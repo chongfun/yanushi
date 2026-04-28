@@ -24,6 +24,24 @@
   </head>
 
   <body>
-    <%= yield %>
+    <%= render "shared/flash" %>
+    
+    <main>
+      <%= yield %>
+    </main>
+
+    <div id="modal-container" data-controller="modal">
+      <dialog id="modal" data-modal-target="dialog" class="modal-dialog">
+        <div class="modal-inner">
+          <header class="modal-header">
+            <h2 data-modal-target="title" id="modal-title"></h2>
+            <button data-action="modal#close" class="modal-close" aria-label="Close modal">&times;</button>
+          </header>
+          <div data-modal-target="content" id="modal-content" class="modal-body">
+            <!-- Turbo streams can target this ID to inject content -->
+          </div>
+        </div>
+      </dialog>
+    </div>
   </body>
 </html>
