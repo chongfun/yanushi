@@ -1,0 +1,11 @@
+<% content_for :title, "New rent payment" %>
+
+<h1>New rent payment</h1>
+
+<%= render "form", rent_payment: @rent_payment %>
+
+<br>
+
+<div>
+  <%= link_to "Back to rent payments", rent_payments_path %>
+</div>

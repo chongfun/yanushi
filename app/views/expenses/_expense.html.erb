@@ -1,0 +1,27 @@
+<div id="<%= dom_id expense %>">
+  <div>
+    <strong>Rental property:</strong>
+    <%= expense.rental_property_id %>
+  </div>
+
+  <div>
+    <strong>Category:</strong>
+    <%= expense.category&.humanize %>
+  </div>
+
+  <div>
+    <strong>Amount:</strong>
+    <%= expense.amount %>
+  </div>
+
+  <div>
+    <strong>Expense date:</strong>
+    <%= expense.expense_date %>
+  </div>
+
+  <div>
+    <strong>Description:</strong>
+    <%= expense.description %>
+  </div>
+
+</div>

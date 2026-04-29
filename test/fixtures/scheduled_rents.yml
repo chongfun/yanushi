@@ -1,0 +1,10 @@
+
+one:
+  lease: one
+  expected_amount: 9.99
+  expected_due_date: 2026-04-28
+
+two:
+  lease: two
+  expected_amount: 9.99
+  expected_due_date: 2026-04-28

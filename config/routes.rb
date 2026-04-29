@@ -1,4 +1,12 @@
 Rails.application.routes.draw do
+  get "dashboards/index"
+  resources :expenses
+  resources :utility_payments
+  resources :rent_payments
+  resources :scheduled_rents
+  resources :leases
+  resources :tenants
+  resources :rental_properties
   resource :session
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
@@ -12,5 +20,5 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
-  root "rails/health#show"
+  root "dashboards#index"
 end

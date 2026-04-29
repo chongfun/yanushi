@@ -1,0 +1,12 @@
+
+one:
+  tenant: one
+  rental_property: one
+  amount: 9.99
+  payment_date: 2026-04-28
+
+two:
+  tenant: two
+  rental_property: two
+  amount: 9.99
+  payment_date: 2026-04-28

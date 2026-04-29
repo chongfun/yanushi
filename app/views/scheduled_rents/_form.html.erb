@@ -1,0 +1,32 @@
+<%= form_with(model: scheduled_rent) do |form| %>
+  <% if scheduled_rent.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(scheduled_rent.errors.count, "error") %> prohibited this scheduled_rent from being saved:</h2>
+
+      <ul>
+        <% scheduled_rent.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :lease_id, style: "display: block" %>
+    <%= form.text_field :lease_id %>
+  </div>
+
+  <div>
+    <%= form.label :expected_amount, style: "display: block" %>
+    <%= form.text_field :expected_amount %>
+  </div>
+
+  <div>
+    <%= form.label :expected_due_date, style: "display: block" %>
+    <%= form.date_field :expected_due_date %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

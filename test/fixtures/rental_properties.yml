@@ -1,0 +1,12 @@
+
+one:
+  user: one
+  address: 123
+  property_type: residential
+  square_footage: 1
+
+two:
+  user: one
+  address: 456
+  property_type: residential
+  square_footage: 1

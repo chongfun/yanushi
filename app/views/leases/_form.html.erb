@@ -1,0 +1,52 @@
+<%= form_with(model: lease) do |form| %>
+  <% if lease.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(lease.errors.count, "error") %> prohibited this lease from being saved:</h2>
+
+      <ul>
+        <% lease.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :rental_property_id, style: "display: block" %>
+    <%= form.collection_select :rental_property_id, RentalProperty.all, :id, :address %>
+  </div>
+
+  <div>
+    <%= form.label :tenant_ids, "Tenants", style: "display: block" %>
+    <%= form.collection_select :tenant_ids, Tenant.all, :id, :name, {}, { multiple: true } %>
+  </div>
+
+  <div>
+    <%= form.label :lease_type, style: "display: block" %>
+    <%= form.select :lease_type, Lease.lease_types.keys.map { |k| [k.humanize, k] } %>
+  </div>
+
+  <div>
+    <%= form.label :commencement_date, style: "display: block" %>
+    <%= form.date_field :commencement_date %>
+  </div>
+
+  <div>
+    <%= form.label :termination_date, style: "display: block" %>
+    <%= form.date_field :termination_date %>
+  </div>
+
+  <div>
+    <%= form.label :annual_rental_amount, style: "display: block" %>
+    <%= form.text_field :annual_rental_amount %>
+  </div>
+
+  <div>
+    <%= form.label :late_period_days, style: "display: block" %>
+    <%= form.number_field :late_period_days %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

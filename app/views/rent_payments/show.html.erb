@@ -1,0 +1,11 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @rent_payment %>
+
+<div>
+  <%= link_to "Download Receipt", rent_payment_path(@rent_payment, format: :pdf), target: "_blank", class: "button" %>
+  <%= link_to "Edit this rent payment", edit_rent_payment_path(@rent_payment) %> |
+  <%= link_to "Back to rent payments", rent_payments_path %>
+
+  <%= button_to "Destroy this rent payment", @rent_payment, method: :delete %>
+</div>

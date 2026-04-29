@@ -1,0 +1,12 @@
+
+one:
+  scheduled_rent: one
+  payment_date: 2026-04-28
+  amount: 9.99
+  payment_method: MyString
+
+two:
+  scheduled_rent: two
+  payment_date: 2026-04-28
+  amount: 9.99
+  payment_method: MyString

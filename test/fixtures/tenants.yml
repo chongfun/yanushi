@@ -1,0 +1,14 @@
+
+one:
+  user: one
+  name: MyString
+  mailing_address: MyString
+  phone_number: MyString
+  email_address: MyString
+
+two:
+  user: one
+  name: MyString
+  mailing_address: MyString
+  phone_number: MyString
+  email_address: MyString

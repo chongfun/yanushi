@@ -1,0 +1,12 @@
+<h1>Dashboard</h1>
+
+<% @properties.each do |property| %>
+  <div>
+    <h2><%= property.address %></h2>
+    <% income = property.leases.joins(scheduled_rents: :rent_payment).sum('rent_payments.amount') + property.utility_payments.sum(:amount) %>
+    <% expenses = property.expenses.sum(:amount) %>
+    <p>Total Income: <%= number_to_currency(income) %></p>
+    <p>Total Expenses: <%= number_to_currency(expenses) %></p>
+    <p>Net Income: <%= number_to_currency(income - expenses) %></p>
+  </div>
+<% end %>

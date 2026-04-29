@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @scheduled_rent %>
+
+<div>
+  <%= link_to "Edit this scheduled rent", edit_scheduled_rent_path(@scheduled_rent) %> |
+  <%= link_to "Back to scheduled rents", scheduled_rents_path %>
+
+  <%= button_to "Destroy this scheduled rent", @scheduled_rent, method: :delete %>
+</div>

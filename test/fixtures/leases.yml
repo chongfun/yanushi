@@ -1,0 +1,16 @@
+
+one:
+  rental_property: one
+  lease_type: term
+  commencement_date: 2026-04-28
+  termination_date: 2026-04-28
+  annual_rental_amount: 9.99
+  late_period_days: 1
+
+two:
+  rental_property: two
+  lease_type: term
+  commencement_date: 2026-04-28
+  termination_date: 2026-04-28
+  annual_rental_amount: 9.99
+  late_period_days: 1
