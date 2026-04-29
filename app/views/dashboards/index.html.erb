@@ -1,12 +1,52 @@
-<h1>Dashboard</h1>
-
-<% @properties.each do |property| %>
-  <div>
-    <h2><%= property.address %></h2>
-    <% income = property.leases.joins(scheduled_rents: :rent_payment).sum('rent_payments.amount') + property.utility_payments.sum(:amount) %>
-    <% expenses = property.expenses.sum(:amount) %>
-    <p>Total Income: <%= number_to_currency(income) %></p>
-    <p>Total Expenses: <%= number_to_currency(expenses) %></p>
-    <p>Net Income: <%= number_to_currency(income - expenses) %></p>
+<div class="flex flex-col gap-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Dashboard</h1>
   </div>
-<% end %>
+
+  <% if @properties.empty? %>
+    <div class="alert alert-info shadow-lg">
+      <div>
+        <h3 class="font-bold">No Properties Found</h3>
+        <div class="text-xs">Get started by creating your first rental property!</div>
+      </div>
+      <div class="flex-none">
+        <%= link_to "Add Property", new_rental_property_path, class: "btn btn-sm" %>
+      </div>
+    </div>
+  <% else %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @properties.each do |property| %>
+        <% income = property.leases.joins(scheduled_rents: :rent_payment).sum('rent_payments.amount') + property.utility_payments.sum(:amount) %>
+        <% expenses = property.expenses.sum(:amount) %>
+        <% net_income = income - expenses %>
+        
+        <div class="card bg-base-100 shadow-xl border border-base-200">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4"><%= property.address %></h2>
+            
+            <div class="stats stats-vertical shadow border border-base-200 bg-base-100">
+              <div class="stat">
+                <div class="stat-title">Total Income</div>
+                <div class="stat-value text-success"><%= number_to_currency(income) %></div>
+              </div>
+              
+              <div class="stat">
+                <div class="stat-title">Total Expenses</div>
+                <div class="stat-value text-error"><%= number_to_currency(expenses) %></div>
+              </div>
+              
+              <div class="stat">
+                <div class="stat-title">Net Income</div>
+                <div class="stat-value <%= net_income >= 0 ? 'text-primary' : 'text-error' %>"><%= number_to_currency(net_income) %></div>
+              </div>
+            </div>
+            
+            <div class="card-actions justify-end mt-4">
+              <%= link_to "View Property", property, class: "btn btn-outline btn-sm" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -1,16 +1,17 @@
-<p style="color: green"><%= notice %></p>
 
 <% content_for :title, "Scheduled rents" %>
 
-<h1>Scheduled rents</h1>
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">Scheduled rents</h1>
+  <%= link_to "New scheduled rent", new_scheduled_rent_path, class: "btn btn-primary" %>
+</div>
 
-<div id="scheduled_rents">
+
+<div id="scheduled_rents" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   <% @scheduled_rents.each do |scheduled_rent| %>
     <%= render scheduled_rent %>
-    <p>
-      <%= link_to "Show this scheduled rent", scheduled_rent %>
-    </p>
+    
   <% end %>
 </div>
 
-<%= link_to "New scheduled rent", new_scheduled_rent_path %>
+

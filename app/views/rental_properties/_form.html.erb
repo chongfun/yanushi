@@ -1,7 +1,7 @@
 <%= form_with(model: rental_property) do |form| %>
   <% if rental_property.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(rental_property.errors.count, "error") %> prohibited this rental_property from being saved:</h2>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content"><div>
+      <h3 class="font-bold"><%= pluralize(rental_property.errors.count, "error") %> prohibited this rental_property from being saved:</h3>
 
       <ul>
         <% rental_property.errors.each do |error| %>
@@ -12,22 +12,22 @@
   <% end %>
 
 
-  <div>
-    <%= form.label :address, style: "display: block" %>
-    <%= form.text_field :address %>
+  <div class="form-control w-full mb-4">
+    <%= form.label :address, class: "label font-semibold" %>
+    <%= form.text_field :address, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :property_type, class: "label font-semibold" %>
+    <%= form.select :property_type, RentalProperty.property_types.keys.map { |k| [k.humanize, k] }, {}, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :square_footage, class: "label font-semibold" %>
+    <%= form.number_field :square_footage, class: "input input-bordered w-full" %>
   </div>
 
   <div>
-    <%= form.label :property_type, style: "display: block" %>
-    <%= form.select :property_type, RentalProperty.property_types.keys.map { |k| [k.humanize, k] } %>
-  </div>
-
-  <div>
-    <%= form.label :square_footage, style: "display: block" %>
-    <%= form.number_field :square_footage %>
-  </div>
-
-  <div>
-    <%= form.submit %>
+    <%= form.submit class: "btn btn-primary w-full mt-4" %>
   </div>
 <% end %>

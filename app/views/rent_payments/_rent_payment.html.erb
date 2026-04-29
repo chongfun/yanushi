@@ -1,22 +1,27 @@
-<div id="<%= dom_id rent_payment %>">
-  <div>
-    <strong>Scheduled rent:</strong>
-    <%= rent_payment.scheduled_rent_id %>
-  </div>
+<div id="<%= dom_id rent_payment %>" class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Scheduled rent</span>
+      <span class="font-medium"><%= rent_payment.scheduled_rent_id %></span>
+    </div>
 
-  <div>
-    <strong>Payment date:</strong>
-    <%= rent_payment.payment_date %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Payment date</span>
+      <span class="font-medium"><%= rent_payment.payment_date %></span>
+    </div>
 
-  <div>
-    <strong>Amount:</strong>
-    <%= rent_payment.amount %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Amount</span>
+      <span class="font-medium"><%= rent_payment.amount %></span>
+    </div>
 
-  <div>
-    <strong>Payment method:</strong>
-    <%= rent_payment.payment_method %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Payment method</span>
+      <span class="font-medium"><%= rent_payment.payment_method %></span>
+    </div>
 
+    <div class="card-actions justify-end mt-4">
+      <%= link_to "View", rent_payment, class: "btn btn-sm btn-outline" %>
+    </div>
+  </div>
 </div>

@@ -1,16 +1,17 @@
-<p style="color: green"><%= notice %></p>
 
 <% content_for :title, "Utility payments" %>
 
-<h1>Utility payments</h1>
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">Utility payments</h1>
+  <%= link_to "New utility payment", new_utility_payment_path, class: "btn btn-primary" %>
+</div>
 
-<div id="utility_payments">
+
+<div id="utility_payments" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   <% @utility_payments.each do |utility_payment| %>
     <%= render utility_payment %>
-    <p>
-      <%= link_to "Show this utility payment", utility_payment %>
-    </p>
+    
   <% end %>
 </div>
 
-<%= link_to "New utility payment", new_utility_payment_path %>
+

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@source not "./plugins/daisyui{,*}.mjs";
+
+@plugin "./plugins/daisyui.mjs" {
+    themes: silk --default;
+}

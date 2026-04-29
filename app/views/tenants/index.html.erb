@@ -1,16 +1,17 @@
-<p style="color: green"><%= notice %></p>
 
 <% content_for :title, "Tenants" %>
 
-<h1>Tenants</h1>
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">Tenants</h1>
+  <%= link_to "New tenant", new_tenant_path, class: "btn btn-primary" %>
+</div>
 
-<div id="tenants">
+
+<div id="tenants" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   <% @tenants.each do |tenant| %>
     <%= render tenant %>
-    <p>
-      <%= link_to "Show this tenant", tenant %>
-    </p>
+    
   <% end %>
 </div>
 
-<%= link_to "New tenant", new_tenant_path %>
+

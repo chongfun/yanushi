@@ -67,3 +67,5 @@ end
 
 gem "prawn"
 gem "prawn-table"
+
+gem "tailwindcss-rails", "~> 4.4"

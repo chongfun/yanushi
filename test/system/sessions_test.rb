@@ -14,7 +14,7 @@ class SessionsTest < ApplicationSystemTestCase
 
     # Verify that the toast notification appears
     assert_selector ".toast", text: "Try another email address or password."
-    assert_selector ".toast-alert"
+    assert_selector ".alert-error"
   end
 
   test "successful login redirects appropriately" do

@@ -1,10 +1,27 @@
-
-
-<%= form_with url: session_path do |form| %>
-  <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email] %><br>
-  <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72 %><br>
-  <%= form.submit "Sign in" %>
-<% end %>
-<br>
-
-<%= link_to "Forgot password?", new_password_path %>
+<div class="flex justify-center items-center min-h-[70vh]">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold justify-center mb-4">Sign in</h2>
+      
+      <%= form_with url: session_path do |form| %>
+        <div class="form-control w-full mb-4">
+          <%= form.label :email, class: "label font-semibold" %>
+          <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email], class: "input input-bordered w-full" %>
+        </div>
+        
+        <div class="form-control w-full mb-6">
+          <%= form.label :password, class: "label font-semibold" %>
+          <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "input input-bordered w-full" %>
+        </div>
+        
+        <%= form.submit "Sign in", class: "btn btn-primary w-full" %>
+      <% end %>
+      
+      <div class="divider">OR</div>
+      
+      <div class="text-center">
+        <%= link_to "Forgot password?", new_password_path, class: "link link-hover" %>
+      </div>
+    </div>
+  </div>
+</div>

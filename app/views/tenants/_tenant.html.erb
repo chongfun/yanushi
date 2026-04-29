@@ -1,23 +1,28 @@
-<div id="<%= dom_id tenant %>">
+<div id="<%= dom_id tenant %>" class="card bg-base-100 shadow-xl">
+  <div class="card-body">
 
-  <div>
-    <strong>Name:</strong>
-    <%= tenant.name %>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Name</span>
+      <span class="font-medium"><%= tenant.name %></span>
+    </div>
+
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Mailing address</span>
+      <span class="font-medium"><%= tenant.mailing_address %></span>
+    </div>
+
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Phone number</span>
+      <span class="font-medium"><%= tenant.phone_number %></span>
+    </div>
+
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Email address</span>
+      <span class="font-medium"><%= tenant.email_address %></span>
+    </div>
+
+    <div class="card-actions justify-end mt-4">
+      <%= link_to "View", tenant, class: "btn btn-sm btn-outline" %>
+    </div>
   </div>
-
-  <div>
-    <strong>Mailing address:</strong>
-    <%= tenant.mailing_address %>
-  </div>
-
-  <div>
-    <strong>Phone number:</strong>
-    <%= tenant.phone_number %>
-  </div>
-
-  <div>
-    <strong>Email address:</strong>
-    <%= tenant.email_address %>
-  </div>
-
 </div>

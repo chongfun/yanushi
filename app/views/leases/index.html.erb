@@ -1,16 +1,17 @@
-<p style="color: green"><%= notice %></p>
 
 <% content_for :title, "Leases" %>
 
-<h1>Leases</h1>
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">Leases</h1>
+  <%= link_to "New lease", new_lease_path, class: "btn btn-primary" %>
+</div>
 
-<div id="leases">
+
+<div id="leases" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   <% @leases.each do |lease| %>
     <%= render lease %>
-    <p>
-      <%= link_to "Show this lease", lease %>
-    </p>
+    
   <% end %>
 </div>
 
-<%= link_to "New lease", new_lease_path %>
+

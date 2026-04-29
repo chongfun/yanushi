@@ -1,10 +1,9 @@
-<p style="color: green"><%= notice %></p>
 
 <%= render @expense %>
 
-<div>
-  <%= link_to "Edit this expense", edit_expense_path(@expense) %> |
-  <%= link_to "Back to expenses", expenses_path %>
-
-  <%= button_to "Destroy this expense", @expense, method: :delete %>
+<div class="flex gap-4 mt-6">
+  <%= link_to "Edit", edit_expense_path(@expense), class: "btn btn-outline" %>
+  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
+  <%= button_to "Delete", @expense, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
 </div>
+

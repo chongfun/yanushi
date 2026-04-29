@@ -1,10 +1,9 @@
-<p style="color: green"><%= notice %></p>
 
 <%= render @utility_payment %>
 
-<div>
-  <%= link_to "Edit this utility payment", edit_utility_payment_path(@utility_payment) %> |
-  <%= link_to "Back to utility payments", utility_payments_path %>
-
-  <%= button_to "Destroy this utility payment", @utility_payment, method: :delete %>
+<div class="flex gap-4 mt-6">
+  <%= link_to "Edit", edit_utility_payment_path(@utility_payment), class: "btn btn-outline" %>
+  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
+  <%= button_to "Delete", @utility_payment, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
 </div>
+

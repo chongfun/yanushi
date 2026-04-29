@@ -1,17 +1,22 @@
-<div id="<%= dom_id scheduled_rent %>">
-  <div>
-    <strong>Lease:</strong>
-    <%= scheduled_rent.lease_id %>
-  </div>
+<div id="<%= dom_id scheduled_rent %>" class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Lease</span>
+      <span class="font-medium"><%= scheduled_rent.lease_id %></span>
+    </div>
 
-  <div>
-    <strong>Expected amount:</strong>
-    <%= scheduled_rent.expected_amount %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Expected amount</span>
+      <span class="font-medium"><%= scheduled_rent.expected_amount %></span>
+    </div>
 
-  <div>
-    <strong>Expected due date:</strong>
-    <%= scheduled_rent.expected_due_date %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Expected due date</span>
+      <span class="font-medium"><%= scheduled_rent.expected_due_date %></span>
+    </div>
 
+    <div class="card-actions justify-end mt-4">
+      <%= link_to "View", scheduled_rent, class: "btn btn-sm btn-outline" %>
+    </div>
+  </div>
 </div>

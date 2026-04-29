@@ -1,7 +1,7 @@
 <%= form_with(model: scheduled_rent) do |form| %>
   <% if scheduled_rent.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(scheduled_rent.errors.count, "error") %> prohibited this scheduled_rent from being saved:</h2>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content"><div>
+      <h3 class="font-bold"><%= pluralize(scheduled_rent.errors.count, "error") %> prohibited this scheduled_rent from being saved:</h3>
 
       <ul>
         <% scheduled_rent.errors.each do |error| %>
@@ -11,22 +11,22 @@
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :lease_id, style: "display: block" %>
-    <%= form.text_field :lease_id %>
+  <div class="form-control w-full mb-4">
+    <%= form.label :lease_id, class: "label font-semibold" %>
+    <%= form.text_field :lease_id, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :expected_amount, class: "label font-semibold" %>
+    <%= form.text_field :expected_amount, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :expected_due_date, class: "label font-semibold" %>
+    <%= form.date_field :expected_due_date, class: "input input-bordered w-full" %>
   </div>
 
   <div>
-    <%= form.label :expected_amount, style: "display: block" %>
-    <%= form.text_field :expected_amount %>
-  </div>
-
-  <div>
-    <%= form.label :expected_due_date, style: "display: block" %>
-    <%= form.date_field :expected_due_date %>
-  </div>
-
-  <div>
-    <%= form.submit %>
+    <%= form.submit class: "btn btn-primary w-full mt-4" %>
   </div>
 <% end %>

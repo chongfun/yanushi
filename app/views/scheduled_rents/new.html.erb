@@ -1,11 +1,9 @@
 <% content_for :title, "New scheduled rent" %>
 
-<h1>New scheduled rent</h1>
+<h1 class="text-3xl font-bold mb-6">New scheduled rent</h1>
 
 <%= render "form", scheduled_rent: @scheduled_rent %>
 
-<br>
-
-<div>
-  <%= link_to "Back to scheduled rents", scheduled_rents_path %>
+<div class="mt-6">
+  <%= link_to "Back to scheduled rents", scheduled_rents_path, class: "btn btn-ghost" %>
 </div>

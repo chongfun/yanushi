@@ -1,11 +1,9 @@
 <% content_for :title, "New expense" %>
 
-<h1>New expense</h1>
+<h1 class="text-3xl font-bold mb-6">New expense</h1>
 
 <%= render "form", expense: @expense %>
 
-<br>
-
-<div>
-  <%= link_to "Back to expenses", expenses_path %>
+<div class="mt-6">
+  <%= link_to "Back to expenses", expenses_path, class: "btn btn-ghost" %>
 </div>

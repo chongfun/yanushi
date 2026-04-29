@@ -1,10 +1,9 @@
-<p style="color: green"><%= notice %></p>
 
 <%= render @tenant %>
 
-<div>
-  <%= link_to "Edit this tenant", edit_tenant_path(@tenant) %> |
-  <%= link_to "Back to tenants", tenants_path %>
-
-  <%= button_to "Destroy this tenant", @tenant, method: :delete %>
+<div class="flex gap-4 mt-6">
+  <%= link_to "Edit", edit_tenant_path(@tenant), class: "btn btn-outline" %>
+  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
+  <%= button_to "Delete", @tenant, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
 </div>
+

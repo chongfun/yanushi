@@ -1,11 +1,9 @@
 <% content_for :title, "New utility payment" %>
 
-<h1>New utility payment</h1>
+<h1 class="text-3xl font-bold mb-6">New utility payment</h1>
 
 <%= render "form", utility_payment: @utility_payment %>
 
-<br>
-
-<div>
-  <%= link_to "Back to utility payments", utility_payments_path %>
+<div class="mt-6">
+  <%= link_to "Back to utility payments", utility_payments_path, class: "btn btn-ghost" %>
 </div>

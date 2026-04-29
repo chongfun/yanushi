@@ -1,37 +1,42 @@
-<div id="<%= dom_id lease %>">
-  <div>
-    <strong>Rental property:</strong>
-    <%= lease.rental_property_id %>
-  </div>
+<div id="<%= dom_id lease %>" class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Rental property</span>
+      <span class="font-medium"><%= lease.rental_property_id %></span>
+    </div>
 
-  <div>
-    <strong>Lease type:</strong>
-    <%= lease.lease_type %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Lease type</span>
+      <span class="font-medium"><%= lease.lease_type %></span>
+    </div>
 
-  <div>
-    <strong>Commencement date:</strong>
-    <%= lease.commencement_date %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Commencement date</span>
+      <span class="font-medium"><%= lease.commencement_date %></span>
+    </div>
 
-  <div>
-    <strong>Termination date:</strong>
-    <%= lease.termination_date %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Termination date</span>
+      <span class="font-medium"><%= lease.termination_date %></span>
+    </div>
 
-  <div>
-    <strong>Annual rental amount:</strong>
-    <%= lease.annual_rental_amount %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Annual rental amount</span>
+      <span class="font-medium"><%= lease.annual_rental_amount %></span>
+    </div>
 
-  <div>
-    <strong>Late period days:</strong>
-    <%= lease.late_period_days %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Late period days</span>
+      <span class="font-medium"><%= lease.late_period_days %></span>
+    </div>
 
-  <div>
-    <strong>Security deposit:</strong>
-    <%= lease.security_deposit %>
-  </div>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Security deposit</span>
+      <span class="font-medium"><%= lease.security_deposit %></span>
+    </div>
 
+    <div class="card-actions justify-end mt-4">
+      <%= link_to "View", lease, class: "btn btn-sm btn-outline" %>
+    </div>
+  </div>
 </div>

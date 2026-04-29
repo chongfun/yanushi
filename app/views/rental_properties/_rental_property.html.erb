@@ -1,18 +1,23 @@
-<div id="<%= dom_id rental_property %>">
+<div id="<%= dom_id rental_property %>" class="card bg-base-100 shadow-xl">
+  <div class="card-body">
 
-  <div>
-    <strong>Address:</strong>
-    <%= rental_property.address %>
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Address</span>
+      <span class="font-medium"><%= rental_property.address %></span>
+    </div>
+
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Property type</span>
+      <span class="font-medium"><%= rental_property.property_type %></span>
+    </div>
+
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Square footage</span>
+      <span class="font-medium"><%= rental_property.square_footage %></span>
+    </div>
+
+    <div class="card-actions justify-end mt-4">
+      <%= link_to "View", rental_property, class: "btn btn-sm btn-outline" %>
+    </div>
   </div>
-
-  <div>
-    <strong>Property type:</strong>
-    <%= rental_property.property_type %>
-  </div>
-
-  <div>
-    <strong>Square footage:</strong>
-    <%= rental_property.square_footage %>
-  </div>
-
 </div>

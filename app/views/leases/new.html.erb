@@ -1,11 +1,9 @@
 <% content_for :title, "New lease" %>
 
-<h1>New lease</h1>
+<h1 class="text-3xl font-bold mb-6">New lease</h1>
 
 <%= render "form", lease: @lease %>
 
-<br>
-
-<div>
-  <%= link_to "Back to leases", leases_path %>
+<div class="mt-6">
+  <%= link_to "Back to leases", leases_path, class: "btn btn-ghost" %>
 </div>

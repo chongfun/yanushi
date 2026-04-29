@@ -1,7 +1,7 @@
 <%= form_with(model: tenant) do |form| %>
   <% if tenant.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(tenant.errors.count, "error") %> prohibited this tenant from being saved:</h2>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content"><div>
+      <h3 class="font-bold"><%= pluralize(tenant.errors.count, "error") %> prohibited this tenant from being saved:</h3>
 
       <ul>
         <% tenant.errors.each do |error| %>
@@ -12,27 +12,27 @@
   <% end %>
 
 
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
+  <div class="form-control w-full mb-4">
+    <%= form.label :name, class: "label font-semibold" %>
+    <%= form.text_field :name, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :mailing_address, class: "label font-semibold" %>
+    <%= form.text_field :mailing_address, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :phone_number, class: "label font-semibold" %>
+    <%= form.text_field :phone_number, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :email_address, class: "label font-semibold" %>
+    <%= form.text_field :email_address, class: "input input-bordered w-full" %>
   </div>
 
   <div>
-    <%= form.label :mailing_address, style: "display: block" %>
-    <%= form.text_field :mailing_address %>
-  </div>
-
-  <div>
-    <%= form.label :phone_number, style: "display: block" %>
-    <%= form.text_field :phone_number %>
-  </div>
-
-  <div>
-    <%= form.label :email_address, style: "display: block" %>
-    <%= form.text_field :email_address %>
-  </div>
-
-  <div>
-    <%= form.submit %>
+    <%= form.submit class: "btn btn-primary w-full mt-4" %>
   </div>
 <% end %>

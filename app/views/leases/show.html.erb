@@ -1,10 +1,9 @@
-<p style="color: green"><%= notice %></p>
 
 <%= render @lease %>
 
-<div>
-  <%= link_to "Edit this lease", edit_lease_path(@lease) %> |
-  <%= link_to "Back to leases", leases_path %>
-
-  <%= button_to "Destroy this lease", @lease, method: :delete %>
+<div class="flex gap-4 mt-6">
+  <%= link_to "Edit", edit_lease_path(@lease), class: "btn btn-outline" %>
+  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
+  <%= button_to "Delete", @lease, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
 </div>
+
