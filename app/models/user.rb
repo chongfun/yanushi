@@ -4,5 +4,5 @@ class User < ApplicationRecord
   has_many :rental_properties, dependent: :destroy
   has_many :tenants, dependent: :destroy
 
-  normalizes :email_address, with: ->(e) { e.strip.downcase }
+  normalizes :email, with: ->(e) { e.strip.downcase }
 end
