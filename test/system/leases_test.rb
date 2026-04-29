@@ -27,10 +27,12 @@ class LeasesTest < ApplicationSystemTestCase
     fill_in "Commencement date", with: Date.today.to_s
     fill_in "Annual rental amount", with: "12000"
     fill_in "Late period days", with: 5
+    fill_in "Security deposit", with: "500"
 
     click_on "Create Lease"
 
     assert_text "Lease was successfully created"
+    assert_text "500.0"
     
     # Verify Scheduled Rents were created
     lease = Lease.last

@@ -6,6 +6,7 @@ one:
   termination_date: 2026-04-28
   annual_rental_amount: 9.99
   late_period_days: 1
+  security_deposit: 500.0
 
 two:
   rental_property: two

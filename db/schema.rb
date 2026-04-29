@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_000547) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_010627) do
   create_table "expenses", force: :cascade do |t|
     t.decimal "amount"
     t.string "category"
@@ -38,6 +38,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_000547) do
     t.integer "late_period_days"
     t.integer "lease_type"
     t.integer "rental_property_id", null: false
+    t.decimal "security_deposit"
     t.date "termination_date"
     t.datetime "updated_at", null: false
     t.index ["rental_property_id"], name: "index_leases_on_rental_property_id"

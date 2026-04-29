@@ -65,6 +65,6 @@ class LeasesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def lease_params
-      params.expect(lease: [ :rental_property_id, :lease_type, :commencement_date, :termination_date, :annual_rental_amount, :late_period_days, tenant_ids: [] ])
+      params.expect(lease: [ :rental_property_id, :lease_type, :commencement_date, :termination_date, :annual_rental_amount, :late_period_days, :security_deposit, tenant_ids: [] ])
     end
 end
