@@ -13,7 +13,7 @@ class RentalProperty < ApplicationRecord
 
     items = []
 
-    scheduled_rents.where(due_date: start_date..end_date).each do |sr|
+    scheduled_rents.where(due_date: start_date..end_date).where(paid: false).each do |sr|
       items << { date: sr.due_date, type: "Scheduled Rent", amount: sr.amount, object: sr }
     end
 
