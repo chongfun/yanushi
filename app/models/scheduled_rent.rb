@@ -3,7 +3,7 @@ class ScheduledRent < ApplicationRecord
   has_one :rent_payment, dependent: :destroy
 
   def paid?
-    rent_payment.present?
+    paid
   end
 
   def late?
