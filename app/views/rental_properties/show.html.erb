@@ -1,9 +1,82 @@
-
 <%= render @rental_property %>
 
-<div class="flex gap-4 mt-6">
+<div class="divider mt-8"></div>
+
+<h2 class="text-2xl font-bold mb-4">Financial Ledger</h2>
+
+<%= turbo_frame_tag "property_financials" do %>
+  <div class="flex justify-end mb-4">
+    <%= form_with url: rental_property_path(@rental_property), method: :get, data: { turbo_frame: "property_financials" }, class: "flex items-center gap-2" do |f| %>
+      <%= f.label :year, "Select Year", class: "text-sm font-semibold" %>
+      <%= f.select :year, 
+            options_for_select((Date.current.year - 5)..(Date.current.year + 1), @year), 
+            {}, 
+            onchange: "this.form.requestSubmit()",
+            class: "select select-bordered select-sm" %>
+    <% end %>
+  </div>
+
+  <div class="overflow-x-auto bg-base-100 rounded-box shadow border border-base-200">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Details</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @financial_items.empty? %>
+          <tr>
+            <td colspan="4" class="text-center py-8 text-base-content/50">
+              No financial activity found for <%= @year %>
+            </td>
+          </tr>
+        <% else %>
+          <% @financial_items.each do |item| %>
+            <tr>
+              <td><%= item[:date].strftime("%b %d, %Y") %></td>
+              <td>
+                <% case item[:type] %>
+                <% when 'Scheduled Rent' %>
+                  <div class="badge badge-info gap-2 text-xs"><%= item[:type] %></div>
+                <% when 'Rent Payment' %>
+                  <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
+                <% when 'Expense' %>
+                  <div class="badge badge-error gap-2 text-xs text-error-content"><%= item[:type] %></div>
+                <% when 'Utility Payment' %>
+                  <div class="badge badge-warning gap-2 text-xs text-warning-content"><%= item[:type] %></div>
+                <% end %>
+              </td>
+              <td class="text-sm">
+                <% if item[:type] == 'Scheduled Rent' && item[:object].rent_payment.present? %>
+                  <span class="text-success">Paid (<%= number_to_currency(item[:object].rent_payment.amount) %>)</span>
+                <% elsif item[:type] == 'Scheduled Rent' && item[:date] < Date.current %>
+                  <span class="text-error">Overdue</span>
+                <% elsif item[:type] == 'Expense' %>
+                  <%= item[:object].category %> - <%= item[:object].description %>
+                <% end %>
+              </td>
+              <td class="text-right font-medium">
+                <% if item[:type] == 'Expense' %>
+                  <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
+                <% elsif ['Rent Payment', 'Utility Payment'].include?(item[:type]) %>
+                  <span class="text-success"><%= number_to_currency(item[:amount]) %></span>
+                <% else %>
+                  <%= number_to_currency(item[:amount]) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<div class="flex gap-4 mt-8">
   <%= link_to "Edit", edit_rental_property_path(@rental_property), class: "btn btn-outline" %>
   <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
   <%= button_to "Delete", @rental_property, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
 </div>
-

@@ -8,6 +8,8 @@ class RentalPropertiesController < ApplicationController
 
   # GET /rental_properties/1 or /rental_properties/1.json
   def show
+    @year = params[:year].present? ? params[:year].to_i : Date.current.year
+    @financial_items = @rental_property.financial_items(@year)
   end
 
   # GET /rental_properties/new
