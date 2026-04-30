@@ -4,9 +4,11 @@ one:
   payment_date: 2026-04-28
   amount: 9.99
   payment_method: MyString
+  transaction_number: Zelle123
 
 two:
   scheduled_rent: two
   payment_date: 2026-04-28
   amount: 9.99
   payment_method: MyString
+  transaction_number: Venmo456

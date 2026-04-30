@@ -17,6 +17,7 @@ class RentPaymentsController < ApplicationController
         pdf.text "Payment Date: #{@rent_payment.payment_date}"
         pdf.text "Amount: #{helpers.number_to_currency(@rent_payment.amount)}"
         pdf.text "Method: #{@rent_payment.payment_method}"
+        pdf.text "Transaction Number: #{@rent_payment.transaction_number}" if @rent_payment.transaction_number.present?
         pdf.text "Property: #{@rent_payment.scheduled_rent.lease.rental_property.address}"
         send_data pdf.render, filename: "receipt_#{@rent_payment.id}.pdf", type: "application/pdf", disposition: "inline"
       end
@@ -78,6 +79,6 @@ class RentPaymentsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def rent_payment_params
-      params.expect(rent_payment: [ :scheduled_rent_id, :payment_date, :amount, :payment_method ])
+      params.expect(rent_payment: [ :scheduled_rent_id, :payment_date, :amount, :payment_method, :transaction_number ])
     end
 end

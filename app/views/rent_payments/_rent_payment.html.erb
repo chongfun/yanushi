@@ -20,6 +20,13 @@
       <span class="font-medium"><%= rent_payment.payment_method %></span>
     </div>
 
+  <% if rent_payment.transaction_number.present? %>
+    <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Transaction number</span>
+      <span class="font-medium"><%= rent_payment.transaction_number %></span>
+    </div>
+  <% end %>
+
     <div class="card-actions justify-end mt-4">
       <%= link_to "View", rent_payment, class: "btn btn-sm btn-outline" %>
     </div>
