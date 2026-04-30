@@ -6,12 +6,6 @@ export default class extends Controller {
   }
 
   connect() {
-    // Add a small delay so the entrance animation can play smoothly
-    requestAnimationFrame(() => {
-      this.element.classList.add("toast-enter-active")
-      this.element.classList.remove("toast-enter")
-    })
-
     if (this.timeoutValue > 0) {
       this.timeoutId = setTimeout(() => {
         this.close()
@@ -26,8 +20,10 @@ export default class extends Controller {
   }
 
   close() {
-    this.element.classList.add("toast-leave-active")
-    this.element.addEventListener('transitionend', () => {
+    this.element.style.transition = "opacity 0.3s ease, transform 0.3s ease"
+    this.element.style.opacity = "0"
+    this.element.style.transform = "translateX(1rem)"
+    this.element.addEventListener("transitionend", () => {
       this.element.remove()
     }, { once: true })
   }

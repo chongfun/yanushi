@@ -1,4 +1,4 @@
-<div id="flash-messages" class="toast-container">
+<div id="flash-messages" class="toast toast-top toast-end z-50">
   <% flash.each do |key, message| %>
     <%= render partial: "shared/toast", locals: { type: key, message: message } %>
   <% end %>
