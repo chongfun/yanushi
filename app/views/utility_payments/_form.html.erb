@@ -12,13 +12,8 @@
   <% end %>
 
   <div class="form-control w-full mb-4">
-    <%= form.label :tenant_id, class: "label font-semibold" %>
-    <%= form.collection_select :tenant_id, Tenant.all, :id, :name, {}, { class: "select select-bordered w-full" } %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :rental_property_id, class: "label font-semibold" %>
-    <%= form.collection_select :rental_property_id, RentalProperty.all, :id, :address, {}, { class: "select select-bordered w-full" } %>
+    <%= form.label :lease_id, class: "label font-semibold" %>
+    <%= form.collection_select :lease_id, Lease.all, :id, ->(l) { "#{l.rental_property.address} (#{l.tenants.pluck(:name).join(', ')})" }, {}, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="form-control w-full mb-4">

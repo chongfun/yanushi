@@ -5,6 +5,8 @@ class UtilityPaymentsTest < ApplicationSystemTestCase
     @user = users(:one)
     @property = RentalProperty.create!(user: @user, address: "999 Utility Ave", property_type: "residential", square_footage: 1000)
     @tenant = Tenant.create!(user: @user, name: "Utility Tester", mailing_address: "123 Test", phone_number: "555-5555", email_address: "tester@example.com")
+    @lease = Lease.create!(rental_property: @property, lease_type: "month_to_month", commencement_date: Date.today)
+    @lease.tenants << @tenant
 
     # Log in
     visit new_session_path
@@ -18,8 +20,7 @@ class UtilityPaymentsTest < ApplicationSystemTestCase
 
     click_on "New utility payment"
 
-    select @tenant.name, from: "Tenant"
-    select @property.address, from: "Rental property"
+    select "#{@property.address} (#{@tenant.name})", from: "Lease"
     fill_in "Amount", with: "150.50"
     fill_in "Payment date", with: Date.today.to_s
 

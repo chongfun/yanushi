@@ -65,6 +65,6 @@ class UtilityPaymentsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def utility_payment_params
-      params.expect(utility_payment: [ :tenant_id, :rental_property_id, :amount, :payment_date, :payment_method, :transaction_number ])
+      params.expect(utility_payment: [ :lease_id, :amount, :payment_date, :payment_method, :transaction_number ])
     end
 end

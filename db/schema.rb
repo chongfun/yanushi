@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_30_225658) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_30_230203) do
   create_table "expenses", force: :cascade do |t|
     t.decimal "amount"
     t.string "category"
@@ -106,14 +106,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_30_225658) do
   create_table "utility_payments", force: :cascade do |t|
     t.decimal "amount"
     t.datetime "created_at", null: false
+    t.integer "lease_id", null: false
     t.date "payment_date"
     t.string "payment_method"
-    t.integer "rental_property_id", null: false
-    t.integer "tenant_id", null: false
     t.string "transaction_number"
     t.datetime "updated_at", null: false
-    t.index ["rental_property_id"], name: "index_utility_payments_on_rental_property_id"
-    t.index ["tenant_id"], name: "index_utility_payments_on_tenant_id"
+    t.index ["lease_id"], name: "index_utility_payments_on_lease_id"
   end
 
   add_foreign_key "expenses", "rental_properties"
@@ -125,6 +123,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_30_225658) do
   add_foreign_key "scheduled_rents", "leases"
   add_foreign_key "sessions", "users"
   add_foreign_key "tenants", "users"
-  add_foreign_key "utility_payments", "rental_properties"
-  add_foreign_key "utility_payments", "tenants"
+  add_foreign_key "utility_payments", "leases"
 end

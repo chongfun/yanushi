@@ -3,6 +3,7 @@ class Lease < ApplicationRecord
   has_many :lease_tenants, dependent: :destroy
   has_many :tenants, through: :lease_tenants
   has_many :scheduled_rents, dependent: :destroy
+  has_many :utility_payments, dependent: :destroy
 
   enum :lease_type, { month_to_month: 0, term: 1 }
 

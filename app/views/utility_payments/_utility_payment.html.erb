@@ -1,13 +1,8 @@
 <div id="<%= dom_id utility_payment %>" class="card bg-base-100 shadow-xl">
   <div class="card-body">
   <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Tenant</span>
-      <span class="font-medium"><%= utility_payment.tenant_id %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Rental property</span>
-      <span class="font-medium"><%= utility_payment.rental_property_id %></span>
+      <span class="text-sm text-base-content/70 block">Lease</span>
+      <span class="font-medium"><%= utility_payment.lease.rental_property.address %> (<%= utility_payment.lease.tenants.pluck(:name).join(', ') %>)</span>
     </div>
 
   <div class="mb-2">
