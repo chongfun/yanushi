@@ -20,6 +20,16 @@
       <span class="font-medium"><%= utility_payment.payment_date %></span>
     </div>
 
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Payment method</span>
+      <span class="font-medium"><%= utility_payment.payment_method %></span>
+    </div>
+
+  <div class="mb-2">
+      <span class="text-sm text-base-content/70 block">Transaction number</span>
+      <span class="font-medium"><%= utility_payment.transaction_number %></span>
+    </div>
+
     <div class="card-actions justify-end mt-4">
       <%= link_to "View", utility_payment, class: "btn btn-sm btn-outline" %>
     </div>

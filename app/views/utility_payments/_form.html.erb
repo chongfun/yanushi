@@ -31,6 +31,16 @@
     <%= form.date_field :payment_date, class: "input input-bordered w-full" %>
   </div>
 
+  <div class="form-control w-full mb-4">
+    <%= form.label :payment_method, class: "label font-semibold" %>
+    <%= form.text_field :payment_method, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :transaction_number, class: "label font-semibold" %>
+    <%= form.text_field :transaction_number, class: "input input-bordered w-full" %>
+  </div>
+
   <div>
     <%= form.submit class: "btn btn-primary w-full mt-4" %>
   </div>
