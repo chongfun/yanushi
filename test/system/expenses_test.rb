@@ -4,7 +4,7 @@ class ExpensesTest < ApplicationSystemTestCase
   setup do
     @user = users(:one)
     @property = RentalProperty.create!(user: @user, address: "999 Expense Ave", property_type: "residential", square_footage: 1000)
-    
+
     # Log in
     visit new_session_path
     fill_in "email", with: @user.email
@@ -14,7 +14,7 @@ class ExpensesTest < ApplicationSystemTestCase
 
   test "creating an expense with IRS category" do
     visit expenses_path
-    
+
     click_on "New expense"
 
     select @property.address, from: "Rental property"

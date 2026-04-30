@@ -26,7 +26,7 @@ class RentalPropertiesTest < ApplicationSystemTestCase
   test "filtering the financial ledger by year" do
     rental_property = rental_properties(:one)
     past_year = Date.current.year - 1
-    
+
     # Create an expense in the past year
     Expense.create!(
       rental_property: rental_property,

@@ -14,19 +14,19 @@ class RentalProperty < ApplicationRecord
     items = []
 
     scheduled_rents.where(due_date: start_date..end_date).each do |sr|
-      items << { date: sr.due_date, type: 'Scheduled Rent', amount: sr.amount, object: sr }
+      items << { date: sr.due_date, type: "Scheduled Rent", amount: sr.amount, object: sr }
     end
 
     rent_payments.where(payment_date: start_date..end_date).each do |rp|
-      items << { date: rp.payment_date, type: 'Rent Payment', amount: rp.amount, object: rp }
+      items << { date: rp.payment_date, type: "Rent Payment", amount: rp.amount, object: rp }
     end
 
     expenses.where(expense_date: start_date..end_date).each do |exp|
-      items << { date: exp.expense_date, type: 'Expense', amount: exp.amount, object: exp }
+      items << { date: exp.expense_date, type: "Expense", amount: exp.amount, object: exp }
     end
 
     utility_payments.where(payment_date: start_date..end_date).each do |up|
-      items << { date: up.payment_date, type: 'Utility Payment', amount: up.amount, object: up }
+      items << { date: up.payment_date, type: "Utility Payment", amount: up.amount, object: up }
     end
 
     items.sort_by { |item| item[:date] }
