@@ -22,8 +22,8 @@ class Lease < ApplicationRecord
 
     months_to_generate.times do |i|
       scheduled_rents.create!(
-        expected_amount: amount_per_month,
-        expected_due_date: commencement_date + i.months
+        amount: amount_per_month,
+        due_date: commencement_date + i.months
       )
     end
   end

@@ -37,6 +37,6 @@ class LeasesTest < ApplicationSystemTestCase
     # Verify Scheduled Rents were created
     lease = Lease.last
     assert_equal 12, lease.scheduled_rents.count
-    assert_equal 1000.0, lease.scheduled_rents.first.expected_amount # 12000 / 12
+    assert_equal 1000.0, lease.scheduled_rents.first.amount # 12000 / 12
   end
 end

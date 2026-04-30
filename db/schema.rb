@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_010627) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_020916) do
   create_table "expenses", force: :cascade do |t|
     t.decimal "amount"
     t.string "category"
@@ -65,9 +65,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_010627) do
   end
 
   create_table "scheduled_rents", force: :cascade do |t|
+    t.decimal "amount"
     t.datetime "created_at", null: false
-    t.decimal "expected_amount"
-    t.date "expected_due_date"
+    t.date "due_date"
     t.integer "lease_id", null: false
     t.datetime "updated_at", null: false
     t.index ["lease_id"], name: "index_scheduled_rents_on_lease_id"

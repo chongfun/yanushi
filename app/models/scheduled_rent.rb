@@ -7,10 +7,10 @@ class ScheduledRent < ApplicationRecord
   end
 
   def late?
-    !paid? && Date.current > (expected_due_date + lease.late_period_days.days)
+    !paid? && Date.current > (due_date + lease.late_period_days.days)
   end
 
   def display_name
-    "#{lease.rental_property.address} - #{expected_due_date}"
+    "#{lease.rental_property.address} - #{due_date}"
   end
 end

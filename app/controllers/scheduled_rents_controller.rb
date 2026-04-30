@@ -65,6 +65,6 @@ class ScheduledRentsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def scheduled_rent_params
-      params.expect(scheduled_rent: [ :lease_id, :expected_amount, :expected_due_date ])
+      params.expect(scheduled_rent: [ :lease_id, :amount, :due_date ])
     end
 end

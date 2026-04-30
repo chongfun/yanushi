@@ -18,7 +18,7 @@ class ScheduledRentsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create scheduled_rent" do
     assert_difference("ScheduledRent.count") do
-      post scheduled_rents_url, params: { scheduled_rent: { expected_amount: @scheduled_rent.expected_amount, expected_due_date: @scheduled_rent.expected_due_date, lease_id: @scheduled_rent.lease_id } }
+      post scheduled_rents_url, params: { scheduled_rent: { amount: @scheduled_rent.amount, due_date: @scheduled_rent.due_date, lease_id: @scheduled_rent.lease_id } }
     end
 
     assert_redirected_to scheduled_rent_url(ScheduledRent.last)
@@ -35,7 +35,7 @@ class ScheduledRentsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update scheduled_rent" do
-    patch scheduled_rent_url(@scheduled_rent), params: { scheduled_rent: { expected_amount: @scheduled_rent.expected_amount, expected_due_date: @scheduled_rent.expected_due_date, lease_id: @scheduled_rent.lease_id } }
+    patch scheduled_rent_url(@scheduled_rent), params: { scheduled_rent: { amount: @scheduled_rent.amount, due_date: @scheduled_rent.due_date, lease_id: @scheduled_rent.lease_id } }
     assert_redirected_to scheduled_rent_url(@scheduled_rent)
   end
 
