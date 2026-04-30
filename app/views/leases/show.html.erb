@@ -1,6 +1,14 @@
 
 <%= render @lease %>
 
+<div class="mt-6 bg-base-200 p-4 rounded-lg shadow-sm">
+  <h3 class="text-lg font-bold mb-2">Generate Scheduled Rents</h3>
+  <%= form_with url: generate_scheduled_rents_lease_path(@lease), method: :post, class: "flex gap-2 items-center" do |f| %>
+    <%= f.number_field :year, value: Date.current.year, class: "input input-bordered input-sm w-24" %>
+    <%= f.submit "Generate Rents", class: "btn btn-sm btn-primary" %>
+  <% end %>
+</div>
+
 <div class="flex gap-4 mt-6">
   <%= link_to "Edit", edit_lease_path(@lease), class: "btn btn-outline" %>
   <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>

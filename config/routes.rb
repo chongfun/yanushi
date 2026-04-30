@@ -4,7 +4,9 @@ Rails.application.routes.draw do
   resources :utility_payments
   resources :rent_payments
   resources :scheduled_rents
-  resources :leases
+  resources :leases do
+    post :generate_scheduled_rents, on: :member
+  end
   resources :tenants
   resources :rental_properties
   resource :session

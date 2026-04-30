@@ -1,5 +1,5 @@
 class LeasesController < ApplicationController
-  before_action :set_lease, only: %i[ show edit update destroy ]
+  before_action :set_lease, only: %i[ show edit update destroy generate_scheduled_rents ]
 
   # GET /leases or /leases.json
   def index
@@ -55,6 +55,13 @@ class LeasesController < ApplicationController
       format.html { redirect_to leases_path, notice: "Lease was successfully destroyed.", status: :see_other }
       format.json { head :no_content }
     end
+  end
+
+  # POST /leases/1/generate_scheduled_rents
+  def generate_scheduled_rents
+    year = params[:year].presence || Date.current.year
+    ScheduledRentsGenerator.new(@lease, year).call
+    redirect_to @lease.rental_property, notice: "Scheduled rents for #{year} have been generated."
   end
 
   private
