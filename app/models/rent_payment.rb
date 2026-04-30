@@ -11,6 +11,6 @@ class RentPayment < ApplicationRecord
   end
 
   def mark_scheduled_rent_unpaid
-    scheduled_rent.update_column(:paid, false)
+    scheduled_rent.update_column(:paid, scheduled_rent.rent_payments.exists?)
   end
 end

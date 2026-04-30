@@ -1,6 +1,6 @@
 class ScheduledRent < ApplicationRecord
   belongs_to :lease
-  has_one :rent_payment, dependent: :destroy
+  has_many :rent_payments, dependent: :destroy
 
   def paid?
     paid

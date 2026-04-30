@@ -16,7 +16,7 @@
   <% else %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @properties.each do |property| %>
-        <% income = property.leases.joins(scheduled_rents: :rent_payment).sum('rent_payments.amount') + property.utility_payments.sum(:amount) %>
+        <% income = property.leases.joins(scheduled_rents: :rent_payments).sum('rent_payments.amount') + property.utility_payments.sum(:amount) %>
         <% expenses = property.expenses.sum(:amount) %>
         <% net_income = income - expenses %>
         

@@ -50,8 +50,8 @@
                 <% end %>
               </td>
               <td class="text-sm">
-                <% if item[:type] == 'Scheduled Rent' && item[:object].rent_payment.present? %>
-                  <span class="text-success">Paid (<%= number_to_currency(item[:object].rent_payment.amount) %>)</span>
+                <% if item[:type] == 'Scheduled Rent' && item[:object].paid? %>
+                  <span class="text-success">Paid (<%= number_to_currency(item[:object].rent_payments.sum(:amount)) %>)</span>
                 <% elsif item[:type] == 'Scheduled Rent' && item[:date] < Date.current %>
                   <span class="text-error">Overdue</span>
                 <% elsif item[:type] == 'Expense' %>
