@@ -46,4 +46,22 @@ class RentalPropertiesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to rental_properties_url
   end
+  test "should download schedule_e_pdf" do
+    get schedule_e_pdf_rental_property_url(@rental_property, year: 2026)
+    assert_response :success
+    assert_equal "application/pdf", response.content_type
+    assert_match /attachment/, response.headers["Content-Disposition"]
+    assert_match /Schedule_E/, response.headers["Content-Disposition"]
+  end
+
+  test "should download schedule_e_pdf with default year" do
+    get schedule_e_pdf_rental_property_url(@rental_property)
+    assert_response :success
+    assert_equal "application/pdf", response.content_type
+  end
+
+  test "should get schedule_e modal" do
+    get schedule_e_rental_property_url(@rental_property)
+    assert_response :success
+  end
 end

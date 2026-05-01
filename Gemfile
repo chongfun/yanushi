@@ -68,5 +68,6 @@ end
 
 gem "prawn", "~> 2.5.0"
 gem "prawn-table", "~> 0.2.2"
+gem "hexapdf", "~> 1.0"
 
 gem "tailwindcss-rails", "~> 4.4"

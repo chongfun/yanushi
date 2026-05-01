@@ -1,5 +1,5 @@
 class RentalPropertiesController < ApplicationController
-  before_action :set_rental_property, only: %i[ show edit update destroy schedule_e ]
+  before_action :set_rental_property, only: %i[ show edit update destroy schedule_e schedule_e_pdf ]
 
   # GET /rental_properties or /rental_properties.json
   def index
@@ -37,6 +37,19 @@ class RentalPropertiesController < ApplicationController
     @total_expenses = @expenses_by_category.values.sum
     @net_income = @total_income - @total_expenses
   end
+
+  # GET /rental_properties/1/schedule_e_pdf
+  def schedule_e_pdf
+    year = params[:year].present? ? params[:year].to_i : Date.current.year
+    pdf_data = ScheduleEGenerator.new(@rental_property, year).call
+
+    send_data pdf_data,
+      filename: "Schedule_E_#{@rental_property.address.parameterize}_#{year}.pdf",
+      type: "application/pdf",
+      disposition: "attachment"
+  end
+
+
 
   # GET /rental_properties/new
   def new
