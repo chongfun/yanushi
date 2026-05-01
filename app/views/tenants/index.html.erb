@@ -6,12 +6,23 @@
   <%= link_to "New tenant", new_tenant_path, class: "btn btn-primary" %>
 </div>
 
-
-<div id="tenants" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <% @tenants.each do |tenant| %>
-    <%= render tenant %>
-    
-  <% end %>
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Mailing Address</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tenants">
+      <% @tenants.each do |tenant| %>
+        <%= render tenant %>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 
