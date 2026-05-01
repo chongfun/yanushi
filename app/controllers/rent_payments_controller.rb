@@ -51,7 +51,7 @@ class RentPaymentsController < ApplicationController
           rental_property = @rent_payment.scheduled_rent.lease.rental_property
           @financial_items = rental_property.financial_items(Date.current.year)
           @year = Date.current.year
-          
+
           format.turbo_stream {
             flash.now[:notice] = "Rent payment recorded successfully."
             render turbo_stream: [

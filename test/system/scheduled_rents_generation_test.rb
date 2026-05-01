@@ -12,7 +12,7 @@ class ScheduledRentsGenerationTest < ApplicationSystemTestCase
       annual_rental_amount: 12000,
       late_period_days: 5
     )
-    
+
     # Log in
     visit new_session_path
     fill_in "email", with: @user.email
@@ -31,7 +31,7 @@ class ScheduledRentsGenerationTest < ApplicationSystemTestCase
     click_on "Generate Rents"
 
     assert_text "Scheduled rents for 2025 have been generated"
-    
+
     # Verify we still only have 12 rents (no duplicates)
     assert_equal 12, @lease.scheduled_rents.count
   end
@@ -44,10 +44,10 @@ class ScheduledRentsGenerationTest < ApplicationSystemTestCase
       annual_rental_amount: 12000,
       late_period_days: 5
     )
-    
+
     # Initial rents generated for the first year (2025). From May to Dec = 8 rents.
     # We will just verify it creates new rents when we click the button for 2026.
-    
+
     visit lease_path(month_lease)
 
     fill_in "year", with: "2026"

@@ -35,7 +35,7 @@ class ExpensesController < ApplicationController
           # Submitted from modal
           @financial_items = @rental_property.financial_items(Date.current.year)
           @year = Date.current.year
-          
+
           format.turbo_stream {
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
