@@ -1,9 +1,71 @@
 
-<%= render @utility_payment %>
+<div class="max-w-3xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Utility Payment</h1>
+      <p class="text-base-content/60">Reference: <%= dom_id(@utility_payment) %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", utility_payments_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Payment", edit_utility_payment_path(@utility_payment), class: "btn btn-outline" %>
+    </div>
+  </div>
 
-<div class="flex gap-4 mt-6">
-  <%= link_to "Edit", edit_utility_payment_path(@utility_payment), class: "btn btn-outline" %>
-  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
-  <%= button_to "Delete", @utility_payment, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row justify-between gap-8">
+        <!-- Payment Summary -->
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Amount</div>
+            <div class="text-4xl font-bold text-primary"><%= number_to_currency(@utility_payment.amount) %></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Date</div>
+              <div class="text-lg font-medium"><%= @utility_payment.payment_date.strftime("%B %d, %Y") %></div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Method</div>
+              <div><span class="badge badge-secondary badge-lg badge-outline font-medium"><%= @utility_payment.payment_method %></span></div>
+            </div>
+          </div>
+
+          <% if @utility_payment.transaction_number.present? %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Transaction Number</div>
+              <div class="font-mono text-sm bg-base-200 px-3 py-1.5 rounded-lg w-fit border border-base-300">
+                <%= @utility_payment.transaction_number %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="divider md:divider-horizontal"></div>
+
+        <!-- Lease Details -->
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Associated Property</div>
+            <div class="text-lg font-bold leading-tight"><%= @utility_payment.lease.rental_property.address %></div>
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Tenants</div>
+            <div class="text-base-content/80 font-medium">
+              <%= @utility_payment.lease.tenants.pluck(:name).join(', ') %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions justify-end mt-10 border-t border-base-200 pt-8">
+        <%= button_to "Delete Payment", @utility_payment, method: :delete, 
+            class: "btn btn-error btn-ghost", 
+            form: { data: { turbo_confirm: "Are you sure you want to delete this payment record?" } } %>
+      </div>
+    </div>
+  </div>
 </div>
 

@@ -2,16 +2,28 @@
 <% content_for :title, "Utility payments" %>
 
 <div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-bold">Utility payments</h1>
+  <h1 class="text-3xl font-bold">Utility Payments</h1>
   <%= link_to "New utility payment", new_utility_payment_path, class: "btn btn-primary" %>
 </div>
 
-
-<div id="utility_payments" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <% @utility_payments.each do |utility_payment| %>
-    <%= render utility_payment %>
-    
-  <% end %>
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Property / Tenants</th>
+        <th>Amount</th>
+        <th>Date</th>
+        <th>Method</th>
+        <th>Transaction #</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="utility_payments">
+      <% @utility_payments.each do |utility_payment| %>
+        <%= render utility_payment %>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 

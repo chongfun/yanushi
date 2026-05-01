@@ -1,32 +1,13 @@
-<div id="<%= dom_id utility_payment %>" class="card bg-base-100 shadow-xl">
-  <div class="card-body">
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Lease</span>
-      <span class="font-medium"><%= utility_payment.lease.rental_property.address %> (<%= utility_payment.lease.tenants.pluck(:name).join(', ') %>)</span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Amount</span>
-      <span class="font-medium"><%= utility_payment.amount %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Payment date</span>
-      <span class="font-medium"><%= utility_payment.payment_date %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Payment method</span>
-      <span class="font-medium"><%= utility_payment.payment_method %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Transaction number</span>
-      <span class="font-medium"><%= utility_payment.transaction_number %></span>
-    </div>
-
-    <div class="card-actions justify-end mt-4">
-      <%= link_to "View", utility_payment, class: "btn btn-sm btn-outline" %>
-    </div>
-  </div>
-</div>
+<tr id="<%= dom_id utility_payment %>">
+  <td class="font-medium">
+    <div><%= utility_payment.lease.rental_property.address %></div>
+    <div class="text-xs text-base-content/60"><%= utility_payment.lease.tenants.pluck(:name).join(', ') %></div>
+  </td>
+  <td class="font-mono"><%= number_to_currency(utility_payment.amount) %></td>
+  <td><%= utility_payment.payment_date %></td>
+  <td><span class="badge badge-ghost"><%= utility_payment.payment_method %></span></td>
+  <td class="text-xs font-mono"><%= utility_payment.transaction_number %></td>
+  <td class="text-right">
+    <%= link_to "View", utility_payment, class: "btn btn-xs btn-ghost" %>
+  </td>
+</tr>
