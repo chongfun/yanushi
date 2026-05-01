@@ -1,0 +1,46 @@
+<%# Modal form for creating an expense against a specific rental property %>
+<% rental_property ||= expense.rental_property %>
+
+<div class="mb-4 p-3 bg-base-200 rounded-box text-sm">
+  <div class="flex justify-between">
+    <span class="text-base-content/70">Property</span>
+    <span class="font-semibold"><%= rental_property.address %></span>
+  </div>
+</div>
+
+<%= form_with(model: [rental_property, expense], data: { turbo: true }) do |form| %>
+  <% if expense.errors.any? %>
+    <div class="alert alert-error mb-4">
+      <ul>
+        <% expense.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :expense_date, class: "label font-semibold" %>
+    <%= form.date_field :expense_date, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :category, class: "label font-semibold" %>
+    <%= form.select :category, Expense.categories.keys.map { |k| [k.titleize, k] }, { prompt: "Select a category" }, class: "select select-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :amount, class: "label font-semibold" %>
+    <%= form.number_field :amount, step: "0.01", class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :description, class: "label font-semibold" %>
+    <%= form.text_area :description, class: "textarea textarea-bordered w-full", rows: 2 %>
+  </div>
+
+  <div class="flex gap-2 mt-6">
+    <%= form.submit "Record Expense", class: "btn btn-primary flex-1" %>
+    <button type="button" data-action="modal#close" class="btn btn-ghost">Cancel</button>
+  </div>
+<% end %>

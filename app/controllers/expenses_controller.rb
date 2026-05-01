@@ -1,5 +1,6 @@
 class ExpensesController < ApplicationController
   before_action :set_expense, only: %i[ show edit update destroy ]
+  before_action :set_rental_property, only: %i[ new create ]
 
   # GET /expenses or /expenses.json
   def index
@@ -11,8 +12,11 @@ class ExpensesController < ApplicationController
   end
 
   # GET /expenses/new
+  # GET /rental_properties/:rental_property_id/expenses/new
   def new
     @expense = Expense.new
+    @expense.rental_property = @rental_property if @rental_property
+    @expense.expense_date = Date.current
   end
 
   # GET /expenses/1/edit
@@ -20,16 +24,39 @@ class ExpensesController < ApplicationController
   end
 
   # POST /expenses or /expenses.json
+  # POST /rental_properties/:rental_property_id/expenses
   def create
     @expense = Expense.new(expense_params)
+    @expense.rental_property = @rental_property if @rental_property
 
     respond_to do |format|
       if @expense.save
-        format.html { redirect_to @expense, notice: "Expense was successfully created." }
+        if @rental_property
+          # Submitted from modal
+          @financial_items = @rental_property.financial_items(Date.current.year)
+          @year = Date.current.year
+          
+          format.turbo_stream {
+            render turbo_stream: [
+              turbo_stream.action(:close_modal, "modal-container"),
+              turbo_stream.update("property_financials", partial: "rental_properties/financials",
+                locals: { rental_property: @rental_property, financial_items: @financial_items, year: @year }),
+              turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
+            ]
+          }
+          format.html { redirect_to @rental_property, notice: "Expense was successfully created." }
+        else
+          format.html { redirect_to @expense, notice: "Expense was successfully created." }
+        end
         format.json { render :show, status: :created, location: @expense }
       else
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @expense.errors, status: :unprocessable_entity }
+        format.turbo_stream {
+          render turbo_stream: turbo_stream.update("modal-frame",
+            partial: "expenses/modal_form",
+            locals: { expense: @expense, rental_property: @rental_property })
+        }
       end
     end
   end
@@ -61,6 +88,10 @@ class ExpensesController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_expense
       @expense = Expense.find(params.expect(:id))
+    end
+
+    def set_rental_property
+      @rental_property = RentalProperty.find(params[:rental_property_id]) if params[:rental_property_id].present?
     end
 
     # Only allow a list of trusted parameters through.

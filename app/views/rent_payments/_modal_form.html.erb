@@ -36,7 +36,7 @@
 
   <div class="form-control w-full mb-4">
     <%= form.label :amount, class: "label font-semibold" %>
-    <%= form.text_field :amount, class: "input input-bordered w-full" %>
+    <%= form.number_field :amount, step: "0.01", class: "input input-bordered w-full" %>
   </div>
 
   <div class="form-control w-full mb-4">

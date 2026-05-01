@@ -1,9 +1,19 @@
 <% content_for :title, "New expense" %>
 
-<h1 class="text-3xl font-bold mb-6">New expense</h1>
-
-<%= render "form", expense: @expense %>
-
-<div class="mt-6">
-  <%= link_to "Back to expenses", expenses_path, class: "btn btn-ghost" %>
-</div>
+<% if @rental_property %>
+  <%# Turbo Frame response for modal %>
+  <turbo-frame id="modal-frame" data-modal-title="Record Expense">
+    <%= render "expenses/modal_form", expense: @expense, rental_property: @rental_property %>
+  </turbo-frame>
+<% else %>
+  <%# Standalone full-page form %>
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">New expense</h1>
+    <div class="bg-base-100 p-6 rounded-box shadow-lg border border-base-200">
+      <%= render "form", expense: @expense %>
+    </div>
+    <div class="mt-6">
+      <%= link_to "Back to expenses", expenses_path, class: "btn btn-ghost" %>
+    </div>
+  </div>
+<% end %>

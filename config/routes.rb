@@ -10,7 +10,9 @@ Rails.application.routes.draw do
     post :generate_scheduled_rents, on: :member
   end
   resources :tenants
-  resources :rental_properties
+  resources :rental_properties do
+    resources :expenses, only: [:new, :create]
+  end
   resource :session
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

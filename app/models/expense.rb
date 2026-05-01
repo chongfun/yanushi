@@ -1,5 +1,9 @@
 class Expense < ApplicationRecord
   belongs_to :rental_property
+  
+  validates :amount, presence: true, numericality: { greater_than: 0 }
+  validates :category, presence: true
+  validates :expense_date, presence: true
 
   enum :category, {
     advertising: "advertising",
