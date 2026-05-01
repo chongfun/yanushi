@@ -1,4 +1,9 @@
 <% content_for :title, "Editing rental property" %>
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Properties", rental_properties_path %></li>
+  <li><%= link_to @rental_property.address, @rental_property %></li>
+  <li>Edit</li>
+<% end %>
 
 <h1 class="text-3xl font-bold mb-6">Editing rental property</h1>
 

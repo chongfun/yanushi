@@ -28,6 +28,15 @@
     <%= render "shared/flash" %>
     
     <main class="container mx-auto px-4 py-8 max-w-7xl">
+      <% if content_for?(:breadcrumbs) %>
+        <div class="breadcrumbs text-sm">
+          <ul>
+            <li><%= link_to "Home", root_path %></li>
+            <%= yield :breadcrumbs %>
+          </ul>
+        </div>
+      <% end %>
+
       <%= yield %>
     </main>
 

@@ -1,6 +1,10 @@
 
 <% content_for :title, "Rental properties" %>
 
+<% content_for :breadcrumbs do %>
+  <li>Properties</li>
+<% end %>
+
 <div class="flex justify-between items-center mb-6">
   <h1 class="text-3xl font-bold">Rental properties</h1>
   <%= link_to "New rental property", new_rental_property_path, class: "btn btn-primary" %>
