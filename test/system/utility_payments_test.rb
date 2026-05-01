@@ -5,7 +5,7 @@ class UtilityPaymentsTest < ApplicationSystemTestCase
     @user = users(:one)
     @property = RentalProperty.create!(user: @user, address: "999 Utility Ave", property_type: "residential", square_footage: 1000)
     @tenant = Tenant.create!(user: @user, name: "Utility Tester", mailing_address: "123 Test", phone_number: "555-5555", email_address: "tester@example.com")
-    @lease = Lease.create!(rental_property: @property, lease_type: "month_to_month", commencement_date: Date.today)
+    @lease = Lease.create!(annual_rental_amount: 12000, rental_property: @property, lease_type: "month_to_month", commencement_date: Date.today)
     @lease.tenants << @tenant
 
     # Log in
