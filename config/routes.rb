@@ -3,7 +3,9 @@ Rails.application.routes.draw do
   resources :expenses
   resources :utility_payments
   resources :rent_payments
-  resources :scheduled_rents
+  resources :scheduled_rents do
+    resources :rent_payments, only: [:new, :create]
+  end
   resources :leases do
     post :generate_scheduled_rents, on: :member
   end

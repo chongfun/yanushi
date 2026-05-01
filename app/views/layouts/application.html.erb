@@ -38,7 +38,7 @@
             <button data-action="modal#close" class="modal-close" aria-label="Close modal">&times;</button>
           </header>
           <div data-modal-target="content" id="modal-content" class="modal-body">
-            <!-- Turbo streams can target this ID to inject content -->
+            <turbo-frame id="modal-frame" data-modal-target="frame"></turbo-frame>
           </div>
         </div>
       </dialog>

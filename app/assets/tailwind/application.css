@@ -5,3 +5,64 @@
 @plugin "./plugins/daisyui.mjs" {
     themes: silk --default;
 }
+
+/* Modal styles */
+dialog.modal-dialog {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-box, 1rem);
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
+  background: var(--color-base-100);
+  width: min(480px, 95vw);
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+dialog.modal-dialog::backdrop {
+  background: oklch(0% 0 0 / 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-base-200);
+}
+
+.modal-header h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-base-content);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-base-content);
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-field);
+}
+
+.modal-close:hover {
+  opacity: 1;
+  background: var(--color-base-200);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}

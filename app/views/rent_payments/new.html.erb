@@ -1,9 +1,15 @@
 <% content_for :title, "New rent payment" %>
 
-<h1 class="text-3xl font-bold mb-6">New rent payment</h1>
-
-<%= render "form", rent_payment: @rent_payment %>
-
-<div class="mt-6">
-  <%= link_to "Back to rent payments", rent_payments_path, class: "btn btn-ghost" %>
-</div>
+<% if @scheduled_rent %>
+  <%# Turbo Frame response for modal — Turbo extracts the matching frame from this page %>
+  <turbo-frame id="modal-frame" data-modal-title="Record Rent Payment">
+    <%= render "rent_payments/modal_form", rent_payment: @rent_payment, scheduled_rent: @scheduled_rent %>
+  </turbo-frame>
+<% else %>
+  <%# Standalone full-page form %>
+  <h1 class="text-3xl font-bold mb-6">New rent payment</h1>
+  <%= render "form", rent_payment: @rent_payment %>
+  <div class="mt-6">
+    <%= link_to "Back to rent payments", rent_payments_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>

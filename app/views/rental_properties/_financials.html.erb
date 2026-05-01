@@ -1,0 +1,76 @@
+<%= turbo_frame_tag "property_financials" do %>
+  <div class="flex justify-end mb-4">
+    <%= form_with url: rental_property_path(rental_property), method: :get, data: { turbo_frame: "property_financials" }, class: "flex items-center gap-2" do |f| %>
+      <%= f.label :year, "Select Year", class: "text-sm font-semibold" %>
+      <%= f.select :year,
+            options_for_select((Date.current.year - 5)..(Date.current.year + 1), year),
+            {},
+            onchange: "this.form.requestSubmit()",
+            class: "select select-bordered select-sm" %>
+    <% end %>
+  </div>
+
+  <div class="overflow-x-auto bg-base-100 rounded-box shadow border border-base-200">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Details</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if financial_items.empty? %>
+          <tr>
+            <td colspan="4" class="text-center py-8 text-base-content/50">
+              No financial activity found for <%= year %>
+            </td>
+          </tr>
+        <% else %>
+          <% financial_items.each do |item| %>
+            <tr class="<%= 'hover cursor-pointer' if item[:type] == 'Scheduled Rent' %>">
+              <td><%= item[:date].strftime("%b %d, %Y") %></td>
+              <td>
+                <% case item[:type] %>
+                <% when 'Scheduled Rent' %>
+                  <div class="badge badge-info gap-2 text-xs"><%= item[:type] %></div>
+                <% when 'Rent Payment' %>
+                  <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
+                <% when 'Expense' %>
+                  <div class="badge badge-error gap-2 text-xs text-error-content"><%= item[:type] %></div>
+                <% when 'Utility Payment' %>
+                  <div class="badge badge-warning gap-2 text-xs text-warning-content"><%= item[:type] %></div>
+                <% end %>
+              </td>
+              <td class="text-sm">
+                <% if item[:type] == 'Scheduled Rent' %>
+                  <%= link_to "＋ Record Payment",
+                        new_scheduled_rent_rent_payment_path(item[:object]),
+                        class: "btn btn-xs btn-outline btn-primary",
+                        data: { turbo_frame: "modal-frame" } %>
+                  <% if item[:date] < Date.current %>
+                    <span class="text-error ml-2 text-xs">Overdue</span>
+                  <% end %>
+                <% elsif item[:type] == 'Rent Payment' %>
+                  Due: <%= item[:object].scheduled_rent.due_date.strftime("%b %d, %Y") %>
+                <% elsif item[:type] == 'Expense' %>
+                  <%= item[:object].category %> - <%= item[:object].description %>
+                <% end %>
+              </td>
+              <td class="text-right font-medium">
+                <% if item[:type] == 'Expense' %>
+                  <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
+                <% elsif ['Rent Payment', 'Utility Payment'].include?(item[:type]) %>
+                  <span class="text-success"><%= number_to_currency(item[:amount]) %></span>
+                <% else %>
+                  <%= number_to_currency(item[:amount]) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
