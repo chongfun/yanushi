@@ -1,9 +1,13 @@
 <%= turbo_frame_tag "property_financials" do %>
   <div class="flex justify-between items-center mb-4">
-    <div>
+    <div class="flex items-center gap-2">
       <%= link_to "＋ Record Expense",
             new_rental_property_expense_path(rental_property),
             class: "btn btn-sm btn-outline btn-error",
+            data: { turbo_frame: "modal-frame" } %>
+      <%= link_to "📋 Schedule E",
+            schedule_e_rental_property_path(rental_property, year: year),
+            class: "btn btn-sm btn-outline btn-accent",
             data: { turbo_frame: "modal-frame" } %>
     </div>
     <%= form_with url: rental_property_path(rental_property), method: :get, data: { turbo_frame: "property_financials" }, class: "flex items-center gap-2" do |f| %>

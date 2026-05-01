@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   resources :tenants
   resources :rental_properties do
     resources :expenses, only: [:new, :create]
+    get :schedule_e, on: :member
   end
   resource :session
   resources :passwords, param: :token

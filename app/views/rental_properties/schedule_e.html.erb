@@ -1,0 +1,138 @@
+<turbo-frame id="modal-frame" data-modal-title="Schedule E Summary — <%= @rental_property.address %> (<%= @year %>)">
+
+  <div class="flex justify-between items-center mb-5">
+    <%# Year selector %>
+    <%= form_with url: schedule_e_rental_property_path(@rental_property), method: :get,
+          data: { turbo_frame: "modal-frame" },
+          class: "flex items-center gap-2" do |f| %>
+      <%= f.label :year, "Tax Year:", class: "text-sm font-semibold" %>
+      <%= f.select :year,
+            options_for_select((Date.current.year - 10)..(Date.current.year), @year),
+            {},
+            onchange: "this.form.requestSubmit()",
+            class: "select select-bordered select-sm" %>
+    <% end %>
+
+    <button onclick="window.print()" class="btn btn-sm btn-ghost gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+      </svg>
+      Print
+    </button>
+  </div>
+
+  <%# Part I — Income %>
+  <h3 class="text-base font-bold uppercase tracking-wide text-base-content/60 mb-2">Income</h3>
+  <div class="overflow-x-auto rounded-box border border-base-200 mb-6">
+    <table class="table table-sm w-full">
+      <thead>
+        <tr class="bg-base-200/60">
+          <th class="w-12">Line</th>
+          <th>Description</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-base-content/50 text-xs">3</td>
+          <td>Rents Received</td>
+          <td class="text-right font-medium text-success"><%= number_to_currency(@rents_received) %></td>
+        </tr>
+        <% if @utility_reimbursements > 0 %>
+          <tr>
+            <td class="text-base-content/50 text-xs">—</td>
+            <td>Utility Reimbursements</td>
+            <td class="text-right font-medium text-success"><%= number_to_currency(@utility_reimbursements) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr class="font-bold border-t-2 border-base-300">
+          <td colspan="2">Total Income</td>
+          <td class="text-right text-success"><%= number_to_currency(@total_income) %></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <%# Part I — Expenses %>
+  <h3 class="text-base font-bold uppercase tracking-wide text-base-content/60 mb-2">Expenses</h3>
+
+  <%
+    schedule_e_lines = {
+      "advertising"                       => { line: "5",  label: "Advertising" },
+      "auto_and_travel"                   => { line: "6",  label: "Auto and Travel" },
+      "cleaning_and_maintenance"          => { line: "7",  label: "Cleaning and Maintenance" },
+      "commissions"                       => { line: "8",  label: "Commissions" },
+      "insurance"                         => { line: "9",  label: "Insurance" },
+      "legal_and_other_professional_fees" => { line: "10", label: "Legal and Other Professional Fees" },
+      "management_fees"                   => { line: "11", label: "Management Fees" },
+      "mortgage_interest"                 => { line: "12", label: "Mortgage Interest (from Form 1098)" },
+      "other_interest"                    => { line: "13", label: "Other Interest" },
+      "repairs"                           => { line: "14", label: "Repairs" },
+      "supplies"                          => { line: "15", label: "Supplies" },
+      "taxes"                             => { line: "16", label: "Taxes" },
+      "utilities"                         => { line: "17", label: "Utilities" },
+      "depreciation_expense"              => { line: "18", label: "Depreciation Expense or Depletion" },
+      "other"                             => { line: "19", label: "Other (specify)" },
+    }
+  %>
+
+  <div class="overflow-x-auto rounded-box border border-base-200 mb-6">
+    <table class="table table-sm w-full">
+      <thead>
+        <tr class="bg-base-200/60">
+          <th class="w-12">Line</th>
+          <th>Category</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @expenses_by_category.empty? %>
+          <tr>
+            <td colspan="3" class="text-center py-6 text-base-content/50">
+              No expenses recorded for <%= @year %>
+            </td>
+          </tr>
+        <% else %>
+          <% schedule_e_lines.each do |key, meta| %>
+            <% next unless @expenses_by_category.key?(key) %>
+            <tr>
+              <td class="text-base-content/50 text-xs"><%= meta[:line] %></td>
+              <td><%= meta[:label] %></td>
+              <td class="text-right font-medium text-error"><%= number_to_currency(@expenses_by_category[key]) %></td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr class="font-bold border-t-2 border-base-300">
+          <td colspan="2">Total Expenses</td>
+          <td class="text-right text-error"><%= number_to_currency(@total_expenses) %></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <%# Net Income / Loss %>
+  <div class="rounded-box border-2 <%= @net_income >= 0 ? 'border-success bg-success/5' : 'border-error bg-error/5' %> p-4 mb-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="font-bold text-base">
+          Net <%= @net_income >= 0 ? "Income" : "Loss" %>
+          <span class="text-xs font-normal text-base-content/50 ml-1">(Schedule E, Line 21 / 22)</span>
+        </p>
+        <p class="text-xs text-base-content/50 mt-0.5">Total Income − Total Expenses</p>
+      </div>
+      <p class="text-xl font-bold <%= @net_income >= 0 ? 'text-success' : 'text-error' %>">
+        <% if @net_income < 0 %><span class="text-sm font-normal">(Loss) </span><% end %>
+        <%= number_to_currency(@net_income.abs) %>
+      </p>
+    </div>
+  </div>
+
+  <p class="text-xs text-base-content/40">
+    ⚠ This summary is for reference only. Consult a tax professional before filing.
+  </p>
+
+</turbo-frame>

@@ -1,5 +1,5 @@
 class RentalPropertiesController < ApplicationController
-  before_action :set_rental_property, only: %i[ show edit update destroy ]
+  before_action :set_rental_property, only: %i[ show edit update destroy schedule_e ]
 
   # GET /rental_properties or /rental_properties.json
   def index
@@ -10,6 +10,32 @@ class RentalPropertiesController < ApplicationController
   def show
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
     @financial_items = @rental_property.financial_items(@year)
+  end
+
+  # GET /rental_properties/1/schedule_e
+  def schedule_e
+    @year = params[:year].present? ? params[:year].to_i : Date.current.year
+
+    start_date = Date.new(@year, 1, 1)
+    end_date   = start_date.end_of_year
+
+    @rents_received = @rental_property.rent_payments
+                        .where(payment_date: start_date..end_date)
+                        .sum(:amount)
+
+    @utility_reimbursements = @rental_property.utility_payments
+                                .where(payment_date: start_date..end_date)
+                                .sum(:amount)
+
+    @total_income = @rents_received + @utility_reimbursements
+
+    @expenses_by_category = @rental_property.expenses
+                              .where(expense_date: start_date..end_date)
+                              .group(:category)
+                              .sum(:amount)
+
+    @total_expenses = @expenses_by_category.values.sum
+    @net_income = @total_income - @total_expenses
   end
 
   # GET /rental_properties/new
