@@ -1,9 +1,67 @@
 
-<%= render @expense %>
+<div class="max-w-3xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Expense Details</h1>
+      <p class="text-base-content/60">Reference: <%= dom_id(@expense) %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", expenses_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Expense", edit_expense_path(@expense), class: "btn btn-outline" %>
+    </div>
+  </div>
 
-<div class="flex gap-4 mt-6">
-  <%= link_to "Edit", edit_expense_path(@expense), class: "btn btn-outline" %>
-  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
-  <%= button_to "Delete", @expense, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row justify-between gap-8">
+        <!-- Expense Summary -->
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Amount</div>
+            <div class="text-4xl font-bold text-error"><%= number_to_currency(@expense.amount) %></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Date</div>
+              <div class="text-lg font-medium"><%= @expense.expense_date.strftime("%B %d, %Y") %></div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Category</div>
+              <div><span class="badge badge-warning badge-lg badge-outline font-medium"><%= @expense.category&.humanize %></span></div>
+            </div>
+          </div>
+
+          <% if @expense.description.present? %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Description</div>
+              <div class="text-base-content/80 bg-base-200 px-4 py-3 rounded-lg border border-base-300">
+                <%= @expense.description %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="divider md:divider-horizontal"></div>
+
+        <!-- Property Details -->
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Associated Property</div>
+            <div class="text-lg font-bold leading-tight"><%= @expense.rental_property.address %></div>
+            <div class="text-sm text-base-content/60 mt-1">
+              Type: <%= @expense.rental_property.property_type&.humanize %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions justify-end mt-10 border-t border-base-200 pt-8">
+        <%= button_to "Delete Expense", @expense, method: :delete, 
+            class: "btn btn-error btn-ghost", 
+            form: { data: { turbo_confirm: "Are you sure you want to delete this expense record?" } } %>
+      </div>
+    </div>
+  </div>
 </div>
 
