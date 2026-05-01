@@ -39,7 +39,7 @@
           </tr>
         <% else %>
           <% financial_items.each do |item| %>
-            <tr class="<%= 'hover cursor-pointer' if item[:type] == 'Scheduled Rent' %>">
+            <tr>
               <td><%= item[:date].strftime("%b %d, %Y") %></td>
               <td>
                 <% case item[:type] %>

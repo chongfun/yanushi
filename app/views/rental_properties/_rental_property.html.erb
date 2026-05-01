@@ -1,29 +1,20 @@
-<div id="<%= dom_id rental_property %>" class="card bg-base-100 shadow-xl">
-  <div class="card-body">
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Address</span>
-      <span class="font-medium"><%= rental_property.address %></span>
+<tr id="<%= dom_id rental_property %>">
+  <td>
+    <div class="flex items-center gap-3">
+      <div class="bg-primary/10 p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      </div>
+      <div class="font-bold"><%= rental_property.address %></div>
     </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Property type</span>
-      <span class="font-medium"><%= rental_property.property_type %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Square footage</span>
-      <span class="font-medium"><%= rental_property.square_footage %></span>
-    </div>
-
-    <div class="card-actions justify-end mt-4">
-      <% if action_name == 'show' %>
-        <%= link_to "Back", rental_properties_path, class: "btn btn-sm btn-ghost" %>
-        <%= link_to "Edit", edit_rental_property_path(rental_property), class: "btn btn-sm btn-outline" %>
-        <%= button_to "Delete", rental_property, method: :delete, class: "btn btn-sm btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
-      <% else %>
-        <%= link_to "View", rental_property, class: "btn btn-sm btn-outline" %>
-      <% end %>
-    </div>
-  </div>
-</div>
+  </td>
+  <td><span class="badge badge-ghost"><%= rental_property.property_type&.humanize %></span></td>
+  <td class="font-mono text-sm"><%= rental_property.square_footage %> sqft</td>
+  <td>
+    <div class="badge badge-neutral badge-sm"><%= rental_property.leases.count %> Leases</div>
+  </td>
+  <th class="text-right">
+    <%= link_to "View Details", rental_property, class: "btn btn-ghost btn-xs" %>
+  </th>
+</tr>

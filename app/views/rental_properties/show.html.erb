@@ -1,14 +1,65 @@
+
 <% content_for :breadcrumbs do %>
   <li><%= link_to "Properties", rental_properties_path %></li>
-  <li><%= @rental_property.address %></li>
+  <li class="font-bold"><%= @rental_property.address %></li>
 <% end %>
 
-<%= render @rental_property %>
+<div class="max-w-6xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-base-content"><%= @rental_property.address %></h1>
+      <div class="flex gap-2 mt-2">
+        <span class="badge badge-primary"><%= @rental_property.property_type&.humanize %></span>
+        <span class="badge badge-outline"><%= @rental_property.square_footage %> sqft</span>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", rental_properties_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Property", edit_rental_property_path(@rental_property), class: "btn btn-outline" %>
+      <%= button_to "Delete", @rental_property, method: :delete, 
+          class: "btn btn-error btn-ghost", 
+          form: { data: { turbo_confirm: "Are you sure? This will delete all associated leases and payments." } } %>
+    </div>
+  </div>
 
-<div class="divider mt-8"></div>
+  <!-- Quick Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="stats shadow bg-base-100 border border-base-200">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Active Leases</div>
+        <div class="stat-value text-primary"><%= @rental_property.leases.count %></div>
+        <div class="stat-desc text-base-content/40">Current active agreements</div>
+      </div>
+    </div>
+    
+    <div class="stats shadow bg-base-100 border border-base-200">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Active Tenants</div>
+        <div class="stat-value text-secondary"><%= @rental_property.leases.joins(:tenants).count %></div>
+        <div class="stat-desc text-base-content/40">Total residents</div>
+      </div>
+    </div>
 
-<h2 class="text-2xl font-bold mb-4">Financial Ledger</h2>
+    <div class="stats shadow bg-base-100 border border-base-200">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Annual Yield</div>
+        <div class="stat-value text-accent font-mono text-2xl">
+          <%= number_to_currency(@rental_property.leases.sum(:annual_rental_amount)) %>
+        </div>
+        <div class="stat-desc text-base-content/40">Contracted revenue</div>
+      </div>
+    </div>
+  </div>
 
-<%= render "rental_properties/financials", rental_property: @rental_property, financial_items: @financial_items, year: @year %>
+  <div class="divider mb-8"></div>
+
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-black tracking-tight">Financial Ledger</h2>
+    </div>
+
+    <%= render "rental_properties/financials", rental_property: @rental_property, financial_items: @financial_items, year: @year %>
+  </div>
+</div>
 
 

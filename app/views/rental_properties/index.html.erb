@@ -6,16 +6,27 @@
 <% end %>
 
 <div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-bold">Rental properties</h1>
+  <h1 class="text-3xl font-bold">Rental Properties</h1>
   <%= link_to "New rental property", new_rental_property_path, class: "btn btn-primary" %>
 </div>
 
-
-<div id="rental_properties" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <% @rental_properties.each do |rental_property| %>
-    <%= render rental_property %>
-    
-  <% end %>
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Address</th>
+        <th>Type</th>
+        <th>Size</th>
+        <th>Leases</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rental_properties">
+      <% @rental_properties.each do |rental_property| %>
+        <%= render rental_property %>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 
