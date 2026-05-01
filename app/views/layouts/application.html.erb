@@ -53,5 +53,20 @@
         </div>
       </dialog>
     </div>
+
+    <dialog id="confirm-modal" data-controller="turbo-confirm" class="modal-dialog">
+      <div class="modal-inner">
+        <header class="modal-header">
+          <h2 id="confirm-title">Confirm Action</h2>
+        </header>
+        <div class="modal-body">
+          <p data-turbo-confirm-target="message" id="confirm-message" class="mb-6"></p>
+          <div class="flex justify-end gap-3 mt-4">
+            <button data-action="turbo-confirm#cancel" class="btn btn-ghost">Cancel</button>
+            <button data-action="turbo-confirm#confirm" class="btn btn-error">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
   </body>
 </html>
