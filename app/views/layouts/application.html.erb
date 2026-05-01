@@ -23,10 +23,11 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="min-h-screen bg-base-200/30">
+    <%= render "shared/navbar" %>
     <%= render "shared/flash" %>
     
-    <main>
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
       <%= yield %>
     </main>
 
