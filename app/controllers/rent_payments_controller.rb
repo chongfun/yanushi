@@ -30,7 +30,7 @@ class RentPaymentsController < ApplicationController
   def new
     @rent_payment = RentPayment.new
     @rent_payment.scheduled_rent = @scheduled_rent if @scheduled_rent
-    @rent_payment.amount = @scheduled_rent&.amount
+    @rent_payment.amount = @scheduled_rent&.balance_due
     @rent_payment.payment_date = Date.current
   end
 

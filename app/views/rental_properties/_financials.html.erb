@@ -35,6 +35,9 @@
                 <% case item[:type] %>
                 <% when 'Scheduled Rent' %>
                   <div class="badge badge-info gap-2 text-xs"><%= item[:type] %></div>
+                  <% if item[:object].partial_payment? %>
+                    <div class="badge badge-warning gap-2 text-xs text-warning-content ml-1">Partial</div>
+                  <% end %>
                 <% when 'Rent Payment' %>
                   <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
                 <% when 'Expense' %>
@@ -63,6 +66,8 @@
                   <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
                 <% elsif ['Rent Payment', 'Utility Payment'].include?(item[:type]) %>
                   <span class="text-success"><%= number_to_currency(item[:amount]) %></span>
+                <% elsif item[:type] == 'Scheduled Rent' %>
+                  <%= number_to_currency(item[:object].balance_due) %>
                 <% else %>
                   <%= number_to_currency(item[:amount]) %>
                 <% end %>

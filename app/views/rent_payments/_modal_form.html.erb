@@ -10,6 +10,12 @@
     <span class="text-base-content/70">Scheduled Amount</span>
     <span class="font-semibold"><%= number_to_currency(scheduled_rent.amount) %></span>
   </div>
+  <% if scheduled_rent.partial_payment? %>
+    <div class="flex justify-between mt-1 pt-1 border-t border-base-300">
+      <span class="text-base-content/70">Balance Due</span>
+      <span class="font-semibold text-primary"><%= number_to_currency(scheduled_rent.balance_due) %></span>
+    </div>
+  <% end %>
 </div>
 
 <%= form_with(model: [scheduled_rent, rent_payment], data: { turbo: true }) do |form| %>
