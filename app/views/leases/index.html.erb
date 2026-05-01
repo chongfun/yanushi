@@ -6,12 +6,24 @@
   <%= link_to "New lease", new_lease_path, class: "btn btn-primary" %>
 </div>
 
-
-<div id="leases" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <% @leases.each do |lease| %>
-    <%= render lease %>
-    
-  <% end %>
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Property / Tenants</th>
+        <th>Type</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Annual Rent</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="leases">
+      <% @leases.each do |lease| %>
+        <%= render lease %>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 

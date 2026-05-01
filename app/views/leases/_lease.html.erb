@@ -1,42 +1,13 @@
-<div id="<%= dom_id lease %>" class="card bg-base-100 shadow-xl">
-  <div class="card-body">
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Rental property</span>
-      <span class="font-medium"><%= lease.rental_property_id %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Lease type</span>
-      <span class="font-medium"><%= lease.lease_type %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Commencement date</span>
-      <span class="font-medium"><%= lease.commencement_date %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Termination date</span>
-      <span class="font-medium"><%= lease.termination_date %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Annual rental amount</span>
-      <span class="font-medium"><%= lease.annual_rental_amount %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Late period days</span>
-      <span class="font-medium"><%= lease.late_period_days %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Security deposit</span>
-      <span class="font-medium"><%= lease.security_deposit %></span>
-    </div>
-
-    <div class="card-actions justify-end mt-4">
-      <%= link_to "View", lease, class: "btn btn-sm btn-outline" %>
-    </div>
-  </div>
-</div>
+<tr id="<%= dom_id lease %>">
+  <td class="font-medium">
+    <div><%= lease.rental_property.address %></div>
+    <div class="text-xs text-base-content/60"><%= lease.tenants.pluck(:name).join(', ') %></div>
+  </td>
+  <td><span class="badge badge-ghost"><%= lease.lease_type&.humanize %></span></td>
+  <td><%= lease.commencement_date %></td>
+  <td><%= lease.termination_date || 'N/A' %></td>
+  <td class="font-mono"><%= number_to_currency(lease.annual_rental_amount) %></td>
+  <td class="text-right">
+    <%= link_to "View", lease, class: "btn btn-xs btn-ghost" %>
+  </td>
+</tr>

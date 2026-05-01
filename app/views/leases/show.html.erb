@@ -1,17 +1,117 @@
 
-<%= render @lease %>
+<div class="max-w-4xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Lease Agreement</h1>
+      <p class="text-base-content/60">Reference: <%= dom_id(@lease) %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", leases_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Lease", edit_lease_path(@lease), class: "btn btn-outline" %>
+    </div>
+  </div>
 
-<div class="mt-6 bg-base-200 p-4 rounded-lg shadow-sm">
-  <h3 class="text-lg font-bold mb-2">Generate Scheduled Rents</h3>
-  <%= form_with url: generate_scheduled_rents_lease_path(@lease), method: :post, class: "flex gap-2 items-center" do |f| %>
-    <%= f.number_field :year, value: Date.current.year, class: "input input-bordered input-sm w-24" %>
-    <%= f.submit "Generate Rents", class: "btn btn-sm btn-primary" %>
-  <% end %>
-</div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Lease Info -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <h2 class="card-title text-xl mb-4">Property & Tenants</h2>
+          
+          <div class="space-y-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Rental Property</div>
+              <div class="text-lg font-bold"><%= @lease.rental_property.address %></div>
+            </div>
 
-<div class="flex gap-4 mt-6">
-  <%= link_to "Edit", edit_lease_path(@lease), class: "btn btn-outline" %>
-  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
-  <%= button_to "Delete", @lease, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-2">Tenants</div>
+              <div class="flex flex-wrap gap-2">
+                <% @lease.tenants.each do |tenant| %>
+                  <div class="badge badge-lg badge-neutral p-4"><%= tenant.name %></div>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Lease Type</div>
+                <div class="font-medium"><%= @lease.lease_type&.humanize %></div>
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Late Period</div>
+                <div class="font-medium"><%= @lease.late_period_days %> Days</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Commencement</div>
+                <div class="font-medium"><%= @lease.commencement_date.strftime("%B %d, %Y") %></div>
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Termination</div>
+                <div class="font-medium text-base-content/70">
+                  <%= @lease.termination_date&.strftime("%B %d, %Y") || "Ongoing" %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <h2 class="card-title text-xl mb-4">Management Actions</h2>
+          <div class="bg-base-200 p-6 rounded-xl border border-base-300">
+            <h3 class="text-sm font-bold mb-3 uppercase tracking-wider text-base-content/70">Generate Scheduled Rents</h3>
+            <p class="text-xs text-base-content/60 mb-4">Manually trigger rent schedule generation for a specific calendar year.</p>
+            <%= form_with url: generate_scheduled_rents_lease_path(@lease), method: :post, class: "flex gap-3 items-center" do |f| %>
+              <%= f.number_field :year, value: Date.current.year, class: "input input-bordered w-32 font-mono" %>
+              <%= f.submit "Generate Rents", class: "btn btn-primary" %>
+            <% end %>
+          </div>
+
+          <div class="card-actions justify-end mt-6 border-t border-base-200 pt-6">
+            <%= button_to "Delete Lease Record", @lease, method: :delete, 
+                class: "btn btn-error btn-ghost btn-sm", 
+                form: { data: { turbo_confirm: "Are you sure you want to delete this lease? All associated data will be removed." } } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary Sidebar -->
+    <div class="space-y-6">
+      <div class="card bg-primary text-primary-content shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg opacity-80">Financial Summary</h2>
+          <div class="mt-4 space-y-4">
+            <div>
+              <div class="text-xs uppercase font-bold opacity-70">Annual Rent</div>
+              <div class="text-3xl font-black"><%= number_to_currency(@lease.annual_rental_amount) %></div>
+            </div>
+            <div>
+              <div class="text-xs uppercase font-bold opacity-70">Monthly Base</div>
+              <div class="text-xl font-bold"><%= number_to_currency(@lease.annual_rental_amount / 12) %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Security Deposit</div>
+          <div class="text-2xl font-bold text-secondary"><%= number_to_currency(@lease.security_deposit) %></div>
+          
+          <div class="mt-6">
+            <%= link_to "View Ledger", "#", class: "btn btn-outline btn-block btn-sm" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
