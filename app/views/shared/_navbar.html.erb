@@ -31,12 +31,12 @@
             class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/rent_payments')}" %>
       </li>
       <li>
-        <%= link_to "Expenses", expenses_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/expenses')}" %>
-      </li>
-      <li>
         <%= link_to "Utility Payments", utility_payments_path,
             class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/utility_payments')}" %>
+      </li>
+      <li>
+        <%= link_to "Expenses", expenses_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/expenses')}" %>
       </li>
     </ul>
   </div>
