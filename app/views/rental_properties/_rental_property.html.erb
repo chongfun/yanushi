@@ -17,7 +17,13 @@
     </div>
 
     <div class="card-actions justify-end mt-4">
-      <%= link_to "View", rental_property, class: "btn btn-sm btn-outline" %>
+      <% if action_name == 'show' %>
+        <%= link_to "Back", rental_properties_path, class: "btn btn-sm btn-ghost" %>
+        <%= link_to "Edit", edit_rental_property_path(rental_property), class: "btn btn-sm btn-outline" %>
+        <%= button_to "Delete", rental_property, method: :delete, class: "btn btn-sm btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
+      <% else %>
+        <%= link_to "View", rental_property, class: "btn btn-sm btn-outline" %>
+      <% end %>
     </div>
   </div>
 </div>

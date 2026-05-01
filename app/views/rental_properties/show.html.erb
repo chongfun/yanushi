@@ -6,8 +6,4 @@
 
 <%= render "rental_properties/financials", rental_property: @rental_property, financial_items: @financial_items, year: @year %>
 
-<div class="flex gap-4 mt-8">
-  <%= link_to "Edit", edit_rental_property_path(@rental_property), class: "btn btn-outline" %>
-  <%= link_to "Back", "javascript:history.back()", class: "btn btn-ghost" %>
-  <%= button_to "Delete", @rental_property, method: :delete, class: "btn btn-error text-error-content", form: { data: { turbo_confirm: 'Are you sure?' } } %>
-</div>
+
