@@ -29,6 +29,6 @@ class RentPaymentsTest < ApplicationSystemTestCase
     assert_text "Rent payment was successfully created"
 
     # Check that PDF receipt link exists
-    assert_selector "a", text: "Download Receipt"
+    assert_selector "a", text: "Download PDF Receipt"
   end
 end

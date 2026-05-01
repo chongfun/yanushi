@@ -1,34 +1,13 @@
-<div id="<%= dom_id rent_payment %>" class="card bg-base-100 shadow-xl">
-  <div class="card-body">
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Scheduled rent</span>
-      <span class="font-medium"><%= rent_payment.scheduled_rent_id %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Payment date</span>
-      <span class="font-medium"><%= rent_payment.payment_date %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Amount</span>
-      <span class="font-medium"><%= rent_payment.amount %></span>
-    </div>
-
-  <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Payment method</span>
-      <span class="font-medium"><%= rent_payment.payment_method %></span>
-    </div>
-
-  <% if rent_payment.transaction_number.present? %>
-    <div class="mb-2">
-      <span class="text-sm text-base-content/70 block">Transaction number</span>
-      <span class="font-medium"><%= rent_payment.transaction_number %></span>
-    </div>
-  <% end %>
-
-    <div class="card-actions justify-end mt-4">
-      <%= link_to "View", rent_payment, class: "btn btn-sm btn-outline" %>
-    </div>
-  </div>
-</div>
+<tr id="<%= dom_id rent_payment %>">
+  <td>
+    <div class="font-medium text-sm"><%= rent_payment.scheduled_rent.display_name %></div>
+    <div class="text-xs text-base-content/60">ID: <%= rent_payment.scheduled_rent_id %></div>
+  </td>
+  <td><%= rent_payment.payment_date %></td>
+  <td class="font-mono"><%= number_to_currency(rent_payment.amount) %></td>
+  <td><span class="badge badge-ghost"><%= rent_payment.payment_method %></span></td>
+  <td class="text-xs"><%= rent_payment.transaction_number %></td>
+  <td class="text-right">
+    <%= link_to "View", rent_payment, class: "btn btn-xs btn-ghost" %>
+  </td>
+</tr>

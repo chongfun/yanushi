@@ -7,11 +7,24 @@
 </div>
 
 
-<div id="rent_payments" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <% @rent_payments.each do |rent_payment| %>
-    <%= render rent_payment %>
-    
-  <% end %>
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Scheduled Rent</th>
+        <th>Payment Date</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Transaction #</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rent_payments">
+      <% @rent_payments.each do |rent_payment| %>
+        <%= render rent_payment %>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 
