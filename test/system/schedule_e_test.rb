@@ -5,7 +5,7 @@ class ScheduleETest < ApplicationSystemTestCase
     @user = users(:one)
     @property = RentalProperty.create!(
       address: "Test Isolation St",
-      property_type: :residential,
+      property_type: :single_family_residence,
       square_footage: 2000,
       user: @user
     )

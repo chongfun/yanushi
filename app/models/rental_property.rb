@@ -5,7 +5,16 @@ class RentalProperty < ApplicationRecord
   has_many :rent_payments, through: :scheduled_rents
   has_many :expenses, dependent: :destroy
   has_many :utility_payments, through: :leases
-  enum :property_type, { commercial: 0, residential: 1 }
+  enum :property_type, {
+    single_family_residence: 1,
+    multi_family_residence: 2,
+    vacation_or_short_term_rental: 3,
+    commercial: 4,
+    land: 5,
+    royalties: 6,
+    self_rental: 7,
+    other: 8
+  }
 
   def financial_items(year)
     start_date = Date.new(year.to_i, 1, 1)

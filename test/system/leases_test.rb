@@ -4,7 +4,7 @@ class LeasesTest < ApplicationSystemTestCase
   setup do
     @user = users(:one)
     # Ensure a property and tenant exist for the select boxes
-    @property = RentalProperty.create!(user: @user, address: "999 Lease Ave", property_type: "residential", square_footage: 1000)
+    @property = RentalProperty.create!(user: @user, address: "999 Lease Ave", property_type: "single_family_residence", square_footage: 1000)
     @tenant = Tenant.create!(user: @user, name: "Lease Tester", mailing_address: "123 Test", phone_number: "555-5555", email_address: "tester@example.com")
 
     # Log in

@@ -2,7 +2,7 @@
 one:
   user: one
   address: 123
-  property_type: residential
+  property_type: single_family_residence
   square_footage: 1
 
 two:

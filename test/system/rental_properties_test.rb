@@ -15,7 +15,7 @@ class RentalPropertiesTest < ApplicationSystemTestCase
     click_on "New rental property"
 
     fill_in "Address", with: "123 Main St"
-    select "Residential", from: "Property type"
+    select "Single Family Residence", from: "Property type"
     fill_in "Square footage", with: 1500
 
     click_on "Create Rental property"

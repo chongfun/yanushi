@@ -9,7 +9,7 @@
     <div>
       <h1 class="text-3xl font-bold text-base-content"><%= @rental_property.address %></h1>
       <div class="flex gap-2 mt-2">
-        <span class="badge badge-primary"><%= @rental_property.property_type&.humanize %></span>
+        <span class="badge badge-primary"><%= @rental_property.property_type&.titleize %></span>
         <span class="badge badge-outline"><%= @rental_property.square_footage %> sqft</span>
       </div>
     </div>

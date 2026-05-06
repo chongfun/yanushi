@@ -3,7 +3,7 @@ require "application_system_test_case"
 class ScheduledRentsGenerationTest < ApplicationSystemTestCase
   setup do
     @user = users(:one)
-    @property = RentalProperty.create!(user: @user, address: "100 Rent Gen Ave", property_type: "residential", square_footage: 1000)
+    @property = RentalProperty.create!(user: @user, address: "100 Rent Gen Ave", property_type: "single_family_residence", square_footage: 1000)
     @lease = Lease.create!(
       rental_property: @property,
       lease_type: :term,

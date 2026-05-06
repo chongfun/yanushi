@@ -178,17 +178,11 @@ class ScheduleEGenerator
 
   private
 
-  # IRS Schedule E property type codes:
-  # 1=Single Family, 2=Multi-Family, 3=Vacation, 4=Commercial,
-  # 5=Land, 6=Royalties, 7=Self-Rental, 8=Other
-  PROPERTY_TYPE_CODES = {
-    "residential" => "1",
-    "commercial"  => "4"
-  }.freeze
 
   def fill_property_info(form)
     set_field(form, :property_address, @property.address)
-    set_field(form, :property_type, PROPERTY_TYPE_CODES[@property.property_type] || "8")
+    type_code = RentalProperty.property_types[@property.property_type] || 8
+    set_field(form, :property_type, type_code.to_s)
     set_field(form, :fair_rental_days, "365")
     set_field(form, :personal_use_days, "0")
   end
