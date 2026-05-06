@@ -47,6 +47,8 @@ class RentalPropertiesController < ApplicationController
       filename: "Schedule_E_#{@rental_property.address.parameterize}_#{year}.pdf",
       type: "application/pdf",
       disposition: "attachment"
+  rescue ScheduleEGenerator::TemplateMissingError => e
+    redirect_to rental_property_path(@rental_property, year: year), alert: e.message
   end
 
 

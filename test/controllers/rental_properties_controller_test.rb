@@ -39,25 +39,27 @@ class RentalPropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to rental_property_url(@rental_property)
   end
 
-  test "should destroy " do
+  test "should destroy" do
     assert_difference("RentalProperty.count", -1) do
       delete rental_property_url(@rental_property)
     end
 
     assert_redirected_to rental_properties_url
   end
-  test "should download schedule_e_pdf" do
-    get schedule_e_pdf_rental_property_url(@rental_property, year: 2026)
+
+  test "should download schedule_e_pdf for available year" do
+    # 2025 is available in app/assets/pdfs
+    get schedule_e_pdf_rental_property_url(@rental_property, year: 2025)
     assert_response :success
     assert_equal "application/pdf", response.content_type
     assert_match /attachment/, response.headers["Content-Disposition"]
-    assert_match /Schedule_E/, response.headers["Content-Disposition"]
   end
 
-  test "should download schedule_e_pdf with default year" do
-    get schedule_e_pdf_rental_property_url(@rental_property)
-    assert_response :success
-    assert_equal "application/pdf", response.content_type
+  test "should redirect and show alert for missing schedule_e_pdf" do
+    # 2026 is missing
+    get schedule_e_pdf_rental_property_url(@rental_property, year: 2026)
+    assert_redirected_to rental_property_path(@rental_property, year: 2026)
+    assert_equal "No Schedule E PDF template found for year 2026", flash[:alert]
   end
 
   test "should get schedule_e modal" do

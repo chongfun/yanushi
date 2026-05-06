@@ -9,8 +9,6 @@
 # field names in the IRS PDF template. Run `bin/rails schedule_e:dump_fields`
 # to discover field names if the template is updated.
 class ScheduleEGenerator
-  TEMPLATE_PATH = Rails.root.join("app/assets/pdfs/f1040se.pdf")
-
   # PDF field name mappings for Schedule E Part I (Page 1).
   #
   # Discovered by running `bin/rails schedule_e:dump_fields` against
@@ -20,24 +18,15 @@ class ScheduleEGenerator
   #
   # If the IRS updates the PDF, re-run the dump_fields rake task and
   # update this mapping.
-  FIELD_MAP = {
-    # Header
+  # PDF field name mappings for Schedule E Part I (Page 1) - 2023-2025
+  MAP_2023_PRESENT = {
     name:               "topmostSubform[0].Page1[0].f1_1[0]",
     ssn:                "topmostSubform[0].Page1[0].f1_2[0]",
-
-    # Line 1a — property address, Column A
     property_address:   "topmostSubform[0].Page1[0].Table_Line1a[0].RowA[0].f1_3[0]",
-    # Line 1b — property type, Column A
     property_type:      "topmostSubform[0].Page1[0].Table_Line1b[0].RowA[0].f1_6[0]",
-
-    # Line 2 — rental days, Column A
     fair_rental_days:   "topmostSubform[0].Page1[0].Table_Line2[0].RowA[0].f1_9[0]",
     personal_use_days:  "topmostSubform[0].Page1[0].Table_Line2[0].RowA[0].f1_10[0]",
-
-    # Income — Line 3, Column A
     rents_received:     "topmostSubform[0].Page1[0].Table_Income[0].Line3[0].f1_16[0]",
-
-    # Expenses — Lines 5–19, Column A (first field per line)
     advertising:                       "topmostSubform[0].Page1[0].Table_Expenses[0].Line5[0].f1_22[0]",
     auto_and_travel:                   "topmostSubform[0].Page1[0].Table_Expenses[0].Line6[0].f1_25[0]",
     cleaning_and_maintenance:          "topmostSubform[0].Page1[0].Table_Expenses[0].Line7[0].f1_28[0]",
@@ -53,22 +42,98 @@ class ScheduleEGenerator
     utilities:                         "topmostSubform[0].Page1[0].Table_Expenses[0].Line17[0].f1_58[0]",
     depreciation_expense:              "topmostSubform[0].Page1[0].Table_Expenses[0].Line18[0].f1_61[0]",
     other:                             "topmostSubform[0].Page1[0].Table_Expenses[0].Line19[0].f1_64[0]",
-
-    # Totals — Lines 20–22, Column A
     total_expenses:     "topmostSubform[0].Page1[0].Table_Expenses[0].Line20[0].f1_68[0]",
     net_income:         "topmostSubform[0].Page1[0].Table_Expenses[0].Line21[0].f1_71[0]",
     net_loss:           "topmostSubform[0].Page1[0].Table_Expenses[0].Line22[0].f1_74[0]",
+    line_23a: "topmostSubform[0].Page1[0].f1_77[0]",
+    line_23b: "topmostSubform[0].Page1[0].f1_78[0]",
+    line_23c: "topmostSubform[0].Page1[0].f1_79[0]",
+    line_23d: "topmostSubform[0].Page1[0].f1_80[0]",
+    line_23e: "topmostSubform[0].Page1[0].f1_81[0]",
+    line_24:  "topmostSubform[0].Page1[0].f1_82[0]",
+    line_25:  "topmostSubform[0].Page1[0].f1_83[0]",
+    line_26:  "topmostSubform[0].Page1[0].f1_84[0]"
+  }.freeze
 
-    # Lines 23a–26 summary (single column — row totals across all properties)
-    # f1_77–f1_84 in order correspond exactly to Lines 23a, 23b, 23c, 23d, 23e, 24, 25, 26.
-    line_23a: "topmostSubform[0].Page1[0].f1_77[0]",  # Total Line 3  (rents received)
-    line_23b: "topmostSubform[0].Page1[0].f1_78[0]",  # Total Line 4  (royalties — blank)
-    line_23c: "topmostSubform[0].Page1[0].f1_79[0]",  # Total Line 18 (depreciation)
-    line_23d: "topmostSubform[0].Page1[0].f1_80[0]",  # Total Line 19 (other expenses)
-    line_23e: "topmostSubform[0].Page1[0].f1_81[0]",  # Total Line 20 (total expenses)
-    line_24:  "topmostSubform[0].Page1[0].f1_82[0]",  # Add positive Line 21 amounts
-    line_25:  "topmostSubform[0].Page1[0].f1_83[0]",  # Losses allowed (from Form 8582 or line 22)
-    line_26:  "topmostSubform[0].Page1[0].f1_84[0]"   # Combine lines 24 and 25
+  # 2022 uses zero-padding for f1_01 through f1_09
+  MAP_2022 = MAP_2023_PRESENT.merge({
+    name:             "topmostSubform[0].Page1[0].f1_01[0]",
+    ssn:              "topmostSubform[0].Page1[0].f1_02[0]",
+    property_address: "topmostSubform[0].Page1[0].Table_Line1a[0].RowA[0].f1_03[0]",
+    property_type:    "topmostSubform[0].Page1[0].Table_Line1b[0].RowA[0].f1_06[0]",
+    fair_rental_days: "topmostSubform[0].Page1[0].Table_Line2[0].RowA[0].f1_09[0]"
+  }).freeze
+
+  # 2019-2021 structural changes
+  MAP_2019_2021 = MAP_2023_PRESENT.merge({
+    property_address: "topmostSubform[0].Page1[0].Line1[0].Table1a[0].RowA[0].f1_3[0]",
+    property_type:    "topmostSubform[0].Page1[0].Line1[0].Table1b[0].RowA[0].f1_6[0]",
+    rents_received:   "topmostSubform[0].Page1[0].Table_Income[0].Income[0].Line3[0].f1_16[0]"
+  }).freeze
+
+  # 2016-2018 shifts (Line 5 starts at f1_28, each line has 6 fields)
+  MAP_2016_2018 = {
+    name:               "topmostSubform[0].Page1[0].f1_1[0]",
+    ssn:                "topmostSubform[0].Page1[0].f1_2[0]",
+    property_address:   "topmostSubform[0].Page1[0].Line1[0].Table1a[0].RowA[0].f1_3[0]",
+    property_type:      "topmostSubform[0].Page1[0].Line1[0].Table1b[0].RowA[0].f1_6[0]",
+    fair_rental_days:   "topmostSubform[0].Page1[0].Table_Line2[0].RowA[0].f1_9[0]",
+    personal_use_days:  "topmostSubform[0].Page1[0].Table_Line2[0].RowA[0].f1_10[0]",
+    rents_received:     "topmostSubform[0].Page1[0].Table_Income[0].Income[0].Line3[0].f1_16[0]",
+    advertising:        "topmostSubform[0].Page1[0].Table_Expenses[0].Line5[0].f1_28[0]",
+    auto_and_travel:    "topmostSubform[0].Page1[0].Table_Expenses[0].Line6[0].f1_34[0]",
+    cleaning_and_maintenance: "topmostSubform[0].Page1[0].Table_Expenses[0].Line7[0].f1_40[0]",
+    commissions:        "topmostSubform[0].Page1[0].Table_Expenses[0].Line8[0].f1_46[0]",
+    insurance:          "topmostSubform[0].Page1[0].Table_Expenses[0].Line9[0].f1_52[0]",
+    legal_and_other_professional_fees: "topmostSubform[0].Page1[0].Table_Expenses[0].Line10[0].f1_58[0]",
+    management_fees:    "topmostSubform[0].Page1[0].Table_Expenses[0].Line11[0].f1_64[0]",
+    mortgage_interest:  "topmostSubform[0].Page1[0].Table_Expenses[0].Line12[0].f1_70[0]",
+    other_interest:     "topmostSubform[0].Page1[0].Table_Expenses[0].Line13[0].f1_76[0]",
+    repairs:            "topmostSubform[0].Page1[0].Table_Expenses[0].Line14[0].f1_82[0]",
+    supplies:           "topmostSubform[0].Page1[0].Table_Expenses[0].Line15[0].f1_88[0]",
+    taxes:              "topmostSubform[0].Page1[0].Table_Expenses[0].Line16[0].f1_94[0]",
+    utilities:          "topmostSubform[0].Page1[0].Table_Expenses[0].Line17[0].f1_100[0]",
+    depreciation_expense: "topmostSubform[0].Page1[0].Table_Expenses[0].Line18[0].f1_106[0]",
+    other:              "topmostSubform[0].Page1[0].Table_Expenses[0].Line19[0].f1_112[0]",
+    total_expenses:     "topmostSubform[0].Page1[0].Table_Expenses[0].Line20[0].f1_119[0]",
+    net_income:         "topmostSubform[0].Page1[0].Table_Expenses[0].Line21[0].f1_125[0]",
+    net_loss:           "topmostSubform[0].Page1[0].Table_Expenses[0].Line22[0].f1_131[0]",
+    line_23a:           "topmostSubform[0].Page1[0].f1_140[0]",
+    line_23b:           "topmostSubform[0].Page1[0].f1_141[0]",
+    line_23c:           "topmostSubform[0].Page1[0].f1_142[0]",
+    line_23d:           "topmostSubform[0].Page1[0].f1_143[0]",
+    line_23e:           "topmostSubform[0].Page1[0].f1_144[0]",
+    line_24:            "topmostSubform[0].Page1[0].f1_145[0]",
+    line_25:            "topmostSubform[0].Page1[0].f1_146[0]",
+    line_26:            "topmostSubform[0].Page1[0].f1_147[0]"
+  }.freeze
+
+  # 2011-2015 oldest conventions (p1-tX)
+  MAP_2011_2015 = {
+    name:               "topmostSubform[0].Page1[0].p1-t1[0]",
+    ssn:                "topmostSubform[0].Page1[0].p1-t2[0]",
+    property_address:   "topmostSubform[0].Page1[0].Line1[0].Pg1Table1a[0].a[0].p1-t5[0]",
+    property_type:      "topmostSubform[0].Page1[0].Line1[0].Pg1Table1b[0].a[0].p1-t52[0]",
+    fair_rental_days:   "topmostSubform[0].Page1[0].Line1[0].Pg1Table1a[0].c[0].p1-t9[0]",
+    rents_received:     "topmostSubform[0].Page1[0].Pg1Table2[0].#subform[1].Line3[0].p1-t11[0]",
+    auto_and_travel:    "topmostSubform[0].Page1[0].Pg1Table2[0].#subform[1].Line4[0].p1-t25[0]",
+    cleaning_and_maintenance: "topmostSubform[0].Page1[0].Pg1Table3[0].Line7[0].p1-t39[0]",
+    insurance:          "topmostSubform[0].Page1[0].Pg1Table3[0].Line6[0].p1-t33[0]",
+    management_fees:    "topmostSubform[0].Page1[0].Pg1Table3[0].Line7[0].p1-t39[0]",
+    other_interest:     "topmostSubform[0].Page1[0].Pg1Table3[0].Line8[0].p1-t45[0]",
+    supplies:           "topmostSubform[0].Page1[0].Line1[0].Pg1Table1b[0].a[0].p1-t52[0]",
+    utilities:          "topmostSubform[0].Page1[0].Pg1Table3[0].Line10[0].p1-t57[0]",
+    other:              "topmostSubform[0].Page1[0].Pg1Table3[0].Line11[0].p1-t63[0]",
+    total_expenses:     "topmostSubform[0].Page1[0].Pg1Table3[0].Line11[0].p1-t63[0]",
+    net_income:         "topmostSubform[0].Page1[0].Pg1Table3[0].Line12[0].p1-t69[0]",
+    net_loss:           "topmostSubform[0].Page1[0].Pg1Table3[0].Line12[0].p1-t69[0]",
+    line_23a:           "topmostSubform[0].Page1[0].Pg1Table3[0].Line13[0].p1-t77[0]",
+    line_23b:           "topmostSubform[0].Page1[0].Pg1Table3[0].Line13[0].p1-t78[0]",
+    line_23c:           "topmostSubform[0].Page1[0].Pg1Table3[0].Line13[0].p1-t79[0]",
+    line_23d:           "topmostSubform[0].Page1[0].Pg1Table3[0].Line13[0].p1-t80[0]",
+    line_24:            "topmostSubform[0].Page1[0].Pg1Table3[0].Line13[0].p1-t82[0]",
+    line_25:            "topmostSubform[0].Page1[0].Pg1Table3[0].Line14[0].p1-t83[0]",
+    line_26:            "topmostSubform[0].Page1[0].Pg1Table3[0].Line14[0].p1-t84[0]"
   }.freeze
 
   # Maps Expense model categories to Schedule E line item keys.
@@ -98,7 +163,7 @@ class ScheduleEGenerator
   def call
     require "hexapdf"
 
-    doc = HexaPDF::Document.open(TEMPLATE_PATH)
+    doc = HexaPDF::Document.open(template_path)
     form = doc.acro_form
 
     fill_property_info(form)
@@ -187,7 +252,7 @@ class ScheduleEGenerator
   end
 
   def set_field(form, key, value)
-    field_name = FIELD_MAP[key]
+    field_name = field_map[key]
     return unless field_name
 
     field = form.field_by_name(field_name)
@@ -196,6 +261,26 @@ class ScheduleEGenerator
     field.field_value = value.to_s
   rescue HexaPDF::Error => e
     Rails.logger.warn("ScheduleEGenerator: Could not set #{key} (#{field_name}): #{e.message}")
+  end
+
+  def field_map
+    @field_map ||= case @year
+    when 2023..2025 then MAP_2023_PRESENT
+    when 2022       then MAP_2022
+    when 2019..2021 then MAP_2019_2021
+    when 2016..2018 then MAP_2016_2018
+    when 2011..2015 then MAP_2011_2015
+    else MAP_2023_PRESENT
+    end
+  end
+
+  class TemplateMissingError < StandardError; end
+
+  def template_path
+    path = Rails.root.join("app/assets/pdfs/f1040se--#{@year}.pdf")
+    return path if File.exist?(path)
+
+    raise TemplateMissingError, "No Schedule E PDF template found for year #{@year}"
   end
 
   def format_amount(amount)
