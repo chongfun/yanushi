@@ -41,7 +41,7 @@ Once saved, the ledger updates instantly. The "Scheduled Rent" is converted into
 
 - Ruby 3.3.0+
 - Rails 8.0+
-- SQLite3
+- PostgreSQL 10+ (any version that supports SELECT FOR UPDATE SKIP LOCKED for job processing)
 
 ### Installation
 
