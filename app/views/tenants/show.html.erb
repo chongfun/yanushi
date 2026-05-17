@@ -55,6 +55,17 @@
               <%= @tenant.mailing_address.presence || "No address on file" %>
             </div>
           </div>
+
+          <% if @tenant.tenant_aliases.any? %>
+            <div class="text-left">
+              <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-1">Payment Aliases</div>
+              <div class="flex flex-wrap gap-1.5 mt-1.5">
+                <% @tenant.tenant_aliases.each do |alias_rec| %>
+                  <span class="badge badge-neutral text-xs py-2 px-2.5 font-medium"><%= alias_rec.name %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>

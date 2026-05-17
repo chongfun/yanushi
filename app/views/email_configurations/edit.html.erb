@@ -1,0 +1,14 @@
+<% content_for :title, "Edit Connection Settings" %>
+
+<% content_for :breadcrumbs do %>
+  <li>Settings</li>
+  <li><%= link_to "Email Ingestion", email_configuration_path %></li>
+  <li>Edit</li>
+<% end %>
+
+<div class="mb-8">
+  <h1 class="text-3xl font-extrabold tracking-tight">Configure Email Ingestion</h1>
+  <p class="text-base-content/70 mt-1">Provide connection credentials for your dedicated incoming email payment alert inbox.</p>
+</div>
+
+<%= render "form" %>
