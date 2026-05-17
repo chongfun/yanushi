@@ -198,7 +198,7 @@ production:
 
 ### 2.3 IMAP Polling Job
 
-The job iterates over all users who have an enabled `EmailConfiguration`, polling each user's mailbox independently.
+The job iterates over all users who have an enabled `EmailConfiguration`, polling each user's mailbox independently. It retrieves the raw `RFC822` email content for all unseen messages and delegates all parsing and business logic to the `PaymentEmailProcessorService`.
 
 ```ruby
 # app/jobs/ingest_payment_emails_job.rb
@@ -224,15 +224,12 @@ class IngestPaymentEmailsJob < ApplicationJob
     message_ids = imap.search(["UNSEEN"])
 
     message_ids.each do |msg_id|
-      envelope = imap.fetch(msg_id, "ENVELOPE").first.attr["ENVELOPE"]
-      body = imap.fetch(msg_id, "BODY[TEXT]").first.attr["BODY[TEXT]"]
-      rfc_message_id = envelope.message_id
+      # Fetch the raw RFC822 message source
+      raw_source = imap.fetch(msg_id, "RFC822").first.attr["RFC822"]
 
       PaymentEmailProcessorService.new(
-        message_id: rfc_message_id,
-        body: body,
-        received_at: Time.current,
-        user: config.user
+        raw_source: raw_source,
+        user:       config.user
       ).call
 
       # Mark as seen
@@ -252,17 +249,19 @@ end
 
 ### 3.1 Parser Strategy
 
-Payment emails are forwarded from **Chase Bank** (Zelle) and **Venmo**. Each source uses predictable email templates, so the parser includes tailored regex pattern sets for both providers. If additional sources need support in the future, the parser can be extended with new pattern sets.
+Payment emails are forwarded from **Chase Bank** (Zelle) and **Venmo**. The parser uses the raw email source to extract the clean, decoded subject line and decoded text/HTML body. The service is initialized with both the `subject` and the clean `body` text (which has had all HTML tags stripped to ensure robust matching).
 
-The parser should extract:
+Using the actual downloaded email fixtures in `test/fixtures/emails`, the parser should extract:
 
-| Field              | Chase Zelle Example                           | Venmo Example                                |
-|--------------------|-----------------------------------------------|--------------------------------------------------|
-| **Payer name**     | "Jane Doe sent you $1,200.00"                 | "Jane Doe paid you $1,200.00"                |
-| **Amount**         | "$1,200.00"                                   | "$1,200.00"                                   |
-| **Date**           | "on May 15, 2026"                             | "May 15, 2026"                                |
-| **Transaction ID** | "Confirmation: 20260515-ABCD1234"             | "Transaction ID: 1234567890123456"            |
-| **Provider**       | "Zelle"                                       | "Venmo"                                       |
+| Field | Chase Zelle Example (`zelle-rent-payment.eml`) | Venmo Example (`venmo-rent-payment.eml`) |
+|---|---|---|
+| **Raw Subject** | `"Fwd: You received money with Zelle®"` | `"samantha sanchez paid you $1,000.00"` |
+| **Clean Body Text** | `"KRISTINA M PAGE sent you money\n...\nAmount $1200.00\nSent on Jul 31, 2024\nTransaction number 21569265114"` | `"samantha sanchez paid You\n...\nMar 29, 2024 PDT\n+ $1,000.00\nPayment ID: 4034689063827771191"` |
+| **Payer name** | `"KRISTINA M PAGE"` (extracted from body) | `"samantha sanchez"` (extracted from subject or body) |
+| **Amount** | `1200.00` | `1000.00` |
+| **Date** | `2024-07-31` | `2024-03-29` |
+| **Transaction ID** | `"21569265114"` | `"4034689063827771191"` |
+| **Provider** | `"zelle"` | `"venmo"` |
 
 ### 3.2 Service Class
 
@@ -271,20 +270,22 @@ The parser should extract:
 class PaymentEmailParserService
   class UnknownProviderError < StandardError; end
 
-  # Chase Bank Zelle notification patterns
+  # Chase Bank Zelle notification patterns (matching real downloaded .eml files)
   CHASE_ZELLE_PATTERNS = {
-    amount: /\$[\d,]+\.\d{2}/,
-    sender: /(.+?)\s+sent\s+you/i,
-    date:   /(?:on|dated?)\s+(\w+ \d{1,2},?\s*\d{4})/i,
-    confirmation: /(?:confirmation|transaction)[\s#:]*([A-Z0-9-]+)/i
+    amount: /Amount\s+\$([\d,]+\.\d{2})/i,
+    sender: /(.+?)\s+sent\s+you\s+money/i,
+    date:   /Sent\s+on\s+(\w+\s+\d{1,2},\s*\d{4})/i,
+    confirmation: /Transaction\s+number\s+(\d+)/i
   }.freeze
 
-  # Venmo notification patterns
+  # Venmo notification patterns (matching real downloaded .eml files)
   VENMO_PATTERNS = {
-    amount: /\$[\d,]+\.\d{2}/,
+    # Amount is matched either in body (e.g. "+ $1,000.00") or in subject ("samantha sanchez paid you $1,000.00")
+    amount: /(?:\+\s+\$|paid\s+you\s+\$)([\d,]+\.\d{2})/i,
+    # Sender is matched in either subject or body before "paid you"
     sender: /(.+?)\s+paid\s+you/i,
-    date:   /(?:on|dated?)\s+(\w+ \d{1,2},?\s*\d{4})/i,
-    confirmation: /(?:transaction\s*(?:id|#|:)|id\s*#?)\s*([A-Z0-9-]+)/i
+    date:   /([A-Z][a-z]{2}\s+\d{1,2},\s*\d{4})/i,
+    confirmation: /Payment\s+ID:\s*(\d+)/i
   }.freeze
 
   PROVIDER_PATTERNS = {
@@ -292,8 +293,9 @@ class PaymentEmailParserService
     "venmo" => VENMO_PATTERNS
   }.freeze
 
-  def initialize(body)
-    @body = body
+  def initialize(subject:, body:)
+    @subject = subject.to_s
+    @body = body.to_s
   end
 
   def parse
@@ -312,27 +314,29 @@ class PaymentEmailParserService
   private
 
   def detect_provider
-    if @body.match?(/zelle/i)
-      "zelle"
-    elsif @body.match?(/venmo/i)
+    combined = "#{@subject} #{@body}"
+    if combined.match?(/venmo/i)
       "venmo"
+    elsif combined.match?(/zelle/i)
+      "zelle"
     else
-      raise UnknownProviderError, "Could not detect payment provider from email body"
+      raise UnknownProviderError, "Could not detect payment provider from email subject or body"
     end
   end
 
   def extract(pattern)
-    match = @body.match(pattern)
+    # Check body first, then subject
+    match = @body.match(pattern) || @subject.match(pattern)
     match ? match[1]&.strip : nil
   end
 
   def extract_amount(pattern)
-    match = @body.match(pattern)
-    match ? match[0].gsub(/[$,]/, "").to_d : nil
+    match = @body.match(pattern) || @subject.match(pattern)
+    match ? match[1].gsub(/,/, "").to_d : nil
   end
 
   def extract_date(pattern)
-    match = @body.match(pattern)
+    match = @body.match(pattern) || @subject.match(pattern)
     match ? Date.parse(match[1]) : nil
   rescue Date::Error
     nil
@@ -340,7 +344,7 @@ class PaymentEmailParserService
 end
 ```
 
-> **Design Decision:** The parser uses a `PROVIDER_PATTERNS` lookup hash keyed by provider name, making it straightforward to add new providers. If additional banks are needed in the future, new pattern sets can be added to the hash and the `detect_provider` method extended.
+> **Design Decision:** The parser separates HTML decoding/stripping (handled by the processor) from pattern extraction. It accepts both subject and clean body text, allowing resilient regex matching from both sections. This ensures Venmo (where the payer/amount are often in the subject line) and Zelle (where they are in the body) are both cleanly parsed.
 
 ---
 
@@ -370,55 +374,61 @@ This is the core business logic. Given a parsed email (payer name, amount, date)
 ```ruby
 # app/services/payment_email_processor_service.rb
 class PaymentEmailProcessorService
-  def initialize(message_id:, body:, received_at:, user:)
-    @message_id  = message_id
-    @body        = body
-    @received_at = received_at
+  def initialize(raw_source:, user:)
+    @raw_source  = raw_source
     @user        = user
   end
 
   def call
-    # 1. Deduplicate
-    return if PaymentEmail.exists?(user: @user, message_id: @message_id)
+    # 1. Parse raw email via Mail gem
+    mail = Mail.read_from_string(@raw_source)
+    message_id = mail.message_id
 
-    # 2. Parse
-    parsed = PaymentEmailParserService.new(@body).parse
+    # 2. Deduplicate
+    return if PaymentEmail.exists?(user: @user, message_id: message_id)
 
-    # 3. Create log record
+    # 3. Extract text and strip HTML tags if multipart or HTML-only
+    body_text = extract_body_text(mail)
+
+    # 4. Parse fields
+    parsed = PaymentEmailParserService.new(subject: mail.subject, body: body_text).parse
+
+    # 5. Create log record
     email_record = PaymentEmail.create!(
       user:           @user,
-      message_id:     @message_id,
+      message_id:     message_id,
       sender_name:    parsed[:sender_name],
       amount:         parsed[:amount],
-      payment_date:   parsed[:payment_date],
+      payment_date:   parsed[:payment_date] || mail.date&.to_date || Date.current,
       transaction_id: parsed[:transaction_id],
       provider:       parsed[:provider],
-      raw_body:       @body,
+      raw_body:       @raw_source,
       status:         :pending
     )
 
-    # 4. Resolve tenant
+    # 6. Resolve tenant
     tenant = resolve_tenant(parsed[:sender_name])
     unless tenant
       email_record.update!(status: :unmatched, error_message: "No tenant found matching '#{parsed[:sender_name]}'")
+      create_unmatched_notification(@user, email_record)
       return email_record
     end
 
-    # 5. Try utility payment match first
+    # 7. Try utility payment match first
     utility_payment = try_create_utility_payment(tenant, parsed)
     if utility_payment
       email_record.update!(status: :matched_utility, utility_payment: utility_payment)
       return email_record
     end
 
-    # 6. Fall back to rent payment
+    # 8. Fall back to rent payment
     rent_payment = try_create_rent_payment(tenant, parsed)
     if rent_payment
       email_record.update!(status: :matched_rent, rent_payment: rent_payment)
       return email_record
     end
 
-    # 7. No match — create in-app notification
+    # 9. No match — create in-app notification
     email_record.update!(status: :unmatched, error_message: "No unpaid utility expense or scheduled rent found for tenant '#{tenant.name}'")
     create_unmatched_notification(@user, email_record)
     email_record
@@ -430,6 +440,27 @@ class PaymentEmailProcessorService
   end
 
   private
+
+  def extract_body_text(mail)
+    raw_body = if mail.multipart?
+      if mail.text_part&.body&.present?
+        mail.text_part.decoded
+      elsif mail.html_part&.body&.present?
+        mail.html_part.decoded
+      else
+        ""
+      end
+    else
+      mail.decoded
+    end
+
+    # If it is HTML, strip the tags to get clean plain text
+    if mail.content_type&.include?("html") || (mail.multipart? && mail.text_part.nil? && mail.html_part.present?)
+      ActionController::Base.helpers.strip_tags(raw_body)
+    else
+      raw_body
+    end
+  end
 
   def resolve_tenant(payer_name)
     return nil if payer_name.blank?
@@ -640,8 +671,8 @@ end
 
 | Test File | Coverage |
 |-----------|----------|
-| `test/services/payment_email_parser_service_test.rb` | Chase Zelle parsing, Venmo parsing, edge cases (missing fields, unusual formats) |
-| `test/services/payment_email_processor_service_test.rb` | Full routing logic — utility exact-amount match, rent fallback, unmatched + notification creation, duplicate handling, alias resolution |
+| `test/services/payment_email_parser_service_test.rb` | Verifies parser regex matching and extraction on the real email templates loaded from the `.eml` fixtures. |
+| `test/services/payment_email_processor_service_test.rb` | Verifies end-to-end processing of real `.eml` files: HTML stripping, provider detection, tenant resolution (including aliases), utility matching, and rent fallbacks. |
 
 ### 6.3 Integration Tests
 
@@ -652,15 +683,24 @@ end
 | `test/controllers/notifications_controller_test.rb` | Index, mark as read |
 | `test/integration/payment_ingestion_flow_test.rb` | End-to-end: email → parse → route → payment created |
 
-### 6.4 Fixtures
+### 6.4 Fixtures & EML Files
 
-Add fixtures for:
-- Tenants with aliases
-- Properties with utility expenses (category: `utilities`)
-- Leases linking tenants to properties
-- Unpaid scheduled rents
-- Sample Chase Bank Zelle email bodies and Venmo email bodies
-- Email configurations per user
+In addition to standard active record fixtures (Tenants, Leases, RentalProperties, Expenses, ScheduledRents), the test suite uses real production email samples saved as `.eml` files under `test/fixtures/emails/`:
+
+* **`test/fixtures/emails/zelle-rent-payment.eml`** — Forwarded Chase Zelle rent payment.
+* **`test/fixtures/emails/zelle-utility-payment.eml`** — Forwarded Chase Zelle utility payment.
+* **`test/fixtures/emails/venmo-rent-payment.eml`** — Forwarded Venmo rent payment.
+
+These raw files are read in tests to verify the Mail decoding, HTML-to-text extraction, regex pattern matching, and business routing logic:
+
+```ruby
+# Example test loader helper
+def read_eml_fixture(filename)
+  File.read(Rails.root.join("test/fixtures/emails", filename))
+end
+```
+
+By verifying the parser and processor against the exact downloaded files, the test suite guarantees high reliability and prevents regressions on future layout updates.
 
 ---
 
