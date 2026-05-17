@@ -1,0 +1,577 @@
+Delivered-To: yanushi@kylechong.com
+Received: by 2002:a2e:82c1:0:b0:386:7666:4c11 with SMTP id n1csp185034ljh;
+        Fri, 1 May 2026 10:18:12 -0700 (PDT)
+X-Received: by 2002:a17:907:3d0d:b0:ba9:2233:1ec with SMTP id a640c23a62f3a-bbac67c4f65mr552115166b.22.1777655892116;
+        Fri, 01 May 2026 10:18:12 -0700 (PDT)
+ARC-Seal: i=2; a=rsa-sha256; t=1777655892; cv=pass;
+        d=google.com; s=arc-20240605;
+        b=KX/37AIO+0eyMtg2YqHA86Usu+Q/XOEC3N3SdnjIZJPbKUp++43rGgtbxsVGOYF4yU
+         E0rYvDqoLqnpSnzR5l/EHbINiJ9nv+uhDbx1ulFG77yjl9kKRaHfeuK5IxAhv34V0jSM
+         U3Q/jx328Op89G0tRRUspJtGvDasXvY7pFoOVIR6JXQqJ7phnw9mMxMnE9gT8MSF7B1/
+         yQFjmskeQAG+sLJ2NlUIZGVk1VBKTx6yOsQZ4LfMsBJkXezRdrVRJa6Y2taKpfkD4OKL
+         tAhvy/yKzyYBe3NZAbx1hJVg6j92CTtbJn8thL6TUG/hkc4BAc01dir+dkOCVfiltd9h
+         M1sA==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :dkim-signature;
+        bh=9QIunx92RCJ3tB2vSROCxDfkG0iZj0xq3FTvOKXBcn0=;
+        fh=aOtn8OwFtN9fekEk5m8iXxCJ2wS94mzz/x4RC6rOz+U=;
+        b=Em4HssW/FNx2qk1qEgcp3IioHTgG6hdiCYT/0LEQ/dw3QM1IsIe1MzsrOD47IE4D2o
+         ghRd8QVWuYMRzp3DZQrzhts6up/7+03BxlR7uraXryaJZ9anhychMfhiOJeelM13fFA2
+         +Md5sQ6uvWJopg1P+V29wftVkw8sjmtN49bOg8HvI6QzXVT4PvONw5YQ4pWbdEH4fWay
+         OeyANsHI+u6wrFaGNqixdS2OMoJHcduXvOdVQBWKx4JUVyRprnoRN0Dn7Aqgu/J12TVc
+         sMdf32rbBNayqv7YMoSTfAk1XhvEUYRCRm/Qny3cXL3aM64IooGerAfjJ/odbus0pJ1r
+         SQGg==;
+        dara=google.com
+ARC-Authentication-Results: i=2; mx.google.com;
+       dkim=pass header.i=@kylechong-com.20251104.gappssmtp.com header.s=20251104 header.b=T0s9e9GR;
+       arc=pass (i=1);
+       spf=pass (google.com: domain of me@kylechong.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=me@kylechong.com;
+       dara=neutral header.i=@kylechong.com
+Return-Path: <me@kylechong.com>
+Received: from mail-sor-f41.google.com (mail-sor-f41.google.com. [209.85.220.41])
+        by mx.google.com with SMTPS id a640c23a62f3a-bbe6924c11bsor91345966b.3.2026.05.01.10.18.11
+        for <yanushi@kylechong.com>
+        (Google Transport Security);
+        Fri, 01 May 2026 10:18:12 -0700 (PDT)
+Received-SPF: pass (google.com: domain of me@kylechong.com designates 209.85.220.41 as permitted sender) client-ip=209.85.220.41;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@kylechong-com.20251104.gappssmtp.com header.s=20251104 header.b=T0s9e9GR;
+       arc=pass (i=1);
+       spf=pass (google.com: domain of me@kylechong.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=me@kylechong.com;
+       dara=neutral header.i=@kylechong.com
+ARC-Seal: i=1; a=rsa-sha256; t=1777655890; cv=none;
+        d=google.com; s=arc-20240605;
+        b=ZdxvgQI9TjPEjGoHaawf7aN1GifUgzQtSNvouARj2Y7qM/9GHbdQu/pDWNgxoKY1OF
+         vp3wOOsRZuec+kOhgIDhEB8k/DiPuA+04kHkx1wBt5gEe6/YMp/HLbj1WRvBSXUGPD69
+         IzncyWOZfLERDmz5jcxmQjaiVw7KAV4pnqf6fCeQGVqx1DzkLsM60OcA+C4HN4gDZld1
+         7o0NkdhTdlUet9cc8m22Wshgj5+rR+3bNz2YwxZRIkfXcYTI4QsnjjLVOAYmpaohchlw
+         5DNvG84OXos2/x0YatZmJWHiU7tQcdueUyzsadXyKNbaGNPen6N0b4sfUncAzgX0Bmx4
+         HlEg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :dkim-signature;
+        bh=9QIunx92RCJ3tB2vSROCxDfkG0iZj0xq3FTvOKXBcn0=;
+        fh=aOtn8OwFtN9fekEk5m8iXxCJ2wS94mzz/x4RC6rOz+U=;
+        b=II1R66eVIcxyydxVdpDy5uv2bmF2foAa1iZ5EnONxWkexUiYvQ6z2ET1FwVKSdZFJx
+         C0uKLgivJOO9sN1A+fp/47JHDPbgfvzeZf3tW6MukaccJLB/IfL3cOQKJAkTIqN9mEkc
+         XGKcbVUWef7DtlUFzB7edK9241F+2lT+sHaIvQkXnh1Cb8BLNbssVlPif7rGQMwN9YVS
+         jJ6zrtIJUs8+ONY7NC09D8H2PEUChMwDCwnMh7D9PT/cdtnAaMahbI+6nqSN3e8ee9Nw
+         CrvwzBNo276pAGc/2b/j7ei2HacI7ThpVWc9mL+LZyZPbVKWJDy2dWfnLw4C6AkwSA0S
+         yh3A==;
+        darn=kylechong.com
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kylechong-com.20251104.gappssmtp.com; s=20251104; t=1777655890; x=1778260690; darn=kylechong.com;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9QIunx92RCJ3tB2vSROCxDfkG0iZj0xq3FTvOKXBcn0=;
+        b=T0s9e9GRV8w+rikTkDQBMwD8HJyaY2Z3CQtOua2CquF+D47nKe6kuhYejlHPBO1vK6
+         G4EamEk3xqKmq4T4kAMT0IN78meBWv0UkIUYv67rAiRAmu0UCjepo7n1x2u7j7oLPWho
+         uBeUgutO9bTxHpPu3I2RQh/Vijk+lf7sLBcDTWtWR0zVc18hjoKIWp6sv738WLZRu4Bw
+         0RFCZL7IuPeNOl2Wx0E9nTTwbh1Zdn3EZpIXea0+Sl/kojo12W6R+PFH126xTB8/YUgf
+         rm8Eqx2G815wdBM9RMW/za0SyUcjFVb7GK+jKJS5UOFtR3e+/P8/dNGI+vaC2imCbjJs
+         jZHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777655890; x=1778260690;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9QIunx92RCJ3tB2vSROCxDfkG0iZj0xq3FTvOKXBcn0=;
+        b=JamaZr+v0C5moqENH85Z13Ug+0WJmGGrI3xnqlkMdId/mde9+eC01R5ab1Octg39I3
+         DYvvWQUV/3K80depNO/MOMpojg+rxqfWHILD4+A6FLzI07TzoVaKboVqKXlDio85H245
+         hATxJej5+uAFP1pWEGHAl1wNRvT2lr/99iDzVR5sovP9Fp57QD4iIY7g6JBl5UJPBODL
+         /xhcx67+NkNVoQbtwZ7FJPj7sXzMUy2dzBG1ZcdJan9SP59Zl14aV6Ey1agJcB2L4y8H
+         cmymuqm6e//y9Le/aiTLMpL6aCFbsk7iUbHLxSUXVvdi9r+od1oWfi9dXQq/PT/4NyyH
+         wOPw==
+X-Gm-Message-State: AOJu0YxwzbF8UPwF0jVzD1bxD71lvLm9f7Tn3JHjAaCcFcJXdVagSk0O
+	iVmzl2vhBdQhTgdtfC4yRGsbD9RnAfXlxag9T/O9mowBkbXknepwpR71p2QiTV5+ltgGEkiozl8
+	TaWV9tjsSnykdCnhF8hCkpkbB1R/bZfcq5ujVmG3Z/x2a6a30yfbh+Roe2g==
+X-Gm-Gg: AeBDietCb30BdPJtJdoe4RUQM9xHx7Hg1uLRZ71dxkHN2PMnkFPLYGEKyFOJjo+P0Jw
+	WitR4y7vXDiPHI1LDfK58nVP1mCfki77HbyTCeIW5+sD9uJDRa0cyf0thnV/PXZXIWncf0rgGz9
+	5BjduahwLbunGjwVryJhj5Os6QUU9/bDDa19D1Hra7MBl2eR3C55ArbPE5o+UHFcQE9hJkbb6Yb
+	IKbj6YVQiRxO2limSQVziAhoC2s2ijBUcLuGySgMzzs73C7S3yxahrZ5udaVoWYadiT9pDvna5m
+	Mq8YDONqQ2nNBZfdiQ==
+X-Received: by 2002:a50:ed0b:0:b0:67b:cd1f:9cc1 with SMTP id
+ 4fb4d7f45d1cf-67bcd1f9d88mr1194336a12.6.1777655889792; Fri, 01 May 2026
+ 10:18:09 -0700 (PDT)
+MIME-Version: 1.0
+References: <1253095366.8125289.1722427752105.JavaMail.webuser@iaasn00692073>
+In-Reply-To: <1253095366.8125289.1722427752105.JavaMail.webuser@iaasn00692073>
+From: Kyle Chong <me@kylechong.com>
+Date: Fri, 1 May 2026 10:17:58 -0700
+X-Gm-Features: AVHnY4IHJf_zIjLUvpXNfYHNW0YjypqYj9tNgylzf7ADTqWaUHZqzKOYaXJMOMo
+Message-ID: <CADMw117j=W1JvCtYeZ9FbOVYzj=g-BKPvEy4Mw9WzrShmT_M_g@mail.gmail.com>
+Subject: =?UTF-8?Q?Fwd=3A_You_received_money_with_Zelle=C2=AE?=
+To: Kyle Chong <yanushi@kylechong.com>
+Content-Type: multipart/alternative; boundary="000000000000d820a40650c4c385"
+
+--000000000000d820a40650c4c385
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+---------- Forwarded message ---------
+From: Chase <no.reply.alerts@chase.com>
+Date: Wed, Jul 31, 2024 at 5:09=E2=80=AFAM
+Subject: You received money with Zelle=C2=AE
+To: <escalon@kylechong.com>
+
+
+[image: Chase Logo]
+Zelle=C2=AE payment
+KRISTINA M PAGE sent you money
+Here are the details:
+Amount $1200.00
+Sent on Jul 31, 2024
+Transaction number 21569265114
+Memo August 2024 rent
+KRISTINA M PAGE is registered with a Zelle=C2=AE member bank that supports
+payments in real time, so your money will usually be available in a few
+moments.
+Go to Zelle=C2=AE <https://www.chase.com/personal/quickpay/login-quickpay>
+Questions? Visit chase.com/Zelle <https://www.chase.com/zelle> or contact
+us at 1-800-935-9935.
+Securely access your accounts in the Chase Mobile=C2=AE app
+<https://www.chase.com/digital/mobile-banking> or at chase.com
+<https://secure.chase.com/web/auth/nav?navKey=3DrequestDashboard>.
+About this message
+
+The Chase Mobile=C2=AE app is available for select mobile devices. Message =
+and
+data rates may apply.
+
+This service email gives you updates and information about your Chase
+relationship.
+
+Chase cannot guarantee the delivery of alerts and notifications. Wireless
+or internet service provider outages or other circumstances could delay
+them. You can always check chase.com or the Chase Mobile app for the status
+of your accounts including your latest account balances and transaction
+details.
+
+To protect your personal information, please don't reply to this message.
+Chase won't ask for confidential information in an email.
+
+If you have concerns about the authenticity of this message or have
+questions about your account visit chase.com/CustomerService
+<https://www.chase.com/digital/customer-service> for ways to contact us.
+
+Your privacy is important to us. See our online Security Center
+<https://www.chase.com/digital/resources/privacy-security> to learn how to
+protect your information.
+
+=C2=A9 2024 JPMorgan Chase & Co.
+
+--000000000000d820a40650c4c385
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><br><div class=3D"gmail_quote gmail_quote_container"><=
+div dir=3D"ltr" class=3D"gmail_attr">---------- Forwarded message ---------=
+<br>From: <strong class=3D"gmail_sendername" dir=3D"auto">Chase</strong> <s=
+pan dir=3D"auto">&lt;<a href=3D"mailto:no.reply.alerts@chase.com">no.reply.=
+alerts@chase.com</a>&gt;</span><br>Date: Wed, Jul 31, 2024 at 5:09=E2=80=AF=
+AM<br>Subject: You received money with Zelle=C2=AE<br>To:  &lt;<a href=3D"m=
+ailto:escalon@kylechong.com">escalon@kylechong.com</a>&gt;<br></div><br><br=
+><div class=3D"msg4405981364583740692"><u></u>
+
+
+
+
+
+
+
+<div style=3D"padding:0px;margin:0px;background-color:#d7dbe0">
+<table role=3D"presentation" align=3D"center" width=3D"100%" border=3D"0" c=
+ellspacing=3D"0" cellpadding=3D"0" style=3D"min-width:800px;background-colo=
+r:#d7dbe0" class=3D"m_4405981364583740692fullWidth">
+  <tbody><tr>
+    <td align=3D"center" style=3D"vertical-align:top;padding:0px 0px 20px 0=
+px;min-width:800px;background-color:#d7dbe0" class=3D"m_4405981364583740692=
+fullWidth">
+      <table role=3D"presentation" align=3D"center" width=3D"800" cellpaddi=
+ng=3D"0" cellspacing=3D"0" border=3D"0" class=3D"m_4405981364583740692fullW=
+idth" style=3D"background-color:#ffffff">
+       =20
+        <tbody><tr>
+          <td align=3D"left" style=3D"vertical-align:top;background-color:#=
+ffffff">
+            <table role=3D"presentation" width=3D"100%" cellpadding=3D"0" c=
+ellspacing=3D"0" border=3D"0">
+
+             =20
+
+              <tbody><tr>
+                <td align=3D"center" style=3D"vertical-align:top;padding:23=
+px 0px 0px;background-color:#005eb8">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" border=3D"0">
+                    <tbody><tr>
+                      <td align=3D"right" style=3D"vertical-align:bottom;pa=
+dding:0px 0px;width:12px"><img src=3D"https://www.chase.com/content/dam/ema=
+il/images/blue-left.jpg" width=3D"12" height=3D"226" border=3D"0" style=3D"=
+display:block" alt=3D""></td>
+                      <td align=3D"center" style=3D"vertical-align:top;padd=
+ing:0px 0px 0px;width:616px;background-color:#ffffff">
+                        <table role=3D"presentation" width=3D"100%" cellpad=
+ding=3D"0" cellspacing=3D"0" border=3D"0">
+                          <tbody><tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:0px 0px;background-color:#ffffff">
+                              <table role=3D"presentation" width=3D"100%" c=
+ellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+
+                               =20
+                               =20
+                              =20
+                                <tbody><tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:0px 0px"><table role=3D"presentation" width=3D"100%" cellpadd=
+ing=3D"0" cellspacing=3D"0" border=3D"0">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"vertica=
+l-align:bottom;width:144px"><img src=3D"https://www.chase.com/content/dam/e=
+mail/images/chase-logo-h-rgb.jpg" width=3D"144" height=3D"76" border=3D"0" =
+style=3D"display:block" alt=3D"Chase Logo"></td>
+                                       </tr>
+                                    </tbody></table></td>
+                                </tr>
+                               =20
+
+                               =20
+
+                                <tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:20px 28px 0px" class=3D"m_4405981364583740692moPad">
+                                    <table role=3D"presentation" align=3D"l=
+eft" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"vertica=
+l-align:top">
+                                          <table role=3D"presentation" widt=
+h=3D"100%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                            <tbody><tr>
+                                              <td align=3D"left" style=3D"v=
+ertical-align:top;padding:5px 10px;font-family:Arial,Helvetica,sans-serif;f=
+ont-size:12px;font-weight:bold;color:#000000;background-color:#d7dbe0;borde=
+r-radius:20px;white-space:nowrap" class=3D"m_4405981364583740692font14">Zel=
+le<span style=3D"font-size:70%;line-height:0;vertical-align:3px">=C2=AE</sp=
+an> payment</td>
+                                            </tr>
+                                          </tbody></table>
+                                        </td>
+                                      </tr>
+                                    </tbody></table>
+                                  </td>
+                                </tr>
+
+                               =20
+
+                               =20
+								  <tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;background-color:#ffffff;padding:20px 30px 28px;font-family:Arial,Hel=
+vetica,sans-serif;font-size:30px;font-weight:bold;color:#414042" class=3D"m=
+_4405981364583740692moPad">KRISTINA M PAGE sent you money</td>
+                                </tr>
+								 =20
+                              </tbody></table>
+                            </td>
+                          </tr>
+                        </tbody></table>
+                      </td>
+                      <td align=3D"left" style=3D"vertical-align:bottom;pad=
+ding:0px 0px;width:12px"><img src=3D"https://www.chase.com/content/dam/emai=
+l/images/blue-right.jpg" width=3D"12" height=3D"226" border=3D"0" style=3D"=
+display:block" alt=3D""></td>
+                    </tr>
+                  </tbody></table>
+                </td>
+              </tr>
+
+             =20
+
+              <tr>
+                <td align=3D"center" style=3D"vertical-align:top;padding:0p=
+x 0px 0px;background-color:#ffffff">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" border=3D"0">
+                    <tbody><tr>
+                      <td align=3D"right" style=3D"vertical-align:top;paddi=
+ng:0px 0px;width:12px"><img src=3D"https://www.chase.com/content/dam/email/=
+images/white-left.jpg" width=3D"12" height=3D"77" border=3D"0" style=3D"dis=
+play:block" alt=3D""></td>
+                      <td align=3D"center" style=3D"vertical-align:top;padd=
+ing:0px 0px 0px;width:616px">
+                        <table role=3D"presentation" width=3D"100%" cellpad=
+ding=3D"0" cellspacing=3D"0" border=3D"0">
+
+                         =20
+                          <tbody><tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:0px 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size=
+:16px;color:#414042" class=3D"m_4405981364583740692moPad">Here are the deta=
+ils:</td>
+                          </tr>
+                         =20
+
+                         =20
+                          <tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:0px 150px 0px 30px" class=3D"m_4405981364583740692moPad">
+                              <table role=3D"presentation" width=3D"100%" c=
+ellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                <tbody><tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:10px 0px 5px;border-bottom:solid 1px #414042">
+                                    <table role=3D"presentation" width=3D"1=
+00%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"vertica=
+l-align:top;padding:0px 0px 0px 0px;font-family:Arial,Helvetica,sans-serif;=
+font-size:16px;color:#414042" class=3D"m_4405981364583740692font14">Amount<=
+/td>
+                                        <td align=3D"right" style=3D"vertic=
+al-align:top;padding:0px 0px 0px 5px;font-family:Arial,Helvetica,sans-serif=
+;font-size:16px;font-weight:bold;color:#414042" class=3D"m_4405981364583740=
+692font14">$1200.00</td>
+                                      </tr>
+                                    </tbody></table>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:20px 0px 5px;border-bottom:solid 1px #414042">
+                                    <table role=3D"presentation" width=3D"1=
+00%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"vertica=
+l-align:top;padding:0px 0px 0px 0px;font-family:Arial,Helvetica,sans-serif;=
+font-size:16px;color:#414042" class=3D"m_4405981364583740692font14">Sent on=
+</td>
+                                        <td align=3D"right" style=3D"vertic=
+al-align:top;padding:0px 0px 0px 5px;font-family:Arial,Helvetica,sans-serif=
+;font-size:16px;font-weight:bold;color:#414042" class=3D"m_4405981364583740=
+692font14"><span class=3D"m_4405981364583740692applelinksgray2"><a style=3D=
+"color:#414042;text-decoration:none">Jul 31, 2024</a></span></td>
+                                      </tr>
+                                    </tbody></table>
+                                  </td>
+                                </tr>
+                                  <tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:20px 0px 5px;border-bottom:solid 1px #414042">
+                                    <table role=3D"presentation" width=3D"1=
+00%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"vertica=
+l-align:top;padding:0px 0px 0px 0px;font-family:Arial,Helvetica,sans-serif;=
+font-size:16px;color:#414042" class=3D"m_4405981364583740692font14">Transac=
+tion number</td>
+                                        <td align=3D"right" style=3D"vertic=
+al-align:top;padding:0px 0px 0px 5px;font-family:Arial,Helvetica,sans-serif=
+;font-size:16px;font-weight:bold;color:#414042" class=3D"m_4405981364583740=
+692font14">21569265114</td>
+                                      </tr>
+                                    </tbody></table>
+                                  </td>
+                                </tr>
+                                  <tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:20px 0px 5px;border-bottom:solid 1px #414042">
+                                    <table role=3D"presentation" width=3D"1=
+00%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"vertica=
+l-align:top;padding:0px 0px 0px 0px;font-family:Arial,Helvetica,sans-serif;=
+font-size:16px;color:#414042" class=3D"m_4405981364583740692font14">Memo</t=
+d>
+                                        <td align=3D"right" style=3D"vertic=
+al-align:top;padding:0px 0px 0px 5px;font-family:Arial,Helvetica,sans-serif=
+;font-size:16px;font-weight:bold;color:#414042" class=3D"m_4405981364583740=
+692font14">August 2024 rent</td>
+                                      </tr>
+                                    </tbody></table>
+                                  </td>
+                                </tr>
+                               =20
+
+                              </tbody></table>
+                            </td>
+                          </tr>
+
+                         =20
+
+                         =20
+                           <tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:40px 30px 40px;font-family:Arial,Helvetica,sans-serif;font-size:16p=
+x;color:#414042" class=3D"m_4405981364583740692moPad">
+                              KRISTINA M PAGE is registered with a Zelle<sp=
+an style=3D"font-size:70%;line-height:0;vertical-align:3px">=C2=AE</span> m=
+ember bank that supports payments in real time, so your money will usually =
+be available in a few moments.
+                              </td>
+                          </tr>
+                          <tr>
+                            <td align=3D"left" style=3D"vertical-align:top"=
+>
+                              <table role=3D"presentation" width=3D"100%" a=
+lign=3D"left" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                <tbody><tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top">
+                                    <table role=3D"presentation" width=3D"2=
+00" align=3D"left" cellpadding=3D"0" cellspacing=3D"0" border=3D"0" class=
+=3D"m_4405981364583740692fullWidth">
+                                      <tbody><tr>
+                                        <td align=3D"left" style=3D"padding=
+:0px;vertical-align:top;padding:0px 0px 30px 30px" class=3D"m_4405981364583=
+740692moPad">
+                                          <table role=3D"presentation" alig=
+n=3D"left" cellpadding=3D"0" cellspacing=3D"0" border=3D"0" style=3D"vertic=
+al-align:top">
+                                            <tbody><tr>
+                                              <td role=3D"button" align=3D"=
+center" style=3D"background-color:#0060f0;color:#fffffe;font-size:16px;font=
+-family:Arial,Helvetica,sans-serif;padding:10px 0px;border:1px solid #0060f=
+0;vertical-align:top;border-radius:4px;width:168px"><a href=3D"https://www.=
+chase.com/personal/quickpay/login-quickpay" rel=3D"noopener noreferrer" sty=
+le=3D"color:#fffffe;text-decoration:none" target=3D"_blank">Go to Zelle<spa=
+n style=3D"font-size:70%;line-height:0;vertical-align:3px">=C2=AE</span></a=
+></td>
+                                            </tr>
+                                          </tbody></table>
+                                        </td>
+                                      </tr>
+                                    </tbody></table>
+                                  </td>
+                                </tr>
+                              </tbody></table>
+                            </td>
+                          </tr>
+
+                         =20
+
+                         =20
+						=09
+                          <tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:0px 30px 40px;font-family:Arial,Helvetica,sans-serif;font-size:16px=
+;color:#414042" class=3D"m_4405981364583740692moPad">Questions? Visit <a st=
+yle=3D"text-decoration:underline;color:#0060f0" href=3D"https://www.chase.c=
+om/zelle" rel=3D"noopener noreferrer" target=3D"_blank">chase.com/Zelle</a>=
+ or contact us <span class=3D"m_4405981364583740692applelinksgray2"><a styl=
+e=3D"color:#414042;text-decoration:none">at 1-800-935-9935</a></span>.</td>
+                          </tr>
+                         =20
+
+                         =20
+                          <tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:0px 30px 20px;font-family:Arial,Helvetica,sans-serif;font-size:12px=
+;color:#717171" class=3D"m_4405981364583740692moPad m_4405981364583740692fo=
+nt14">Securely access your accounts in the <a style=3D"text-decoration:unde=
+rline;color:#0060f0" href=3D"https://www.chase.com/digital/mobile-banking" =
+rel=3D"noopener noreferrer" target=3D"_blank">Chase=C2=A0Mobile<span style=
+=3D"font-size:70%;line-height:0;vertical-align:3px;text-decoration:none">=
+=C2=AE</span> app</a> or at <a style=3D"text-decoration:underline;color:#00=
+60f0" href=3D"https://secure.chase.com/web/auth/nav?navKey=3DrequestDashboa=
+rd" rel=3D"noopener noreferrer" target=3D"_blank">chase.com</a>. </td>
+                          </tr>
+                         =20
+                         =20
+
+                          <tr>
+                            <td align=3D"left" style=3D"vertical-align:top;=
+padding:0px 0px;background-color:#f6f6f6">
+                              <table role=3D"presentation" width=3D"100%" c=
+ellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                <tbody><tr>
+                                  <td align=3D"left" style=3D"vertical-alig=
+n:top;padding:20px 30px 60px;font-family:Arial,Helvetica,sans-serif;font-si=
+ze:12px;color:#717171" class=3D"m_4405981364583740692moPad m_44059813645837=
+40692font14">
+                                    <span role=3D"heading" style=3D"text-tr=
+ansform:uppercase;font-weight:bold">About this message</span><br>
+                                    <br>
+                                    The Chase=C2=A0Mobile<span style=3D"fon=
+t-size:70%;line-height:0;vertical-align:3px">=C2=AE</span> app is available=
+  for select mobile devices. Message and data rates may apply.<br>
+                                    <br>
+
+                                   =20
+
+
+
+                                   =20
+
+                                   =20
+
+                                    This service email gives you updates an=
+d information about your Chase relationship.<br>
+                                    <br>
+
+                                   =20
+
+                                    Chase cannot guarantee the delivery of =
+alerts and notifications. Wireless or internet service provider outages or =
+other circumstances could delay them. You can always check <span class=3D"m=
+_4405981364583740692applelinksgray"><a style=3D"color:#717171;text-decorati=
+on:none">chase.com</a></span> or the Chase=C2=A0Mobile app for the status o=
+f your accounts including your latest account balances and transaction deta=
+ils.<br>
+                                    <br>
+                                    To protect your personal information, p=
+lease don&#39;t reply to this message. Chase won&#39;t ask for confidential=
+ information in an email. <br>
+                                    <br>
+                                    If you have concerns about the authenti=
+city of this message or have questions about your account visit <a style=3D=
+"text-decoration:underline;color:#0060f0" href=3D"https://www.chase.com/dig=
+ital/customer-service" rel=3D"noopener noreferrer" target=3D"_blank">chase.=
+com/CustomerService</a> for ways to contact us.<br>
+                                    <br>
+                                    Your privacy is important to us. See ou=
+r online <a style=3D"text-decoration:underline;color:#0060f0" href=3D"https=
+://www.chase.com/digital/resources/privacy-security" rel=3D"noopener norefe=
+rrer" target=3D"_blank">Security Center</a> to learn how to protect your in=
+formation.<br>
+                                    <br>
+
+                                   =20
+
+                                   =20
+
+                                    =C2=A9 2024 JPMorgan Chase &amp; Co. </=
+td>
+                                </tr>
+                              </tbody></table>
+                            </td>
+                          </tr>
+                         =20
+                         =20
+                        </tbody></table>
+                      </td>
+                      <td align=3D"left" style=3D"vertical-align:top;paddin=
+g:0px 0px;width:12px"><img src=3D"https://www.chase.com/content/dam/email/i=
+mages/white-right.jpg" width=3D"12" height=3D"77" border=3D"0" style=3D"dis=
+play:block" alt=3D""></td>
+                    </tr>
+                  </tbody></table>
+                </td>
+              </tr>
+            </tbody></table>
+          </td>
+        </tr>
+       =20
+       =20
+      </tbody></table>
+    </td>
+  </tr>
+</tbody></table>
+</div>
+
+</div></div></div>
+
+--000000000000d820a40650c4c385--

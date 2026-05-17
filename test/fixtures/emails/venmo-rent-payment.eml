@@ -1,0 +1,307 @@
+Delivered-To: me@kylechong.com
+Received: by 2002:ac8:7745:0:b0:432:c538:c30e with SMTP id g5csp422546qtu;
+        Fri, 29 Mar 2024 12:27:00 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGGLl/m80fUs6nFZPQ9HRe81zfLHVBjomHlbghluBtv8qVSvzmtcnnDU3f6ccE9Cn9CxkPW
+X-Received: by 2002:a05:622a:64a:b0:431:7575:2162 with SMTP id a10-20020a05622a064a00b0043175752162mr3912479qtb.34.1711740419983;
+        Fri, 29 Mar 2024 12:26:59 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1711740419; cv=none;
+        d=google.com; s=arc-20160816;
+        b=Sc8vmBGgThAAEeNY3RkNDLa5NTurnC4i5dzVMlDinsgkBz97kFCD0FIG94VlHSFci/
+         fUY9mw7PDUYPsd1YRkNhRj8Cza1Utucr3WkVNrRYHAWGCnmFYpTYcm2R8ActSe8Tq1aG
+         Umy4E227Tu+QNxqGM/bEDNMCTHPiac0TPfGiq1mGv2RZYPQOCjkyl3orLMNBfKjoLnaU
+         shxdYlDQcHHlujC8vzet9bYFGzIE6up/TWmiId/24E60EPwAyJzQNmkiKZJA9VGmTSP3
+         OmLhSXDytqTguvVkYdfcJpr7UfimaS2y8v23FoSsoqLtaRnC1Hj7RL/WAf1+6LQeONiC
+         0RFg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=feedback-id:date:message-id:mime-version:subject:to:reply-to:from
+         :dkim-signature:dkim-signature;
+        bh=aWp5aXz8RC1a/Z9AdmsS4wG9AjYCs+51Ki6KotlR44g=;
+        fh=nqHm98OBGhh344EmUF5w3HrCUlhkqePyaXGyufMUdnU=;
+        b=CUgOjugoS80v0w12CmEf3UxQUxKo8nVLYLF2QF2Q5ZpIbIIa5lPmXj4ZKLxWTjptwB
+         58yH3qdzbLZcU3HRaAz88tJOLbdVSDG/MesNIPIeZsEtkRU/2hzaqefdoxcZmOrn2AB4
+         BqcqLlkxhtNKJMiN4Q2H4ITGg6+9ov4i3yb0bUusVXB7NsZuMpyvgTBMDErXxohZ5ytS
+         StVU10tvYtpJG9zDiugt6SE5rNRzDOKnKXMHIBbo+t9zTOVTBmlwXLC+TgigxPCTkZLP
+         zouIEyoMJzcpxMAJdH73IEr6jvPv2fnPOWE0gjFc8Oe9zf2lmeG5hQQp6MYPP6hXH3cN
+         a+bw==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@venmo.com header.s=lycwyfwp74k6gitv7a7jiergkl3mgkrg header.b=clp83llJ;
+       dkim=pass header.i=@amazonses.com header.s=ug7nbtf4gccmlpwj322ax3p6ow6yfsug header.b=G5JqM8je;
+       spf=pass (google.com: domain of 0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@amazonses.com designates 54.240.33.193 as permitted sender) smtp.mailfrom=0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@amazonses.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=venmo.com
+Return-Path: <0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@amazonses.com>
+Received: from a33-193.smtp-out.amazonses.com (a33-193.smtp-out.amazonses.com. [54.240.33.193])
+        by mx.google.com with ESMTPS id d4-20020a05622a15c400b004311ddb94cbsi4329329qty.404.2024.03.29.12.26.59
+        for <me@kylechong.com>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 29 Mar 2024 12:26:59 -0700 (PDT)
+Received-SPF: pass (google.com: domain of 0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@amazonses.com designates 54.240.33.193 as permitted sender) client-ip=54.240.33.193;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@venmo.com header.s=lycwyfwp74k6gitv7a7jiergkl3mgkrg header.b=clp83llJ;
+       dkim=pass header.i=@amazonses.com header.s=ug7nbtf4gccmlpwj322ax3p6ow6yfsug header.b=G5JqM8je;
+       spf=pass (google.com: domain of 0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@amazonses.com designates 54.240.33.193 as permitted sender) smtp.mailfrom=0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@amazonses.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=venmo.com
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=lycwyfwp74k6gitv7a7jiergkl3mgkrg; d=venmo.com; t=1711740419;
+	h=From:Reply-To:To:Subject:MIME-Version:Content-Type:Message-ID:Date;
+	bh=RUHQuNY6tUPVqF4JMgxhA6lfdAgaH+kmhyLxLWsowyk=;
+	b=clp83llJXYZCscvBW7mjbigc093EkjpZRRTzbUcYNM+7hpIIuPnZdpc9D7Kf8S2Y
+	DTuOqF2DKB598qWEJaotf3AD1Z6B8KXGrgn/BC24HzNg4VP7L0zDkGi8scEHbOJ+nDf
+	a5TU3+r1TpFzm3ufQWDfj5NR/wVxvWbFo+Myjhuk=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=ug7nbtf4gccmlpwj322ax3p6ow6yfsug; d=amazonses.com; t=1711740419;
+	h=From:Reply-To:To:Subject:MIME-Version:Content-Type:Message-ID:Date:Feedback-ID;
+	bh=RUHQuNY6tUPVqF4JMgxhA6lfdAgaH+kmhyLxLWsowyk=;
+	b=G5JqM8jeAWpefSfQJWrmAVJvmDqog/dIjSIoY7EUy3Ds+Q5z4mEAIIxBqP6zd7jR
+	yieEssOslVxcK39uqynaYTGNmL8O6dttCJxWsIEv++K/4398Pmk8TsPyq6vQv29FUJY
+	VeFBtCB+4IN/qVXSg240V5922qkonUzXFfbEhY7M=
+From: Venmo <venmo@venmo.com>
+Reply-To: Venmo No-reply <no-reply@venmo.com>
+To: me@kylechong.com
+Subject: samantha sanchez paid you $1,000.00
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_217895_439199940.1711740419447"
+Message-ID: <0100018e8badfd77-5c8cd2df-9b51-4556-9eb9-212196e097db-000000@email.amazonses.com>
+Date: Fri, 29 Mar 2024 19:26:59 +0000
+Feedback-ID: 1.us-east-1.fQ0yL0IwGSResIpU9lW9fHNtFl/iEQA4Znd52HkQv2U=:AmazonSES
+X-SES-Outgoing: 2024.03.29-54.240.33.193
+
+------=_Part_217895_439199940.1711740419447
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+
+------=_Part_217895_439199940.1711740419447
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+ "http://www.w3.org/TR/html4/strict.dtd">
+<html class=3D""  id=3D"html_container" xmlns=3D"http://www.w3.org/1999/xht=
+ml" dir=3D"ltr" lang=3D"en-US" xmlns:fb=3D"http://www.facebook.com/2008/fbm=
+l">
+    <head>
+        <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Du=
+tf-8">
+        <title> - Venmo</title>
+    </head>
+
+    <body style=3D"margin:0;color: #2F3033">
+       =20
+        <div style=3D"font-family:'helvetica neue';">
+            <div style=3D"margin: 0 auto; max-width: 320px;">
+                <div style=3D"font-size:14px;border: 2px solid #e8ebea;">
+                    <div style=3D"padding: 10px 0; text-align: center; back=
+ground-color: #0074DE;">
+                        <img src=3D"https://s3.amazonaws.com/venmo/venmo-lo=
+go-white.png" alt=3D"venmo" title=3D"venmo" style=3D"color: #fff;width:125p=
+x;height:24px;" />
+                    </div>
+                   =20
+                    <div style=3D"padding:20px;background-color:#fff;">
+                       =20
+<div width=3D"100%" >
+   =20
+
+
+
+   =20
+
+<table id=3D"_story" width=3D"100%"> <tbody>
+    <tr>
+        <!-- img of actor -->
+        <td valign=3D"top" width=3D"48px" style=3D"padding-right:10px;">
+            <a href=3D"https://venmo.com/code?user_id=3D2688993468612609018=
+&actor_id=3D1417148316516352606" aria-label=3D"">
+                <img src=3D"https://pics-v3.venmo.com/f5e2cdf3-cb0c-4b17-9a=
+6b-d8bde80ae7b0?width=3D100&amp;height=3D100&amp;version=3D5" alt=3D"" styl=
+e=3D"border-radius:3px;width:48px;height:48px;"/>
+            </a>
+        </td>
+        <td style=3D"font-size:14px;color:#2F3033;vertical-align:top;paddin=
+g-left:2px;">
+            <div >
+                <!-- actor name -->
+                <a style=3D"color:#0074DE; text-decoration:none" href=3D"ht=
+tps://venmo.com/code?user_id=3D2688993468612609018&actor_id=3D1417148316516=
+352606">
+                    samantha sanchez
+                </a>
+                <!-- action -->
+                <span>
+                    paid
+                </span>
+              =20
+                <!-- recipient name -->
+                <a style=3D"color:#0074DE; text-decoration:none"
+                   =20
+                    href=3D"https://venmo.com/code?user_id=3D14171483165163=
+52606&actor_id=3D1417148316516352606">
+                   =20
+                    You
+                </a>
+               =20
+            </div>
+            <!-- note -->
+            <div>
+                <p>april</p>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td style=3D"font-size:14px;padding-left:2px;color:#2F3033;">
+            Transfer Date and Amount:
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td style=3D"font-size:14px;padding-left:2px;color:#2F3033;">
+        <!-- date, audience, and amount -->
+            <span>Mar 29, 2024 PDT</span>
+            <span> =C2=B7 </span>
+            <img style=3D"vertical-align: -1px; width: 12px; height: 12px;"=
+ src=3D"https://s3.amazonaws.com/venmo/audience/private_v2.png" alt=3D"priv=
+ate"/>
+           =20
+
+            <!-- amount -->
+           =20
+               =20
+                <span style=3D"color:#148572;float:right;">
+                   =20
+                    + $1,000.00
+                   =20
+                </span>
+               =20
+           =20
+        </td>
+    </tr>
+   =20
+   =20
+   =20
+    <tr>
+        <td></td>
+        <td style=3D"padding-top:10px;">
+            <table style=3D"width:170px; table-layout:fixed;font-size:14px;=
+">
+                <tbody>
+                <tr>
+                   =20
+                    <td style=3D"padding:5px 0; text-align:center; border-r=
+adius:50px; background-color:#0074DE;" >
+                        <a href=3D"https://venmo.com/story/4034689064674839=
+971?k=3D36a6140f-311c-44eb-87d9-6b54beabde07" style=3D"text-decoration:none=
+; color: #fff;display:block;width:100%;">
+                                Like
+                        </a>
+                    </td>
+                   =20
+                   =20
+                    <td style=3D"padding:5px 0; border-radius:50px; text-al=
+ign:center;background-color:#0074DE;" >
+                        <a href=3D"https://venmo.com/story/4034689064674839=
+971?login=3D1" style=3D"text-decoration:none; color: #fff;display:block;wid=
+th:100%;">
+                            Comment
+                        </a>
+                    </td>
+                   =20
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+   =20
+</tbody> </table>
+
+
+
+
+
+    <div style=3D"color:#6B6E76;font-size:12px;margin-top:10px;padding-top:=
+10px; border-top: 1px dotted #ccc">
+   =20
+        <p>Money credited to your Venmo account.</p>
+        <a style=3D"text-decoration:none;color:#0074de;" href=3D"https://ve=
+nmo.com/cash_out">Transfer to your bank</a>.
+   =20
+    <p>Payment ID: 4034689063827771191</p>
+   =20
+  </div>
+ =20
+   =20
+<div style=3D"color:#6B6E76;font-size:12px;margin-top:10px;padding-top:10px=
+; border-top: 1px dotted #ccc">
+    <div style=3D"width:50%; padding:5px; text-align:center; border-radius:=
+50px; background-color:#0074DE;">
+        <a href=3D"https://venmo.com/referral/invite?campaign_service=3Dema=
+il&campaign_template=3Dpayment.received" style=3D"text-decoration:none; col=
+or: #000; display:block; width:100%; font-size:12px;">
+            <div style=3D"font-size:14px; color:#fff;">Invite Friends!</div=
+>
+        </a>
+    </div>
+
+
+</div>
+
+    <div id=3D"_receipt_disclosures" style=3D"font-size:11px;margin-top:10p=
+x;padding-top:10px; border-top: 1px dotted #ccc">
+
+    <div>
+        For any issues, including the recipient not receiving funds, please=
+ contact us at support@venmo.com or call 1-855-812-4430.
+    </div>
+
+
+    <div style=3D"margin-top:10px;">
+        See our <a style=3D"text-decoration:none;color:#0074DE" href=3D"htt=
+ps://venmo.com/legal/regulatory-agency-california">disclosures</a> for more=
+ information.<div style=3D"margin-top:10px;">This payment will be reviewed =
+for compliance with our User Agreement and if we determine that there is a =
+violation by either party, it may be reversed or your ability to transfer t=
+o your bank account may be restricted.</div>
+    </div>
+
+</div>
+
+</div>
+
+                       =20
+                    </div>
+                    <div style=3D"padding:10px 15px; color: #6B6E76; text-a=
+lign: center;">
+                       =20
+                        <div style=3D"color: #6B6E76; margin-top: 5px;">
+                            Venmo is a service of PayPal, Inc., a licensed =
+provider of money transfer services. All money transmission is provided by =
+PayPal, Inc. pursuant to <a href=3D"https://venmo.com/legal/us-licenses/" s=
+tyle=3D"color:#0074DE; text-decoration:none">PayPal, Inc.=E2=80=99s license=
+s</a>.
+                        </div>
+                      <p style=3D"color: #6B6E76; margin-top: 14px;">PayPal=
+ is located at </p><p style=3D"color: #6B6E76;">2211 North First Street, Sa=
+n Jose, CA 95131</p>
+                        <div style=3D"margin-top: 5px;">
+                           =20
+                           =20
+                                <div style=3D"font-size: smaller; margin-to=
+p: 20px;">For security reasons, you cannot unsubscribe from payment emails.=
+</div>
+                           =20
+                        </div>
+                       =20
+                    </div>
+                </div>
+               =20
+               =20
+            </div>
+        </div>
+    </body>
+</html>
+
+------=_Part_217895_439199940.1711740419447--
