@@ -2,7 +2,7 @@
 
 ## Overview
 
-Automatically retrieve forwarded Zelle/Venmo payment notifications from an email inbox and create the appropriate `RentPayment` or `UtilityPayment` records. The system will match the payer's name to a tenant (supporting aliases for name changes), determine whether the payment corresponds to an outstanding utility expense or unpaid scheduled rent, and create the correct payment record.
+Automatically retrieve forwarded Zelle/Venmo payment notifications from an email inbox and create the appropriate `TenantPayment` records. The system will match the payer's name to a tenant (supporting aliases for name changes) and create a credit on their running lease account ledger.
 
 ---
 
@@ -13,16 +13,17 @@ User
  ├── RentalProperty
  │    ├── Lease
  │    │    ├── LeaseTenant → Tenant
- │    │    ├── ScheduledRent → RentPayment
- │    │    └── UtilityPayment
+ │    │    ├── ScheduledRent
+ │    │    ├── TenantCharge → Expense
+ │    │    └── TenantPayment
  │    └── Expense (category enum includes "utilities")
  └── Tenant
 ```
 
 ### Key Observations
 
-- **Utility payments** (`utility_payments`) belong to a `Lease` but have **no foreign key to `Expense`**. There is currently no programmatic link between a utility payment received from a tenant and the corresponding utility expense recorded against the property.
-- **Expenses** with `category: "utilities"` are tracked per `RentalProperty`, not per `Lease`.
+- **Tenant payments** (`tenant_payments`) belong to a `Lease` and act as credits on the running account ledger.
+- **Expenses** are tracked per `RentalProperty`, and can optionally be linked to a `TenantCharge` if reimbursable.
 - **Tenants** have a single `name` field — no alias support exists today.
 - **No email integration** exists in the application.
 
@@ -69,25 +70,8 @@ class Tenant < ApplicationRecord
 end
 ```
 
-### 1.2 Link Utility Payments to Expenses
 
-Add an optional `expense_id` foreign key to `utility_payments` so that a tenant's utility payment can be associated with the specific utility expense it reimburses.
-
-```ruby
-# db/migrate/XXXXXXXX_add_expense_id_to_utility_payments.rb
-add_reference :utility_payments, :expense, null: true, foreign_key: true
-```
-
-**Update `UtilityPayment` model:**
-
-```ruby
-class UtilityPayment < ApplicationRecord
-  belongs_to :lease
-  belongs_to :expense, optional: true
-end
-```
-
-### 1.3 Email Ingestion Log
+### 1.2 Email Ingestion Log
 
 Track every processed email to prevent duplicate payment creation and provide an audit trail.
 
@@ -102,10 +86,9 @@ create_table :payment_emails do |t|
   t.string     :transaction_id                 # Parsed Zelle/Venmo transaction number
   t.string     :provider                       # "zelle" or "venmo"
   t.string     :status,          null: false, default: "pending"
-  # status enum: pending, matched_rent, matched_utility, unmatched, error
+  # status enum: pending, matched, unmatched, error
   t.string     :error_message
-  t.references :rent_payment,    null: true, foreign_key: true
-  t.references :utility_payment, null: true, foreign_key: true
+  t.references :tenant_payment,  null: true, foreign_key: true
   t.text       :raw_body                       # Original email body for debugging
   t.timestamps
 end
@@ -119,36 +102,33 @@ add_index :payment_emails, [:user_id, :message_id], unique: true
 # app/models/payment_email.rb
 class PaymentEmail < ApplicationRecord
   belongs_to :user
-  belongs_to :rent_payment,    optional: true
-  belongs_to :utility_payment, optional: true
+  belongs_to :tenant_payment, optional: true
 
   enum :status, {
-    pending:          "pending",
-    matched_rent:     "matched_rent",
-    matched_utility:  "matched_utility",
-    unmatched:        "unmatched",
-    error:            "error"
+    pending:   "pending",
+    matched:   "matched",
+    unmatched: "unmatched",
+    error:     "error"
   }
 
   validates :message_id, presence: true, uniqueness: { scope: :user_id }
 end
 ```
 
-### 1.4 Per-User Email Configuration
+### 1.3 Per-User Email Configuration
 
-Since this is a multi-user application, IMAP credentials are stored per-user in the database rather than in Rails credentials.
+Since this is a multi-user application, Gmail API credentials are stored per-user in the database rather than in Rails credentials.
 
 ```ruby
 # db/migrate/XXXXXXXX_create_email_configurations.rb
 create_table :email_configurations do |t|
-  t.references :user,        null: false, foreign_key: true, index: { unique: true }
-  t.string     :imap_server, null: false  # e.g. "imap.gmail.com"
-  t.integer    :imap_port,   null: false, default: 993
-  t.string     :username,    null: false
-  t.string     :password,    null: false  # Encrypted via Active Record Encryption
-  t.string     :mailbox,     null: false, default: "INBOX"
-  t.boolean    :ssl,         null: false, default: true
-  t.boolean    :enabled,     null: false, default: true
+  t.references :user,                    null: false, foreign_key: true, index: { unique: true }
+  t.string     :provider,                null: false, default: "gmail_api"
+  t.string     :gmail_address,           null: false
+  t.string     :google_refresh_token,    null: false
+  t.string     :google_access_token,     null: false
+  t.datetime   :google_token_expires_at, null: false
+  t.boolean    :enabled,                 null: false, default: true
   t.datetime   :last_polled_at
   t.timestamps
 end
@@ -161,10 +141,9 @@ end
 class EmailConfiguration < ApplicationRecord
   belongs_to :user
 
-  encrypts :password
+  encrypts :google_refresh_token, :google_access_token
 
-  validates :imap_server, :username, :password, presence: true
-  validates :imap_port, numericality: { only_integer: true, greater_than: 0 }
+  validates :gmail_address, :google_refresh_token, :google_access_token, presence: true
 end
 ```
 
@@ -180,11 +159,11 @@ end
 
 ## Phase 2 — Email Connection & Retrieval
 
-### 2.1 Approach: IMAP Polling via Solid Queue Recurring Job
+### 2.1 Approach: Gmail API Polling via Solid Queue Recurring Job
 
-Since the application already uses **Solid Queue** for background jobs (see `config/recurring.yml`), the simplest approach is a recurring job that polls each user's IMAP mailbox for new forwarded payment emails. This avoids the operational overhead of configuring Action Mailbox ingress routing.
+Since the application already uses **Solid Queue** for background jobs (see `config/recurring.yml`), the simplest approach is a recurring job that polls each user's inbox using the **Gmail API** for new forwarded payment emails. This avoids the operational overhead of configuring Action Mailbox ingress routing.
 
-Payment notification emails may arrive via **manual forwarding** or **auto-forwarding rules** — the system handles both identically since it processes all unseen messages in the configured mailbox.
+Payment notification emails may arrive via **manual forwarding** or **auto-forwarding rules** — the system handles both identically since it processes all unseen messages.
 
 ### 2.2 Recurring Job Configuration
 
@@ -196,7 +175,34 @@ production:
     schedule: every 15 minutes
 ```
 
-### 2.3 IMAP Polling Job
+### 2.3 Gmail API Client
+
+The application uses a dedicated service class `GmailApiClient` to authenticate and fetch unseen emails.
+
+```ruby
+# app/services/gmail_api_client.rb
+# Handles Google OAuth authentication, refreshing tokens, and fetching unread messages.
+class GmailApiClient
+  def initialize(config)
+    @config = config
+    # ... Google::Apis::GmailV1::GmailService setup ...
+  end
+  
+  def list_unread_messages
+    # ...
+  end
+  
+  def get_raw_message(msg_id)
+    # ...
+  end
+  
+  def mark_as_read(msg_id)
+    # ...
+  end
+end
+```
+
+### 2.4 API Polling Job
 
 The job iterates over all users who have an enabled `EmailConfiguration`, polling each user's mailbox independently. It retrieves the raw `RFC822` email content for all unseen messages and delegates all parsing and business logic to the `PaymentEmailProcessorService`.
 
@@ -216,29 +222,21 @@ class IngestPaymentEmailsJob < ApplicationJob
   private
 
   def poll_mailbox(config)
-    imap = Net::IMAP.new(config.imap_server, port: config.imap_port, ssl: config.ssl)
-    imap.login(config.username, config.password)
-    imap.select(config.mailbox)
+    client = GmailApiClient.new(config)
+    messages = client.list_unread_messages
 
-    # Search for UNSEEN messages
-    message_ids = imap.search(["UNSEEN"])
-
-    message_ids.each do |msg_id|
-      # Fetch the raw RFC822 message source
-      raw_source = imap.fetch(msg_id, "RFC822").first.attr["RFC822"]
+    messages.each do |msg_id|
+      raw_source = client.get_raw_message(msg_id)
 
       PaymentEmailProcessorService.new(
         raw_source: raw_source,
         user:       config.user
       ).call
 
-      # Mark as seen
-      imap.store(msg_id, "+FLAGS", [:Seen])
+      client.mark_as_read(msg_id)
     end
 
     config.update!(last_polled_at: Time.current)
-    imap.logout
-    imap.disconnect
   end
 end
 ```
@@ -350,23 +348,16 @@ end
 
 ## Phase 4 — Payment Routing Logic
 
-This is the core business logic. Given a parsed email (payer name, amount, date), determine whether to create a `UtilityPayment` or `RentPayment`.
+This is the core business logic. Given a parsed email (payer name, amount, date), determine the correct lease and create a `TenantPayment`.
 
 ### 4.1 Resolution Algorithm
 
 ```
 1. Resolve payer name → Tenant (using primary name + aliases)
-2. Find all active Leases for that Tenant (scoped to the current User)
-3. For each Lease:
-   a. Find the Property associated with the Lease
-   b. Check for a "utilities" Expense on that Property that:
-      - Has no existing UtilityPayment linked to it (via expense_id)
-      - Has an amount that exactly matches the payment amount
-   c. If a matching utility expense is found → create UtilityPayment
-4. If no utility match is found:
-   a. Find the earliest unpaid ScheduledRent across all of the Tenant's Leases
-   b. Create a RentPayment against that ScheduledRent
-5. If no tenant match or no unpaid rent → mark as "unmatched"
+2. Find active Leases for that Tenant (scoped to the current User)
+3. If no active leases, mark as "unmatched"
+4. If active leases exist, find the one with the most negative balance (or just the first one if balances are >= 0)
+5. Create a TenantPayment on that Lease
 ```
 
 ### 4.2 Service Class
@@ -414,22 +405,15 @@ class PaymentEmailProcessorService
       return email_record
     end
 
-    # 7. Try utility payment match first
-    utility_payment = try_create_utility_payment(tenant, parsed)
-    if utility_payment
-      email_record.update!(status: :matched_utility, utility_payment: utility_payment)
+    # 7. Try create tenant payment
+    tenant_payment = try_create_tenant_payment(tenant, parsed)
+    if tenant_payment
+      email_record.update!(status: :matched, tenant_payment: tenant_payment)
       return email_record
     end
 
-    # 8. Fall back to rent payment
-    rent_payment = try_create_rent_payment(tenant, parsed)
-    if rent_payment
-      email_record.update!(status: :matched_rent, rent_payment: rent_payment)
-      return email_record
-    end
-
-    # 9. No match — create in-app notification
-    email_record.update!(status: :unmatched, error_message: "No unpaid utility expense or scheduled rent found for tenant '#{tenant.name}'")
+    # 8. No match — create in-app notification
+    email_record.update!(status: :unmatched, error_message: "No active lease found for tenant '#{tenant.name}'")
     create_unmatched_notification(@user, email_record)
     email_record
 
@@ -478,47 +462,20 @@ class PaymentEmailProcessorService
     alias_match&.tenant
   end
 
-  def try_create_utility_payment(tenant, parsed)
-    tenant.leases.includes(rental_property: :expenses).each do |lease|
-      property = lease.rental_property
+  def try_create_tenant_payment(tenant, parsed)
+    # Find active leases for this tenant
+    active_leases = tenant.leases.where(
+      "commencement_date <= :today AND (termination_date IS NULL OR termination_date >= :today)",
+      today: Date.current
+    ).to_a
 
-      # Find utility expenses that don't already have a linked payment
-      utility_expenses = property.expenses
-                                 .where(category: :utilities)
-                                 .where.not(id: UtilityPayment.where.not(expense_id: nil).select(:expense_id))
+    return nil if active_leases.empty?
 
-      matching_expense = utility_expenses.find do |expense|
-        expense.amount == parsed[:amount]
-      end
+    # Prefer the lease with the most negative balance, otherwise just use the first active lease
+    target_lease = active_leases.min_by { |lease| lease.current_balance }
 
-      next unless matching_expense
-
-      return UtilityPayment.create!(
-        lease:              lease,
-        expense:            matching_expense,
-        amount:             parsed[:amount],
-        payment_date:       parsed[:payment_date] || Date.current,
-        payment_method:     parsed[:provider],
-        transaction_number: parsed[:transaction_id]
-      )
-    end
-
-    nil
-  end
-
-  def try_create_rent_payment(tenant, parsed)
-    # Find earliest unpaid scheduled rent across all of the tenant's leases
-    earliest_unpaid = ScheduledRent
-      .joins(lease: :lease_tenants)
-      .where(lease_tenants: { tenant_id: tenant.id })
-      .where(paid: false)
-      .order(:due_date)
-      .first
-
-    return nil unless earliest_unpaid
-
-    RentPayment.create!(
-      scheduled_rent:     earliest_unpaid,
+    TenantPayment.create!(
+      lease:              target_lease,
       amount:             parsed[:amount],
       payment_date:       parsed[:payment_date] || Date.current,
       payment_method:     parsed[:provider],
@@ -544,13 +501,10 @@ end
 | Scenario | Behavior |
 |----------|----------|
 | Payer name matches no tenant (primary or alias) | Mark `PaymentEmail` as `unmatched`; create in-app notification |
-| Payer matches tenant but no utility expense or unpaid rent | Mark as `unmatched`; create in-app notification |
-| Multiple utility expenses match the same amount | Match the **oldest** unlinked utility expense |
-| Utility expense amount does not exactly match | Skip utility match; fall through to rent payment |
-| Payment amount exceeds scheduled rent amount | Still create the `RentPayment`; the existing `update_scheduled_rent_status` callback handles partial/over payments |
+| Payer matches tenant but no active lease | Mark as `unmatched`; create in-app notification |
 | Duplicate email (same `message_id`) | Skip silently — uniqueness index prevents double-processing |
 | Parse failure (no amount extracted) | Mark as `error` with descriptive message; create in-app notification |
-| Tenant has leases on multiple properties | Check utility expenses on **all** properties; for rent, use the **earliest** unpaid `ScheduledRent` across all leases |
+| Tenant has leases on multiple properties | Apply payment to the active lease with the most negative balance |
 
 ---
 
@@ -592,13 +546,12 @@ Add a new view to monitor the status of ingested payment emails:
 
 ### 5.3 Email Configuration Settings Page
 
-Each user configures their own IMAP credentials via a settings page:
+Each user configures their own Gmail API credentials via a settings page, typically starting an OAuth flow:
 
-- **Route:** `GET /settings/email` — form for IMAP server, port, username, password, mailbox, SSL toggle, enabled toggle
-- **Route:** `PATCH /settings/email` — update credentials
-- Password encrypted at rest via Active Record Encryption (`encrypts :password`)
+- **Route:** `GET /settings/email` — form to connect a Google Workspace account.
+- **Route:** `PATCH /settings/email` — update configuration.
+- Tokens encrypted at rest via Active Record Encryption.
 - Display `last_polled_at` timestamp so the user knows when the mailbox was last checked
-- "Test Connection" button to validate IMAP credentials before saving
 
 **New files:**
 - `app/controllers/email_configurations_controller.rb`
@@ -707,10 +660,9 @@ By verifying the parser and processor against the exact downloaded files, the te
 ## Migration Execution Order
 
 1. `CreateTenantAliases` — new table
-2. `AddExpenseIdToUtilityPayments` — add column
-3. `CreateEmailConfigurations` — new table (per-user IMAP credentials)
-4. `CreatePaymentEmails` — new table
-5. `CreateNotifications` — new table
+2. `CreateEmailConfigurations` — new table (per-user Gmail API credentials)
+3. `CreatePaymentEmails` — new table
+4. `CreateNotifications` — new table
 
 ---
 
@@ -719,7 +671,6 @@ By verifying the parser and processor against the exact downloaded files, the te
 | Action | Path |
 |--------|------|
 | **Create** | `db/migrate/XXXXX_create_tenant_aliases.rb` |
-| **Create** | `db/migrate/XXXXX_add_expense_id_to_utility_payments.rb` |
 | **Create** | `db/migrate/XXXXX_create_email_configurations.rb` |
 | **Create** | `db/migrate/XXXXX_create_payment_emails.rb` |
 | **Create** | `db/migrate/XXXXX_create_notifications.rb` |
@@ -729,7 +680,6 @@ By verifying the parser and processor against the exact downloaded files, the te
 | **Create** | `app/models/notification.rb` |
 | **Modify** | `app/models/tenant.rb` — add `has_many :tenant_aliases`, `all_names` method |
 | **Modify** | `app/models/user.rb` — add `has_one :email_configuration` |
-| **Modify** | `app/models/utility_payment.rb` — add `belongs_to :expense, optional: true` |
 | **Create** | `app/services/payment_email_parser_service.rb` |
 | **Create** | `app/services/payment_email_processor_service.rb` |
 | **Create** | `app/jobs/ingest_payment_emails_job.rb` |
@@ -762,7 +712,7 @@ By verifying the parser and processor against the exact downloaded files, the te
 
 | # | Question | Decision |
 |---|----------|----------|
-| 1 | **Single-user or multi-user IMAP?** | **Multi-user.** Each user stores their own IMAP credentials in the `email_configurations` table. Passwords are encrypted via Active Record Encryption. |
+| 1 | **Authentication mechanism?** | **Multi-user Gmail API.** Each user stores their own OAuth credentials in the `email_configurations` table. Tokens are encrypted via Active Record Encryption. |
 | 2 | **Payment provider coverage** | **Chase Bank (Zelle) and Venmo.** The parser uses provider-specific regex patterns for both sources, organized in a `PROVIDER_PATTERNS` lookup hash. |
 | 3 | **Utility expense matching tolerance** | **Exact match.** The utility payment amount must exactly equal the expense amount — no tolerance. |
 | 4 | **Forwarding mechanism** | **Both manual and auto-forwarded.** The system processes all unseen messages in the configured mailbox identically regardless of how they arrived. |

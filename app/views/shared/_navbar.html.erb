@@ -34,10 +34,24 @@
         <%= link_to "Expenses", expenses_path,
             class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/expenses')}" %>
       </li>
+      <li>
+        <%= link_to "Email Settings", email_configuration_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/email_configuration') || request.path.start_with?('/payment_emails')}" %>
+      </li>
     </ul>
   </div>
  
   <div class="navbar-end">
+    <% if authenticated? %>
+      <% unread_count = Current.user.notifications.unread.count %>
+      <%= link_to notifications_path, class: "btn btn-ghost btn-circle relative mr-2" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
+        <% if unread_count > 0 %>
+          <span class="badge badge-primary badge-xs absolute top-2 right-2 p-1.5"><%= unread_count %></span>
+        <% end %>
+      <% end %>
+    <% end %>
+
     <%# Mobile dropdown %>
     <div class="dropdown dropdown-end lg:hidden">
       <div tabindex="0" role="button" class="btn btn-ghost btn-square">
@@ -52,6 +66,7 @@
         <li><%= link_to "Leases", leases_path %></li>
         <li><%= link_to "Payments", tenant_payments_path %></li>
         <li><%= link_to "Expenses", expenses_path %></li>
+        <li><%= link_to "Email Settings", email_configuration_path %></li>
       </ul>
     </div>
   </div>

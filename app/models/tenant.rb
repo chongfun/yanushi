@@ -5,4 +5,11 @@ class Tenant < ApplicationRecord
   has_many :tenant_payments, through: :leases
 
   accepts_nested_attributes_for allow_destroy: true, reject_if: :all_blank
+  has_many :tenant_aliases, dependent: :destroy
+
+  accepts_nested_attributes_for :tenant_aliases, allow_destroy: true, reject_if: :all_blank
+
+  def all_names
+    [ name, *tenant_aliases.pluck(:name) ].compact.map { |n| n.downcase.strip }
+  end
 end

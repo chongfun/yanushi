@@ -1,0 +1,141 @@
+<% content_for :title, "Payment Email Details" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Email Settings", email_configuration_path %></li>
+  <li><%= link_to "History", payment_emails_path %></li>
+  <li>Details</li>
+<% end %>
+
+<div class="flex justify-between items-center mb-8">
+  <div>
+    <h1 class="text-3xl font-extrabold tracking-tight">Ingested Message Log</h1>
+    <p class="text-base-content/70 mt-1">Audit and troubleshooting panel for processed transaction notification.</p>
+  </div>
+  <%= link_to payment_emails_path, class: "btn btn-outline btn-sm btn-neutral" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+    Back to history
+  <% end %>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="lg:col-span-2 flex flex-col gap-6">
+    <!-- Main Ingestion Summary Card -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title text-xl font-bold border-b border-base-200 pb-3 mb-4 flex items-center gap-2">
+          Parsed Transaction Info
+          <% case @payment_email.status %>
+          <% when "matched" %>
+            <span class="badge badge-success">Matched</span>
+          <% when "unmatched" %>
+            <span class="badge badge-warning">Unmatched</span>
+          <% when "pending" %>
+            <span class="badge badge-info">Pending</span>
+          <% else %>
+            <span class="badge badge-error">Error</span>
+          <% end %>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="text-xs text-base-content/60 font-semibold uppercase tracking-wider">Payer Name (Sender)</div>
+            <div class="text-lg font-bold text-base-content mt-0.5"><%= @payment_email.sender_name || "N/A" %></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-base-content/60 font-semibold uppercase tracking-wider">Transaction Amount</div>
+            <div class="text-lg font-bold text-success mt-0.5"><%= number_to_currency(@payment_email.amount) %></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-base-content/60 font-semibold uppercase tracking-wider">Transaction Provider</div>
+            <div class="text-sm font-semibold text-base-content mt-0.5 capitalize"><%= @payment_email.provider || "N/A" %></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-base-content/60 font-semibold uppercase tracking-wider">Payment / Sent Date</div>
+            <div class="text-sm font-semibold text-base-content mt-0.5"><%= @payment_email.payment_date ? l(@payment_email.payment_date) : "N/A" %></div>
+          </div>
+
+          <div class="md:col-span-2">
+            <div class="text-xs text-base-content/60 font-semibold uppercase tracking-wider">Message ID</div>
+            <div class="text-xs font-mono bg-base-200/50 p-2 rounded border border-base-200 mt-1 select-all"><%= @payment_email.message_id %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collapsible Raw Email Headers & Source -->
+    <div class="collapse collapse-plus bg-base-100 border border-base-200 shadow-sm rounded-lg overflow-hidden">
+      <input type="checkbox" />
+      <div class="collapse-title font-bold text-lg flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-primary"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>
+        Raw Ingested Email Source
+      </div>
+      <div class="collapse-content p-0">
+        <div class="border-t border-base-200">
+          <div class="bg-neutral text-neutral-content p-4 font-mono text-xs overflow-x-auto max-h-[400px] select-text">
+            <pre><%= @payment_email.raw_body %></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Matching / Resolution Details Sidebar -->
+  <div class="flex flex-col gap-6">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-3">Resolution Flow</h3>
+
+        <% if @payment_email.status == "matched" && @payment_email.tenant_payment %>
+          <div class="alert alert-success py-4 rounded-lg text-sm mb-4">
+            <div>
+              <div class="font-bold">Successfully Matched to Lease Ledger</div>
+              <div class="text-xs opacity-90 mt-0.5">Applied to active tenant lease running account.</div>
+            </div>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-base-content/60">Tenant Payment Record:</span>
+              <%= link_to "View Payment", tenant_payment_path(@payment_email.tenant_payment), class: "link link-primary font-semibold" %>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/60">Lease Record:</span>
+              <%= link_to "Lease ##{@payment_email.tenant_payment.lease_id}", lease_path(@payment_email.tenant_payment.lease), class: "link link-primary font-semibold" %>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/60">Property:</span>
+              <span class="font-semibold"><%= @payment_email.tenant_payment.lease.rental_property.address %></span>
+            </div>
+          </div>
+
+        <% elsif @payment_email.status == "unmatched" %>
+          <div class="alert alert-warning py-4 rounded-lg text-sm mb-4">
+            <div>
+              <div class="font-bold">Unresolved Transaction</div>
+              <div class="text-xs opacity-90 mt-0.5">Could not match payer name to any active tenant.</div>
+            </div>
+          </div>
+          <p class="text-xs text-base-content/70 leading-relaxed mb-4">
+            This email failed to resolve. Review your active tenant names and <strong>Tenant Aliases</strong> in the Tenants list to ensure names like <em>"<%= @payment_email.sender_name %>"</em> are added as aliases.
+          </p>
+          <div class="flex justify-start">
+            <%= link_to "Manage Tenants", tenants_path, class: "btn btn-primary btn-sm" %>
+          </div>
+
+        <% elsif @payment_email.status == "error" %>
+          <div class="alert alert-error py-4 rounded-lg text-sm mb-4">
+            <div>
+              <div class="font-bold">Processing Error</div>
+              <div class="text-xs opacity-90 mt-0.5">An exception was raised during digestion.</div>
+            </div>
+          </div>
+          <div class="bg-base-200 p-3 rounded border border-base-300 font-mono text-xs text-error select-text mb-4 break-words">
+            <%= @payment_email.error_message %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

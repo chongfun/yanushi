@@ -1,0 +1,56 @@
+<%= form_with(model: @email_configuration, url: email_configuration_path, method: :patch, class: "space-y-6") do |f| %>
+  <% if @email_configuration.errors.any? %>
+    <div class="alert alert-error shadow-sm rounded-lg flex items-start gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(@email_configuration.errors.count, "error") %> prohibited this configuration from being saved:</h3>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+          <% @email_configuration.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Google Workspace (OAuth2) Card -->
+  <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden mb-6">
+    <div class="card-body">
+      <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-2 flex items-center gap-2">
+        <svg class="size-5 text-primary" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 2.192 15.34 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c6.478 0 10.793-4.537 10.793-10.986 0-.746-.08-1.32-.176-1.886H12.24z"/>
+        </svg>
+        Google Workspace Connection (Recommended)
+      </h3>
+      <p class="text-sm text-base-content/70">Connect securely using Google OAuth2 to ingest payment notification emails directly from your Google Workspace or Gmail account.</p>
+
+      <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <%= link_to auth_google_path, class: "btn btn-primary gap-2 shadow-sm hover:scale-[1.02] transition-all", data: { turbo: false } do %>
+          <svg class="size-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 2.192 15.34 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c6.478 0 10.793-4.537 10.793-10.986 0-.746-.08-1.32-.176-1.886H12.24z"/>
+          </svg>
+          Connect Google Workspace Account
+        <% end %>
+
+        <% if @email_configuration.gmail_address.present? %>
+          <div class="badge badge-success py-3 gap-1.5 font-medium">
+            <span class="size-1.5 rounded-full bg-white animate-ping"></span>
+            Connected: <%= @email_configuration.gmail_address %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="form-control mt-6">
+        <div class="flex items-center gap-2">
+          <%= f.check_box :enabled, class: "checkbox checkbox-primary checkbox-sm" %>
+          <%= f.label :enabled, "Enable Ingestion Job", class: "label-text font-medium cursor-pointer" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 border-t border-base-200 pt-6">
+    <%= link_to "Cancel", email_configuration_path, class: "btn btn-ghost" %>
+    <%= f.submit "Save Settings", class: "btn btn-primary px-8" %>
+  </div>
+<% end %>

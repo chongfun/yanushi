@@ -1,0 +1,211 @@
+<% content_for :title, "Email Settings" %>
+
+<% content_for :breadcrumbs do %>
+  <li>Settings</li>
+  <li>Email Ingestion</li>
+<% end %>
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+  <div>
+    <h1 class="text-3xl font-extrabold tracking-tight">Email Ingestion Settings</h1>
+    <p class="text-base-content/70 mt-1">Configure automated tenant payment retrieval from your Chase or Venmo notifications.</p>
+  </div>
+  <div class="flex gap-2">
+    <%= link_to edit_email_configuration_path, class: "btn btn-outline btn-neutral" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.936 6.936 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+      Configure Connection
+    <% end %>
+    <% if @email_configuration.persisted? && @email_configuration.enabled? %>
+      <%= button_to ingest_email_configuration_path, method: :post, class: "btn btn-primary shadow-sm hover:scale-[1.02] transition-all" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 animate-pulse"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+        Run Sync Now
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="lg:col-span-2 flex flex-col gap-6">
+    <!-- Status & Connection Summary Card -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
+      <div class="card-body">
+        <h2 class="card-title text-xl font-bold flex items-center gap-2 mb-4">
+          Connection Status
+          <% if @email_configuration.persisted? && @email_configuration.enabled? %>
+            <div class="badge badge-success gap-1.5 py-2">
+              <span class="size-1.5 rounded-full bg-white animate-ping"></span>
+              Active Polling
+            </div>
+          <% else %>
+            <div class="badge badge-neutral">Inactive / Unconfigured</div>
+          <% end %>
+        </h2>
+
+        <% if @email_configuration.persisted? %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
+            <div class="flex items-center gap-3">
+              <div class="p-3 bg-base-200 rounded-lg text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+              </div>
+              <div>
+                <div class="text-xs text-base-content/60 uppercase font-semibold tracking-wider">Workspace Account</div>
+                <div class="font-medium text-base-content"><%= @email_configuration.gmail_address %></div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="p-3 bg-base-200 rounded-lg text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" /></svg>
+              </div>
+              <div>
+                <div class="text-xs text-base-content/60 uppercase font-semibold tracking-wider">Method</div>
+                <div class="font-medium text-base-content">Gmail REST API (Secure OAuth2)</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="p-3 bg-base-200 rounded-lg text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+              </div>
+              <div>
+                <div class="text-xs text-base-content/60 uppercase font-semibold tracking-wider">Last Sync Check</div>
+                <div class="font-medium text-base-content">
+                  <%= @email_configuration.last_polled_at ? l(@email_configuration.last_polled_at, format: :short) : "Never" %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <% else %>
+          <div class="alert alert-info py-6 rounded-lg my-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+              <h3 class="font-bold">Automate payment tracking</h3>
+              <p class="text-sm">Configure your banking email inbox to forward payment notifications, automatically parsing and posting tenant payments instantly.</p>
+            </div>
+          </div>
+          <div class="flex justify-start mt-4">
+            <%= link_to "Get Started Now", edit_email_configuration_path, class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Recent Processed Emails log -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title text-xl font-bold">Recent Payment Messages</h2>
+          <%= link_to "View History", payment_emails_path, class: "btn btn-ghost btn-sm text-primary" %>
+        </div>
+
+        <% emails = Current.user.payment_emails.order(created_at: :desc).limit(5) %>
+        <% if emails.any? %>
+          <div class="overflow-x-auto">
+            <table class="table w-full">
+              <thead>
+                <tr>
+                  <th>Sender</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Received</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% emails.each do |email| %>
+                  <tr class="hover:bg-base-200/50 cursor-pointer" onclick="window.location='<%= payment_email_path(email) %>'">
+                    <td>
+                      <div class="font-bold"><%= email.sender_name || "Unknown" %></div>
+                      <div class="text-xs text-base-content/60 flex items-center gap-1">
+                        <span class="badge badge-xs badge-neutral"><%= email.provider %></span>
+                      </div>
+                    </td>
+                    <td class="font-semibold text-success">+<%= number_to_currency(email.amount) %></td>
+                    <td>
+                      <% case email.status %>
+                      <% when "matched" %>
+                        <span class="badge badge-success gap-1">Matched</span>
+                      <% when "unmatched" %>
+                        <span class="badge badge-warning gap-1">Unmatched</span>
+                      <% when "pending" %>
+                        <span class="badge badge-info gap-1">Pending</span>
+                      <% else %>
+                        <span class="badge badge-error gap-1">Error</span>
+                      <% end %>
+                    </td>
+                    <td class="text-xs text-base-content/60"><%= time_ago_in_words(email.created_at) %> ago</td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="text-center py-8 text-base-content/50">
+            No payment messages processed yet. When emails are sync'd, they will show up here.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documentation / Help Guide Sidebar -->
+  <div class="flex flex-col gap-6">
+    <div class="card bg-base-300/40 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h3 class="font-bold text-lg mb-4">How it works</h3>
+        <div class="space-y-6 relative before:absolute before:inset-y-1 before:left-[15px] before:w-0.5 before:bg-primary/20">
+          <!-- Step 1 -->
+          <div class="relative flex gap-4">
+            <div class="size-8 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold shrink-0 z-10 text-sm shadow-sm">1</div>
+            <div>
+              <h4 class="font-bold text-sm text-base-content">Configure credentials</h4>
+              <p class="text-xs text-base-content/60 mt-1 leading-relaxed">Connect securely using Google Workspace OAuth2 credentials.</p>
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div class="relative flex gap-4">
+            <div class="size-8 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold shrink-0 z-10 text-sm shadow-sm">2</div>
+            <div>
+              <h4 class="font-bold text-sm text-base-content">Forward notifications</h4>
+              <p class="text-xs text-base-content/60 mt-1 leading-relaxed">Direct your Chase Zelle or Venmo alerts to your connected Gmail.</p>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="relative flex gap-4">
+            <div class="size-8 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold shrink-0 z-10 text-sm shadow-sm">3</div>
+            <div>
+              <h4 class="font-bold text-sm text-base-content">Auto-Ingestion</h4>
+              <p class="text-xs text-base-content/60 mt-1 leading-relaxed">A background job automatically scans and parses new notifications.</p>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div class="relative flex gap-4">
+            <div class="size-8 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold shrink-0 z-10 text-sm shadow-sm">4</div>
+            <div>
+              <h4 class="font-bold text-sm text-base-content">Intelligent matching</h4>
+              <p class="text-xs text-base-content/60 mt-1 leading-relaxed">Automatically matches and credits payments to the active lease running account.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h3 class="font-bold text-lg mb-2">Supported Formats</h3>
+        <p class="text-xs text-base-content/70 mb-4">The platform automatically strips HTML formatting and applies optimized parsing regex to Chase Zelle and Venmo transaction notification alert layouts.</p>
+        
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 p-2.5 bg-base-200/50 rounded-lg">
+            <div class="badge badge-info badge-sm">Zelle</div>
+            <div class="text-xs font-semibold">You received money with Zelle® emails</div>
+          </div>
+          <div class="flex items-center gap-2 p-2.5 bg-base-200/50 rounded-lg">
+            <div class="badge badge-success badge-sm">Venmo</div>
+            <div class="text-xs font-semibold">"Payer paid you $X" notifications</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

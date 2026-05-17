@@ -71,3 +71,6 @@ gem "prawn-table", "~> 0.2.2"
 gem "hexapdf", "~> 1.8"
 
 gem "tailwindcss-rails", "~> 4.4"
+
+gem "google-apis-gmail_v1"
+gem "googleauth"

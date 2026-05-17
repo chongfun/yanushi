@@ -1,0 +1,73 @@
+<% content_for :title, "Payment Ingestion History" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Email Settings", email_configuration_path %></li>
+  <li>History</li>
+<% end %>
+
+<div class="mb-8">
+  <h1 class="text-3xl font-extrabold tracking-tight">Payment Ingestion History</h1>
+  <p class="text-base-content/70 mt-1">Audit log of all processed payment transaction emails received from your mail server.</p>
+</div>
+
+<div class="card bg-base-100 border border-base-200 shadow-sm">
+  <div class="card-body p-0">
+    <% if @payment_emails.any? %>
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th class="pl-6">Payer</th>
+              <th>Provider</th>
+              <th>Parsed Details</th>
+              <th>Status</th>
+              <th>Processed At</th>
+              <th class="text-right pr-6">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @payment_emails.each do |email| %>
+              <tr class="hover">
+                <td class="pl-6">
+                  <div class="font-bold"><%= email.sender_name || "Unknown Sender" %></div>
+                  <div class="text-xs text-base-content/50"><%= email.message_id.truncate(30) %></div>
+                </td>
+                <td>
+                  <span class="badge badge-neutral capitalize font-semibold"><%= email.provider %></span>
+                </td>
+                <td>
+                  <div class="font-semibold text-success"><%= number_to_currency(email.amount) %></div>
+                  <div class="text-xs text-base-content/60">Date: <%= email.payment_date ? l(email.payment_date) : "N/A" %></div>
+                </td>
+                <td>
+                  <% case email.status %>
+                  <% when "matched" %>
+                    <span class="badge badge-success gap-1">Matched</span>
+                  <% when "unmatched" %>
+                    <span class="badge badge-warning gap-1">Unmatched</span>
+                  <% when "pending" %>
+                    <span class="badge badge-info gap-1">Pending</span>
+                  <% else %>
+                    <span class="badge badge-error gap-1">Error</span>
+                  <% end %>
+                </td>
+                <td class="text-sm text-base-content/60">
+                  <%= l(email.created_at, format: :short) %>
+                </td>
+                <td class="text-right pr-6">
+                  <%= link_to "View Details", payment_email_path(email), class: "btn btn-ghost btn-sm text-primary" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-16 text-base-content/50">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 mx-auto mb-4 text-base-content/30"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+        <h3 class="font-bold text-lg">No payment history yet</h3>
+        <p class="text-sm mt-1">Once you configure your email inbox and receive transaction notification emails, they will appear here.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

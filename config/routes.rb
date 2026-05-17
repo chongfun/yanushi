@@ -19,6 +19,20 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
+  resource :email_configuration, only: [ :show, :edit, :update ] do
+    post :ingest, on: :member
+  end
+
+  get "auth/google" => "google_auth#redirect", as: :auth_google
+  get "auth/google/callback" => "google_auth#callback", as: :auth_google_callback
+
+
+  resources :notifications, only: [ :index ] do
+    post :mark_all_read, on: :collection
+    post :mark_read, on: :member
+  end
+
+  resources :payment_emails, only: [ :index, :show ]
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
