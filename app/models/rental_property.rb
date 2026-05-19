@@ -40,4 +40,16 @@ class RentalProperty < ApplicationRecord
 
     items.sort_by { |item| item[:date] }
   end
+
+  def active_years(additional_years = [])
+    years = Set.new(additional_years.map(&:to_i).reject(&:zero?))
+    years << Date.current.year
+
+    years.merge(scheduled_rents.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM due_date)::integer")).compact)
+    years.merge(tenant_payments.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM payment_date)::integer")).compact)
+    years.merge(tenant_charges.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM charge_date)::integer")).compact)
+    years.merge(expenses.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM expense_date)::integer")).compact)
+
+    years.to_a.sort
+  end
 end

@@ -21,7 +21,7 @@
     <%= form_with url: rental_property_path(rental_property), method: :get, data: { turbo_frame: "property_financials" }, class: "flex items-center gap-2" do |f| %>
       <%= f.label :year, "Select Year", class: "text-sm font-semibold" %>
       <%= f.select :year,
-            options_for_select((Date.current.year - 5)..(Date.current.year + 1), year),
+            options_for_select(rental_property.active_years([year]), year),
             {},
             onchange: "this.form.requestSubmit()",
             class: "select select-bordered select-sm" %>
