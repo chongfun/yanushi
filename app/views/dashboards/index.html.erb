@@ -47,10 +47,11 @@
                 <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-2">Lease Balances</div>
                 <div class="space-y-1.5">
                   <% active_leases.each do |lease| %>
+                    <% balance = lease.current_balance %>
                     <div class="flex justify-between items-center text-xs">
                       <span class="text-base-content/70">Lease #<%= lease.id %> (<%= lease.tenants.pluck(:name).first %>)</span>
-                      <span class="font-bold <%= lease.current_balance >= 0 ? 'text-success' : 'text-error' %>">
-                        <%= lease.current_balance >= 0 ? "+" : "" %><%= number_to_currency(lease.current_balance) %>
+                      <span class="font-bold <%= balance >= 0 ? 'text-success' : 'text-error' %>">
+                        <%= balance >= 0 ? "+" : "" %><%= number_to_currency(balance) %>
                       </span>
                     </div>
                   <% end %>
