@@ -48,7 +48,7 @@
   <div class="form-control w-full mb-4">
     <%= form.label :reimburse_lease_id, "Lease to Charge", class: "label font-semibold" %>
     <%= form.select :reimburse_lease_id, 
-          Lease.all.map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.pluck(:name).join(', ')})", l.id] }, 
+          Lease.includes(:rental_property, :tenants).map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.map(&:name).join(', ')})", l.id] }, 
           { include_blank: "Select a lease (or auto-assign active lease)..." }, 
           { class: "select select-bordered w-full" } %>
   </div>
