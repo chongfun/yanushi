@@ -7,7 +7,7 @@
           class: "flex items-center gap-2" do |f| %>
       <%= f.label :year, "Tax Year:", class: "text-sm font-semibold" %>
       <%= f.select :year,
-            options_for_select((Date.current.year - 10)..(Date.current.year), @year),
+            options_for_select(@rental_property.active_years([@year]), @year),
             {},
             onchange: "this.form.requestSubmit()",
             class: "select select-bordered select-sm" %>
