@@ -6,7 +6,7 @@ class ScheduledRentsGenerator
   end
 
   def call
-    amount = (@lease.annual_rental_amount / 12.0).truncate(2)
+    amount = (@lease.annual_rental_amount / 12).truncate(2)
     first_due_date = first_due_date_for(@lease.commencement_date)
 
     1.upto(12) do |month|
