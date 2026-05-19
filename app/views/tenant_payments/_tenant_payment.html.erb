@@ -1,0 +1,13 @@
+<tr id="<%= dom_id tenant_payment %>">
+  <td>
+    <div class="font-medium text-sm"><%= tenant_payment.lease.rental_property.address %></div>
+    <div class="text-xs text-base-content/60">Lease ID: <%= tenant_payment.lease_id %></div>
+  </td>
+  <td><%= tenant_payment.payment_date %></td>
+  <td class="font-mono text-success"><%= number_to_currency(tenant_payment.amount) %></td>
+  <td><span class="badge badge-ghost"><%= tenant_payment.payment_method %></span></td>
+  <td class="text-xs"><%= tenant_payment.transaction_number %></td>
+  <td class="text-right">
+    <%= link_to "View", tenant_payment, class: "btn btn-xs btn-ghost" %>
+  </td>
+</tr>

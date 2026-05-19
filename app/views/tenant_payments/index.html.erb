@@ -1,0 +1,26 @@
+<% content_for :title, "Payments" %>
+
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">Payments</h1>
+  <%= link_to "New Payment", new_tenant_payment_path, class: "btn btn-primary" %>
+</div>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Lease/Property</th>
+        <th>Payment Date</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Transaction #</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tenant_payments">
+      <% @tenant_payments.each do |tenant_payment| %>
+        <%= render tenant_payment %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

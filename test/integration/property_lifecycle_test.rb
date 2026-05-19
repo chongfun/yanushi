@@ -38,12 +38,12 @@ class PropertyLifecycleTest < ActionDispatch::IntegrationTest
     lease = Lease.last
     assert_redirected_to lease_url(lease)
 
-    # 3. Record a Rent Payment for the first scheduled rent
+    # 3. Record a Tenant Payment for the lease
     scheduled_rent = lease.scheduled_rents.order(:due_date).first
-    assert_difference "RentPayment.count", 1 do
-      post rent_payments_url, params: {
-        rent_payment: {
-          scheduled_rent_id: scheduled_rent.id,
+    assert_difference "TenantPayment.count", 1 do
+      post tenant_payments_url, params: {
+        tenant_payment: {
+          lease_id: lease.id,
           amount: 2000,
           payment_date: Date.new(2025, 1, 1),
           payment_method: "Check"
@@ -51,8 +51,8 @@ class PropertyLifecycleTest < ActionDispatch::IntegrationTest
       }
     end
 
-    # 4. Verify the scheduled rent is marked as paid (based on app logic)
+    # 4. Verify the scheduled rent is marked as covered
     scheduled_rent.reload
-    assert scheduled_rent.paid?
+    assert scheduled_rent.covered?
   end
 end

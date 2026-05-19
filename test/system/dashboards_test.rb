@@ -9,8 +9,7 @@ class DashboardsTest < ApplicationSystemTestCase
     Expense.create!(rental_property: @property, category: "repairs", amount: 250.00, expense_date: Date.today, description: "Fix door")
 
     @lease = Lease.create!(rental_property: @property, lease_type: "month_to_month", commencement_date: Date.today, annual_rental_amount: 12000, late_period_days: 5)
-    scheduled = @lease.scheduled_rents.first
-    RentPayment.create!(scheduled_rent: scheduled, amount: 1000.0, payment_date: Date.today, payment_method: "cash")
+    TenantPayment.create!(lease: @lease, amount: 1000.0, payment_date: Date.today, payment_method: "cash")
 
     # Log in
     visit new_session_path

@@ -14,10 +14,10 @@ class TenantsTest < ApplicationSystemTestCase
     visit tenants_path
     click_on "New tenant"
 
-    fill_in "Name", with: "Jane Doe"
-    fill_in "Mailing address", with: "456 Side St"
-    fill_in "Phone number", with: "555-1234"
-    fill_in "Email address", with: "jane@example.com"
+    fill_in "Primary Legal Name", with: "Jane Doe"
+    fill_in "Mailing Address", with: "456 Side St"
+    fill_in "Phone Number", with: "555-1234"
+    fill_in "Email Address", with: "jane@example.com"
 
     click_on "Create Tenant"
 

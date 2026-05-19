@@ -36,6 +36,28 @@
     <%= form.text_field :description, class: "input input-bordered w-full" %>
   </div>
 
+  <div class="divider">Tenant Reimbursement</div>
+
+  <div class="form-control mb-4">
+    <label class="label cursor-pointer justify-start gap-4">
+      <%= form.check_box :tenant_reimbursable, class: "checkbox checkbox-primary" %>
+      <span class="label-text font-semibold">Tenant Reimbursable (Charges Tenant Running Account)</span>
+    </label>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :reimburse_lease_id, "Lease to Charge", class: "label font-semibold" %>
+    <%= form.select :reimburse_lease_id, 
+          Lease.all.map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.pluck(:name).join(', ')})", l.id] }, 
+          { include_blank: "Select a lease (or auto-assign active lease)..." }, 
+          { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :reimburse_amount, "Charge Amount (Defaults to expense amount if left blank)", class: "label font-semibold" %>
+    <%= form.number_field :reimburse_amount, step: "0.01", class: "input input-bordered w-full", placeholder: "e.g. 150.00" %>
+  </div>
+
   <div>
     <%= form.submit class: "btn btn-primary w-full mt-4" %>
   </div>

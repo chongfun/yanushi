@@ -1,0 +1,18 @@
+<% if @lease %>
+  <turbo-frame id="modal-frame" data-modal-title="Record Payment">
+    <%= render "tenant_payments/modal_form", tenant_payment: @tenant_payment, lease: @lease %>
+  </turbo-frame>
+<% else %>
+  <div class="max-w-xl mx-auto py-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">New Payment</h1>
+      <%= link_to "Cancel", tenant_payments_path, class: "btn btn-ghost" %>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl border border-base-200">
+      <div class="card-body">
+        <%= render "form", tenant_payment: @tenant_payment %>
+      </div>
+    </div>
+  </div>
+<% end %>

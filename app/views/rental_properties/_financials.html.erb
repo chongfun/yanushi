@@ -5,6 +5,14 @@
             new_rental_property_expense_path(rental_property),
             class: "btn btn-sm btn-outline btn-error",
             data: { turbo_frame: "modal-frame" } %>
+      <% active_lease = rental_property.leases.where("commencement_date <= ? AND (termination_date >= ? OR lease_type = ?)", Date.current, Date.current, Lease.lease_types[:month_to_month]).first %>
+      <% active_lease ||= rental_property.leases.order(commencement_date: :desc).first %>
+      <% if active_lease %>
+        <%= link_to "＋ Record Payment",
+              new_lease_tenant_payment_path(active_lease),
+              class: "btn btn-sm btn-outline btn-primary",
+              data: { turbo_frame: "modal-frame" } %>
+      <% end %>
       <%= link_to "📋 Schedule E",
             schedule_e_rental_property_path(rental_property, year: year),
             class: "btn btn-sm btn-outline btn-accent",
@@ -45,39 +53,44 @@
                 <% case item[:type] %>
                 <% when 'Scheduled Rent' %>
                   <div class="badge badge-info gap-2 text-xs"><%= item[:type] %></div>
-                  <% if item[:object].partial_payment? %>
-                    <div class="badge badge-warning gap-2 text-xs text-warning-content ml-1">Partial</div>
-                  <% end %>
-                <% when 'Rent Payment' %>
+                <% when 'Tenant Payment' %>
                   <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
                 <% when 'Expense' %>
                   <div class="badge badge-error gap-2 text-xs text-error-content"><%= item[:type] %></div>
-                <% when 'Utility Payment' %>
+                <% when 'Tenant Charge' %>
                   <div class="badge badge-warning gap-2 text-xs text-warning-content"><%= item[:type] %></div>
                 <% end %>
               </td>
               <td class="text-sm">
                 <% if item[:type] == 'Scheduled Rent' %>
-                  <%= link_to "＋ Record Payment",
-                        new_scheduled_rent_rent_payment_path(item[:object]),
-                        class: "btn btn-xs btn-outline btn-primary",
-                        data: { turbo_frame: "modal-frame" } %>
-                  <% if item[:date] < Date.current %>
-                    <span class="text-error ml-2 text-xs">Overdue</span>
+                  <% if item[:object].covered? %>
+                    <span class="badge badge-success badge-sm badge-outline font-medium">Paid</span>
+                  <% else %>
+                    <span class="badge badge-error badge-sm badge-outline font-medium">Unpaid</span>
+                    <% if item[:date] < Date.current %>
+                      <span class="text-error ml-2 text-xs font-semibold">Overdue</span>
+                    <% end %>
                   <% end %>
-                <% elsif item[:type] == 'Rent Payment' %>
-                  Due: <%= item[:object].scheduled_rent.due_date.strftime("%b %d, %Y") %>
+                <% elsif item[:type] == 'Tenant Payment' %>
+                  Lease #<%= item[:object].lease_id %> (Method: <%= item[:object].payment_method %>)
+                <% elsif item[:type] == 'Tenant Charge' %>
+                  Charge: <%= item[:object].description %>
                 <% elsif item[:type] == 'Expense' %>
                   <%= item[:object].category %> - <%= item[:object].description %>
+                  <% if item[:object].reimbursed? %>
+                    <span class="badge badge-warning text-xs text-warning-content ml-2">Reimbursable</span>
+                  <% end %>
                 <% end %>
               </td>
               <td class="text-right font-medium">
                 <% if item[:type] == 'Expense' %>
                   <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
-                <% elsif ['Rent Payment', 'Utility Payment'].include?(item[:type]) %>
-                  <span class="text-success"><%= number_to_currency(item[:amount]) %></span>
+                <% elsif item[:type] == 'Tenant Charge' %>
+                  <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
+                <% elsif item[:type] == 'Tenant Payment' %>
+                  <span class="text-success">+<%= number_to_currency(item[:amount]) %></span>
                 <% elsif item[:type] == 'Scheduled Rent' %>
-                  <%= number_to_currency(item[:object].balance_due) %>
+                  <span class="text-base-content/75"><%= number_to_currency(item[:amount]) %></span>
                 <% else %>
                   <%= number_to_currency(item[:amount]) %>
                 <% end %>

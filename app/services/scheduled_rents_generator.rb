@@ -6,13 +6,14 @@ class ScheduledRentsGenerator
   end
 
   def call
-    amount_per_month = @lease.annual_rental_amount / 12.0
+    amount = (@lease.annual_rental_amount / 12.0).truncate(2)
+    first_due_date = first_due_date_for(@lease.commencement_date)
 
     1.upto(12) do |month|
       date = Date.new(@year, month, 1)
 
-      # Skip if before lease start
-      next if date < @lease.commencement_date.beginning_of_month
+      # Skip if before the first due date
+      next if date < first_due_date
 
       # Skip if after lease end (for term leases)
       if @lease.term? && @lease.termination_date
@@ -23,18 +24,23 @@ class ScheduledRentsGenerator
         next if date > @end_date.beginning_of_month
       end
 
-      # Calculate exact due date by adding the month difference
-      # between the target month/year and the commencement month/year
-      months_diff = (@year * 12 + month) - (@lease.commencement_date.year * 12 + @lease.commencement_date.month)
-      due_date = @lease.commencement_date + months_diff.months
-
       # Check for existing scheduled rent in this month
-      unless @lease.scheduled_rents.where(due_date: due_date.beginning_of_month..due_date.end_of_month).exists?
+      unless @lease.scheduled_rents.where(due_date: date.beginning_of_month..date.end_of_month).exists?
         @lease.scheduled_rents.create!(
-          amount: amount_per_month,
-          due_date: due_date
+          amount: amount,
+          due_date: date
         )
       end
+    end
+  end
+
+  private
+
+  def first_due_date_for(date)
+    if date.day == 1
+      date
+    else
+      (date + 1.month).beginning_of_month
     end
   end
 end

@@ -28,16 +28,14 @@ class ScheduleETest < ApplicationSystemTestCase
       lease_type: :term
     )
 
-    # Scheduled rents are generated automatically by after_create
-    scheduled_rent = lease.scheduled_rents.first
-    scheduled_rent.rent_payments.create!(
+    # Create tenant payments
+    lease.tenant_payments.create!(
       amount: 5000.00,
       payment_date: Date.new(year, 1, 5),
       payment_method: "Zelle"
     )
 
-    # Create income: Utility Payment
-    lease.utility_payments.create!(
+    lease.tenant_payments.create!(
       amount: 150.00,
       payment_date: Date.new(year, 2, 10),
       payment_method: "Check"
@@ -69,9 +67,7 @@ class ScheduleETest < ApplicationSystemTestCase
 
     # Verify Income
     assert_text "Rents Received"
-    assert_text "$5,000.00"
-    assert_text "Utility Reimbursements"
-    assert_text "$150.00"
+    assert_text "$5,150.00"
     assert_text "Total Income"
     assert_text "$5,150.00"
 

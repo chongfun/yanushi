@@ -1,0 +1,12 @@
+<div class="max-w-xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Edit Payment</h1>
+    <%= link_to "Cancel", @tenant_payment, class: "btn btn-ghost" %>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <%= render "form", tenant_payment: @tenant_payment %>
+    </div>
+  </div>
+</div>
