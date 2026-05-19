@@ -33,8 +33,9 @@ class ExpensesController < ApplicationController
       if @expense.save
         if @rental_property
           # Submitted from modal
-          @financial_items = @rental_property.financial_items(Date.current.year)
-          @year = Date.current.year
+          year = @expense.expense_date&.year || Date.current.year
+          @financial_items = @rental_property.financial_items(year)
+          @year = year
 
           format.turbo_stream {
             render turbo_stream: [

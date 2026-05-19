@@ -52,8 +52,9 @@ class TenantPaymentsController < ApplicationController
         if @lease
           # Submitted from modal
           rental_property = @lease.rental_property
-          @financial_items = rental_property.financial_items(Date.current.year)
-          @year = Date.current.year
+          year = @tenant_payment.payment_date&.year || Date.current.year
+          @financial_items = rental_property.financial_items(year)
+          @year = year
 
           format.turbo_stream {
             flash.now[:notice] = "Payment recorded successfully."
