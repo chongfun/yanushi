@@ -30,9 +30,9 @@ class ScheduleEGeneratorTest < ActiveSupport::TestCase
   setup do
     @property = rental_properties(:one)
     # Clear existing data to avoid overlap between tests
+    TenantCharge.delete_all
     Expense.delete_all
-    RentPayment.delete_all
-    UtilityPayment.delete_all
+    TenantPayment.delete_all
   end
 
   def create_data_for_year(year)
@@ -48,20 +48,20 @@ class ScheduleEGeneratorTest < ActiveSupport::TestCase
       )
     end
 
-    scheduled_rent = scheduled_rents(:one)
-    RentPayment.create!(
-      scheduled_rent: scheduled_rent,
+    lease = leases(:one)
+    TenantPayment.create!(
+      lease: lease,
       payment_date: date_in_year,
       amount: RENT_AMOUNT,
       payment_method: "check",
       transaction_number: "TEST-#{year}"
     )
 
-    lease = leases(:one)
-    UtilityPayment.create!(
+    TenantPayment.create!(
       lease: lease,
       amount: UTILITY_AMOUNT,
-      payment_date: date_in_year
+      payment_date: date_in_year,
+      payment_method: "zelle"
     )
   end
 

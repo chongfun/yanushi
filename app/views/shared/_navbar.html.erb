@@ -27,12 +27,8 @@
             class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/leases')}" %>
       </li>
       <li>
-        <%= link_to "Rent Payments", rent_payments_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/rent_payments')}" %>
-      </li>
-      <li>
-        <%= link_to "Utility Payments", utility_payments_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/utility_payments')}" %>
+        <%= link_to "Payments", tenant_payments_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/tenant_payments')}" %>
       </li>
       <li>
         <%= link_to "Expenses", expenses_path,
@@ -40,7 +36,7 @@
       </li>
     </ul>
   </div>
-
+ 
   <div class="navbar-end">
     <%# Mobile dropdown %>
     <div class="dropdown dropdown-end lg:hidden">
@@ -54,9 +50,8 @@
         <li><%= link_to "Properties", rental_properties_path %></li>
         <li><%= link_to "Tenants", tenants_path %></li>
         <li><%= link_to "Leases", leases_path %></li>
-        <li><%= link_to "Rent Payments", rent_payments_path %></li>
+        <li><%= link_to "Payments", tenant_payments_path %></li>
         <li><%= link_to "Expenses", expenses_path %></li>
-        <li><%= link_to "Utility Payments", utility_payments_path %></li>
       </ul>
     </div>
   </div>

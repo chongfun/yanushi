@@ -1,0 +1,46 @@
+<%= form_with(model: tenant_payment) do |form| %>
+  <% if tenant_payment.errors.any? %>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+      <div>
+        <h3 class="font-bold"><%= pluralize(tenant_payment.errors.count, "error") %> prohibited this payment from being saved:</h3>
+        <ul>
+          <% tenant_payment.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :lease_id, "Lease / Property / Tenants", class: "label font-semibold" %>
+    <%= form.select :lease_id, 
+          Lease.includes(:rental_property, :tenants).map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.map(&:name).join(', ')})", l.id] }, 
+          { include_blank: "Select a lease..." }, 
+          { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :payment_date, class: "label font-semibold" %>
+    <%= form.date_field :payment_date, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :amount, class: "label font-semibold" %>
+    <%= form.text_field :amount, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :payment_method, class: "label font-semibold" %>
+    <%= form.text_field :payment_method, class: "input input-bordered w-full", placeholder: "e.g. Zelle, Check, Cash" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :transaction_number, "Transaction # (Zelle, Venmo, etc.)", class: "label font-semibold" %>
+    <%= form.text_field :transaction_number, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= form.submit class: "btn btn-primary w-full mt-4" %>
+  </div>
+<% end %>

@@ -1,0 +1,51 @@
+<% lease ||= tenant_payment.lease %>
+
+<div class="mb-4 p-3 bg-base-200 rounded-box text-sm">
+  <div class="flex justify-between">
+    <span class="text-base-content/70">Lease ID</span>
+    <span class="font-semibold">#<%= lease.id %></span>
+  </div>
+  <div class="flex justify-between mt-1">
+    <span class="text-base-content/70">Current Balance</span>
+    <span class="font-semibold <%= lease.current_balance >= 0 ? 'text-success' : 'text-error' %>">
+      <%= lease.current_balance >= 0 ? "+" : "" %><%= number_to_currency(lease.current_balance) %>
+    </span>
+  </div>
+</div>
+
+<%= form_with(model: [lease, tenant_payment], data: { turbo: true }) do |form| %>
+  <% if tenant_payment.errors.any? %>
+    <div class="alert alert-error mb-4">
+      <ul>
+        <% tenant_payment.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :payment_date, class: "label font-semibold" %>
+    <%= form.date_field :payment_date, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :amount, class: "label font-semibold" %>
+    <%= form.number_field :amount, step: "0.01", class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :payment_method, class: "label font-semibold" %>
+    <%= form.text_field :payment_method, class: "input input-bordered w-full", placeholder: "e.g. Zelle, Check, Cash" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :transaction_number, "Transaction # (Zelle, Venmo, etc.)", class: "label font-semibold" %>
+    <%= form.text_field :transaction_number, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="flex gap-2 mt-6">
+    <%= form.submit "Record Payment", class: "btn btn-primary flex-1" %>
+    <button type="button" data-action="modal#close" class="btn btn-ghost">Cancel</button>
+  </div>
+<% end %>

@@ -33,14 +33,17 @@ class ExpensesController < ApplicationController
       if @expense.save
         if @rental_property
           # Submitted from modal
-          @financial_items = @rental_property.financial_items(Date.current.year)
-          @year = Date.current.year
+          year = @expense.expense_date&.year || Date.current.year
+          @financial_items = @rental_property.financial_items(year)
+          @year = year
 
           format.turbo_stream {
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
               turbo_stream.update("property_financials", partial: "rental_properties/financials",
                 locals: { rental_property: @rental_property, financial_items: @financial_items, year: @year }),
+              turbo_stream.update("active_lease_balances", partial: "rental_properties/lease_balances",
+                locals: { rental_property: @rental_property }),
               turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
             ]
           }
@@ -96,6 +99,6 @@ class ExpensesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def expense_params
-      params.expect(expense: [ :rental_property_id, :category, :amount, :expense_date, :description ])
+      params.expect(expense: [ :rental_property_id, :category, :amount, :expense_date, :description, :tenant_reimbursable, :reimburse_lease_id, :reimburse_amount ])
     end
 end

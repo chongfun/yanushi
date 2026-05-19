@@ -10,14 +10,27 @@
 
 if Rails.env.development?
   user = User.find_by(email: "me@kylechong.com")
-  User.create!(email: "me@kylechong.com", password: "password123") if user.nil?
+  if user.nil?
+    user = User.create!(email: "me@kylechong.com", password: "password123")
+  end
   rp = RentalProperty.create!(user: user, address: "1#{rand(1000)} Main St", property_type: "single_family_residence", square_footage: 1500)
   tenant = Tenant.create!(user: user, name: "John Doe", email_address: "john@kylechong.com", phone_number: "123-456-7890")
   lease = Lease.create!(rental_property: rp, tenants: [ tenant ], lease_type: "term", annual_rental_amount: 14400, commencement_date: Date.current - 1.year, termination_date: Date.current + 1.year, security_deposit: 1200, late_period_days: 3)
   lease.scheduled_rents.where("due_date < ?", Date.current - 1.month).each do |sr|
-    payment = RentPayment.create!(scheduled_rent: sr, amount: 1200, payment_date: sr.due_date + rand(lease.late_period_days), payment_method: "ach")
-    expense = Expense.create!(rental_property: rp, amount: rand(100...200), category: "utilities", expense_date: sr.due_date)
-    UtilityPayment.create!(lease: lease, amount: expense.amount, payment_date: payment.payment_date, payment_method: "ach")
+    payment_date = sr.due_date + rand(lease.late_period_days)
+    TenantPayment.create!(lease: lease, amount: 1200, payment_date: payment_date, payment_method: "ach")
+
+    expense_amount = rand(100...200)
+    Expense.create!(
+      rental_property: rp,
+      amount: expense_amount,
+      category: "utilities",
+      expense_date: sr.due_date,
+      tenant_reimbursable: true,
+      reimburse_lease_id: lease.id,
+      reimburse_amount: expense_amount
+    )
+    TenantPayment.create!(lease: lease, amount: expense_amount, payment_date: payment_date, payment_method: "ach")
   end
 
   Expense.create!(rental_property: rp, amount: rand(200...300), category: "repairs", expense_date: Date.current - 1.year, description: "A/C tune-up")

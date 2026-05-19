@@ -1,22 +1,12 @@
 class ScheduledRent < ApplicationRecord
   belongs_to :lease
-  has_many :rent_payments, dependent: :destroy
 
-  def paid?
-    paid
+  def covered?(as_of: Date.current)
+    lease.total_credits(as_of: as_of) >= lease.total_debits(as_of: due_date)
   end
 
-  def balance_due
-    amount - rent_payments.sum(:amount)
-  end
-
-  def partial_payment?
-    total_paid = rent_payments.sum(:amount)
-    total_paid > 0 && total_paid < amount
-  end
-
-  def late?
-    !paid? && Date.current > (due_date + lease.late_period_days.days)
+  def late?(as_of: Date.current)
+    !covered?(as_of: as_of) && as_of > (due_date + lease.late_period_days.days)
   end
 
   def display_name

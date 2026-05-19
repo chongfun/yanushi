@@ -289,17 +289,9 @@ class ScheduleEGenerator
   end
 
   def rents_received
-    rent_sum = @property.rent_payments
-                 .where(payment_date: date_range)
-                 .sum(:amount)
-
-    rent_sum + utility_payment_total
-  end
-
-  def utility_payment_total
-    @utility_payment_total ||= @property.utility_payments
-                                 .where(payment_date: date_range)
-                                 .sum(:amount)
+    @property.tenant_payments
+             .where(payment_date: date_range)
+             .sum(:amount)
   end
 
   def expenses_by_category

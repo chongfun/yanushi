@@ -1,12 +1,11 @@
 Rails.application.routes.draw do
   get "dashboards/index"
   resources :expenses
-  resources :utility_payments
-  resources :rent_payments
-  resources :scheduled_rents do
-    resources :rent_payments, only: [ :new, :create ]
-  end
+  resources :tenant_payments
+  resources :tenant_charges, only: [ :show, :destroy ]
+  resources :scheduled_rents
   resources :leases do
+    resources :tenant_payments, only: [ :new, :create ]
     post :generate_scheduled_rents, on: :member
   end
   resources :tenants
@@ -19,6 +18,7 @@ Rails.application.routes.draw do
   end
   resource :session
   resources :passwords, param: :token
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

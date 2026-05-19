@@ -1,0 +1,6 @@
+one:
+  lease: one
+  expense: one
+  amount: 250.00
+  charge_date: 2026-04-28
+  description: Reimbursable repairs

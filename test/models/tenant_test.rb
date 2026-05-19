@@ -1,7 +1,7 @@
 require "test_helper"
 
 class TenantTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  setup do
+    @tenant = tenants(:one)
+  end
 end

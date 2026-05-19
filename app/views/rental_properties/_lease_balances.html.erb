@@ -1,0 +1,23 @@
+<% active_leases = rental_property.leases.select { |l| l.commencement_date <= Date.current && (l.termination_date.nil? || l.termination_date >= Date.current) } %>
+<% if active_leases.any? %>
+  <div class="mb-8">
+    <h3 class="text-lg font-bold text-base-content/70 mb-3">Active Lease Balances</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <% active_leases.each do |lease| %>
+        <% balance = lease.current_balance %>
+        <div class="p-4 rounded-xl border bg-base-100 shadow-sm flex justify-between items-center <%= balance >= 0 ? 'border-success/30' : 'border-error/30' %>">
+          <div>
+            <div class="font-bold text-sm text-base-content/85">Lease #<%= lease.id %> (<%= lease.tenants.pluck(:name).join(', ') %>)</div>
+            <div class="text-xs text-base-content/50"><%= lease.commencement_date.strftime("%b %Y") %> - <%= lease.termination_date&.strftime("%b %Y") || 'Month-to-Month' %></div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-black <%= balance >= 0 ? 'text-success' : 'text-error' %>">
+              <%= balance >= 0 ? "+" : "" %><%= number_to_currency(balance) %>
+            </div>
+            <div class="text-xxs uppercase tracking-wider text-base-content/40 font-bold"><%= balance >= 0 ? 'Surplus / Paid' : 'Balance Owed' %></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

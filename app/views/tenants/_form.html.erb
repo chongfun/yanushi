@@ -1,38 +1,59 @@
-<%= form_with(model: tenant) do |form| %>
+<%= form_with(model: tenant, data: { controller: "nested-form" }) do |form| %>
   <% if tenant.errors.any? %>
-    <div class="alert alert-error shadow-lg mb-6 text-error-content"><div>
-      <h3 class="font-bold"><%= pluralize(tenant.errors.count, "error") %> prohibited this tenant from being saved:</h3>
-
-      <ul>
-        <% tenant.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+      <div>
+        <h3 class="font-bold"><%= pluralize(tenant.errors.count, "error") %> prohibited this tenant from being saved:</h3>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+          <% tenant.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
     </div>
   <% end %>
 
+  <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
+    <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-4">Contact Profile</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control w-full">
+        <%= form.label :name, "Primary Legal Name", class: "label font-semibold" %>
+        <%= form.text_field :name, placeholder: "e.g. Kristina Page", class: "input input-bordered w-full" %>
+      </div>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :name, class: "label font-semibold" %>
-    <%= form.text_field :name, class: "input input-bordered w-full" %>
+      <div class="form-control w-full">
+        <%= form.label :email_address, "Email Address", class: "label font-semibold" %>
+        <%= form.email_field :email_address, placeholder: "kristina@example.com", class: "input input-bordered w-full" %>
+      </div>
+
+      <div class="form-control w-full">
+        <%= form.label :phone_number, "Phone Number", class: "label font-semibold" %>
+        <%= form.text_field :phone_number, placeholder: "555-1234", class: "input input-bordered w-full" %>
+      </div>
+
+      <div class="form-control w-full">
+        <%= form.label :mailing_address, "Mailing Address", class: "label font-semibold" %>
+        <%= form.text_field :mailing_address, placeholder: "123 Main St", class: "input input-bordered w-full" %>
+      </div>
+    </div>
   </div>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :mailing_address, class: "label font-semibold" %>
-    <%= form.text_field :mailing_address, class: "input input-bordered w-full" %>
+  <!-- Tenant Aliases (Dynamic Nested Fields) -->
+  <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
+    <div class="flex justify-between items-center border-b border-base-200 pb-3 mb-4">
+      <div>
+        <h3 class="font-bold text-lg">Payer Name Aliases</h3>
+        <p class="text-xs text-base-content/60 mt-0.5">Add other names (e.g. maiden name, abbreviations) this tenant might use on Zelle/Venmo payments.</p>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm btn-primary" data-action="nested-form#add">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+        Add Alias
+      </button>
+    </div>
   </div>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :phone_number, class: "label font-semibold" %>
-    <%= form.text_field :phone_number, class: "input input-bordered w-full" %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :email_address, class: "label font-semibold" %>
-    <%= form.text_field :email_address, class: "input input-bordered w-full" %>
-  </div>
-
-  <div>
-    <%= form.submit class: "btn btn-primary w-full mt-4" %>
+  <div class="flex justify-end gap-3 pt-4">
+    <%= link_to "Cancel", tenants_path, class: "btn btn-ghost" %>
+    <%= form.submit class: "btn btn-primary px-8" %>
   </div>
 <% end %>

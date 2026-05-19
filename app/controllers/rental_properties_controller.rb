@@ -19,13 +19,11 @@ class RentalPropertiesController < ApplicationController
     start_date = Date.new(@year, 1, 1)
     end_date   = start_date.end_of_year
 
-    @rents_received = @rental_property.rent_payments
+    @rents_received = @rental_property.tenant_payments
                         .where(payment_date: start_date..end_date)
                         .sum(:amount)
 
-    @utility_reimbursements = @rental_property.utility_payments
-                                .where(payment_date: start_date..end_date)
-                                .sum(:amount)
+    @utility_reimbursements = 0
 
     @total_income = @rents_received + @utility_reimbursements
 

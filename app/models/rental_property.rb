@@ -2,9 +2,9 @@ class RentalProperty < ApplicationRecord
   belongs_to :user
   has_many :leases, dependent: :destroy
   has_many :scheduled_rents, through: :leases
-  has_many :rent_payments, through: :scheduled_rents
   has_many :expenses, dependent: :destroy
-  has_many :utility_payments, through: :leases
+  has_many :tenant_payments, through: :leases
+  has_many :tenant_charges, through: :leases
   enum :property_type, {
     single_family_residence: 1,
     multi_family_residence: 2,
@@ -22,20 +22,20 @@ class RentalProperty < ApplicationRecord
 
     items = []
 
-    scheduled_rents.where(due_date: start_date..end_date).where(paid: false).each do |sr|
+    scheduled_rents.where(due_date: start_date..end_date).each do |sr|
       items << { date: sr.due_date, type: "Scheduled Rent", amount: sr.amount, object: sr }
     end
 
-    rent_payments.where(payment_date: start_date..end_date).each do |rp|
-      items << { date: rp.payment_date, type: "Rent Payment", amount: rp.amount, object: rp }
+    tenant_payments.where(payment_date: start_date..end_date).each do |tp|
+      items << { date: tp.payment_date, type: "Tenant Payment", amount: tp.amount, object: tp }
+    end
+
+    tenant_charges.where(charge_date: start_date..end_date).each do |tc|
+      items << { date: tc.charge_date, type: "Tenant Charge", amount: tc.amount, object: tc }
     end
 
     expenses.where(expense_date: start_date..end_date).each do |exp|
       items << { date: exp.expense_date, type: "Expense", amount: exp.amount, object: exp }
-    end
-
-    utility_payments.where(payment_date: start_date..end_date).each do |up|
-      items << { date: up.payment_date, type: "Utility Payment", amount: up.amount, object: up }
     end
 
     items.sort_by { |item| item[:date] }

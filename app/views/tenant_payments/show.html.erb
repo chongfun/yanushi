@@ -1,0 +1,72 @@
+<div class="max-w-3xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Payment Details</h1>
+      <p class="text-base-content/60">Reference: <%= dom_id(@tenant_payment) %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", tenant_payments_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Payment", edit_tenant_payment_path(@tenant_payment), class: "btn btn-outline" %>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row justify-between gap-8">
+        <!-- Payment Summary -->
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Amount Paid</div>
+            <div class="text-4xl font-bold text-primary"><%= number_to_currency(@tenant_payment.amount) %></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Payment Date</div>
+              <div class="text-lg font-medium"><%= @tenant_payment.payment_date.strftime("%B %d, %Y") %></div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Payment Method</div>
+              <div><span class="badge badge-secondary badge-lg badge-outline font-medium"><%= @tenant_payment.payment_method %></span></div>
+            </div>
+          </div>
+
+          <% if @tenant_payment.transaction_number.present? %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Transaction Number</div>
+              <div class="font-mono text-sm bg-base-200 px-3 py-1.5 rounded-lg w-fit border border-base-300">
+                <%= @tenant_payment.transaction_number %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="divider md:divider-horizontal"></div>
+
+        <!-- Property & Lease Details -->
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Property Address</div>
+            <div class="text-lg font-bold leading-tight"><%= @tenant_payment.lease.rental_property.address %></div>
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Lease Period</div>
+            <div class="font-medium"><%= @tenant_payment.lease.commencement_date.strftime("%b %d, %Y") %> – <%= @tenant_payment.lease.termination_date ? @tenant_payment.lease.termination_date.strftime("%b %d, %Y") : "Month-to-Month" %></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions justify-between mt-10 border-t border-base-200 pt-8">
+        <div>
+          <%= link_to "Download PDF Receipt", tenant_payment_path(@tenant_payment, format: :pdf), target: "_blank", class: "btn btn-primary px-8" %>
+        </div>
+        <div>
+          <%= button_to "Delete Payment", @tenant_payment, method: :delete, 
+              class: "btn btn-error btn-ghost", 
+              form: { data: { turbo_confirm: "Are you sure you want to delete this payment record?" } } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

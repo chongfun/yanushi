@@ -60,14 +60,44 @@ class ScheduledRentsGeneratorTest < ActiveSupport::TestCase
     end
   end
 
-  test "maintains the day of the month from commencement date" do
+  test "aligns due dates to the 1st of the month, ensuring first_due_date is on or after the commencement date" do
+    # Commencement 15th (not day 1, so first due date must be after commencement: 2025-02-01)
     @lease.update!(commencement_date: Date.new(2025, 1, 15))
     @lease.scheduled_rents.destroy_all
-
     ScheduledRentsGenerator.new(@lease, 2025).call
 
+    assert_equal Date.new(2025, 2, 1), @lease.scheduled_rents.order(:due_date).first.due_date
     @lease.scheduled_rents.each do |rent|
-      assert_equal 15, rent.due_date.day
+      assert_equal 1, rent.due_date.day
+    end
+
+    # Commencement 1st (is day 1, so first due date is equal to commencement: 2025-01-01)
+    @lease.update!(commencement_date: Date.new(2025, 1, 1))
+    @lease.scheduled_rents.destroy_all
+    ScheduledRentsGenerator.new(@lease, 2025).call
+
+    assert_equal Date.new(2025, 1, 1), @lease.scheduled_rents.order(:due_date).first.due_date
+    @lease.scheduled_rents.each do |rent|
+      assert_equal 1, rent.due_date.day
+    end
+  end
+
+  test "truncates monthly rent and ignores remaining cents for term series" do
+    # $10,000 / year term lease -> $833.33 for all 12 months
+    @lease.update!(
+      commencement_date: Date.new(2025, 1, 1),
+      termination_date: Date.new(2025, 12, 31),
+      annual_rental_amount: 10000.00
+    )
+    @lease.scheduled_rents.destroy_all
+    ScheduledRentsGenerator.new(@lease, 2025).call
+
+    rents = @lease.scheduled_rents.order(:due_date).to_a
+    assert_equal 12, rents.size
+
+    # All 12 months: $833.33 exactly
+    rents.each do |rent|
+      assert_equal 833.33, rent.amount.to_f
     end
   end
 end
