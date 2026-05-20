@@ -1,0 +1,43 @@
+<% content_for :title, "Upload Payment Receipt - Yanushi" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Payment Ingestions", payment_receipt_ingestions_path %></li>
+  <li>Upload Receipt</li>
+<% end %>
+
+<div class="max-w-2xl mx-auto mt-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold text-primary mb-2">Ingest Payment Receipt</h2>
+      <p class="text-sm text-base-content/70 mb-6">
+        Upload a Chase Zelle or Venmo payment receipt PDF. The system will automatically extract the payment date, amount, transaction number, and attempt to resolve the matching tenant.
+      </p>
+
+      <%= form_with(model: @ingestion, local: true, class: "space-y-6") do |f| %>
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-semibold">Select Receipt PDF</span>
+            <span class="label-text-alt text-base-content/50">PDF only (Max 1 page)</span>
+          </label>
+          <%= f.file_field :pdf_file, accept: "application/pdf", class: "file-input file-input-bordered file-input-primary w-full" %>
+        </div>
+
+        <div class="alert alert-info shadow-sm text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <div>
+            <h3 class="font-bold">Supported Formats</h3>
+            <div class="text-xs">
+              • <strong>Chase Zelle</strong>: Single-payment PDF receipts printed or saved from Chase Online.<br>
+              • <strong>Venmo</strong>: "Transaction details" pages saved or printed as PDF.
+            </div>
+          </div>
+        </div>
+
+        <div class="card-actions justify-end mt-6 gap-3">
+          <%= link_to "Cancel", payment_receipt_ingestions_path, class: "btn btn-ghost" %>
+          <%= f.submit "Upload & Parse", class: "btn btn-primary px-6" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
