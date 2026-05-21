@@ -13,7 +13,7 @@
         Upload a Chase Zelle receipt, Venmo receipt, or monthly Chase checking statement PDF. The system will automatically parse the transactions, extract metadata, and match them to your tenants.
       </p>
 
-      <%= form_with(model: @ingestion, local: true, class: "space-y-6") do |f| %>
+      <%= form_with(model: @ingestion, local: true, data: { turbo: false }, class: "space-y-6") do |f| %>
         <div class="form-control w-full">
           <label class="label">
             <span class="label-text font-semibold">Select Document PDF</span>

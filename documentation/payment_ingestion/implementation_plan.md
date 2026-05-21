@@ -47,6 +47,8 @@ Sanitized test documents are in `test/fixtures/files/`:
 | Remember Alias checkbox? | Yes. The confirmation form includes an option to save the parsed payer name/username as an alias for the selected tenant. |
 | PDF presentation? | For single receipts, the PDF is embedded in the review page. For bank statements, the extracted line item (`raw_text`) is displayed instead of the full multi-page PDF. |
 | Failed parse manual correction? | If parsing fails, the landlord can manually fill out all fields and confirm anyway, preserving a complete audit trail. |
+| How are documents processed? | Document parsing is offloaded to a background job (`IngestPaymentDocumentJob`) to avoid blocking Puma threads. |
+| Are transaction numbers validated? | Yes, validated to be under 50 characters and alphanumeric with dashes/underscores on both `PaymentIngestion` and `TenantPayment`. |
 
 ---
 
@@ -135,7 +137,7 @@ add_index :tenant_aliases, "lower(alias_name)", unique: true
 
 ### `payment_documents`
 
-Stores the binary PDF file. Multiple `PaymentIngestion` records can reference the same document (e.g., when a bank statement contains multiple tenant transactions).
+Stores the binary PDF file and tracks parsing status. Multiple `PaymentIngestion` records can reference the same document (e.g., when a bank statement contains multiple tenant transactions).
 
 ```ruby
 create_table :payment_documents do |t|
@@ -143,6 +145,8 @@ create_table :payment_documents do |t|
   t.binary     :attachment_file
   t.string     :attachment_filename
   t.string     :attachment_content_type
+  t.string     :status, null: false, default: "processing"
+  t.text       :error_message
   t.timestamps
 end
 ```
@@ -208,6 +212,13 @@ class PaymentDocument < ApplicationRecord
   validates :attachment_file, presence: true
   validates :attachment_filename, presence: true
   validates :attachment_content_type, presence: true
+  validates :status, presence: true
+
+  enum :status, {
+    processing: "processing",
+    success: "success",
+    failed: "failed"
+  }
 end
 ```
 
@@ -225,6 +236,7 @@ class PaymentIngestion < ApplicationRecord
 
   validates :source, presence: true
   validates :status, presence: true
+  validates :transaction_number, length: { maximum: 50 }, format: { with: /\A[a-zA-Z0-9_\-]*\z/, message: "must be alphanumeric with dashes or underscores" }, allow_blank: true
 
   validate :ensure_not_duplicate_payment
   validate :validate_parse_status
@@ -278,6 +290,12 @@ end
 has_many :tenant_aliases, dependent: :destroy
 has_many :payment_ingestions
 accepts_nested_attributes_for :tenant_aliases, allow_destroy: true, reject_if: :all_blank
+```
+
+### `TenantPayment` — Additions
+
+```ruby
+validates :transaction_number, length: { maximum: 50 }, format: { with: /\A[a-zA-Z0-9_\-]*\z/, message: "must be alphanumeric with dashes or underscores" }, allow_blank: true
 ```
 
 ---
@@ -369,6 +387,7 @@ module PaymentIngestions
           success: true
         )
       rescue => e
+        Rails.logger.error("Zelle parser error: #{e.message}\n#{e.backtrace.join("\n")}")
         IngestionResult.new(receipt_type: "zelle", raw_text: pdf_text, error_message: e.message, success: false)
       end
 
@@ -421,6 +440,7 @@ module PaymentIngestions
           success: true
         )
       rescue => e
+        Rails.logger.error("Venmo parser error: #{e.message}\n#{e.backtrace.join("\n")}")
         IngestionResult.new(receipt_type: "venmo", raw_text: pdf_text, error_message: e.message, success: false)
       end
 
@@ -495,7 +515,8 @@ module PaymentIngestions
         end
         results
       rescue => e
-        [IngestionResult.new(receipt_type: "chase_statement", raw_text: pdf_text, error_message: e.message, success: false)]
+        Rails.logger.error("ChaseStatement parser error: #{e.message}\n#{e.backtrace.join("\n")}")
+        [IngestionResult.new(receipt_type: "chase_statement", raw_text: nil, error_message: e.message, success: false)]
       end
 
       private
@@ -565,6 +586,7 @@ Coordinates the full ingestion pipeline. Handles both single-page receipts and m
 **Key behaviors:**
 
 - Runs parsing within the user's timezone context.
+- Can accept a `PaymentDocument` record directly as `pdf_path_or_io` to extract stored binary file bytes.
 - Extracts text from all pages using `HexaPDF`.
 - Detects document type (`chase_statement`, `venmo`, or `zelle`) based on text markers.
 - For bank statements: creates one `PaymentDocument` shared by all resulting `PaymentIngestion` records; discards unmatched items silently.
@@ -578,6 +600,35 @@ Coordinates the full ingestion pipeline. Handles both single-page receipts and m
 | `CHASE TOTAL CHECKING` + `TRANSACTION DETAIL` | `chase_statement` |
 | `Transaction ID` or `venmo` | `venmo` |
 | `zelle` or `chase` or `Transaction number` | `zelle` |
+
+---
+
+## Background Jobs
+
+### `IngestPaymentDocumentJob`
+
+Invoked asynchronously to parse uploaded documents.
+
+```ruby
+class IngestPaymentDocumentJob < ApplicationJob
+  queue_as :default
+
+  def perform(payment_document_id)
+    payment_document = PaymentDocument.find(payment_document_id)
+    begin
+      PaymentIngestions::Ingestion.new.call(
+        user: payment_document.user,
+        pdf_path_or_io: payment_document,
+        source: "pdf_upload"
+      )
+      payment_document.update!(status: :success)
+    rescue => e
+      payment_document.update!(status: :failed, error_message: e.message)
+      Rails.logger.error("Failed to ingest payment document #{payment_document_id}: #{e.message}\n#{e.backtrace.join("\n")}")
+    end
+  end
+end
+```
 
 ---
 

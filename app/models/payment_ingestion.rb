@@ -7,6 +7,7 @@ class PaymentIngestion < ApplicationRecord
 
   validates :source, presence: true
   validates :status, presence: true
+  validates :transaction_number, length: { maximum: 50 }, format: { with: /\A[a-zA-Z0-9_\-]*\z/, message: "must be alphanumeric with dashes or underscores" }, allow_blank: true
 
   validate :ensure_not_duplicate_payment
   validate :validate_parse_status
@@ -48,11 +49,11 @@ class PaymentIngestion < ApplicationRecord
 
       if create_alias
         # Create alias for payer name if it's not already matched and is not the tenant's canonical name
-        if payer_name.present? && payer_name.downcase != tenant.name.downcase && !tenant.tenant_aliases.exists?(alias_name: payer_name)
+        if payer_name.present? && payer_name.downcase != tenant.name.downcase && !tenant.tenant_aliases.where("LOWER(alias_name) = ?", payer_name.downcase).exists?
           tenant.tenant_aliases.create!(alias_name: payer_name)
         end
         # Create alias for payer username if it's not already matched
-        if payer_username.present? && !tenant.tenant_aliases.exists?(alias_name: payer_username)
+        if payer_username.present? && !tenant.tenant_aliases.where("LOWER(alias_name) = ?", payer_username.downcase).exists?
           tenant.tenant_aliases.create!(alias_name: payer_username)
         end
       end

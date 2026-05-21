@@ -1,4 +1,4 @@
-# app/services/payment_receipts/parsers/zelle.rb
+# app/services/payment_ingestions/parsers/zelle.rb
 module PaymentIngestions
   module Parsers
     class Zelle < Base
@@ -16,6 +16,7 @@ module PaymentIngestions
           success: true
         )
       rescue => e
+        Rails.logger.error("Zelle parser error: #{e.message}\n#{e.backtrace.join("\n")}")
         IngestionResult.new(
           receipt_type: "zelle",
           raw_text: pdf_text,

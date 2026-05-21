@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       get :download
     end
   end
+  resources :payment_documents, only: [ :destroy ]
   resources :rental_properties do
     resources :expenses, only: [ :new, :create ]
     member do

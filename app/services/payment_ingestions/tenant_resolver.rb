@@ -1,4 +1,4 @@
-# app/services/payment_receipts/tenant_resolver.rb
+# app/services/payment_ingestions/tenant_resolver.rb
 module PaymentIngestions
   class TenantResolver
     ResolveResult = Struct.new(:tenant, :tenants, :status, keyword_init: true)
@@ -21,23 +21,21 @@ module PaymentIngestions
     private
 
     def find_candidates(user, display_name, username)
-      results = []
+      search_values = []
+      search_values << username.strip.downcase if username.present?
+      search_values << display_name.strip.downcase if display_name.present?
 
-      # Try matching by username if present (e.g. "@handle")
-      if username.present?
-        normalized_username = username.strip.downcase
-        results += user.tenants.where("LOWER(name) = ?", normalized_username).to_a
-        results += user.tenants.joins(:tenant_aliases).where("LOWER(tenant_aliases.alias_name) = ?", normalized_username).to_a
-      end
+      return [] if search_values.empty?
 
-      # Try matching by display name
-      if display_name.present?
-        normalized_name = display_name.strip.downcase
-        results += user.tenants.where("LOWER(name) = ?", normalized_name).to_a
-        results += user.tenants.joins(:tenant_aliases).where("LOWER(tenant_aliases.alias_name) = ?", normalized_name).to_a
-      end
-
-      results.uniq
+      user.tenants
+          .left_outer_joins(:tenant_aliases)
+          .where(
+            "LOWER(tenants.name) IN (?) OR LOWER(tenant_aliases.alias_name) IN (?)",
+            search_values,
+            search_values
+          )
+          .distinct
+          .to_a
     end
   end
 end

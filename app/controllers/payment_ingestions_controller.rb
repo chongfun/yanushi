@@ -8,10 +8,31 @@ class PaymentIngestionsController < ApplicationController
                                  .reviewable
                                  .order(created_at: :desc)
 
-    @confirmed_ingestions = user.payment_ingestions
-                                .includes(:tenant, lease: :rental_property)
-                                .confirmed
-                                .order(created_at: :desc)
+    # Simple pagination for confirmed ingestions (History)
+    @per_page = 20
+    @page = [ params[:page].to_i, 1 ].max
+
+    confirmed_scope = user.payment_ingestions
+                          .includes(:tenant, lease: :rental_property)
+                          .confirmed
+
+    @total_confirmed_count = confirmed_scope.count
+    @total_pages = (@total_confirmed_count.to_f / @per_page).ceil
+    @page = [ @page, @total_pages ].min if @total_pages > 0
+
+    @confirmed_ingestions = confirmed_scope.order(created_at: :desc)
+                                           .limit(@per_page)
+                                           .offset((@page - 1) * @per_page)
+
+    @processing_documents = user.payment_documents
+                                 .processing
+                                 .select(:id, :user_id, :attachment_filename, :attachment_content_type, :status, :error_message, :created_at, :updated_at)
+                                 .order(created_at: :desc)
+
+    @failed_documents = user.payment_documents
+                            .failed
+                            .select(:id, :user_id, :attachment_filename, :attachment_content_type, :status, :error_message, :created_at, :updated_at)
+                            .order(created_at: :desc)
   end
 
   def new
@@ -25,53 +46,44 @@ class PaymentIngestionsController < ApplicationController
       return
     end
 
+    # Validate actual file content, not client-provided MIME type (which is spoofable)
+    header = pdf_param.read(5)
+    pdf_param.rewind
+    unless header == "%PDF-"
+      redirect_to new_payment_ingestion_path, alert: "Only PDF files are supported."
+      return
+    end
+
+    if pdf_param.size > 10.megabytes
+      redirect_to new_payment_ingestion_path, alert: "File size exceeds the 10MB limit."
+      return
+    end
+
     begin
-      result = PaymentIngestions::Ingestion.new.call(
-        user: Current.session.user,
-        pdf_path_or_io: pdf_param,
-        source: "pdf_upload"
+      pdf_bytes = pdf_param.read
+      filename = pdf_param.original_filename
+      content_type = pdf_param.content_type
+
+      payment_document = Current.session.user.payment_documents.create!(
+        attachment_file: pdf_bytes,
+        attachment_filename: filename,
+        attachment_content_type: content_type,
+        status: :processing
       )
 
-      if result.is_a?(Array)
-        saved_count = result.select(&:persisted?).count
-        if saved_count > 0
-          redirect_to payment_ingestions_path, notice: "Bank statement parsed successfully. Found #{saved_count} matching tenant payment transaction(s)."
-        else
-          redirect_to payment_ingestions_path, alert: "Bank statement parsed, but no matching tenant transactions were found."
-        end
-      else
-        @ingestion = result
-        if @ingestion.persisted?
-          if @ingestion.failed?
-            redirect_to payment_ingestion_path(@ingestion), alert: "Parsing failed. Please manually fill in the details."
-          else
-            redirect_to payment_ingestion_path(@ingestion), notice: "Receipt uploaded and parsed successfully."
-          end
-        else
-          error_msg = @ingestion.errors.full_messages.to_sentence.presence || "Could not save ingestion record."
-          redirect_to new_payment_ingestion_path, alert: error_msg
-        end
-      end
-    rescue PaymentIngestions::ParsingError => e
-      redirect_to new_payment_ingestion_path, alert: "Parsing failed: #{e.message}"
+      IngestPaymentDocumentJob.perform_later(payment_document.id)
+
+      redirect_to payment_ingestions_path, notice: "Document uploaded successfully and is being processed in the background."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to new_payment_ingestion_path, alert: "Upload failed: #{e.record.errors.full_messages.to_sentence}"
+    rescue => e
+      Rails.logger.error("Upload document failed: #{e.message}\n#{e.backtrace.join("\n")}")
+      redirect_to new_payment_ingestion_path, alert: "Upload failed: An unexpected error occurred while processing the file."
     end
   end
 
   def show
-    user = Current.session.user
-    @tenants = user.tenants.order(:name)
-    @leases = Lease.joins(:tenants).where(tenants: { user_id: user.id }).includes(:rental_property).distinct
-
-    # Build maps for Stimulus dynamic filtering
-    @tenant_leases_map = {}
-    @tenants.each do |tenant|
-      @tenant_leases_map[tenant.id] = tenant.leases.pluck(:id)
-    end
-
-    @lease_tenants_map = {}
-    @leases.each do |lease|
-      @lease_tenants_map[lease.id] = lease.tenants.pluck(:id)
-    end
+    set_form_data
   end
 
   def update
@@ -86,20 +98,7 @@ class PaymentIngestionsController < ApplicationController
 
       redirect_to payment_ingestion_path(@ingestion), notice: "Ingestion record updated successfully."
     else
-      user = Current.session.user
-      @tenants = user.tenants.order(:name)
-      @leases = Lease.joins(:tenants).where(tenants: { user_id: user.id }).includes(:rental_property).distinct
-
-      @tenant_leases_map = {}
-      @tenants.each do |tenant|
-        @tenant_leases_map[tenant.id] = tenant.leases.pluck(:id)
-      end
-
-      @lease_tenants_map = {}
-      @leases.each do |lease|
-        @lease_tenants_map[lease.id] = lease.tenants.pluck(:id)
-      end
-
+      set_form_data
       render :show, status: :unprocessable_entity
     end
   end
@@ -113,7 +112,8 @@ class PaymentIngestionsController < ApplicationController
     rescue PaymentIngestions::ConfirmationError => e
       redirect_to payment_ingestion_path(@ingestion), alert: e.message
     rescue => e
-      redirect_to payment_ingestion_path(@ingestion), alert: "Failed to confirm payment: #{e.message}"
+      Rails.logger.error("Confirm payment ingestion failed: #{e.message}\n#{e.backtrace.join("\n")}")
+      redirect_to payment_ingestion_path(@ingestion), alert: "Failed to confirm payment: An unexpected error occurred."
     end
   end
 
@@ -137,5 +137,22 @@ class PaymentIngestionsController < ApplicationController
 
   def set_ingestion
     @ingestion = Current.session.user.payment_ingestions.find(params[:id])
+  end
+
+  def set_form_data
+    user = Current.session.user
+    @tenants = user.tenants.order(:name)
+    @leases = Lease.joins(:tenants).where(tenants: { user_id: user.id }).includes(:rental_property).distinct
+
+    # Preload and group in Ruby memory to avoid N+1 queries
+    @tenant_leases_map = Hash.new { |h, k| h[k] = [] }
+    LeaseTenant.joins(:tenant).where(tenants: { user_id: user.id }).pluck(:tenant_id, :lease_id).each do |tenant_id, lease_id|
+      @tenant_leases_map[tenant_id] << lease_id
+    end
+
+    @lease_tenants_map = Hash.new { |h, k| h[k] = [] }
+    LeaseTenant.joins(lease: :rental_property).where(rental_properties: { user_id: user.id }).pluck(:lease_id, :tenant_id).each do |lease_id, tenant_id|
+      @lease_tenants_map[lease_id] << tenant_id
+    end
   end
 end

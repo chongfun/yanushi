@@ -1,4 +1,4 @@
-# app/services/payment_receipts/parsers/chase_statement.rb
+# app/services/payment_ingestions/parsers/chase_statement.rb
 module PaymentIngestions
   module Parsers
     class ChaseStatement < Base
@@ -64,10 +64,11 @@ module PaymentIngestions
 
         results
       rescue => e
+        Rails.logger.error("ChaseStatement parser error: #{e.message}\n#{e.backtrace.join("\n")}")
         [
           IngestionResult.new(
             receipt_type: "chase_statement",
-            raw_text: pdf_text,
+            raw_text: nil,
             error_message: e.message,
             success: false
           )

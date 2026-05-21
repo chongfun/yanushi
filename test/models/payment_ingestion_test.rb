@@ -135,7 +135,7 @@ class PaymentIngestionTest < ActiveSupport::TestCase
     other_user = users(:two)
     other_tenant = Tenant.create!(user: other_user, name: "Other Tenant", mailing_address: "Address", email_address: "other@example.com")
     other_property = RentalProperty.create!(user: other_user, address: "456 Other Rd")
-    other_lease = Lease.create!(rental_property: other_property, commencement_date: Date.current, annual_rental_amount: 1000)
+    other_lease = Lease.create!(rental_property: other_property, lease_type: :month_to_month, commencement_date: Date.current, annual_rental_amount: 1000)
     LeaseTenant.create!(lease: other_lease, tenant: other_tenant)
 
     # Create payment for other user

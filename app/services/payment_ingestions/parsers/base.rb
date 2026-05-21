@@ -1,4 +1,4 @@
-# app/services/payment_receipts/parsers/base.rb
+# app/services/payment_ingestions/parsers/base.rb
 module PaymentIngestions
   module Parsers
     class Base

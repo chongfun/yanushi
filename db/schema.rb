@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_050501) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_070000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_050501) do
     t.binary "attachment_file"
     t.string "attachment_filename"
     t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "status", default: "processing", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_payment_documents_on_user_id"
@@ -80,6 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_050501) do
     t.index ["payment_document_id"], name: "index_payment_ingestions_on_payment_document_id"
     t.index ["tenant_id"], name: "index_payment_ingestions_on_tenant_id"
     t.index ["tenant_payment_id"], name: "index_payment_ingestions_on_tenant_payment_id"
+    t.index ["user_id", "payment_method", "transaction_number"], name: "idx_payment_ingestions_dup_check"
     t.index ["user_id"], name: "index_payment_ingestions_on_user_id"
   end
 

@@ -1,4 +1,4 @@
-# app/services/payment_receipts/parsers/venmo.rb
+# app/services/payment_ingestions/parsers/venmo.rb
 module PaymentIngestions
   module Parsers
     class Venmo < Base
@@ -17,6 +17,7 @@ module PaymentIngestions
           success: true
         )
       rescue => e
+        Rails.logger.error("Venmo parser error: #{e.message}\n#{e.backtrace.join("\n")}")
         IngestionResult.new(
           receipt_type: "venmo",
           raw_text: pdf_text,

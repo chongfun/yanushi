@@ -1,14 +1,11 @@
-# app/services/payment_receipts/ingestion_result.rb
+# app/services/payment_ingestions/ingestion_result.rb
 module PaymentIngestions
-  class IngestionResult
-    attr_accessor :payer_name, :payer_username, :amount, :payment_date,
-                  :payment_method, :transaction_number, :receipt_type,
-                  :raw_text, :error_message, :success
-
-    def initialize(attrs = {})
-      attrs.each { |k, v| send(:"#{k}=", v) }
-    end
-
+  class IngestionResult < Struct.new(
+    :payer_name, :payer_username, :amount, :payment_date,
+    :payment_method, :transaction_number, :receipt_type,
+    :raw_text, :error_message, :success,
+    keyword_init: true
+  )
     def success?
       !!success && error_message.nil?
     end
