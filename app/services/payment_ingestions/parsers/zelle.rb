@@ -1,5 +1,5 @@
 # app/services/payment_receipts/parsers/zelle.rb
-module PaymentReceipts
+module PaymentIngestions
   module Parsers
     class Zelle < Base
       def parse(pdf_text)

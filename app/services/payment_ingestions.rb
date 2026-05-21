@@ -1,5 +1,4 @@
-# app/services/payment_receipts.rb
-module PaymentReceipts
+module PaymentIngestions
   class Error < StandardError; end
   class ParsingError < Error; end
   class ResolutionError < Error; end

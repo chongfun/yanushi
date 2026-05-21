@@ -5,8 +5,7 @@ class Tenant < ApplicationRecord
   has_many :tenant_payments, through: :leases
 
   has_many :tenant_aliases, dependent: :destroy
-  has_many :payment_receipt_ingestions
+  has_many :payment_ingestions
 
   accepts_nested_attributes_for :tenant_aliases, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for allow_destroy: true, reject_if: :all_blank
 end

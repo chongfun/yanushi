@@ -1,8 +1,9 @@
-class PaymentReceiptIngestion < ApplicationRecord
+class PaymentIngestion < ApplicationRecord
   belongs_to :user
   belongs_to :tenant, optional: true
   belongs_to :lease, optional: true
   belongs_to :tenant_payment, optional: true
+  belongs_to :payment_document, optional: true
 
   validates :source, presence: true
   validates :status, presence: true
@@ -21,7 +22,8 @@ class PaymentReceiptIngestion < ApplicationRecord
 
   PAYMENT_METHODS = [
     [ "Chase Zelle", "zelle" ],
-    [ "Venmo", "venmo" ]
+    [ "Venmo", "venmo" ],
+    [ "P2P", "p2p" ]
   ].freeze
 
   scope :reviewable, -> { where(status: [ :matched, :unmatched, :ambiguous, :failed ]) }
@@ -31,8 +33,8 @@ class PaymentReceiptIngestion < ApplicationRecord
   end
 
   def confirm!(create_alias: false)
-    raise PaymentReceipts::ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless confirmable?
-    raise PaymentReceipts::ConfirmationError, "Already confirmed" if confirmed?
+    raise PaymentIngestions::ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless confirmable?
+    raise PaymentIngestions::ConfirmationError, "Already confirmed" if confirmed?
 
     transaction do
       # Note: uses current attributes on the ingestion record (which may have been edited by the user)
@@ -59,7 +61,7 @@ class PaymentReceiptIngestion < ApplicationRecord
       payment
     end
   rescue ActiveRecord::RecordNotUnique
-    raise PaymentReceipts::ConfirmationError, "This transaction has already been recorded in another tenant payment."
+    raise PaymentIngestions::ConfirmationError, "This transaction has already been recorded in another tenant payment."
   end
 
   def duplicate_exists?
@@ -79,11 +81,11 @@ class PaymentReceiptIngestion < ApplicationRecord
   end
 
   def attachment_attached?
-    attachment_file.present?
+    payment_document.present?
   end
 
   def attachment_image?
-    attachment_content_type&.start_with?("image/")
+    payment_document&.attachment_content_type&.start_with?("image/")
   end
 
   private

@@ -1,5 +1,5 @@
 # app/services/payment_receipts/tenant_resolver.rb
-module PaymentReceipts
+module PaymentIngestions
   class TenantResolver
     ResolveResult = Struct.new(:tenant, :tenants, :status, keyword_init: true)
 

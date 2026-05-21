@@ -1,5 +1,5 @@
 # app/services/payment_receipts/parsers/venmo.rb
-module PaymentReceipts
+module PaymentIngestions
   module Parsers
     class Venmo < Base
       def parse(pdf_text)

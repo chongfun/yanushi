@@ -1,5 +1,5 @@
 # app/services/payment_receipts/parsers/base.rb
-module PaymentReceipts
+module PaymentIngestions
   module Parsers
     class Base
       def parse(pdf_text)

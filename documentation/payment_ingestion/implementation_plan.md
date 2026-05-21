@@ -1,54 +1,62 @@
-# Implementation Plan: Payment Receipt Ingestion
+# Implementation Plan: Payment Ingestion
 
 ## Overview
 
-Build a service library that ingests payment receipts from multiple sources (PDF files, and future email), extracts transaction data, resolves the payer to a tenant (supporting aliases for name/username mismatches), and creates `TenantPayment` records. The architecture must cleanly support adding new receipt sources (e.g., scheduled email fetching) without modifying the core ingestion logic.
+A service library that ingests payment documents—individual receipts and multi-page bank statements—from multiple sources (PDF upload, and future email), extracts transaction data, resolves payers to tenants (supporting aliases for name/username mismatches), and creates `TenantPayment` records. The architecture cleanly supports adding new receipt sources (e.g., scheduled email fetching) and new document types without modifying the core ingestion logic.
 
 ### Goals
 
-- Parse Zelle (Chase) and Venmo receipt PDFs to extract payment data.
+- Parse Chase Zelle and Venmo receipt PDFs to extract payment data.
+- Parse multi-page Chase bank statements to extract Zelle and P2P ACH line items.
 - Match payer names/usernames to tenants using an alias system for flexible lookup.
-- Create `TenantPayment` records from parsed receipt data.
+- Create `TenantPayment` records from parsed data.
 - Design a source-agnostic ingestion pipeline so email receipts (and other sources) can reuse the same parsing and matching logic.
-- Provide a UI for uploading receipts and reviewing/confirming ingestion results before committing.
+- Provide a UI for uploading documents and reviewing/confirming ingestion results before committing.
 
-### Receipt Fixtures
+### Supported Document Types
 
-Three test PDFs are provided in `test/fixtures/files/receipts/`:
+| Document Type | Source | Parser | Notes |
+|---|---|---|---|
+| Chase Zelle receipt | PDF upload | `Parsers::Zelle` | Single-page, 1 payment per PDF |
+| Venmo receipt | PDF upload | `Parsers::Venmo` | Single-page, 1 payment per PDF |
+| Chase bank statement | PDF upload | `Parsers::ChaseStatement` | Multi-page, multiple Zelle/P2P payments per PDF |
+
+### Test Fixtures
+
+Sanitized test documents are in `test/fixtures/files/`:
 
 | File | Source | Notes |
 |------|--------|-------|
-| `202604 Zelle.pdf` | Chase Zelle | Title: "Payment Activity - chase.com" |
-| `202403 Venmo.pdf` | Venmo | Title: "Transaction details" |
-| `202312 Security Deposit Zelle.pdf` | Chase Zelle | Title: "Transfer activity - chase.com" |
+| `receipts/202604 Zelle.pdf` | Chase Zelle | Single-page receipt |
+| `receipts/202403 Venmo.pdf` | Venmo | Single-page receipt |
+| `receipts/202312 Security Deposit Zelle.pdf` | Chase Zelle | Single-page receipt |
+| `statements/20260416-statements-1234-.pdf` | Chase statement | Multi-page, generated with mock data (no PII) |
 
-### Decisions
+### Design Decisions
 
 | Question | Answer |
 |----------|--------|
-| How are payers matched to tenants? | By name/username lookup against `tenants.name` and a new `tenant_aliases` table. |
-| What if no tenant match is found? | The receipt is flagged as `unmatched`; the user can manually assign it via UI. |
-| What if multiple tenants match? | The receipt is flagged as `ambiguous`; the user picks the correct tenant. |
-| Are receipts auto-committed? | No — uploaded receipts produce a reviewable record; the user confirms before creating `TenantPayment` records. |
-| How are duplicate receipts handled? | Enforced by a compound unique index on `[payment_method, transaction_number]` on `tenant_payments`. Validation on `PaymentReceiptIngestion` warns/blocks if a payment already exists. |
-| PDF scope? | Strictly 1 PDF upload maps to 1 payment for now. Multi-transaction statement PDFs are out of scope. |
-| Future Email Scope? | User-scoped. The user will configure email inboxes to monitor for fetching emailed receipts. |
-| Storage Strategy? | Receipt PDFs are stored as binary data in the database (`bytea` column) to avoid object store dependencies for this low-volume application (max ~3 tenants). Deleting the ingestion record deletes its associated binary; records are kept indefinitely for audit purposes (no auto-deletion). |
-| Timezone parsing? | User-configured timezone string (defaulting to the user's timezone column on `users`). Receipts are parsed in this timezone context. |
-| Name Cleaning? | Parsers strip non-alphanumeric characters except typical name punctuation (spaces, apostrophes, hyphens, periods, underscores) and `@` handles to avoid icon/unicode artifacts. |
-| Remember Alias Checkbox? | Yes. The confirmation form includes an option to save the parsed payer name/username as an alias for the selected tenant on confirmation. |
-| PDF Presentation? | Embedded inside the `show.html.erb` review page so the landlord can visually compare the PDF next to the form fields. |
-| Failed Parse Manual Correction? | If parsing fails, the landlord can manually fill out all fields on the failed ingestion record and confirm it anyway, ensuring a complete audit trail. |
+| How are payers matched to tenants? | By name/username lookup against `tenants.name` and a `tenant_aliases` table. |
+| What if no tenant match is found? | Receipts are flagged `unmatched`; the user can manually assign via UI. Bank statement items with no match are silently discarded. |
+| What if multiple tenants match? | The receipt is flagged `ambiguous`; the user picks the correct tenant. |
+| Are records auto-committed? | No — uploaded documents produce reviewable records; the user confirms before `TenantPayment` records are created. |
+| How are duplicates handled? | Compound unique index on `[payment_method, transaction_number]` on `tenant_payments`. Validation on `PaymentIngestion` warns/blocks if a payment already exists. |
+| Storage strategy? | PDF files are stored as binary data (`bytea`) in the `payment_documents` table. Multiple `PaymentIngestion` records can share a single `PaymentDocument` (e.g., bank statement). |
+| Timezone parsing? | User-configured timezone string on `users.timezone`. Receipts are parsed within this timezone context. |
+| Name cleaning? | Parsers strip non-alphanumeric characters except typical name punctuation (spaces, apostrophes, hyphens, periods, underscores) and `@` handles. |
+| Remember Alias checkbox? | Yes. The confirmation form includes an option to save the parsed payer name/username as an alias for the selected tenant. |
+| PDF presentation? | For single receipts, the PDF is embedded in the review page. For bank statements, the extracted line item (`raw_text`) is displayed instead of the full multi-page PDF. |
+| Failed parse manual correction? | If parsing fails, the landlord can manually fill out all fields and confirm anyway, preserving a complete audit trail. |
 
 ---
 
 ## Architecture
 
-The ingestion pipeline follows a layered design that separates **sourcing** → **parsing** → **matching** → **recording**:
+The ingestion pipeline follows a layered design: **sourcing** → **parsing** → **matching** → **recording**.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   Receipt Sources                    │
+│                   Document Sources                   │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────┐  │
 │  │  PDF Upload  │  │ Email Fetch  │  │  Future…  │  │
 │  │  (Phase 1)   │  │  (Phase 2)   │  │           │  │
@@ -56,68 +64,66 @@ The ingestion pipeline follows a layered design that separates **sourcing** → 
 │         │                 │                │         │
 │         ▼                 ▼                ▼         │
 │  ┌─────────────────────────────────────────────┐     │
-│  │         PaymentReceipts::Ingestion          │     │
+│  │       PaymentIngestions::Ingestion          │     │
 │  │  (orchestrator – user & source-agnostic)    │     │
 │  │                                             │     │
-│  │  1. Detect receipt type (Zelle vs Venmo)    │     │
-│  │  2. Delegate to appropriate parser          │     │
-│  │  3. Resolve tenant via TenantResolver       │     │
-│  │  4. Return IngestionResult                  │     │
+│  │  1. Extract text via HexaPDF                │     │
+│  │  2. Detect document type                    │     │
+│  │  3. Delegate to appropriate parser          │     │
+│  │  4. Resolve tenants via TenantResolver      │     │
+│  │  5. Return PaymentIngestion record(s)       │     │
 │  └─────────────────────────────────────────────┘     │
 │         │                                            │
 │         ▼                                            │
 │  ┌─────────────────────────────────────────────┐     │
-│  │         PaymentReceipts::Parsers            │     │
-│  │  ┌───────────┐  ┌────────────┐              │     │
-│  │  │   Zelle   │  │   Venmo    │              │     │
-│  │  └───────────┘  └────────────┘              │     │
+│  │        PaymentIngestions::Parsers            │     │
+│  │  ┌───────────┐ ┌──────────┐ ┌────────────┐  │     │
+│  │  │   Zelle   │ │  Venmo   │ │  Chase     │  │     │
+│  │  │           │ │          │ │  Statement │  │     │
+│  │  └───────────┘ └──────────┘ └────────────┘  │     │
 │  └─────────────────────────────────────────────┘     │
 │         │                                            │
 │         ▼                                            │
 │  ┌─────────────────────────────────────────────┐     │
-│  │         PaymentReceipts::TenantResolver     │     │
-│  │  (name/username → Tenant via aliases)       │     │
+│  │       PaymentIngestions::TenantResolver      │     │
+│  │  (name/username → Tenant via aliases)        │     │
 │  └─────────────────────────────────────────────┘     │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### Module Namespace
 
-All receipt ingestion code lives under `PaymentReceipts::` in `app/services/payment_receipts/`:
+All ingestion code lives under `PaymentIngestions::` in `app/services/payment_ingestions/`:
 
 ```
-app/services/payment_receipts/
-├── errors.rb                 # StandardError subclasses
-├── ingestion.rb              # Orchestrator
-├── ingestion_result.rb       # Value object for parsed results
-├── tenant_resolver.rb        # Name → Tenant matching
-└── parsers/
-    ├── base.rb               # Common parser interface
-    ├── zelle.rb              # Chase Zelle PDF parser
-    └── venmo.rb              # Venmo PDF parser
+app/services/
+├── payment_ingestions.rb          # Error class hierarchy
+└── payment_ingestions/
+    ├── ingestion.rb               # Orchestrator
+    ├── ingestion_result.rb        # Value object for parsed results
+    ├── tenant_resolver.rb         # Name → Tenant matching
+    └── parsers/
+        ├── base.rb                # Common parser interface
+        ├── zelle.rb               # Chase Zelle receipt parser
+        ├── venmo.rb               # Venmo receipt parser
+        └── chase_statement.rb     # Chase bank statement parser
 ```
 
 ---
 
-## Phase 1 — Schema Changes
+## Database Schema
 
-### 1.1 Add Timezone to `users`
+### `users` — Timezone Column
 
 ```ruby
-# db/migrate/XXXXXXXX_add_timezone_to_users.rb
-class AddTimezoneToUsers < ActiveRecord::Migration[8.1]
-  def change
-    add_column :users, :timezone, :string, default: "UTC", null: false
-  end
-end
+add_column :users, :timezone, :string, default: "UTC", null: false
 ```
 
-### 1.2 New Table: `tenant_aliases`
+### `tenant_aliases`
 
-Tenant aliases allow flexible matching when receipt payer names differ from the tenant's name (e.g., matching Venmo handles or Zelle names). Alias names must be globally unique case-insensitive.
+Aliases allow flexible matching when receipt payer names differ from the tenant's name (e.g., Venmo handles or Zelle display names). Alias names are globally unique (case-insensitive).
 
 ```ruby
-# db/migrate/XXXXXXXX_create_tenant_aliases.rb
 create_table :tenant_aliases do |t|
   t.references :tenant, null: false, foreign_key: true
   t.string     :alias_name, null: false
@@ -127,66 +133,61 @@ end
 add_index :tenant_aliases, "lower(alias_name)", unique: true
 ```
 
-### 1.3 New Table: `payment_receipt_ingestions`
+### `payment_documents`
 
-Tracks each ingestion attempt for review, manual assignment, and auditing. Stores the raw PDF as binary data (`bytea` in PostgreSQL).
+Stores the binary PDF file. Multiple `PaymentIngestion` records can reference the same document (e.g., when a bank statement contains multiple tenant transactions).
 
 ```ruby
-# db/migrate/XXXXXXXX_create_payment_receipt_ingestions.rb
-create_table :payment_receipt_ingestions do |t|
+create_table :payment_documents do |t|
   t.references :user, null: false, foreign_key: true
-  t.references :tenant, foreign_key: true                # null if unmatched
-  t.references :lease, foreign_key: true                 # null if unresolved
-  t.references :tenant_payment, foreign_key: true        # null until confirmed
+  t.binary     :attachment_file
+  t.string     :attachment_filename
+  t.string     :attachment_content_type
+  t.timestamps
+end
+```
 
-  t.string  :source, null: false                         # "pdf_upload", "email"
-  t.string  :receipt_type                                # "zelle", "venmo"
-  t.string  :status, null: false, default: "pending"     # pending, matched, unmatched, ambiguous, confirmed, failed
-  t.string  :payer_name                                  # display name from receipt
-  t.string  :payer_username                              # username handle (e.g. Venmo @handle)
+### `payment_ingestions`
+
+Tracks each ingestion attempt for review, manual assignment, and auditing.
+
+```ruby
+create_table :payment_ingestions do |t|
+  t.references :user, null: false, foreign_key: true
+  t.references :tenant, foreign_key: true                     # null if unmatched
+  t.references :lease, foreign_key: true                      # null if unresolved
+  t.references :tenant_payment, foreign_key: true             # null until confirmed
+  t.references :payment_document, foreign_key: true           # shared for statements
+
+  t.string  :source, null: false                              # "pdf_upload", "email"
+  t.string  :receipt_type                                     # "zelle", "venmo", "chase_statement"
+  t.string  :status, null: false, default: "pending"          # pending, matched, unmatched, ambiguous, confirmed, failed
+  t.string  :payer_name                                       # display name from document
+  t.string  :payer_username                                   # username handle (e.g. Venmo @handle)
   t.decimal :amount, precision: 12, scale: 2
   t.date    :payment_date
-  t.string  :payment_method                              # "zelle", "venmo"
+  t.string  :payment_method                                   # "zelle", "venmo", "p2p"
   t.string  :transaction_number
-  t.text    :raw_text                                    # full extracted text
-  t.text    :error_message                               # parsing error details
-  t.binary  :pdf_file                                    # Raw PDF binary contents
+  t.text    :raw_text                                         # full extracted text (receipt) or line item (statement)
+  t.text    :error_message                                    # parsing error details
 
   t.timestamps
 end
 ```
 
-### 1.4 Modify Table: `tenant_payments`
-
-Add a compound unique index on `payment_method` and `transaction_number` to prevent duplicate ledger postings at the database level.
+### `tenant_payments` — Unique Index
 
 ```ruby
-# db/migrate/XXXXXXXX_add_unique_index_to_tenant_payments.rb
 add_index :tenant_payments, [:payment_method, :transaction_number], unique: true, where: "transaction_number IS NOT NULL"
 ```
 
 ---
 
-## Phase 2 — Model Changes
+## Models
 
-### 2.1 StandardError Hierarchy
-
-We define explicit subclasses of `StandardError` to enable robust monitoring and categorisation:
+### `TenantAlias`
 
 ```ruby
-# app/services/payment_receipts/errors.rb
-module PaymentReceipts
-  class Error < StandardError; end
-  class ParsingError < Error; end
-  class ResolutionError < Error; end
-  class ConfirmationError < Error; end
-end
-```
-
-### 2.2 New Model: `TenantAlias`
-
-```ruby
-# app/models/tenant_alias.rb
 class TenantAlias < ApplicationRecord
   belongs_to :tenant
 
@@ -197,21 +198,34 @@ class TenantAlias < ApplicationRecord
 end
 ```
 
-### 2.3 New Model: `PaymentReceiptIngestion`
-
-Handles parsing failures as validation errors on the record during saving, meaning if a parsing error occurs during upload, the record fails to save and displays validation errors. If saved manually later, status validations are soft.
+### `PaymentDocument`
 
 ```ruby
-# app/models/payment_receipt_ingestion.rb
-class PaymentReceiptIngestion < ApplicationRecord
+class PaymentDocument < ApplicationRecord
+  belongs_to :user
+  has_many :payment_ingestions, dependent: :destroy
+
+  validates :attachment_file, presence: true
+  validates :attachment_filename, presence: true
+  validates :attachment_content_type, presence: true
+end
+```
+
+### `PaymentIngestion`
+
+Handles parsing results, duplicate detection, confirmation flow, and alias creation.
+
+```ruby
+class PaymentIngestion < ApplicationRecord
   belongs_to :user
   belongs_to :tenant, optional: true
   belongs_to :lease, optional: true
   belongs_to :tenant_payment, optional: true
+  belongs_to :payment_document, optional: true
 
   validates :source, presence: true
   validates :status, presence: true
-  
+
   validate :ensure_not_duplicate_payment
   validate :validate_parse_status
 
@@ -224,6 +238,12 @@ class PaymentReceiptIngestion < ApplicationRecord
     failed: "failed"
   }
 
+  PAYMENT_METHODS = [
+    [ "Chase Zelle", "zelle" ],
+    [ "Venmo", "venmo" ],
+    [ "P2P", "p2p" ]
+  ].freeze
+
   scope :reviewable, -> { where(status: [:matched, :unmatched, :ambiguous, :failed]) }
 
   def confirmable?
@@ -231,130 +251,85 @@ class PaymentReceiptIngestion < ApplicationRecord
   end
 
   def confirm!(create_alias: false)
-    raise PaymentReceipts::ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless confirmable?
-    raise PaymentReceipts::ConfirmationError, "Already confirmed" if confirmed?
-
-    transaction do
-      # Note: uses current attributes on the ingestion record (which may have been edited by the user)
-      payment = TenantPayment.create!(
-        lease: lease,
-        amount: amount,
-        payment_date: payment_date,
-        payment_method: payment_method,
-        transaction_number: transaction_number
-      )
-
-      if create_alias
-        # Create alias for payer name if it's not already matched and is not the tenant's canonical name
-        if payer_name.present? && payer_name.downcase != tenant.name.downcase && !tenant.tenant_aliases.exists?(alias_name: payer_name)
-          tenant.tenant_aliases.create!(alias_name: payer_name)
-        end
-        # Create alias for payer username if it's not already matched
-        if payer_username.present? && !tenant.tenant_aliases.exists?(alias_name: payer_username)
-          tenant.tenant_aliases.create!(alias_name: payer_username)
-        end
-      end
-
-      update!(status: :confirmed, tenant_payment: payment)
-      payment
-    end
-  rescue ActiveRecord::RecordNotUnique
-    raise PaymentReceipts::ConfirmationError, "This transaction has already been recorded in another tenant payment."
+    # Creates a TenantPayment, optionally saves aliases, and marks status as confirmed
   end
 
   def duplicate_exists?
-    return false if transaction_number.blank? || payment_method.blank?
-    TenantPayment.exists?(payment_method: payment_method, transaction_number: transaction_number)
+    # Checks TenantPayment table for existing payment_method + transaction_number combination
   end
 
-  private
-
-  def validate_parse_status
-    # We only surface validation errors for parsing errors on new records before saving.
-    # If the landlord manually edits a failed parser record to make it valid, we clear errors.
-    if failed? && error_message.present? && amount.blank? && tenant.blank?
-      errors.add(:base, "Parsing failed: #{error_message}")
-    end
+  def ingestion_duplicate_exists?
+    # Checks PaymentIngestion table for pending duplicate uploads
   end
 
-  def ensure_not_duplicate_payment
-    if duplicate_exists?
-      errors.add(:transaction_number, "has already been recorded in a tenant payment")
-    end
+  def attachment_attached?
+    payment_document.present?
+  end
+
+  def attachment_image?
+    payment_document&.attachment_content_type&.start_with?("image/")
   end
 end
 ```
 
-### 2.4 Modified: `Tenant`
+### `Tenant` — Additions
 
 ```ruby
-# app/models/tenant.rb — additions
 has_many :tenant_aliases, dependent: :destroy
-has_many :payment_receipt_ingestions
-
+has_many :payment_ingestions
 accepts_nested_attributes_for :tenant_aliases, allow_destroy: true, reject_if: :all_blank
 ```
 
 ---
 
-## Phase 3 — Service Library (`PaymentReceipts::`)
+## Service Library (`PaymentIngestions::`)
 
-### 3.1 `PaymentReceipts::IngestionResult` (Value Object)
-
-We add `payer_username` to capture handles like `@shoppetheivy` on Venmo.
+### Error Hierarchy
 
 ```ruby
-# app/services/payment_receipts/ingestion_result.rb
-module PaymentReceipts
-  class IngestionResult
-    attr_accessor :payer_name, :payer_username, :amount, :payment_date, 
-                  :payment_method, :transaction_number, :receipt_type, 
-                  :raw_text, :error_message, :success
+module PaymentIngestions
+  class Error < StandardError; end
+  class ParsingError < Error; end
+  class ResolutionError < Error; end
+  class ConfirmationError < Error; end
+end
+```
 
-    def initialize(attrs = {})
-      attrs.each { |k, v| send(:"#{k}=", v) }
-    end
+### `PaymentIngestions::IngestionResult` (Value Object)
+
+Captures parsed data from any parser, including `payer_username` for Venmo handles.
+
+```ruby
+module PaymentIngestions
+  class IngestionResult
+    attr_accessor :payer_name, :payer_username, :amount, :payment_date,
+                  :payment_method, :transaction_number, :receipt_type,
+                  :raw_text, :error_message, :success
 
     def success?
       !!success && error_message.nil?
-    end
-
-    def to_h
-      {
-        payer_name: payer_name,
-        payer_username: payer_username,
-        amount: amount,
-        payment_date: payment_date,
-        payment_method: payment_method,
-        transaction_number: transaction_number,
-        receipt_type: receipt_type,
-        raw_text: raw_text,
-        error_message: error_message
-      }
     end
   end
 end
 ```
 
-### 3.2 `PaymentReceipts::Parsers::Base`
+### `PaymentIngestions::Parsers::Base`
 
-Cleans extracted names to strip out emojis, Chase icons, and unrecognized symbols while keeping standard name punctuation, spaces, and handles.
+Common parser interface with shared helpers for name cleaning, amount parsing, and date parsing.
 
 ```ruby
-# app/services/payment_receipts/parsers/base.rb
-module PaymentReceipts
+module PaymentIngestions
   module Parsers
     class Base
       def parse(pdf_text)
-        raise NotImplementedError, "#{self.class}#parse must be implemented"
+        raise NotImplementedError
       end
 
       private
 
       def clean_name(name)
         return nil if name.blank?
-        # Keep letters, numbers, spaces, apostrophes, hyphens, periods, underscores, and @
-        name.gsub(/[^\p{Alnum}\p{Space}'\-._@]/, '').squish
+        name.gsub(/[^\p{Alnum}\p{Space}'\-._@]/, "").squish
       end
 
       def parse_amount(text)
@@ -364,7 +339,6 @@ module PaymentReceipts
       end
 
       def parse_date(text)
-        # Parse within the active Time.zone context
         Time.zone.parse(text)&.to_date
       rescue ArgumentError, Date::Error
         nil
@@ -374,20 +348,20 @@ module PaymentReceipts
 end
 ```
 
-### 3.3 `PaymentReceipts::Parsers::Zelle`
+### `PaymentIngestions::Parsers::Zelle`
+
+Parses single-page Chase Zelle receipt PDFs. Extracts payer name, amount, date, and transaction number.
 
 ```ruby
-# app/services/payment_receipts/parsers/zelle.rb
-module PaymentReceipts
+module PaymentIngestions
   module Parsers
     class Zelle < Base
       def parse(pdf_text)
-        raw_payer = extract_payer(pdf_text)
         IngestionResult.new(
           receipt_type: "zelle",
           payment_method: "zelle",
           raw_text: pdf_text,
-          payer_name: clean_name(raw_payer),
+          payer_name: clean_name(extract_payer(pdf_text)),
           payer_username: nil,
           amount: extract_amount(pdf_text),
           payment_date: extract_date(pdf_text),
@@ -395,12 +369,7 @@ module PaymentReceipts
           success: true
         )
       rescue => e
-        IngestionResult.new(
-          receipt_type: "zelle",
-          raw_text: pdf_text,
-          error_message: e.message,
-          success: false
-        )
+        IngestionResult.new(receipt_type: "zelle", raw_text: pdf_text, error_message: e.message, success: false)
       end
 
       private
@@ -408,7 +377,6 @@ module PaymentReceipts
       def extract_payer(text)
         match = text.match(/Completed\s+([A-Za-z ]+?)\s+(?:In moments|Scheduled)/i)
         return match[1].strip if match
-
         match = text.match(/(.+?)\s+sent you money/i)
         match&.[](1)&.strip
       end
@@ -432,34 +400,28 @@ module PaymentReceipts
 end
 ```
 
-### 3.4 `PaymentReceipts::Parsers::Venmo`
+### `PaymentIngestions::Parsers::Venmo`
+
+Parses single-page Venmo receipt PDFs. Extracts payer name, `@username`, amount, date, and transaction ID.
 
 ```ruby
-# app/services/payment_receipts/parsers/venmo.rb
-module PaymentReceipts
+module PaymentIngestions
   module Parsers
     class Venmo < Base
       def parse(pdf_text)
-        raw_payer = extract_payer(pdf_text)
-        raw_username = extract_username(pdf_text)
         IngestionResult.new(
           receipt_type: "venmo",
           payment_method: "venmo",
           raw_text: pdf_text,
-          payer_name: clean_name(raw_payer),
-          payer_username: clean_name(raw_username),
+          payer_name: clean_name(extract_payer(pdf_text)),
+          payer_username: clean_name(extract_username(pdf_text)),
           amount: extract_amount(pdf_text),
           payment_date: extract_date(pdf_text),
           transaction_number: extract_transaction_id(pdf_text),
           success: true
         )
       rescue => e
-        IngestionResult.new(
-          receipt_type: "venmo",
-          raw_text: pdf_text,
-          error_message: e.message,
-          success: false
-        )
+        IngestionResult.new(receipt_type: "venmo", raw_text: pdf_text, error_message: e.message, success: false)
       end
 
       private
@@ -467,11 +429,7 @@ module PaymentReceipts
       def extract_payer(text)
         lines = text.split("\n").map(&:strip).reject(&:empty?)
         idx = lines.index("Transaction details")
-        if idx && lines[idx + 1]
-          lines[idx + 1]
-        else
-          nil
-        end
+        idx && lines[idx + 1] ? lines[idx + 1] : nil
       end
 
       def extract_username(text)
@@ -498,13 +456,73 @@ module PaymentReceipts
 end
 ```
 
-### 3.5 `PaymentReceipts::TenantResolver`
+### `PaymentIngestions::Parsers::ChaseStatement`
 
-Resolves a payer name or username against tenant names and aliases.
+Parses multi-page Chase bank statements. Extracts Zelle and P2P ACH line items from the `TRANSACTION DETAIL` section.
+
+- **Year inference:** Parses the statement period header (e.g., `"March 18, 2026 through April 16, 2026"`) to resolve `MM/DD` dates to the correct year, handling December–January rollovers.
+- **Line item extraction:** Regex matching on each line for:
+  - Zelle: `03/24  Zelle Payment From Alice Smith ZELNEW202604A  1,300.00  2,850.00`
+  - P2P ACH: `04/01  Oak Vly Com Bnk  P2P  Bob Jones  Web ID: P2PNEW202604A  1,000.00  3,700.00`
+- **`raw_text`:** Stores only the matched line item text (not the entire statement), making review cleaner.
+- Returns an **array** of `IngestionResult` objects.
 
 ```ruby
-# app/services/payment_receipts/tenant_resolver.rb
-module PaymentReceipts
+module PaymentIngestions
+  module Parsers
+    class ChaseStatement < Base
+      def parse(pdf_text)
+        period_match = pdf_text.match(/([a-zA-Z]+\s+\d{1,2},\s+\d{4})\s+through\s+([a-zA-Z]+\s+\d{1,2},\s+\d{4})/i)
+        start_date, end_date = if period_match
+          [parse_date(period_match[1]), parse_date(period_match[2])]
+        else
+          [Date.current.beginning_of_year, Date.current]
+        end
+
+        results = []
+        pdf_text.each_line do |line|
+          line = line.strip
+          next if line.empty?
+
+          # Zelle match
+          if (m = line.match(/^\s*(\d{2}\/\d{2})\s+Zelle Payment From\s+(.+?)\s+(\w+)\s+([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s*$/i))
+            results << build_result("zelle", m, line, start_date, end_date)
+
+          # P2P ACH match
+          elsif (m = line.match(/^\s*(\d{2}\/\d{2})\s+(.+?\bP2P)\s+(.+?)\s+Web ID:\s*(\w+)\s+([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s*$/i))
+            results << build_p2p_result(m, line, start_date, end_date)
+          end
+        end
+        results
+      rescue => e
+        [IngestionResult.new(receipt_type: "chase_statement", raw_text: pdf_text, error_message: e.message, success: false)]
+      end
+
+      private
+
+      def resolve_date(date_str, start_date, end_date)
+        month, day = date_str.split("/").map(&:to_i)
+        year = end_date.year
+        d = Date.new(year, month, day)
+        if d < start_date || d > end_date
+          year = start_date.year
+          d = Date.new(year, month, day)
+        end
+        d
+      rescue Date::Error
+        Date.current
+      end
+    end
+  end
+end
+```
+
+### `PaymentIngestions::TenantResolver`
+
+Resolves a payer name or username against tenant names and aliases (case-insensitive).
+
+```ruby
+module PaymentIngestions
   class TenantResolver
     ResolveResult = Struct.new(:tenant, :tenants, :status, keyword_init: true)
 
@@ -514,12 +532,9 @@ module PaymentReceipts
       candidates = find_candidates(user, display_name, username)
 
       case candidates.size
-      when 0
-        ResolveResult.new(status: :unmatched)
-      when 1
-        ResolveResult.new(tenant: candidates.first, tenants: candidates, status: :matched)
-      else
-        ResolveResult.new(tenants: candidates, status: :ambiguous)
+      when 0 then ResolveResult.new(status: :unmatched)
+      when 1 then ResolveResult.new(tenant: candidates.first, tenants: candidates, status: :matched)
+      else        ResolveResult.new(tenants: candidates, status: :ambiguous)
       end
     end
 
@@ -527,270 +542,51 @@ module PaymentReceipts
 
     def find_candidates(user, display_name, username)
       results = []
-
-      # Try matching by username if present (e.g. "@handle")
       if username.present?
-        normalized_username = username.strip.downcase
-        results += user.tenants.where("LOWER(name) = ?", normalized_username).to_a
-        results += user.tenants.joins(:tenant_aliases).where("LOWER(tenant_aliases.alias_name) = ?", normalized_username).to_a
+        normalized = username.strip.downcase
+        results += user.tenants.where("LOWER(name) = ?", normalized).to_a
+        results += user.tenants.joins(:tenant_aliases).where("LOWER(tenant_aliases.alias_name) = ?", normalized).to_a
       end
-
       if display_name.present?
-        normalized_name = display_name.strip.downcase
-        results += user.tenants.where("LOWER(name) = ?", normalized_name).to_a
-        results += user.tenants.joins(:tenant_aliases).where("LOWER(tenant_aliases.alias_name) = ?", normalized_name).to_a
+        normalized = display_name.strip.downcase
+        results += user.tenants.where("LOWER(name) = ?", normalized).to_a
+        results += user.tenants.joins(:tenant_aliases).where("LOWER(tenant_aliases.alias_name) = ?", normalized).to_a
       end
-
       results.uniq
     end
   end
 end
 ```
 
-### 3.6 `PaymentReceipts::Ingestion` (Orchestrator)
+### `PaymentIngestions::Ingestion` (Orchestrator)
 
-Runs parsing inside the user's timezone context.
+Coordinates the full ingestion pipeline. Handles both single-page receipts and multi-page bank statements.
 
-```ruby
-# app/services/payment_receipts/ingestion.rb
-module PaymentReceipts
-  class Ingestion
-    PARSERS = {
-      "zelle" => Parsers::Zelle,
-      "venmo" => Parsers::Venmo
-    }.freeze
+**Key behaviors:**
 
-    def call(user:, pdf_path_or_io:, source: "pdf_upload")
-      # Extract text and run parsing in the user's local timezone context
-      Time.use_zone(user.timezone) do
-        pdf_bytes = read_pdf_bytes(pdf_path_or_io)
-        raw_text = extract_text(pdf_path_or_io)
-        receipt_type = detect_type(raw_text)
-        parser = (PARSERS[receipt_type] || Parsers::Zelle).new
-        result = parser.parse(raw_text)
+- Runs parsing within the user's timezone context.
+- Extracts text from all pages using `HexaPDF`.
+- Detects document type (`chase_statement`, `venmo`, or `zelle`) based on text markers.
+- For bank statements: creates one `PaymentDocument` shared by all resulting `PaymentIngestion` records; discards unmatched items silently.
+- For receipts: creates one `PaymentDocument` + one `PaymentIngestion`.
+- Returns an **Array** for statements, a single `PaymentIngestion` for receipts.
 
-        ingestion = if result.success?
-          resolve_result = TenantResolver.new.resolve(user, result.payer_name, result.payer_username)
-          tenant = resolve_result.tenant
-          lease = tenant&.leases&.find { |l| active_lease?(l, result.payment_date) }
+**Document type detection:**
 
-          PaymentReceiptIngestion.new(
-            user: user,
-            source: source,
-            receipt_type: result.receipt_type,
-            status: resolve_result.status,
-            payer_name: result.payer_name,
-            payer_username: result.payer_username,
-            amount: result.amount,
-            payment_date: result.payment_date,
-            payment_method: result.payment_method,
-            transaction_number: result.transaction_number,
-            raw_text: result.raw_text,
-            tenant: tenant,
-            lease: lease,
-            pdf_file: pdf_bytes
-          )
-        else
-          PaymentReceiptIngestion.new(
-            user: user,
-            source: source,
-            receipt_type: receipt_type,
-            status: :failed,
-            raw_text: raw_text,
-            error_message: result.error_message,
-            pdf_file: pdf_bytes
-          )
-        end
-
-        ingestion.save
-        ingestion
-      end
-    end
-
-    private
-
-    def read_pdf_bytes(pdf_path_or_io)
-      if pdf_path_or_io.respond_to?(:read)
-        pdf_path_or_io.rewind
-        bytes = pdf_path_or_io.read
-        pdf_path_or_io.rewind
-        bytes
-      else
-        File.binread(pdf_path_or_io.to_s)
-      end
-    end
-
-    def extract_text(pdf_path_or_io)
-      require "hexapdf"
-
-      doc = if pdf_path_or_io.respond_to?(:read)
-        HexaPDF::Document.new(io: pdf_path_or_io)
-      else
-        HexaPDF::Document.open(pdf_path_or_io.to_s)
-      end
-
-      # Strictly enforce 1-page/1-payment checks
-      raise PaymentReceipts::ParsingError, "Multi-page statement PDFs are not supported" if doc.pages.count > 1
-
-      page = doc.pages.first
-      extractor = doc.task(:smart_text_extractor) rescue nil
-      
-      if extractor
-        extractor.text(page)
-      else
-        page.extract_text rescue ""
-      end
-    end
-
-    def detect_type(text)
-      case text
-      when /venmo/i then "venmo"
-      when /zelle/i, /chase/i then "zelle"
-      else "unknown"
-      end
-    end
-
-    def active_lease?(lease, payment_date)
-      return true if lease.month_to_month?
-      return true unless lease.termination_date
-      date = payment_date || Date.current
-      date >= lease.commencement_date && date <= lease.termination_date
-    end
-  end
-end
-```
+| Marker | Type |
+|--------|------|
+| `CHASE TOTAL CHECKING` + `TRANSACTION DETAIL` | `chase_statement` |
+| `Transaction ID` or `venmo` | `venmo` |
+| `zelle` or `chase` or `Transaction number` | `zelle` |
 
 ---
 
-## Phase 4 — Controller & Route Changes
+## Controller & Routes
 
-### 4.1 New Controller: `PaymentReceiptIngestionsController`
-
-Handles PDF upload, review of parsed results, and confirmation.
+### Routes
 
 ```ruby
-# app/controllers/payment_receipt_ingestions_controller.rb
-class PaymentReceiptIngestionsController < ApplicationController
-  before_action :set_ingestion, only: [:show, :update, :confirm, :destroy, :download]
-
-  # GET /payment_receipt_ingestions
-  def index
-    @ingestions = current_user.payment_receipt_ingestions.order(created_at: :desc)
-    @pending = @ingestions.where(status: [:matched, :unmatched, :ambiguous, :failed])
-  end
-
-  # GET /payment_receipt_ingestions/:id
-  def show
-  end
-
-  # GET /payment_receipt_ingestions/new
-  def new
-    @ingestion = PaymentReceiptIngestion.new
-  end
-
-  # GET /payment_receipt_ingestions/:id/download
-  def download
-    if @ingestion.pdf_file.present?
-      send_data @ingestion.pdf_file,
-        filename: "receipt_#{@ingestion.id}.pdf",
-        type: "application/pdf",
-        disposition: "inline"
-    else
-      redirect_to payment_receipt_ingestion_path(@ingestion), alert: "No PDF file attached to this ingestion."
-    end
-  end
-
-  # POST /payment_receipt_ingestions
-  def create
-    uploaded_file = params[:receipt_file]
-
-    unless uploaded_file&.content_type == "application/pdf"
-      @ingestion = PaymentReceiptIngestion.new
-      @ingestion.errors.add(:base, "Please upload a PDF file.")
-      render :new, status: :unprocessable_entity
-      return
-    end
-
-    begin
-      @ingestion = PaymentReceipts::Ingestion.new.call(
-        user: current_user,
-        pdf_path_or_io: uploaded_file.tempfile,
-        source: "pdf_upload"
-      )
-
-      if @ingestion.persisted?
-        redirect_to payment_receipt_ingestion_path(@ingestion),
-          notice: ingestion_flash_message(@ingestion)
-      else
-        render :new, status: :unprocessable_entity
-      end
-    rescue PaymentReceipts::ParsingError => e
-      @ingestion = PaymentReceiptIngestion.new
-      @ingestion.errors.add(:base, e.message)
-      render :new, status: :unprocessable_entity
-    end
-  end
-
-  # PATCH /payment_receipt_ingestions/:id
-  def update
-    if @ingestion.update(ingestion_update_params)
-      # If manual corrections make it confirmable, mark as matched so confirmation button appears
-      if @ingestion.confirmable? && !@ingestion.confirmed?
-        @ingestion.update!(status: :matched)
-      end
-      redirect_to payment_receipt_ingestion_path(@ingestion),
-        notice: "Ingestion details updated."
-    else
-      render :show, status: :unprocessable_entity
-    end
-  end
-
-  # POST /payment_receipt_ingestions/:id/confirm
-  def confirm
-    create_alias = ActiveModel::Type::Boolean.new.cast(params[:create_alias])
-    payment = @ingestion.confirm!(create_alias: create_alias)
-    
-    redirect_to payment_receipt_ingestion_path(@ingestion),
-      notice: "Payment of #{helpers.number_to_currency(payment.amount)} created successfully."
-  rescue PaymentReceipts::ConfirmationError => e
-    redirect_to payment_receipt_ingestion_path(@ingestion),
-      alert: "Could not confirm: #{e.message}"
-  end
-
-  # DELETE /payment_receipt_ingestions/:id
-  def destroy
-    @ingestion.destroy!
-    redirect_to payment_receipt_ingestions_path,
-      notice: "Ingestion record deleted."
-  end
-
-  private
-
-  def set_ingestion
-    @ingestion = current_user.payment_receipt_ingestions.find(params[:id])
-  end
-
-  def ingestion_update_params
-    params.expect(payment_receipt_ingestion: [:tenant_id, :lease_id, :amount, :payment_date, :payment_method, :transaction_number])
-  end
-
-  def ingestion_flash_message(ingestion)
-    case ingestion.status
-    when "matched"  then "Receipt parsed and tenant matched! Review and confirm below."
-    when "unmatched" then "Receipt parsed but no tenant match found. Please assign a tenant."
-    when "ambiguous" then "Receipt parsed but multiple tenants matched. Please select the correct one."
-    when "failed"    then "Could not parse this receipt. #{ingestion.error_message}"
-    else "Receipt uploaded."
-    end
-  end
-end
-```
-
-### 4.2 Route Changes
-
-```ruby
-# config/routes.rb — additions
-resources :payment_receipt_ingestions, only: [:index, :new, :create, :show, :update, :destroy] do
+resources :payment_ingestions do
   member do
     post :confirm
     get :download
@@ -798,17 +594,47 @@ resources :payment_receipt_ingestions, only: [:index, :new, :create, :show, :upd
 end
 ```
 
+### `PaymentIngestionsController`
+
+| Action | Behavior |
+|--------|----------|
+| `index` | Lists reviewable (pending) and confirmed ingestion records |
+| `new` | Upload form for receipts and statements |
+| `create` | Calls `Ingestion` orchestrator; redirects to `show` (receipt) or `index` (statement) |
+| `show` | Review page with tenant/lease assignment dropdowns (dynamically filtered via Stimulus) |
+| `update` | Saves manual corrections; auto-promotes status to `matched` if confirmable |
+| `confirm` | Creates `TenantPayment` via `confirm!`, optionally saves aliases |
+| `download` | Streams the PDF from the associated `PaymentDocument` |
+| `destroy` | Deletes the ingestion record |
+
+**Tenant/Lease dynamic filtering:** The `show` action builds `tenant_leases_map` and `lease_tenants_map` hashes, passed to a Stimulus controller that keeps the tenant and lease dropdowns in sync—selecting a tenant filters leases to those associated with that tenant, and vice versa. All leases are shown regardless of payment status.
+
 ---
 
-## Phase 5 — Verification Plan
+## Verification Plan
 
 ### Automated Tests
-We run the suite and verify the extraction and resolution logic passes correctly:
-- `rails test test/services/payment_receipts/`
-- `rails test test/models/tenant_alias_test.rb`
-- `rails test test/controllers/payment_receipt_ingestions_controller_test.rb`
+
+Run the full test suite:
+
+```bash
+bin/rails test
+```
+
+Key test files:
+
+| File | Coverage |
+|------|----------|
+| `test/models/payment_ingestion_test.rb` | Model validations, confirmable logic, duplicate detection |
+| `test/models/tenant_alias_test.rb` | Alias uniqueness and normalization |
+| `test/controllers/payment_ingestions_controller_test.rb` | CRUD, statement upload, duplicate handling |
+| `test/services/payment_ingestions_test.rb` | End-to-end ingestion for Zelle, Venmo, and bank statements; tenant resolution |
+| `test/services/payment_ingestions/parsers/chase_statement_test.rb` | Statement parser regex matching, year inference |
 
 ### Manual Verification
-- Upload the three PDFs located in `test/fixtures/files/receipts/` through the web dashboard, verifying they resolve to matched or unmatched candidates accordingly.
-- Confirm one matching item and inspect the resulting balance updates.
+
+- Upload the three receipt PDFs and the sanitized statement PDF through the web dashboard.
+- Verify tenant matching/unmatching behavior.
+- Confirm a matched item and inspect the resulting `TenantPayment` and balance updates.
 - Upload a duplicate receipt to verify validation warnings and DB constraint behavior.
+- For bank statements, verify multiple pending records appear in the index with individual line items.

@@ -9,7 +9,7 @@ Rails.application.routes.draw do
     post :generate_scheduled_rents, on: :member
   end
   resources :tenants
-  resources :payment_receipt_ingestions do
+  resources :payment_ingestions do
     member do
       post :confirm
       get :download

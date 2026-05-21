@@ -1,6 +1,6 @@
 require "test_helper"
 
-class PaymentReceiptIngestionTest < ActiveSupport::TestCase
+class PaymentIngestionTest < ActiveSupport::TestCase
   setup do
     @user = users(:one)
     @tenant = tenants(:one)
@@ -8,7 +8,7 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
   end
 
   test "should be valid with basic required fields" do
-    ingestion = PaymentReceiptIngestion.new(
+    ingestion = PaymentIngestion.new(
       user: @user,
       source: "pdf_upload",
       status: "pending"
@@ -17,12 +17,12 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
   end
 
   test "should be invalid without user or source or status" do
-    ingestion = PaymentReceiptIngestion.new(user: nil, source: nil, status: nil)
+    ingestion = PaymentIngestion.new(user: nil, source: nil, status: nil)
     assert_not ingestion.valid?
   end
 
   test "confirmable? returns true only when required fields are present and no duplicate exists" do
-    ingestion = PaymentReceiptIngestion.new(
+    ingestion = PaymentIngestion.new(
       user: @user,
       source: "pdf_upload",
       status: "matched",
@@ -57,7 +57,7 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
   end
 
   test "confirm! creates tenant payment and updates status" do
-    ingestion = PaymentReceiptIngestion.create!(
+    ingestion = PaymentIngestion.create!(
       user: @user,
       source: "pdf_upload",
       status: "matched",
@@ -82,7 +82,7 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
   end
 
   test "confirm! with create_alias: true creates alias" do
-    ingestion = PaymentReceiptIngestion.create!(
+    ingestion = PaymentIngestion.create!(
       user: @user,
       source: "pdf_upload",
       status: "matched",
@@ -114,7 +114,7 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
       transaction_number: "TXNDUP"
     )
 
-    ingestion = PaymentReceiptIngestion.new(
+    ingestion = PaymentIngestion.new(
       user: @user,
       source: "pdf_upload",
       status: "matched",
@@ -126,10 +126,7 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
       transaction_number: "TXNDUP"
     )
 
-    # Note: confirmable? is false because duplicate_exists? checks DB beforehand
-    # Let's bypass validation or mock it to test database constraint recovery
-    assert_raise PaymentReceipts::ConfirmationError do
-      # Directly calling confirm! since it checks confirmable? first and throws ConfirmationError
+    assert_raise PaymentIngestions::ConfirmationError do
       ingestion.confirm!
     end
   end
@@ -151,7 +148,7 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
     )
 
     # Create ingestion for our user (user one) with the same transaction number
-    ingestion = PaymentReceiptIngestion.new(
+    ingestion = PaymentIngestion.new(
       user: @user,
       source: "pdf_upload",
       status: "matched",
@@ -177,17 +174,21 @@ class PaymentReceiptIngestionTest < ActiveSupport::TestCase
   end
 
   test "supports database-backed attachment" do
-    ingestion = PaymentReceiptIngestion.new(
+    payment_doc = PaymentDocument.create!(
       user: @user,
-      source: "pdf_upload",
-      status: "pending",
       attachment_file: "fake receipt content",
       attachment_filename: "test.pdf",
       attachment_content_type: "application/pdf"
     )
+    ingestion = PaymentIngestion.new(
+      user: @user,
+      source: "pdf_upload",
+      status: "pending",
+      payment_document: payment_doc
+    )
     assert ingestion.save
     assert ingestion.attachment_attached?
-    assert_equal "test.pdf", ingestion.attachment_filename
-    assert_equal "fake receipt content", ingestion.attachment_file
+    assert_equal "test.pdf", ingestion.payment_document.attachment_filename
+    assert_equal "fake receipt content", ingestion.payment_document.attachment_file
   end
 end

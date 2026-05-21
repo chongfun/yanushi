@@ -1,5 +1,5 @@
 # app/services/payment_receipts/ingestion_result.rb
-module PaymentReceipts
+module PaymentIngestions
   class IngestionResult
     attr_accessor :payer_name, :payer_username, :amount, :payment_date,
                   :payment_method, :transaction_number, :receipt_type,
