@@ -23,6 +23,16 @@ class ExpensesController < ApplicationController
 
 
   def create
+    property_id = expense_params[:rental_property_id]
+    if property_id.present?
+      Current.session.user.rental_properties.find(property_id)
+    end
+
+    lease_id = expense_params[:reimburse_lease_id]
+    if lease_id.present?
+      Current.session.user.leases.find(lease_id)
+    end
+
     @expense = Expense.new(expense_params)
     @expense.rental_property = @rental_property if @rental_property
 
@@ -63,6 +73,16 @@ class ExpensesController < ApplicationController
 
 
   def update
+    property_id = expense_params[:rental_property_id]
+    if property_id.present?
+      Current.session.user.rental_properties.find(property_id)
+    end
+
+    lease_id = expense_params[:reimburse_lease_id]
+    if lease_id.present?
+      Current.session.user.leases.find(lease_id)
+    end
+
     respond_to do |format|
       if @expense.update(expense_params)
         format.html { redirect_to @expense, notice: "Expense was successfully updated.", status: :see_other }
