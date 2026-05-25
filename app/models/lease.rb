@@ -19,13 +19,21 @@ class Lease < ApplicationRecord
 
   # Total credits (payments received) up to a given date
   def total_credits(as_of: Date.current)
-    tenant_payments.where("payment_date <= ?", as_of).sum(:amount)
+    if tenant_payments.loaded?
+      tenant_payments.select { |tp| tp.payment_date <= as_of }.sum(&:amount)
+    else
+      tenant_payments.where("payment_date <= ?", as_of).sum(:amount)
+    end
   end
 
-  # Total debits (rents + charges) up to a given date
   def total_debits(as_of: Date.current)
-    rent_debits = scheduled_rents.where("due_date <= ?", as_of).sum(:amount)
-    charge_debits = tenant_charges.where("charge_date <= ?", as_of).sum(:amount)
+    if scheduled_rents.loaded? && tenant_charges.loaded?
+      rent_debits = scheduled_rents.select { |sr| sr.due_date <= as_of }.sum(&:amount)
+      charge_debits = tenant_charges.select { |tc| tc.charge_date <= as_of }.sum(&:amount)
+    else
+      rent_debits = scheduled_rents.where("due_date <= ?", as_of).sum(:amount)
+      charge_debits = tenant_charges.where("charge_date <= ?", as_of).sum(:amount)
+    end
     rent_debits + charge_debits
   end
 
