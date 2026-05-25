@@ -24,9 +24,17 @@ module Yanushi
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
-    # Active Record Encryption key setup (using out-of-the-box keys for development/testing)
-    config.active_record.encryption.primary_key = "Y0QmkDuj0fMrjh9Q6NFmMgTo1TSb0lzV"
-    config.active_record.encryption.deterministic_key = "CtnBorkeD5Rxk3ES9oJyCjqdlwhMxgap"
-    config.active_record.encryption.key_derivation_salt = "U1q34XHoHWMcG8lNAFwHzFf0MW6ycVgp"
+    encryption_credentials = credentials.active_record_encryption || {}
+    encryption_keys = {
+      primary_key: ENV["ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY"] || encryption_credentials[:primary_key],
+      deterministic_key: ENV["ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY"] || encryption_credentials[:deterministic_key],
+      key_derivation_salt: ENV["ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT"] || encryption_credentials[:key_derivation_salt]
+    }
+
+    if encryption_keys.values.all?(&:present?)
+      config.active_record.encryption.primary_key = encryption_keys[:primary_key]
+      config.active_record.encryption.deterministic_key = encryption_keys[:deterministic_key]
+      config.active_record.encryption.key_derivation_salt = encryption_keys[:key_derivation_salt]
+    end
   end
 end
