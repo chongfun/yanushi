@@ -93,6 +93,50 @@ class PaymentIngestionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "venmo", @ingestion.payment_method
   end
 
+  test "should not update payment ingestion with another user's tenant" do
+    user_property = RentalProperty.create!(user: @user, address: "999 Other St", property_type: :other)
+    user_lease = Lease.create!(
+      rental_property: user_property,
+      commencement_date: Date.current,
+      annual_rental_amount: 12000,
+      lease_type: :term
+    )
+    other_user = users(:two)
+    other_tenant = Tenant.create!(user: other_user, name: "Other Tenant")
+
+    patch payment_ingestion_url(@ingestion), params: {
+      payment_ingestion: {
+        tenant_id: other_tenant.id,
+        lease_id: user_lease.id
+      }
+    }
+
+    assert_response :not_found
+    assert_not_equal other_tenant, @ingestion.reload.tenant
+  end
+
+  test "should not update payment ingestion with another user's lease" do
+    user_tenant = Tenant.create!(user: @user, name: "User's Tenant")
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+    other_lease = Lease.create!(
+      rental_property: other_property,
+      commencement_date: Date.current,
+      annual_rental_amount: 12000,
+      lease_type: :term
+    )
+
+    patch payment_ingestion_url(@ingestion), params: {
+      payment_ingestion: {
+        tenant_id: user_tenant.id,
+        lease_id: other_lease.id
+      }
+    }
+
+    assert_response :not_found
+    assert_not_equal other_lease, @ingestion.lease
+  end
+
   test "should download payment attachment" do
     get download_payment_ingestion_url(@ingestion)
     assert_response :success

@@ -87,9 +87,7 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def update
-    permitted_params = params.require(:payment_ingestion).permit(
-      :tenant_id, :lease_id, :amount, :payment_date, :payment_method, :transaction_number
-    )
+    permitted_params = payment_ingestion_params
 
     if @ingestion.update(permitted_params)
       if @ingestion.confirmable? && (@ingestion.failed? || @ingestion.unmatched? || @ingestion.ambiguous?)
@@ -137,6 +135,21 @@ class PaymentIngestionsController < ApplicationController
 
   def set_ingestion
     @ingestion = Current.session.user.payment_ingestions.find(params[:id])
+  end
+
+  def payment_ingestion_params
+    permitted_params = params.require(:payment_ingestion).permit(
+      :tenant_id, :lease_id, :amount, :payment_date, :payment_method, :transaction_number
+    )
+
+    user = Current.session.user
+    if permitted_params[:tenant_id].present?
+      raise ActiveRecord::RecordNotFound unless user.tenants.where(id: permitted_params[:tenant_id]).exists?
+    end
+    if permitted_params[:lease_id].present?
+      raise ActiveRecord::RecordNotFound unless user.leases.where(id: permitted_params[:lease_id]).exists?
+    end
+    permitted_params
   end
 
   def set_form_data
