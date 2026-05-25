@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_070000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,8 +143,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_070000) do
     t.string "payment_method", null: false
     t.string "transaction_number"
     t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
     t.index ["lease_id"], name: "index_tenant_payments_on_lease_id"
-    t.index ["payment_method", "transaction_number"], name: "index_tenant_payments_on_payment_method_and_transaction_number", unique: true, where: "(transaction_number IS NOT NULL)"
+    t.index ["user_id", "payment_method", "transaction_number"], name: "index_tenant_payments_on_user_payment_method_transaction_number", unique: true, where: "(transaction_number IS NOT NULL)"
+    t.index ["user_id"], name: "index_tenant_payments_on_user_id"
   end
 
   create_table "tenants", force: :cascade do |t|
@@ -184,5 +186,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_070000) do
   add_foreign_key "tenant_charges", "expenses"
   add_foreign_key "tenant_charges", "leases"
   add_foreign_key "tenant_payments", "leases"
+  add_foreign_key "tenant_payments", "users"
   add_foreign_key "tenants", "users"
 end

@@ -166,7 +166,7 @@ class PaymentIngestionTest < ActiveSupport::TestCase
 
     # Now reassign that payment to our user's lease
     payment = TenantPayment.find_by!(transaction_number: "TXNSCOPED")
-    payment.update!(lease: @lease)
+    payment.update!(lease: @lease, user: @user)
 
     # Now it should flag as duplicate!
     assert ingestion.duplicate_exists?
