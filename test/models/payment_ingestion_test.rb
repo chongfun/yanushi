@@ -191,4 +191,42 @@ class PaymentIngestionTest < ActiveSupport::TestCase
     assert_equal "test.pdf", ingestion.payment_document.attachment_filename
     assert_equal "fake receipt content", ingestion.payment_document.attachment_file
   end
+
+  test "confirm! pessimistic locking prevents race conditions and raises already confirmed on concurrent calls" do
+    ingestion = PaymentIngestion.create!(
+      user: @user,
+      source: "pdf_upload",
+      status: "matched",
+      tenant: @tenant,
+      lease: @lease,
+      amount: 1200.0,
+      payment_date: Date.current,
+      payment_method: "venmo",
+      transaction_number: "TXNRACE"
+    )
+
+    exceptions = []
+    threads = []
+
+    2.times do
+      threads << Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          begin
+            # Reload to get separate in-memory status checking
+            ingestion.class.find(ingestion.id).confirm!
+          rescue => e
+            exceptions << e
+          end
+        end
+      end
+    end
+
+    threads.each(&:join)
+
+    # Verify exactly one confirmation succeeded and the other was blocked and rejected
+    assert_equal 1, exceptions.size
+    assert_instance_of PaymentIngestions::ConfirmationError, exceptions.first
+    assert_match /Already confirmed/, exceptions.first.message
+    assert_equal "confirmed", ingestion.reload.status
+  end
 end

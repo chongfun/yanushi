@@ -34,10 +34,11 @@ class PaymentIngestion < ApplicationRecord
   end
 
   def confirm!(create_alias: false)
-    raise PaymentIngestions::ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless confirmable?
-    raise PaymentIngestions::ConfirmationError, "Already confirmed" if confirmed?
-
     transaction do
+      lock!
+      raise PaymentIngestions::ConfirmationError, "Already confirmed" if confirmed?
+      raise PaymentIngestions::ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless confirmable?
+
       # Note: uses current attributes on the ingestion record (which may have been edited by the user)
       payment = TenantPayment.create!(
         lease: lease,

@@ -31,7 +31,7 @@ module PaymentIngestions
         # Match from "Sender" column layout:
         # Completed                         JANE DOE
         # Or match from header / sentence: "JANE DOE sent you money"
-        match = text.match(/Completed\s+([A-Za-z ]+?)\s+(?:In moments|Scheduled)/i)
+        match = text.match(/Completed\s+([\p{L}\s'\-]+?)\s+(?:In moments|Scheduled)/i)
         return match[1].strip if match
 
         match = text.match(/(.+?)\s+sent you money/i)

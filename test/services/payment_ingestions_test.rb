@@ -197,4 +197,39 @@ class PaymentIngestionsServiceTest < ActiveSupport::TestCase
       assert_equal 3, doc.payment_ingestions.count
     end
   end
+
+  test "Zelle parser extracts payer names with Unicode, apostrophes, and hyphens" do
+    # 1. Column layout matching
+    text_column = "Completed\nRené O'Connor-Smith\nIn moments\n$1,300.00\nTransaction number ZELNEW202604\nDec 4, 2023"
+    result1 = PaymentIngestions::Parsers::Zelle.new.parse(text_column)
+    assert result1.success?
+    assert_equal "René O'Connor-Smith", result1.payer_name
+    assert_equal BigDecimal("1300.00"), result1.amount
+    assert_equal Date.new(2023, 12, 4), result1.payment_date
+    assert_equal "ZELNEW202604", result1.transaction_number
+
+    # 2. Header sentence matching
+    text_sentence = "René O'Connor-Smith sent you money\n$1,300.00\nTransaction number ZELNEW202604\nDec 4, 2023"
+    result2 = PaymentIngestions::Parsers::Zelle.new.parse(text_sentence)
+    assert result2.success?
+    assert_equal "René O'Connor-Smith", result2.payer_name
+  end
+
+  test "parsers handle exceptions gracefully and return failure result" do
+    # Zelle Parser exception handling
+    result_zelle = PaymentIngestions::Parsers::Zelle.new.parse(nil)
+    assert_not result_zelle.success?
+    assert_match /undefined method/, result_zelle.error_message
+
+    # Venmo Parser exception handling
+    result_venmo = PaymentIngestions::Parsers::Venmo.new.parse(nil)
+    assert_not result_venmo.success?
+    assert_match /undefined method/, result_venmo.error_message
+
+    # ChaseStatement Parser exception handling
+    result_chase = PaymentIngestions::Parsers::ChaseStatement.new.parse(nil)
+    assert_equal 1, result_chase.size
+    assert_not result_chase.first.success?
+    assert_match /undefined method/, result_chase.first.error_message
+  end
 end
