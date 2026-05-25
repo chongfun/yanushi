@@ -1,5 +1,0 @@
-<%= turbo_stream.update "modal-title", "Record Rent Payment" %>
-<%= turbo_stream.update "modal-content" do %>
-  <%= render "rent_payments/modal_form", rent_payment: @rent_payment, scheduled_rent: @scheduled_rent %>
-<% end %>
-<%= turbo_stream.action "openModal", "modal-container" %>
