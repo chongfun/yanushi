@@ -49,12 +49,10 @@ class PaymentIngestion < ApplicationRecord
       )
 
       if create_alias
-        # Create alias for payer name if it's not already matched and is not the tenant's canonical name
-        if payer_name.present? && payer_name.downcase != tenant.name.downcase && !tenant.tenant_aliases.where("LOWER(alias_name) = ?", payer_name.downcase).exists?
+        if tenant.alias_candidate?(payer_name)
           tenant.tenant_aliases.create!(alias_name: payer_name)
         end
-        # Create alias for payer username if it's not already matched
-        if payer_username.present? && !tenant.tenant_aliases.where("LOWER(alias_name) = ?", payer_username.downcase).exists?
+        if tenant.alias_candidate?(payer_username)
           tenant.tenant_aliases.create!(alias_name: payer_username)
         end
       end

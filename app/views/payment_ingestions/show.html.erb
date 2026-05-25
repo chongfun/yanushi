@@ -184,24 +184,9 @@
             <% if @ingestion.confirmable? %>
               <%= form_with(url: confirm_payment_ingestion_path(@ingestion), method: :post, local: true, class: "space-y-4") do %>
                 <!-- Checkbox to auto-add aliases -->
-                <% 
-                  show_alias_option = false
-                  alias_name_proposal = nil
-                  
-                  if @ingestion.tenant.present?
-                    # Check if payer_name needs alias
-                    if @ingestion.payer_name.present? && @ingestion.payer_name.downcase != @ingestion.tenant.name.downcase && !@ingestion.tenant.tenant_aliases.exists?(alias_name: @ingestion.payer_name)
-                      show_alias_option = true
-                      alias_name_proposal = @ingestion.payer_name
-                    # Check if payer_username needs alias
-                    elsif @ingestion.payer_username.present? && !@ingestion.tenant.tenant_aliases.exists?(alias_name: @ingestion.payer_username)
-                      show_alias_option = true
-                      alias_name_proposal = @ingestion.payer_username
-                    end
-                  end
-                %>
+                <% alias_name_proposal = payment_ingestion_alias_proposal(@ingestion) %>
 
-                <% if show_alias_option %>
+                <% if alias_name_proposal %>
                   <div class="form-control bg-primary/5 border border-primary/20 rounded-lg p-3">
                     <label class="flex items-start gap-3 cursor-pointer select-none">
                       <%= check_box_tag :create_alias, "1", true, class: "checkbox checkbox-primary checkbox-sm mt-0.5" %>

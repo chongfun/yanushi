@@ -40,4 +40,13 @@ class Lease < ApplicationRecord
   def current_balance
     balance_as_of(Date.current)
   end
+
+  scope :active, ->(date = Date.current) {
+    where("commencement_date <= ?", date)
+      .where("termination_date IS NULL OR termination_date >= ?", date)
+  }
+
+  def active?(date = Date.current)
+    commencement_date <= date && (termination_date.nil? || termination_date >= date)
+  end
 end

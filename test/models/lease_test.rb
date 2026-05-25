@@ -152,4 +152,53 @@ class LeaseTest < ActiveSupport::TestCase
       assert lease.scheduled_rents.count >= 15
     end
   end
+
+  test "active? and scope active" do
+    # 1. Lease with commencement date in the future
+    future_lease = Lease.create!(
+      rental_property: @property,
+      commencement_date: Date.current + 1.day,
+      termination_date: Date.current + 1.month,
+      annual_rental_amount: 12000.0,
+      lease_type: :term
+    )
+    assert_not future_lease.active?
+
+    # 2. Lease with commencement in the past and no termination date
+    ongoing_lease = Lease.create!(
+      rental_property: @property,
+      commencement_date: Date.current - 1.day,
+      termination_date: nil,
+      annual_rental_amount: 12000.0,
+      lease_type: :month_to_month
+    )
+    assert ongoing_lease.active?
+
+    # 3. Lease with commencement in past and termination in future
+    current_lease = Lease.create!(
+      rental_property: @property,
+      commencement_date: Date.current - 1.day,
+      termination_date: Date.current + 1.day,
+      annual_rental_amount: 12000.0,
+      lease_type: :term
+    )
+    assert current_lease.active?
+
+    # 4. Lease with termination in the past
+    past_lease = Lease.create!(
+      rental_property: @property,
+      commencement_date: Date.current - 2.days,
+      termination_date: Date.current - 1.day,
+      annual_rental_amount: 12000.0,
+      lease_type: :term
+    )
+    assert_not past_lease.active?
+
+    # Test the scope
+    active_leases = Lease.active
+    assert_includes active_leases, ongoing_lease
+    assert_includes active_leases, current_lease
+    assert_not_includes active_leases, future_lease
+    assert_not_includes active_leases, past_lease
+  end
 end
