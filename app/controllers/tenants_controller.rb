@@ -1,25 +1,23 @@
 class TenantsController < ApplicationController
   before_action :set_tenant, only: %i[ show edit update destroy ]
 
-  # GET /tenants or /tenants.json
   def index
-    @tenants = Tenant.all
+    @tenants = Current.session.user.tenants
   end
 
-  # GET /tenants/1 or /tenants/1.json
+
   def show
   end
 
-  # GET /tenants/new
+
   def new
     @tenant = Tenant.new
   end
 
-  # GET /tenants/1/edit
+
   def edit
   end
 
-  # POST /tenants or /tenants.json
   def create
     @tenant = Tenant.new(tenant_params)
     @tenant.user = Current.session.user
@@ -35,7 +33,7 @@ class TenantsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /tenants/1 or /tenants/1.json
+
   def update
     respond_to do |format|
       if @tenant.update(tenant_params)
@@ -48,7 +46,7 @@ class TenantsController < ApplicationController
     end
   end
 
-  # DELETE /tenants/1 or /tenants/1.json
+
   def destroy
     @tenant.destroy!
 
@@ -61,11 +59,11 @@ class TenantsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_tenant
-      @tenant = Tenant.find(params.expect(:id))
+      @tenant = Current.session.user.tenants.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
     def tenant_params
-      params.require(:tenant).permit(:user_id, :name, :mailing_address, :phone_number, :email_address, tenant_aliases_attributes: [ :id, :alias_name, :_destroy ])
+      params.require(:tenant).permit(:name, :mailing_address, :phone_number, :email_address, tenant_aliases_attributes: [ :id, :alias_name, :_destroy ])
     end
 end

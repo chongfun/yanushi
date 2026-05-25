@@ -2,12 +2,10 @@ class TenantPaymentsController < ApplicationController
   before_action :set_tenant_payment, only: %i[ show edit update destroy ]
   before_action :set_lease, only: %i[ new create ]
 
-  # GET /tenant_payments or /tenant_payments.json
   def index
-    @tenant_payments = TenantPayment.all
+    @tenant_payments = Current.session.user.tenant_payments.includes(lease: :rental_property)
   end
 
-  # GET /tenant_payments/1 or /tenant_payments/1.json
   def show
     respond_to do |format|
       format.html
@@ -25,8 +23,7 @@ class TenantPaymentsController < ApplicationController
     end
   end
 
-  # GET /tenant_payments/new
-  # GET /leases/:lease_id/tenant_payments/new
+
   def new
     @tenant_payment = TenantPayment.new
     @tenant_payment.lease = @lease if @lease
@@ -37,12 +34,10 @@ class TenantPaymentsController < ApplicationController
     @tenant_payment.payment_date = Date.current
   end
 
-  # GET /tenant_payments/1/edit
   def edit
   end
 
-  # POST /tenant_payments or /tenant_payments.json
-  # POST /leases/:lease_id/tenant_payments
+
   def create
     @tenant_payment = TenantPayment.new(tenant_payment_params)
     @tenant_payment.lease = @lease if @lease
@@ -84,7 +79,6 @@ class TenantPaymentsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /tenant_payments/1 or /tenant_payments/1.json
   def update
     respond_to do |format|
       if @tenant_payment.update(tenant_payment_params)
@@ -97,7 +91,6 @@ class TenantPaymentsController < ApplicationController
     end
   end
 
-  # DELETE /tenant_payments/1 or /tenant_payments/1.json
   def destroy
     @tenant_payment.destroy!
 
@@ -108,16 +101,15 @@ class TenantPaymentsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
     def set_tenant_payment
-      @tenant_payment = TenantPayment.find(params.expect(:id))
+      @tenant_payment = Current.session.user.tenant_payments.find(params.expect(:id))
     end
 
     def set_lease
-      @lease = Lease.find(params[:lease_id]) if params[:lease_id].present?
+      @lease = Current.session.user.leases.find(params[:lease_id]) if params[:lease_id].present?
     end
 
-    # Only allow a list of trusted parameters through.
+
     def tenant_payment_params
       params.expect(tenant_payment: [ :lease_id, :payment_date, :amount, :payment_method, :transaction_number ])
     end

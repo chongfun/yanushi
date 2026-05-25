@@ -1,25 +1,24 @@
 class LeasesController < ApplicationController
   before_action :set_lease, only: %i[ show edit update destroy generate_scheduled_rents ]
 
-  # GET /leases or /leases.json
   def index
-    @leases = Lease.all
+    @leases = Current.session.user.leases.includes(:rental_property, :tenants)
   end
 
-  # GET /leases/1 or /leases/1.json
+
   def show
   end
 
-  # GET /leases/new
+
   def new
     @lease = Lease.new
   end
 
-  # GET /leases/1/edit
+
   def edit
   end
 
-  # POST /leases or /leases.json
+
   def create
     @lease = Lease.new(lease_params)
 
@@ -34,7 +33,7 @@ class LeasesController < ApplicationController
     end
   end
 
-  # PATCH/PUT /leases/1 or /leases/1.json
+
   def update
     respond_to do |format|
       if @lease.update(lease_params)
@@ -47,7 +46,7 @@ class LeasesController < ApplicationController
     end
   end
 
-  # DELETE /leases/1 or /leases/1.json
+
   def destroy
     @lease.destroy!
 
@@ -57,7 +56,7 @@ class LeasesController < ApplicationController
     end
   end
 
-  # POST /leases/1/generate_scheduled_rents
+
   def generate_scheduled_rents
     year = params[:year].presence || Date.current.year
     ScheduledRentsGenerator.new(@lease, year).call
@@ -67,7 +66,7 @@ class LeasesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_lease
-      @lease = Lease.find(params.expect(:id))
+      @lease = Current.session.user.leases.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

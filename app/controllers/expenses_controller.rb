@@ -2,29 +2,26 @@ class ExpensesController < ApplicationController
   before_action :set_expense, only: %i[ show edit update destroy ]
   before_action :set_rental_property, only: %i[ new create ]
 
-  # GET /expenses or /expenses.json
   def index
-    @expenses = Expense.all
+    @expenses = Current.session.user.expenses
   end
 
-  # GET /expenses/1 or /expenses/1.json
+
   def show
   end
 
-  # GET /expenses/new
-  # GET /rental_properties/:rental_property_id/expenses/new
+
   def new
     @expense = Expense.new
     @expense.rental_property = @rental_property if @rental_property
     @expense.expense_date = Date.current
   end
 
-  # GET /expenses/1/edit
+
   def edit
   end
 
-  # POST /expenses or /expenses.json
-  # POST /rental_properties/:rental_property_id/expenses
+
   def create
     @expense = Expense.new(expense_params)
     @expense.rental_property = @rental_property if @rental_property
@@ -64,7 +61,7 @@ class ExpensesController < ApplicationController
     end
   end
 
-  # PATCH/PUT /expenses/1 or /expenses/1.json
+
   def update
     respond_to do |format|
       if @expense.update(expense_params)
@@ -77,7 +74,7 @@ class ExpensesController < ApplicationController
     end
   end
 
-  # DELETE /expenses/1 or /expenses/1.json
+
   def destroy
     @expense.destroy!
 
@@ -90,11 +87,11 @@ class ExpensesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_expense
-      @expense = Expense.find(params.expect(:id))
+      @expense = Current.session.user.expenses.find(params.expect(:id))
     end
 
     def set_rental_property
-      @rental_property = RentalProperty.find(params[:rental_property_id]) if params[:rental_property_id].present?
+      @rental_property = Current.session.user.rental_properties.find(params[:rental_property_id]) if params[:rental_property_id].present?
     end
 
     # Only allow a list of trusted parameters through.

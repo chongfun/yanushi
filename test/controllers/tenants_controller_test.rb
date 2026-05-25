@@ -18,7 +18,7 @@ class TenantsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create tenant" do
     assert_difference("Tenant.count") do
-      post tenants_url, params: { tenant: { email_address: @tenant.email_address, mailing_address: @tenant.mailing_address, name: @tenant.name, phone_number: @tenant.phone_number, user_id: @tenant.user_id } }
+      post tenants_url, params: { tenant: { email_address: @tenant.email_address, mailing_address: @tenant.mailing_address, name: @tenant.name, phone_number: @tenant.phone_number } }
     end
 
     assert_redirected_to tenant_url(Tenant.last)
@@ -35,7 +35,7 @@ class TenantsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update tenant" do
-    patch tenant_url(@tenant), params: { tenant: { email_address: @tenant.email_address, mailing_address: @tenant.mailing_address, name: @tenant.name, phone_number: @tenant.phone_number, user_id: @tenant.user_id } }
+    patch tenant_url(@tenant), params: { tenant: { email_address: @tenant.email_address, mailing_address: @tenant.mailing_address, name: @tenant.name, phone_number: @tenant.phone_number } }
     assert_redirected_to tenant_url(@tenant)
   end
 

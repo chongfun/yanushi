@@ -1,18 +1,17 @@
 class RentalPropertiesController < ApplicationController
   before_action :set_rental_property, only: %i[ show edit update destroy schedule_e schedule_e_pdf ]
 
-  # GET /rental_properties or /rental_properties.json
   def index
-    @rental_properties = RentalProperty.all
+    @rental_properties = Current.session.user.rental_properties
   end
 
-  # GET /rental_properties/1 or /rental_properties/1.json
+
   def show
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
     @financial_items = @rental_property.financial_items(@year)
   end
 
-  # GET /rental_properties/1/schedule_e
+
   def schedule_e
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
 
@@ -36,7 +35,7 @@ class RentalPropertiesController < ApplicationController
     @net_income = @total_income - @total_expenses
   end
 
-  # GET /rental_properties/1/schedule_e_pdf
+
   def schedule_e_pdf
     year = params[:year].present? ? params[:year].to_i : Date.current.year
     pdf_data = ScheduleEGenerator.new(@rental_property, year).call
@@ -51,16 +50,15 @@ class RentalPropertiesController < ApplicationController
 
 
 
-  # GET /rental_properties/new
+
   def new
     @rental_property = RentalProperty.new
   end
 
-  # GET /rental_properties/1/edit
+
   def edit
   end
 
-  # POST /rental_properties or /rental_properties.json
   def create
     @rental_property = RentalProperty.new(rental_property_params)
     @rental_property.user = Current.session.user
@@ -76,7 +74,7 @@ class RentalPropertiesController < ApplicationController
     end
   end
 
-  # PATCH/PUT /rental_properties/1 or /rental_properties/1.json
+
   def update
     respond_to do |format|
       if @rental_property.update(rental_property_params)
@@ -89,7 +87,7 @@ class RentalPropertiesController < ApplicationController
     end
   end
 
-  # DELETE /rental_properties/1 or /rental_properties/1.json
+
   def destroy
     @rental_property.destroy!
 
@@ -102,11 +100,11 @@ class RentalPropertiesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_rental_property
-      @rental_property = RentalProperty.find(params.expect(:id))
+      @rental_property = Current.session.user.rental_properties.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
     def rental_property_params
-      params.expect(rental_property: [ :user_id, :address, :property_type, :square_footage ])
+      params.expect(rental_property: [ :address, :property_type, :square_footage ])
     end
 end
