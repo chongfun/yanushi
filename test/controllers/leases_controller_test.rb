@@ -64,4 +64,31 @@ class LeasesControllerTest < ActionDispatch::IntegrationTest
     patch lease_url(@lease), params: { lease: { rental_property_id: other_property.id } }
     assert_response :not_found
   end
+
+  test "should not create lease with other user's tenant" do
+    other_tenant = Tenant.create!(user: users(:two), name: "Other Tenant")
+
+    assert_no_difference("Lease.count") do
+      post leases_url, params: {
+        lease: {
+          annual_rental_amount: 10000,
+          commencement_date: Date.current,
+          lease_type: "term",
+          rental_property_id: rental_properties(:one).id,
+          tenant_ids: [ other_tenant.id ]
+        }
+      }
+    end
+
+    assert_response :not_found
+  end
+
+  test "should not update lease with other user's tenant" do
+    other_tenant = Tenant.create!(user: users(:two), name: "Other Tenant")
+
+    patch lease_url(@lease), params: { lease: { tenant_ids: [ other_tenant.id ] } }
+
+    assert_response :not_found
+    assert_not_includes @lease.reload.tenants, other_tenant
+  end
 end
