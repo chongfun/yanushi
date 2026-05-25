@@ -12,6 +12,7 @@ class ScheduledRentsGenerationTest < ApplicationSystemTestCase
       annual_rental_amount: 12000,
       late_period_days: 5
     )
+    Leases::ScheduledRentSyncService.call(@lease, previously_new_record: true)
 
     # Log in
     visit new_session_path
@@ -21,7 +22,7 @@ class ScheduledRentsGenerationTest < ApplicationSystemTestCase
   end
 
   test "generating scheduled rents multiple times does not duplicate them" do
-    # Initial rents from after_create callback
+    # Initial rents from explicit scheduled rent sync
     assert_equal 12, @lease.scheduled_rents.count
 
     visit lease_path(@lease)

@@ -21,7 +21,7 @@ class PropertyLifecycleTest < ActionDispatch::IntegrationTest
     assert_redirected_to rental_property_url(property)
 
     # 2. Create a Lease for the Property
-    # Note: after_create callback on Lease generates ScheduledRents
+    # Lease creation through the controller generates ScheduledRents explicitly
     assert_difference "Lease.count", 1 do
       assert_difference "ScheduledRent.count", 12 do
         post leases_url, params: {
