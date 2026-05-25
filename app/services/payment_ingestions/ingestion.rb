@@ -73,7 +73,7 @@ module PaymentIngestions
     def extract_pdf_data(pdf_path_or_io, user)
       if pdf_path_or_io.is_a?(PaymentDocument)
         payment_document = pdf_path_or_io
-        pdf_bytes = payment_document.attachment_file
+        pdf_bytes = payment_document.has_attribute?(:attachment_file) ? payment_document.attachment_file : PaymentDocument.where(id: payment_document.id).pluck(:attachment_file).first
         filename = payment_document.attachment_filename
         io = StringIO.new(pdf_bytes)
         doc = HexaPDF::Document.new(io: io)
