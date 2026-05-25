@@ -24,20 +24,44 @@ class RentalProperty < ApplicationRecord
 
     items = []
 
-    scheduled_rents.where(due_date: start_date..end_date).each do |sr|
-      items << { date: sr.due_date, type: "Scheduled Rent", amount: sr.amount, object: sr }
+    if scheduled_rents.loaded?
+      scheduled_rents.select { |sr| sr.due_date >= start_date && sr.due_date <= end_date }.each do |sr|
+        items << { date: sr.due_date, type: "Scheduled Rent", amount: sr.amount, object: sr }
+      end
+    else
+      scheduled_rents.where(due_date: start_date..end_date).each do |sr|
+        items << { date: sr.due_date, type: "Scheduled Rent", amount: sr.amount, object: sr }
+      end
     end
 
-    tenant_payments.where(payment_date: start_date..end_date).each do |tp|
-      items << { date: tp.payment_date, type: "Tenant Payment", amount: tp.amount, object: tp }
+    if tenant_payments.loaded?
+      tenant_payments.select { |tp| tp.payment_date >= start_date && tp.payment_date <= end_date }.each do |tp|
+        items << { date: tp.payment_date, type: "Tenant Payment", amount: tp.amount, object: tp }
+      end
+    else
+      tenant_payments.where(payment_date: start_date..end_date).each do |tp|
+        items << { date: tp.payment_date, type: "Tenant Payment", amount: tp.amount, object: tp }
+      end
     end
 
-    tenant_charges.where(charge_date: start_date..end_date).each do |tc|
-      items << { date: tc.charge_date, type: "Tenant Charge", amount: tc.amount, object: tc }
+    if tenant_charges.loaded?
+      tenant_charges.select { |tc| tc.charge_date >= start_date && tc.charge_date <= end_date }.each do |tc|
+        items << { date: tc.charge_date, type: "Tenant Charge", amount: tc.amount, object: tc }
+      end
+    else
+      tenant_charges.where(charge_date: start_date..end_date).each do |tc|
+        items << { date: tc.charge_date, type: "Tenant Charge", amount: tc.amount, object: tc }
+      end
     end
 
-    expenses.where(expense_date: start_date..end_date).each do |exp|
-      items << { date: exp.expense_date, type: "Expense", amount: exp.amount, object: exp }
+    if expenses.loaded?
+      expenses.select { |exp| exp.expense_date >= start_date && exp.expense_date <= end_date }.each do |exp|
+        items << { date: exp.expense_date, type: "Expense", amount: exp.amount, object: exp }
+      end
+    else
+      expenses.where(expense_date: start_date..end_date).each do |exp|
+        items << { date: exp.expense_date, type: "Expense", amount: exp.amount, object: exp }
+      end
     end
 
     items.sort_by { |item| item[:date] }
