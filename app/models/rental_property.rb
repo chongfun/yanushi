@@ -16,6 +16,8 @@ class RentalProperty < ApplicationRecord
     other: 8
   }
 
+  validates :address, presence: true
+
   def financial_items(year)
     start_date = Date.new(year.to_i, 1, 1)
     end_date = start_date.end_of_year
