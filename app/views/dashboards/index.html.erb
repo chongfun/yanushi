@@ -16,8 +16,8 @@
   <% else %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @properties.each do |property| %>
-        <% income = property.tenant_payments.sum(:amount) %>
-        <% expenses = property.expenses.sum(:amount) %>
+        <% income = property.tenant_payments.sum(&:amount) %>
+        <% expenses = property.expenses.sum(&:amount) %>
         <% net_income = income - expenses %>
         
         <div class="card bg-base-100 shadow-xl border border-base-200">
@@ -49,7 +49,7 @@
                   <% active_leases.each do |lease| %>
                     <% balance = lease.current_balance %>
                     <div class="flex justify-between items-center text-xs">
-                      <span class="text-base-content/70">Lease #<%= lease.id %> (<%= lease.tenants.pluck(:name).first %>)</span>
+                      <span class="text-base-content/70">Lease #<%= lease.id %> (<%= lease.tenants.first&.name %>)</span>
                       <span class="font-bold <%= balance >= 0 ? 'text-success' : 'text-error' %>">
                         <%= balance >= 0 ? "+" : "" %><%= number_to_currency(balance) %>
                       </span>
