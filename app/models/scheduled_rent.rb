@@ -1,6 +1,9 @@
 class ScheduledRent < ApplicationRecord
   belongs_to :lease
 
+  validates :amount, presence: true, numericality: { greater_than: 0 }
+  validates :due_date, presence: true
+
   def covered?(as_of: Date.current)
     lease.total_credits(as_of: as_of) >= lease.total_debits(as_of: due_date)
   end

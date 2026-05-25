@@ -8,8 +8,14 @@ class Lease < ApplicationRecord
 
   enum :lease_type, { month_to_month: 0, term: 1 }
 
+  validates :commencement_date, presence: true
+  validates :annual_rental_amount, presence: true, numericality: { greater_than: 0 }
+  validates :lease_type, presence: true
+
   after_create :generate_scheduled_rents
-  after_update :generate_scheduled_rents
+  after_update :generate_scheduled_rents,
+    if: -> { saved_change_to_commencement_date? || saved_change_to_termination_date? ||
+             saved_change_to_annual_rental_amount? || saved_change_to_lease_type? }
 
   # Total credits (payments received) up to a given date
   def total_credits(as_of: Date.current)
