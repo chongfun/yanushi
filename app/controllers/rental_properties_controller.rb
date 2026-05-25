@@ -8,6 +8,7 @@ class RentalPropertiesController < ApplicationController
 
   def show
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
+    @rental_property = Current.session.user.rental_properties.includes(leases: [ :tenants, :tenant_payments, :scheduled_rents, :tenant_charges ]).find(params.expect(:id))
     @financial_items = @rental_property.financial_items(@year)
   end
 
