@@ -13,7 +13,7 @@
 
   <div class="form-control w-full mb-4">
     <%= form.label :rental_property_id, class: "label font-semibold" %>
-    <%= form.collection_select :rental_property_id, RentalProperty.all, :id, :address, {}, { class: "select select-bordered w-full" } %>
+    <%= form.collection_select :rental_property_id, @rental_properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="form-control w-full mb-4">
@@ -48,8 +48,8 @@
   <div class="form-control w-full mb-4">
     <%= form.label :reimburse_lease_id, "Lease to Charge", class: "label font-semibold" %>
     <%= form.select :reimburse_lease_id, 
-          Lease.includes(:rental_property, :tenants).map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.map(&:name).join(', ')})", l.id] }, 
-          { include_blank: "Select a lease (or auto-assign active lease)..." }, 
+          @leases.map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.map(&:name).join(', ')})", l.id] },
+          { include_blank: "Select a lease (or auto-assign active lease)..." },
           { class: "select select-bordered w-full" } %>
   </div>
 

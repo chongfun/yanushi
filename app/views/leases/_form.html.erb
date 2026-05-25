@@ -13,12 +13,12 @@
 
   <div class="form-control w-full mb-4">
     <%= form.label :rental_property_id, class: "label font-semibold" %>
-    <%= form.collection_select :rental_property_id, RentalProperty.all, :id, :address, {}, { class: "select select-bordered w-full" } %>
+    <%= form.collection_select :rental_property_id, @rental_properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="form-control w-full mb-4">
     <%= form.label :tenant_ids, "Tenants", class: "label font-semibold" %>
-    <%= form.collection_select :tenant_ids, Tenant.all, :id, :name, {}, { multiple: true, class: "select select-bordered w-full h-32" } %>
+    <%= form.collection_select :tenant_ids, @tenants, :id, :name, {}, { multiple: true, class: "select select-bordered w-full h-32" } %>
   </div>
 
   <div class="form-control w-full mb-4">
