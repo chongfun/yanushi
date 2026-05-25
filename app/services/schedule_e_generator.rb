@@ -289,7 +289,7 @@ class ScheduleEGenerator
   end
 
   def rents_received
-    @property.tenant_payments
+    @rents_received ||= @property.tenant_payments
              .where(payment_date: date_range)
              .sum(:amount)
   end
