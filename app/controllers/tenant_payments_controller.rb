@@ -39,6 +39,11 @@ class TenantPaymentsController < ApplicationController
 
 
   def create
+    lease_id = tenant_payment_params[:lease_id]
+    if lease_id.present?
+      Current.session.user.leases.find(lease_id)
+    end
+
     @tenant_payment = TenantPayment.new(tenant_payment_params)
     @tenant_payment.lease = @lease if @lease
 
@@ -80,6 +85,11 @@ class TenantPaymentsController < ApplicationController
   end
 
   def update
+    lease_id = tenant_payment_params[:lease_id]
+    if lease_id.present?
+      Current.session.user.leases.find(lease_id)
+    end
+
     respond_to do |format|
       if @tenant_payment.update(tenant_payment_params)
         format.html { redirect_to @tenant_payment, notice: "Payment was successfully updated.", status: :see_other }

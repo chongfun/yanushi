@@ -39,11 +39,40 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to expense_url(@expense)
   end
 
-  test "should destroy " do
+  test "should destroy" do
     assert_difference("Expense.count", -1) do
       delete expense_url(@expense)
     end
 
     assert_redirected_to expenses_url
+  end
+
+  test "should not create expense with other user's property" do
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+
+    assert_no_difference("Expense.count") do
+      post expenses_url, params: { expense: { amount: 100.0, category: "repairs", expense_date: Date.current, rental_property_id: other_property.id } }
+      assert_response :not_found
+    end
+  end
+
+  test "should not update expense to other user's property" do
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+
+    patch expense_url(@expense), params: { expense: { rental_property_id: other_property.id } }
+    assert_response :not_found
+  end
+
+  test "should not create expense with other user's reimburse lease" do
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+    other_lease = Lease.create!(rental_property: other_property, commencement_date: Date.current - 1.day, annual_rental_amount: 12000, lease_type: :term)
+
+    assert_no_difference("Expense.count") do
+      post expenses_url, params: { expense: { amount: 100.0, category: "repairs", expense_date: Date.current, rental_property_id: @expense.rental_property_id, reimburse_lease_id: other_lease.id } }
+      assert_response :not_found
+    end
   end
 end

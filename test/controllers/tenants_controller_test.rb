@@ -79,7 +79,7 @@ class TenantsControllerTest < ActionDispatch::IntegrationTest
     assert tenant.tenant_aliases.exists?(alias_name: "New Alias")
   end
 
-  test "should destroy  " do
+  test "should destroy" do
     assert_difference("Tenant.count", -1) do
       delete tenant_url(@tenant)
     end

@@ -53,4 +53,24 @@ class TenantPaymentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to tenant_payments_url
   end
+
+  test "should not create tenant payment with other user's lease" do
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+    other_lease = Lease.create!(rental_property: other_property, commencement_date: Date.current - 1.day, annual_rental_amount: 12000, lease_type: :term)
+
+    assert_no_difference("TenantPayment.count") do
+      post tenant_payments_url, params: { tenant_payment: { lease_id: other_lease.id, amount: 500, payment_date: Date.current, payment_method: "Zelle", transaction_number: "TXNTEST456" } }
+      assert_response :not_found
+    end
+  end
+
+  test "should not update tenant payment to other user's lease" do
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+    other_lease = Lease.create!(rental_property: other_property, commencement_date: Date.current - 1.day, annual_rental_amount: 12000, lease_type: :term)
+
+    patch tenant_payment_url(@tenant_payment), params: { tenant_payment: { lease_id: other_lease.id } }
+    assert_response :not_found
+  end
 end

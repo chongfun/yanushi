@@ -20,6 +20,11 @@ class LeasesController < ApplicationController
 
 
   def create
+    property_id = lease_params[:rental_property_id]
+    if property_id.present?
+      Current.session.user.rental_properties.find(property_id)
+    end
+
     @lease = Lease.new(lease_params)
 
     respond_to do |format|
@@ -35,6 +40,11 @@ class LeasesController < ApplicationController
 
 
   def update
+    property_id = lease_params[:rental_property_id]
+    if property_id.present?
+      Current.session.user.rental_properties.find(property_id)
+    end
+
     respond_to do |format|
       if @lease.update(lease_params)
         format.html { redirect_to @lease, notice: "Lease was successfully updated.", status: :see_other }
