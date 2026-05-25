@@ -1,0 +1,6 @@
+module PaymentIngestions
+  class Error < StandardError; end
+  class ParsingError < Error; end
+  class ResolutionError < Error; end
+  class ConfirmationError < Error; end
+end

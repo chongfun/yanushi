@@ -18,17 +18,17 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control w-full">
         <%= form.label :name, "Primary Legal Name", class: "label font-semibold" %>
-        <%= form.text_field :name, placeholder: "e.g. Kristina Page", class: "input input-bordered w-full" %>
+        <%= form.text_field :name, placeholder: "e.g. John Doe", class: "input input-bordered w-full" %>
       </div>
 
       <div class="form-control w-full">
         <%= form.label :email_address, "Email Address", class: "label font-semibold" %>
-        <%= form.email_field :email_address, placeholder: "kristina@example.com", class: "input input-bordered w-full" %>
+        <%= form.email_field :email_address, placeholder: "john@example.com", class: "input input-bordered w-full" %>
       </div>
 
       <div class="form-control w-full">
         <%= form.label :phone_number, "Phone Number", class: "label font-semibold" %>
-        <%= form.text_field :phone_number, placeholder: "555-1234", class: "input input-bordered w-full" %>
+        <%= form.text_field :phone_number, placeholder: "+15556661234", class: "input input-bordered w-full" %>
       </div>
 
       <div class="form-control w-full">
@@ -50,6 +50,34 @@
         Add Alias
       </button>
     </div>
+
+    <div class="space-y-3" data-nested-form-target="target">
+      <%= form.fields_for :tenant_aliases do |alias_form| %>
+        <div class="flex items-center gap-3" data-nested-form-wrapper data-new-record="false">
+          <%= alias_form.hidden_field :_destroy %>
+          <div class="form-control w-full">
+            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "input input-bordered w-full font-mono text-sm" %>
+          </div>
+          <button type="button" class="btn btn-error btn-outline btn-square btn-sm" data-action="nested-form#remove">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
+          </button>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Template for new alias fields -->
+    <template data-nested-form-target="template">
+      <%= form.fields_for :tenant_aliases, TenantAlias.new, child_index: "NEW_RECORD" do |alias_form| %>
+        <div class="flex items-center gap-3 mt-3" data-nested-form-wrapper data-new-record="true">
+          <div class="form-control w-full">
+            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "input input-bordered w-full font-mono text-sm" %>
+          </div>
+          <button type="button" class="btn btn-error btn-outline btn-square btn-sm" data-action="nested-form#remove">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
+          </button>
+        </div>
+      <% end %>
+    </template>
   </div>
 
   <div class="flex justify-end gap-3 pt-4">

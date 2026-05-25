@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_19_020657) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_070000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,6 +47,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_020657) do
     t.index ["rental_property_id"], name: "index_leases_on_rental_property_id"
   end
 
+  create_table "payment_documents", force: :cascade do |t|
+    t.string "attachment_content_type"
+    t.binary "attachment_file"
+    t.string "attachment_filename"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "status", default: "processing", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_payment_documents_on_user_id"
+  end
+
+  create_table "payment_ingestions", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.bigint "lease_id"
+    t.string "payer_name"
+    t.string "payer_username"
+    t.date "payment_date"
+    t.bigint "payment_document_id"
+    t.string "payment_method"
+    t.text "raw_text"
+    t.string "receipt_type"
+    t.string "source", null: false
+    t.string "status", default: "pending", null: false
+    t.bigint "tenant_id"
+    t.bigint "tenant_payment_id"
+    t.string "transaction_number"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["lease_id"], name: "index_payment_ingestions_on_lease_id"
+    t.index ["payment_document_id"], name: "index_payment_ingestions_on_payment_document_id"
+    t.index ["tenant_id"], name: "index_payment_ingestions_on_tenant_id"
+    t.index ["tenant_payment_id"], name: "index_payment_ingestions_on_tenant_payment_id"
+    t.index ["user_id", "payment_method", "transaction_number"], name: "idx_payment_ingestions_dup_check"
+    t.index ["user_id"], name: "index_payment_ingestions_on_user_id"
+  end
+
   create_table "rental_properties", force: :cascade do |t|
     t.string "address"
     t.datetime "created_at", null: false
@@ -75,6 +114,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_020657) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "tenant_aliases", force: :cascade do |t|
+    t.string "alias_name", null: false
+    t.datetime "created_at", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index "tenant_id, lower((alias_name)::text)", name: "index_tenant_aliases_on_tenant_id_and_lower_alias_name", unique: true
+    t.index ["tenant_id"], name: "index_tenant_aliases_on_tenant_id"
+  end
+
   create_table "tenant_charges", force: :cascade do |t|
     t.decimal "amount", precision: 12, scale: 2, null: false
     t.date "charge_date", null: false
@@ -96,6 +144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_020657) do
     t.string "transaction_number"
     t.datetime "updated_at", null: false
     t.index ["lease_id"], name: "index_tenant_payments_on_lease_id"
+    t.index ["payment_method", "transaction_number"], name: "index_tenant_payments_on_payment_method_and_transaction_number", unique: true, where: "(transaction_number IS NOT NULL)"
   end
 
   create_table "tenants", force: :cascade do |t|
@@ -113,6 +162,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_020657) do
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "password_digest", null: false
+    t.string "timezone", default: "UTC", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
@@ -121,9 +171,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_020657) do
   add_foreign_key "lease_tenants", "leases"
   add_foreign_key "lease_tenants", "tenants"
   add_foreign_key "leases", "rental_properties"
+  add_foreign_key "payment_documents", "users"
+  add_foreign_key "payment_ingestions", "leases"
+  add_foreign_key "payment_ingestions", "payment_documents"
+  add_foreign_key "payment_ingestions", "tenant_payments"
+  add_foreign_key "payment_ingestions", "tenants"
+  add_foreign_key "payment_ingestions", "users"
   add_foreign_key "rental_properties", "users"
   add_foreign_key "scheduled_rents", "leases"
   add_foreign_key "sessions", "users"
+  add_foreign_key "tenant_aliases", "tenants"
   add_foreign_key "tenant_charges", "expenses"
   add_foreign_key "tenant_charges", "leases"
   add_foreign_key "tenant_payments", "leases"
