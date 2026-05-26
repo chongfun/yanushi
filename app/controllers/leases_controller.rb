@@ -1,5 +1,6 @@
 class LeasesController < ApplicationController
   before_action :set_lease, only: %i[ show edit update destroy generate_scheduled_rents ]
+  before_action :set_form_data, only: %i[ new edit create update ]
 
   def index
     @leases = Current.session.user.leases.includes(:rental_property, :tenants)
@@ -71,6 +72,12 @@ class LeasesController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_lease
       @lease = Current.session.user.leases.find(params.expect(:id))
+    end
+
+    def set_form_data
+      user = Current.session.user
+      @rental_properties = user.rental_properties.order(:address)
+      @tenants = user.tenants.order(:name)
     end
 
     # Only allow a list of trusted parameters through.

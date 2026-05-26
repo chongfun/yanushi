@@ -13,8 +13,22 @@ class TenantPaymentsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get new" do
+    other_user = users(:two)
+    other_property = RentalProperty.create!(user: other_user, address: "999 Other St", property_type: :other)
+    other_tenant = Tenant.create!(user: other_user, name: "Other Tenant")
+    other_lease = Lease.create!(
+      rental_property: other_property,
+      commencement_date: Date.current,
+      annual_rental_amount: 12000,
+      lease_type: :term
+    )
+    LeaseTenant.create!(lease: other_lease, tenant: other_tenant)
+
     get new_tenant_payment_url
+
     assert_response :success
+    assert_no_match other_property.address, response.body
+    assert_no_match other_tenant.name, response.body
   end
 
   test "should create tenant_payment" do

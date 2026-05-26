@@ -1,6 +1,7 @@
 class ExpensesController < ApplicationController
   before_action :set_expense, only: %i[ show edit update destroy ]
   before_action :set_rental_property, only: %i[ new create ]
+  before_action :set_form_data, only: %i[ new edit create update ]
 
   def index
     @expenses = Current.session.user.expenses
@@ -112,6 +113,12 @@ class ExpensesController < ApplicationController
 
     def set_rental_property
       @rental_property = Current.session.user.rental_properties.find(params[:rental_property_id]) if params[:rental_property_id].present?
+    end
+
+    def set_form_data
+      user = Current.session.user
+      @rental_properties = user.rental_properties.order(:address)
+      @leases = user.leases.includes(:rental_property, :tenants)
     end
 
     # Only allow a list of trusted parameters through.

@@ -1,6 +1,7 @@
 class TenantPaymentsController < ApplicationController
   before_action :set_tenant_payment, only: %i[ show edit update destroy ]
   before_action :set_lease, only: %i[ new create ]
+  before_action :set_form_data, only: %i[ new edit create update ]
 
   def index
     @tenant_payments = Current.session.user.tenant_payments.includes(lease: :rental_property)
@@ -117,6 +118,10 @@ class TenantPaymentsController < ApplicationController
 
     def set_lease
       @lease = Current.session.user.leases.find(params[:lease_id]) if params[:lease_id].present?
+    end
+
+    def set_form_data
+      @leases = Current.session.user.leases.includes(:rental_property, :tenants)
     end
 
 
