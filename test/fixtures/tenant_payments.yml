@@ -1,4 +1,5 @@
 one:
+  user: one
   lease: one
   amount: 1000.00
   payment_date: 2026-04-28
@@ -6,6 +7,7 @@ one:
   transaction_number: TXN12345
 
 two:
+  user: one
   lease: two
   amount: 1200.00
   payment_date: 2026-04-28
