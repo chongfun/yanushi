@@ -20,12 +20,9 @@ class LeasesController < ApplicationController
 
 
   def create
-    property_id = lease_params[:rental_property_id]
-    if property_id.present?
-      Current.session.user.rental_properties.find(property_id)
-    end
+    permitted_params = lease_params
 
-    @lease = Lease.new(lease_params)
+    @lease = Lease.new(permitted_params)
 
     respond_to do |format|
       if @lease.save
@@ -40,13 +37,10 @@ class LeasesController < ApplicationController
 
 
   def update
-    property_id = lease_params[:rental_property_id]
-    if property_id.present?
-      Current.session.user.rental_properties.find(property_id)
-    end
+    permitted_params = lease_params
 
     respond_to do |format|
-      if @lease.update(lease_params)
+      if @lease.update(permitted_params)
         format.html { redirect_to @lease, notice: "Lease was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @lease }
       else
@@ -81,6 +75,18 @@ class LeasesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def lease_params
-      params.expect(lease: [ :rental_property_id, :lease_type, :commencement_date, :termination_date, :annual_rental_amount, :late_period_days, :security_deposit, tenant_ids: [] ])
+      permitted_params = params.expect(lease: [ :rental_property_id, :lease_type, :commencement_date, :termination_date, :annual_rental_amount, :late_period_days, :security_deposit, tenant_ids: [] ])
+
+      user = Current.session.user
+      if permitted_params[:rental_property_id].present?
+        raise ActiveRecord::RecordNotFound unless user.rental_properties.where(id: permitted_params[:rental_property_id]).exists?
+      end
+
+      tenant_ids = Array(permitted_params[:tenant_ids]).reject(&:blank?)
+      if tenant_ids.any?
+        raise ActiveRecord::RecordNotFound unless user.tenants.where(id: tenant_ids).count == tenant_ids.count
+      end
+
+      permitted_params
     end
 end
