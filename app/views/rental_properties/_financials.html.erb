@@ -5,8 +5,7 @@
             new_rental_property_expense_path(rental_property),
             class: "btn btn-sm btn-outline btn-error",
             data: { turbo_frame: "modal-frame" } %>
-      <% active_lease = rental_property.leases.where("commencement_date <= ? AND (termination_date >= ? OR lease_type = ?)", Date.current, Date.current, Lease.lease_types[:month_to_month]).first %>
-      <% active_lease ||= rental_property.leases.order(commencement_date: :desc).first %>
+      <% active_lease = active_lease_for(rental_property) %>
       <% if active_lease %>
         <%= link_to "＋ Record Payment",
               new_lease_tenant_payment_path(active_lease),

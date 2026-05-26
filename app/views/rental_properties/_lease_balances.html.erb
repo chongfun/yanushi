@@ -1,4 +1,4 @@
-<% active_leases = rental_property.leases.select { |l| l.commencement_date <= Date.current && (l.termination_date.nil? || l.termination_date >= Date.current) } %>
+<% active_leases = active_leases_for(rental_property) %>
 <% if active_leases.any? %>
   <div class="mb-8">
     <h3 class="text-lg font-bold text-base-content/70 mb-3">Active Lease Balances</h3>
