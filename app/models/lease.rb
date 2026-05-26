@@ -1,4 +1,4 @@
-class Lease < ApplicationRecord
+class Lease < ShardedRecord
   belongs_to :rental_property
   has_many :lease_tenants, dependent: :destroy
   has_many :tenants, through: :lease_tenants

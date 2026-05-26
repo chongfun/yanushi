@@ -71,7 +71,7 @@ class PaymentIngestionsController < ApplicationController
         status: :processing
       )
 
-      IngestPaymentDocumentJob.perform_later(payment_document.id)
+      IngestPaymentDocumentJob.perform_later(payment_document.id, shard: Current.session.user.shard)
 
       redirect_to payment_ingestions_path, notice: "Document uploaded successfully and is being processed in the background."
     rescue ActiveRecord::RecordInvalid => e

@@ -1,4 +1,4 @@
-class LeaseTenant < ApplicationRecord
+class LeaseTenant < ShardedRecord
   belongs_to :lease
   belongs_to :tenant
 

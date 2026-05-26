@@ -1,4 +1,4 @@
-class PaymentDocument < ApplicationRecord
+class PaymentDocument < ShardedRecord
   belongs_to :user
   has_many :payment_ingestions, dependent: :destroy
 

@@ -13,6 +13,22 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: true
   validates :password_digest, presence: true
+  validates :shard, presence: true
 
   normalizes :email, with: ->(e) { e.strip.downcase }
+
+  before_validation :assign_shard, on: :create
+
+  private
+
+  def assign_shard
+    self.shard ||= determine_shard
+  end
+
+  def determine_shard
+    require "digest"
+    shards = [ "default", "shard_two" ]
+    index = Digest::MD5.hexdigest(email.to_s.strip.downcase).hex % shards.size
+    shards[index]
+  end
 end

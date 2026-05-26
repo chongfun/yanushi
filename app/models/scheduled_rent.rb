@@ -1,4 +1,4 @@
-class ScheduledRent < ApplicationRecord
+class ScheduledRent < ShardedRecord
   belongs_to :lease
 
   validates :amount, presence: true, numericality: { greater_than: 0 }

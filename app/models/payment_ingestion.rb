@@ -1,4 +1,4 @@
-class PaymentIngestion < ApplicationRecord
+class PaymentIngestion < ShardedRecord
   belongs_to :user
   belongs_to :tenant, optional: true
   belongs_to :lease, optional: true

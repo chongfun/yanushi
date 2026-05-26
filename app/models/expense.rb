@@ -1,4 +1,4 @@
-class Expense < ApplicationRecord
+class Expense < ShardedRecord
   belongs_to :rental_property
   has_one :tenant_charge, dependent: :destroy
 

@@ -1,4 +1,4 @@
-class TenantAlias < ApplicationRecord
+class TenantAlias < ShardedRecord
   belongs_to :tenant
 
   validates :alias_name, presence: true

@@ -1,4 +1,4 @@
-class TenantCharge < ApplicationRecord
+class TenantCharge < ShardedRecord
   belongs_to :lease
   belongs_to :expense
 

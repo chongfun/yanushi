@@ -1,4 +1,4 @@
-class TenantPayment < ApplicationRecord
+class TenantPayment < ShardedRecord
   belongs_to :lease
   belongs_to :user
 
