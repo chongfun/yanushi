@@ -24,21 +24,22 @@ class ExpensesController < ApplicationController
 
 
   def create
-    property_id = expense_params[:rental_property_id]
+    permitted_params = expense_params
+    property_id = permitted_params[:rental_property_id]
     if property_id.present?
       Current.session.user.rental_properties.find(property_id)
     end
 
-    lease_id = expense_params[:reimburse_lease_id]
+    lease_id = permitted_params[:reimburse_lease_id]
     if lease_id.present?
       Current.session.user.leases.find(lease_id)
     end
 
-    @expense = Expense.new(expense_params)
+    @expense = Expense.new(permitted_params)
     @expense.rental_property = @rental_property if @rental_property
 
     respond_to do |format|
-      if @expense.save
+      if save_expense
         if @rental_property
           # Submitted from modal
           year = @expense.expense_date&.year || Date.current.year
@@ -74,18 +75,21 @@ class ExpensesController < ApplicationController
 
 
   def update
-    property_id = expense_params[:rental_property_id]
+    permitted_params = expense_params
+    property_id = permitted_params[:rental_property_id]
     if property_id.present?
       Current.session.user.rental_properties.find(property_id)
     end
 
-    lease_id = expense_params[:reimburse_lease_id]
+    lease_id = permitted_params[:reimburse_lease_id]
     if lease_id.present?
       Current.session.user.leases.find(lease_id)
     end
 
+    @expense.assign_attributes(permitted_params)
+
     respond_to do |format|
-      if @expense.update(expense_params)
+      if save_expense
         format.html { redirect_to @expense, notice: "Expense was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @expense }
       else
@@ -124,5 +128,15 @@ class ExpensesController < ApplicationController
     # Only allow a list of trusted parameters through.
     def expense_params
       params.expect(expense: [ :rental_property_id, :category, :amount, :expense_date, :description, :tenant_reimbursable, :reimburse_lease_id, :reimburse_amount ])
+    end
+
+    def save_expense
+      Expense.transaction do
+        @expense.save!
+        Expenses::TenantChargeService.call(@expense)
+      end
+      true
+    rescue ActiveRecord::RecordInvalid
+      false
     end
 end

@@ -18,7 +18,7 @@ class ExpenseTest < ActiveSupport::TestCase
     )
 
     assert_difference -> { TenantCharge.count }, 1 do
-      expense.save!
+      save_with_tenant_charge!(expense)
     end
 
     charge = expense.tenant_charge
@@ -38,7 +38,7 @@ class ExpenseTest < ActiveSupport::TestCase
       reimburse_amount: 75.00
     )
 
-    expense.save!
+    save_with_tenant_charge!(expense)
     assert_equal 75.00, expense.tenant_charge.amount
   end
 
@@ -52,11 +52,12 @@ class ExpenseTest < ActiveSupport::TestCase
       tenant_reimbursable: true,
       reimburse_lease_id: @lease.id
     )
+    Expenses::TenantChargeService.call(expense)
 
     # Simulates submitting the edit form where reinforce_amount is pre-populated with the old value 150.00
     # and they only change the expense amount to 200.00
     expense.assign_attributes(amount: 200.00, reimburse_amount: "150.00")
-    expense.save!
+    save_with_tenant_charge!(expense)
 
     assert_equal 200.00, expense.tenant_charge.amount
   end
@@ -72,10 +73,11 @@ class ExpenseTest < ActiveSupport::TestCase
       reimburse_lease_id: @lease.id,
       reimburse_amount: 50.00 # custom
     )
+    Expenses::TenantChargeService.call(expense)
 
     # Form pre-populates custom amount 50.00, user updates expense to 200.00
     expense.assign_attributes(amount: 200.00, reimburse_amount: "50.00")
-    expense.save!
+    save_with_tenant_charge!(expense)
 
     assert_equal 50.00, expense.tenant_charge.amount
   end
@@ -91,10 +93,11 @@ class ExpenseTest < ActiveSupport::TestCase
       reimburse_lease_id: @lease.id,
       reimburse_amount: 50.00 # custom
     )
+    Expenses::TenantChargeService.call(expense)
 
     # Form submits empty string for reimburse_amount (clear custom)
     expense.assign_attributes(amount: 150.00, reimburse_amount: "")
-    expense.save!
+    save_with_tenant_charge!(expense)
 
     assert_equal 150.00, expense.tenant_charge.amount
   end
@@ -109,9 +112,11 @@ class ExpenseTest < ActiveSupport::TestCase
       tenant_reimbursable: true,
       reimburse_lease_id: @lease.id
     )
+    Expenses::TenantChargeService.call(expense)
 
     # Unrelated programmatic update or direct ActiveRecord update without setting virtual attribute
     expense.update!(amount: 180.00)
+    Expenses::TenantChargeService.call(expense)
 
     assert_equal 180.00, expense.tenant_charge.reload.amount
   end
@@ -127,9 +132,17 @@ class ExpenseTest < ActiveSupport::TestCase
       reimburse_lease_id: @lease.id,
       reimburse_amount: 50.00 # custom
     )
+    Expenses::TenantChargeService.call(expense)
 
     expense.update!(amount: 180.00)
+    Expenses::TenantChargeService.call(expense)
 
     assert_equal 50.00, expense.tenant_charge.reload.amount
   end
+
+  private
+    def save_with_tenant_charge!(expense)
+      expense.save!
+      Expenses::TenantChargeService.call(expense)
+    end
 end

@@ -89,4 +89,24 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       assert_response :not_found
     end
   end
+
+  test "should fail validation and return errors when custom reimburse amount is invalid" do
+    assert_no_difference("Expense.count") do
+      post expenses_url, params: {
+        expense: {
+          amount: 100.0,
+          category: "repairs",
+          expense_date: Date.current,
+          rental_property_id: @expense.rental_property_id,
+          tenant_reimbursable: "1",
+          reimburse_lease_id: leases(:one).id,
+          reimburse_amount: -50.0
+        }
+      }, as: :json
+    end
+
+    assert_response :unprocessable_entity
+    response_json = JSON.parse(response.body)
+    assert_includes response_json.keys, "reimburse_amount"
+  end
 end

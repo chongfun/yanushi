@@ -16,12 +16,13 @@ if Rails.env.development?
   rp = RentalProperty.create!(user: user, address: "1#{rand(1000)} Main St", property_type: "single_family_residence", square_footage: 1500)
   tenant = Tenant.create!(user: user, name: "John Doe", email_address: "john@kylechong.com", phone_number: "123-456-7890")
   lease = Lease.create!(rental_property: rp, tenants: [ tenant ], lease_type: "term", annual_rental_amount: 14400, commencement_date: Date.current - 1.year, termination_date: Date.current + 1.year, security_deposit: 1200, late_period_days: 3)
+  Leases::ScheduledRentSyncService.call(lease, previously_new_record: true)
   lease.scheduled_rents.where("due_date < ?", Date.current - 1.month).each do |sr|
     payment_date = sr.due_date + rand(lease.late_period_days)
     TenantPayment.create!(lease: lease, amount: 1200, payment_date: payment_date, payment_method: "ach")
 
     expense_amount = rand(100...200)
-    Expense.create!(
+    expense = Expense.create!(
       rental_property: rp,
       amount: expense_amount,
       category: "utilities",
@@ -30,6 +31,7 @@ if Rails.env.development?
       reimburse_lease_id: lease.id,
       reimburse_amount: expense_amount
     )
+    Expenses::TenantChargeService.call(expense)
     TenantPayment.create!(lease: lease, amount: expense_amount, payment_date: payment_date, payment_method: "ach")
   end
 

@@ -8,9 +8,6 @@ class LeaseTest < ActiveSupport::TestCase
       property_type: :single_family_residence,
       square_footage: 2000
     )
-    # Turn off automatic scheduled rents generation for our custom scenario tests to avoid noise
-    Lease.skip_callback(:create, :after, :generate_scheduled_rents)
-
     @lease = Lease.create!(
       rental_property: @property,
       commencement_date: Date.parse("2026-01-01"),
@@ -20,9 +17,6 @@ class LeaseTest < ActiveSupport::TestCase
       lease_type: :term,
       late_period_days: 3
     )
-
-    # Re-enable the callback to keep other tests working
-    Lease.set_callback(:create, :after, :generate_scheduled_rents)
   end
 
   test "Scenario 1: Simple monthly rent" do
@@ -109,7 +103,7 @@ class LeaseTest < ActiveSupport::TestCase
       termination_date: Date.parse("2026-03-31"),
       annual_rental_amount: 12000 # $1000/mo
     )
-    lease.send(:generate_scheduled_rents)
+    Leases::ScheduledRentSyncService.call(lease, previously_new_record: true)
 
     assert_equal 3, lease.scheduled_rents.count
     assert_equal [ 1000.0, 1000.0, 1000.0 ], lease.scheduled_rents.order(:due_date).map(&:amount)
@@ -119,6 +113,7 @@ class LeaseTest < ActiveSupport::TestCase
       termination_date: Date.parse("2026-06-30"),
       annual_rental_amount: 14400 # $1200/mo
     )
+    Leases::ScheduledRentSyncService.call(lease)
 
     # Total rents should be 6
     assert_equal 6, lease.scheduled_rents.count
@@ -140,7 +135,7 @@ class LeaseTest < ActiveSupport::TestCase
       termination_date: Date.parse("2026-03-31"),
       annual_rental_amount: 12000 # $1000/mo
     )
-    lease.send(:generate_scheduled_rents)
+    Leases::ScheduledRentSyncService.call(lease, previously_new_record: true)
 
     assert_equal 3, lease.scheduled_rents.count
 
@@ -150,6 +145,7 @@ class LeaseTest < ActiveSupport::TestCase
         lease_type: :month_to_month,
         termination_date: nil
       )
+      Leases::ScheduledRentSyncService.call(lease)
 
       # Should generate rents rolling forward (12 months from today, or 11 months from commencement, max)
       # Date.current is 2026-04-01, +12 months = 2027-04-01 (approx 16 total months generated)
