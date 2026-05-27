@@ -23,8 +23,8 @@ class ScheduledRentsController < ApplicationController
         format.html { redirect_to @scheduled_rent, notice: "Scheduled rent was successfully created." }
         format.json { render :show, status: :created, location: @scheduled_rent }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @scheduled_rent.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @scheduled_rent.errors, status: :unprocessable_content }
       end
     end
   end
@@ -35,8 +35,8 @@ class ScheduledRentsController < ApplicationController
         format.html { redirect_to @scheduled_rent, notice: "Scheduled rent was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @scheduled_rent }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @scheduled_rent.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @scheduled_rent.errors, status: :unprocessable_content }
       end
     end
   end

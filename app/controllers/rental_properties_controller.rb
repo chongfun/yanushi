@@ -69,8 +69,8 @@ class RentalPropertiesController < ApplicationController
         format.html { redirect_to @rental_property, notice: "Rental property was successfully created." }
         format.json { render :show, status: :created, location: @rental_property }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @rental_property.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @rental_property.errors, status: :unprocessable_content }
       end
     end
   end
@@ -82,8 +82,8 @@ class RentalPropertiesController < ApplicationController
         format.html { redirect_to @rental_property, notice: "Rental property was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @rental_property }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @rental_property.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @rental_property.errors, status: :unprocessable_content }
       end
     end
   end

@@ -27,8 +27,8 @@ class TenantsController < ApplicationController
         format.html { redirect_to @tenant, notice: "Tenant was successfully created." }
         format.json { render :show, status: :created, location: @tenant }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @tenant.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @tenant.errors, status: :unprocessable_content }
       end
     end
   end
@@ -40,8 +40,8 @@ class TenantsController < ApplicationController
         format.html { redirect_to @tenant, notice: "Tenant was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @tenant }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @tenant.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @tenant.errors, status: :unprocessable_content }
       end
     end
   end

@@ -36,7 +36,7 @@ RSpec.describe "RentalProperties", type: :request do
         post rental_properties_url, params: { rental_property: { address: "" } }
       }.not_to change(RentalProperty, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -63,7 +63,7 @@ RSpec.describe "RentalProperties", type: :request do
 
     it "renders edit on validation failure" do
       patch rental_property_url(rental_property), params: { rental_property: { address: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
