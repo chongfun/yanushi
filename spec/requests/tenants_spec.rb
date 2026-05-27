@@ -55,7 +55,7 @@ RSpec.describe "Tenants", type: :request do
         post tenants_url, params: { tenant: { name: "" } }
       }.not_to change(Tenant, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -102,7 +102,7 @@ RSpec.describe "Tenants", type: :request do
 
     it "renders edit on validation failure" do
       patch tenant_url(tenant), params: { tenant: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

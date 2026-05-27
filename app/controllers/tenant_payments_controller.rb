@@ -74,8 +74,8 @@ class TenantPaymentsController < ApplicationController
         end
         format.json { render :show, status: :created, location: @tenant_payment }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @tenant_payment.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @tenant_payment.errors, status: :unprocessable_content }
         format.turbo_stream {
           render turbo_stream: turbo_stream.update("modal-frame",
             partial: "tenant_payments/modal_form",
@@ -96,8 +96,8 @@ class TenantPaymentsController < ApplicationController
         format.html { redirect_to @tenant_payment, notice: "Payment was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @tenant_payment }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @tenant_payment.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @tenant_payment.errors, status: :unprocessable_content }
       end
     end
   end

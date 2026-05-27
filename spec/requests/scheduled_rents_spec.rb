@@ -38,7 +38,7 @@ RSpec.describe "ScheduledRents", type: :request do
         post scheduled_rents_url, params: { scheduled_rent: { amount: -50.0 } }
       }.not_to change(ScheduledRent, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -65,7 +65,7 @@ RSpec.describe "ScheduledRents", type: :request do
 
     it "renders edit on validation failure" do
       patch scheduled_rent_url(scheduled_rent), params: { scheduled_rent: { amount: -50.0 } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

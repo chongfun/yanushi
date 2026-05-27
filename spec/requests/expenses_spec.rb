@@ -50,7 +50,7 @@ RSpec.describe "Expenses", type: :request do
         post expenses_url, params: { expense: { amount: 100.00, category: "repairs", description: "Faucet", expense_date: Date.today, rental_property_id: "" } }
       }.not_to change(Expense, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "handles modal-submit success with turbo_stream" do
@@ -122,7 +122,7 @@ RSpec.describe "Expenses", type: :request do
         }, as: :json
       }.not_to change(Expense, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       response_json = JSON.parse(response.body)
       expect(response_json.keys).to include("reimburse_amount")
     end
@@ -161,7 +161,7 @@ RSpec.describe "Expenses", type: :request do
 
     it "renders edit on validation failure" do
       patch expense_url(expense), params: { expense: { amount: -50.0 } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

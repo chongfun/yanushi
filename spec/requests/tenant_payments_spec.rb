@@ -68,7 +68,7 @@ RSpec.describe "TenantPayments", type: :request do
         post tenant_payments_url, params: { tenant_payment: { lease_id: "", amount: 500, payment_date: Date.today, payment_method: "Zelle" } }
       }.not_to change(TenantPayment, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "handles modal-submit success with turbo_stream" do
@@ -150,7 +150,7 @@ RSpec.describe "TenantPayments", type: :request do
 
     it "renders edit on validation failure" do
       patch tenant_payment_url(tenant_payment), params: { tenant_payment: { amount: -50.0 } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

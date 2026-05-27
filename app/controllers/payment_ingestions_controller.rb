@@ -97,7 +97,7 @@ class PaymentIngestionsController < ApplicationController
       redirect_to payment_ingestion_path(@ingestion), notice: "Ingestion record updated successfully."
     else
       set_form_data
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

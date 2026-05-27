@@ -30,8 +30,8 @@ class LeasesController < ApplicationController
         format.html { redirect_to @lease, notice: "Lease was successfully created." }
         format.json { render :show, status: :created, location: @lease }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @lease.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @lease.errors, status: :unprocessable_content }
       end
     end
   end
@@ -46,8 +46,8 @@ class LeasesController < ApplicationController
         format.html { redirect_to @lease, notice: "Lease was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @lease }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @lease.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @lease.errors, status: :unprocessable_content }
       end
     end
   end

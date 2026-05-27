@@ -69,7 +69,7 @@ RSpec.describe "Leases", type: :request do
         post leases_url, params: { lease: { commencement_date: nil } }
       }.not_to change(Lease, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -108,7 +108,7 @@ RSpec.describe "Leases", type: :request do
 
     it "renders edit on validation failure" do
       patch lease_url(lease), params: { lease: { commencement_date: nil } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "updates the lease without triggering scheduled rent sync if Commencement/Termination dates and Annual Rental Amount are unchanged" do
