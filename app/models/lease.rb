@@ -14,27 +14,16 @@ class Lease < ApplicationRecord
 
   # Total credits (payments received) up to a given date
   def total_credits(as_of: Date.current)
-    if tenant_payments.loaded?
-      tenant_payments.select { |tp| tp.payment_date <= as_of }.sum(&:amount)
-    else
-      tenant_payments.where("payment_date <= ?", as_of).sum(:amount)
-    end
+    balance_query.total_credits(as_of: as_of)
   end
 
   def total_debits(as_of: Date.current)
-    if scheduled_rents.loaded? && tenant_charges.loaded?
-      rent_debits = scheduled_rents.select { |sr| sr.due_date <= as_of }.sum(&:amount)
-      charge_debits = tenant_charges.select { |tc| tc.charge_date <= as_of }.sum(&:amount)
-    else
-      rent_debits = scheduled_rents.where("due_date <= ?", as_of).sum(:amount)
-      charge_debits = tenant_charges.where("charge_date <= ?", as_of).sum(:amount)
-    end
-    rent_debits + charge_debits
+    balance_query.total_debits(as_of: as_of)
   end
 
   # Positive = tenant has credit, negative = tenant owes money
   def balance_as_of(date = Date.current)
-    total_credits(as_of: date) - total_debits(as_of: date)
+    balance_query.balance_as_of(date)
   end
 
   def current_balance
@@ -49,4 +38,10 @@ class Lease < ApplicationRecord
   def active?(date = Date.current)
     commencement_date <= date && (termination_date.nil? || termination_date >= date)
   end
+
+  private
+
+    def balance_query
+      Leases::BalanceQuery.new(lease: self)
+    end
 end

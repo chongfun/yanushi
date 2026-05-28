@@ -284,14 +284,16 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
 
     it "handles ConfirmationError during confirm" do
-      allow_any_instance_of(PaymentIngestion).to receive(:confirm!).and_raise(PaymentIngestions::ConfirmationError.new("custom confirmation error"))
+      allow(PaymentIngestions::ConfirmService).to receive(:call).and_return(
+        ServiceResult.new(success: false, data: nil, error: "custom confirmation error", code: :confirmation_error)
+      )
       post confirm_payment_ingestion_url(ingestion)
       expect(response).to redirect_to(payment_ingestion_path(ingestion))
       expect(flash[:alert]).to eq("custom confirmation error")
     end
 
     it "handles unexpected error during confirm" do
-      allow_any_instance_of(PaymentIngestion).to receive(:confirm!).and_raise(StandardError.new("something went wrong"))
+      allow(PaymentIngestions::ConfirmService).to receive(:call).and_raise(StandardError.new("something went wrong"))
       post confirm_payment_ingestion_url(ingestion)
       expect(response).to redirect_to(payment_ingestion_path(ingestion))
       expect(flash[:alert]).to include("Failed to confirm payment: An unexpected error occurred")

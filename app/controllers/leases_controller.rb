@@ -26,7 +26,8 @@ class LeasesController < ApplicationController
     @lease = Lease.new(permitted_params)
 
     respond_to do |format|
-      if save_lease(sync_scheduled_rents: true, previously_new_record: true)
+      result = Leases::SaveService.call(lease: @lease, sync_scheduled_rents: true, previously_new_record: true)
+      if result.success?
         format.html { redirect_to @lease, notice: "Lease was successfully created." }
         format.json { render :show, status: :created, location: @lease }
       else
@@ -42,7 +43,8 @@ class LeasesController < ApplicationController
     @lease.assign_attributes(permitted_params)
 
     respond_to do |format|
-      if save_lease(sync_scheduled_rents: scheduled_rent_sync_needed?)
+      result = Leases::SaveService.call(lease: @lease)
+      if result.success?
         format.html { redirect_to @lease, notice: "Lease was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @lease }
       else
@@ -96,22 +98,5 @@ class LeasesController < ApplicationController
       end
 
       permitted_params
-    end
-
-    def save_lease(sync_scheduled_rents:, previously_new_record: false)
-      Lease.transaction do
-        @lease.save!
-        Leases::ScheduledRentSyncService.call(@lease, previously_new_record: previously_new_record) if sync_scheduled_rents
-      end
-      true
-    rescue ActiveRecord::RecordInvalid
-      false
-    end
-
-    def scheduled_rent_sync_needed?
-      @lease.will_save_change_to_commencement_date? ||
-        @lease.will_save_change_to_termination_date? ||
-        @lease.will_save_change_to_annual_rental_amount? ||
-        @lease.will_save_change_to_lease_type?
     end
 end

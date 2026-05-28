@@ -3,36 +3,16 @@ class PaymentIngestionsController < ApplicationController
 
   def index
     user = Current.session.user
-    @reviewable_ingestions = user.payment_ingestions
-                                 .includes(:tenant, lease: :rental_property)
-                                 .reviewable
-                                 .order(created_at: :desc)
+    result = PaymentIngestions::IndexQuery.new(user: user).call(page: params[:page])
 
-    # Simple pagination for confirmed ingestions (History)
-    @per_page = 20
-    @page = [ params[:page].to_i, 1 ].max
-
-    confirmed_scope = user.payment_ingestions
-                          .includes(:tenant, lease: :rental_property)
-                          .confirmed
-
-    @total_confirmed_count = confirmed_scope.count
-    @total_pages = (@total_confirmed_count.to_f / @per_page).ceil
-    @page = [ @page, @total_pages ].min if @total_pages > 0
-
-    @confirmed_ingestions = confirmed_scope.order(created_at: :desc)
-                                           .limit(@per_page)
-                                           .offset((@page - 1) * @per_page)
-
-    @processing_documents = user.payment_documents
-                                 .processing
-                                 .select(:id, :user_id, :attachment_filename, :attachment_content_type, :status, :error_message, :created_at, :updated_at)
-                                 .order(created_at: :desc)
-
-    @failed_documents = user.payment_documents
-                            .failed
-                            .select(:id, :user_id, :attachment_filename, :attachment_content_type, :status, :error_message, :created_at, :updated_at)
-                            .order(created_at: :desc)
+    @reviewable_ingestions = result.reviewable_ingestions
+    @per_page = result.per_page
+    @page = result.page
+    @total_confirmed_count = result.total_confirmed_count
+    @total_pages = result.total_pages
+    @confirmed_ingestions = result.confirmed_ingestions
+    @processing_documents = result.processing_documents
+    @failed_documents = result.failed_documents
   end
 
   def new
@@ -40,45 +20,11 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def create
-    pdf_param = params.dig(:payment_ingestion, :pdf_file)
-    if pdf_param.nil?
-      redirect_to new_payment_ingestion_path, alert: "Please select a PDF file to upload."
-      return
-    end
-
-    # Validate actual file content, not client-provided MIME type (which is spoofable)
-    header = pdf_param.read(5)
-    pdf_param.rewind
-    unless header == "%PDF-"
-      redirect_to new_payment_ingestion_path, alert: "Only PDF files are supported."
-      return
-    end
-
-    if pdf_param.size > 10.megabytes
-      redirect_to new_payment_ingestion_path, alert: "File size exceeds the 10MB limit."
-      return
-    end
-
-    begin
-      pdf_bytes = pdf_param.read
-      filename = pdf_param.original_filename
-      content_type = pdf_param.content_type
-
-      payment_document = Current.session.user.payment_documents.create!(
-        attachment_file: pdf_bytes,
-        attachment_filename: filename,
-        attachment_content_type: content_type,
-        status: :processing
-      )
-
-      IngestPaymentDocumentJob.perform_later(payment_document.id)
-
+    result = PaymentIngestions::UploadService.call(user: Current.session.user, pdf_param: params.dig(:payment_ingestion, :pdf_file))
+    if result.success?
       redirect_to payment_ingestions_path, notice: "Document uploaded successfully and is being processed in the background."
-    rescue ActiveRecord::RecordInvalid => e
-      redirect_to new_payment_ingestion_path, alert: "Upload failed: #{e.record.errors.full_messages.to_sentence}"
-    rescue => e
-      Rails.logger.error("Upload document failed: #{e.message}\n#{e.backtrace.join("\n")}")
-      redirect_to new_payment_ingestion_path, alert: "Upload failed: An unexpected error occurred while processing the file."
+    else
+      redirect_to new_payment_ingestion_path, alert: result.error
     end
   end
 
@@ -87,13 +33,8 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def update
-    permitted_params = payment_ingestion_params
-
-    if @ingestion.update(permitted_params)
-      if @ingestion.confirmable? && (@ingestion.failed? || @ingestion.unmatched? || @ingestion.ambiguous?)
-        @ingestion.update!(status: :matched)
-      end
-
+    result = PaymentIngestions::UpdateService.call(user: Current.session.user, ingestion: @ingestion, params: payment_ingestion_params)
+    if result.success?
       redirect_to payment_ingestion_path(@ingestion), notice: "Ingestion record updated successfully."
     else
       set_form_data
@@ -105,10 +46,12 @@ class PaymentIngestionsController < ApplicationController
     create_alias = params[:create_alias] == "1"
 
     begin
-      @ingestion.confirm!(create_alias: create_alias)
-      redirect_to payment_ingestions_path, notice: "Payment confirmed and tenant payment created successfully."
-    rescue PaymentIngestions::ConfirmationError => e
-      redirect_to payment_ingestion_path(@ingestion), alert: e.message
+      result = PaymentIngestions::ConfirmService.call(user: Current.session.user, ingestion: @ingestion, create_alias: create_alias)
+      if result.success?
+        redirect_to payment_ingestions_path, notice: "Payment confirmed and tenant payment created successfully."
+      else
+        redirect_to payment_ingestion_path(@ingestion), alert: result.error
+      end
     rescue => e
       Rails.logger.error("Confirm payment ingestion failed: #{e.message}\n#{e.backtrace.join("\n")}")
       redirect_to payment_ingestion_path(@ingestion), alert: "Failed to confirm payment: An unexpected error occurred."
@@ -153,19 +96,10 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def set_form_data
-    user = Current.session.user
-    @tenants = user.tenants.order(:name)
-    @leases = Lease.joins(:tenants).where(tenants: { user_id: user.id }).includes(:rental_property).distinct
-
-    # Preload and group in Ruby memory to avoid N+1 queries
-    @tenant_leases_map = Hash.new { |h, k| h[k] = [] }
-    LeaseTenant.joins(:tenant).where(tenants: { user_id: user.id }).pluck(:tenant_id, :lease_id).each do |tenant_id, lease_id|
-      @tenant_leases_map[tenant_id] << lease_id
-    end
-
-    @lease_tenants_map = Hash.new { |h, k| h[k] = [] }
-    LeaseTenant.joins(lease: :rental_property).where(rental_properties: { user_id: user.id }).pluck(:lease_id, :tenant_id).each do |lease_id, tenant_id|
-      @lease_tenants_map[lease_id] << tenant_id
-    end
+    result = PaymentIngestions::FormDataQuery.new(user: Current.session.user).call
+    @tenants = result.tenants
+    @leases = result.leases
+    @tenant_leases_map = result.tenant_leases_map
+    @lease_tenants_map = result.lease_tenants_map
   end
 end
