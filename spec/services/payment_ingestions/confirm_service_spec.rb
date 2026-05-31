@@ -26,7 +26,7 @@ RSpec.describe PaymentIngestions::ConfirmService do
     expect {
       result = described_class.call(user: user, ingestion: ingestion)
       expect(result).to be_success
-      expect(result.data).to be_a(TenantPayment)
+      expect(result.value!.data).to be_a(TenantPayment)
     }.to change(TenantPayment, :count).by(1)
 
     expect(ingestion.reload.status).to eq("confirmed")
@@ -51,7 +51,7 @@ RSpec.describe PaymentIngestions::ConfirmService do
     result = described_class.call(user: user, ingestion: ingestion)
 
     expect(result).to be_failure
-    expect(result.error).to eq("Cannot confirm: missing required fields or duplicate exists")
+    expect(result.failure.error).to eq("Cannot confirm: missing required fields or duplicate exists")
   end
 
   it "prevents concurrent confirmation" do
@@ -68,7 +68,7 @@ RSpec.describe PaymentIngestions::ConfirmService do
 
     expect(results.count(&:success?)).to eq(1)
     expect(results.count(&:failure?)).to eq(1)
-    expect(results.find(&:failure?).error).to eq("Already confirmed")
+    expect(results.find(&:failure?).failure.error).to eq("Already confirmed")
     expect(ingestion.reload.status).to eq("confirmed")
   end
 end

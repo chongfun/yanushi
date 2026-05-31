@@ -7,8 +7,9 @@ RSpec.describe PaymentIngestions::TenantResolver do
   describe '#resolve' do
     it 'returns unmatched if both display_name and username are blank' do
       result = resolver.resolve(user, nil, nil)
-      expect(result.status).to eq(:unmatched)
-      expect(result.tenant).to be_nil
+      expect(result).to be_failure
+      expect(result.failure.status).to eq(:unmatched)
+      expect(result.failure.tenant).to be_nil
     end
 
     it 'resolves correctly when display_name is blank but username is present' do
@@ -16,8 +17,9 @@ RSpec.describe PaymentIngestions::TenantResolver do
       create(:tenant_alias, tenant: tenant, alias_name: "@janesmith")
 
       result = resolver.resolve(user, "", "@janesmith")
-      expect(result.status).to eq(:matched)
-      expect(result.tenant).to eq(tenant)
+      expect(result).to be_success
+      expect(result.value!.status).to eq(:matched)
+      expect(result.value!.tenant).to eq(tenant)
     end
   end
 end

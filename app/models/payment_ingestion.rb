@@ -35,9 +35,9 @@ class PaymentIngestion < ApplicationRecord
 
   def confirm!(create_alias: false)
     result = PaymentIngestions::ConfirmService.call(user: user, ingestion: self, create_alias: create_alias)
-    raise PaymentIngestions::ConfirmationError, result.error if result.failure?
+    raise PaymentIngestions::ConfirmationError, result.failure.error if result.failure?
 
-    result.data
+    result.value!.data
   end
 
   def duplicate_exists?

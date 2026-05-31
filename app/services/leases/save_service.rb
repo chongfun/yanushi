@@ -23,9 +23,9 @@ module Leases
         lease.save!
         Leases::ScheduledRentSyncService.call(lease, previously_new_record:) if should_sync
       end
-      ServiceResult.new(success: true, data: lease, error: nil, code: nil)
+      ServiceResult.success(lease)
     rescue ActiveRecord::RecordInvalid
-      ServiceResult.new(success: false, data: lease, error: lease.errors.full_messages.to_sentence, code: :validation_error)
+      ServiceResult.failure(data: lease, error: lease.errors.full_messages.to_sentence, code: :validation_error)
     end
 
     private

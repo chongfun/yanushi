@@ -13,9 +13,9 @@ module Expenses
         expense.save!
         Expenses::TenantChargeService.call(expense)
       end
-      ServiceResult.new(success: true, data: expense, error: nil, code: nil)
+      ServiceResult.success(expense)
     rescue ActiveRecord::RecordInvalid
-      ServiceResult.new(success: false, data: expense, error: expense.errors.full_messages.to_sentence, code: :validation_error)
+      ServiceResult.failure(data: expense, error: expense.errors.full_messages.to_sentence, code: :validation_error)
     end
 
     private

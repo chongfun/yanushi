@@ -285,7 +285,7 @@ RSpec.describe "PaymentIngestions", type: :request do
 
     it "handles ConfirmationError during confirm" do
       allow(PaymentIngestions::ConfirmService).to receive(:call).and_return(
-        ServiceResult.new(success: false, data: nil, error: "custom confirmation error", code: :confirmation_error)
+        ServiceResult.failure(error: "custom confirmation error", code: :confirmation_error)
       )
       post confirm_payment_ingestion_url(ingestion)
       expect(response).to redirect_to(payment_ingestion_path(ingestion))

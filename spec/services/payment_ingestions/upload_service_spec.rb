@@ -27,21 +27,21 @@ RSpec.describe PaymentIngestions::UploadService do
     result = described_class.call(user: user, pdf_param: nil)
 
     expect(result).to be_failure
-    expect(result.error).to eq("Please select a PDF file to upload.")
+    expect(result.failure.error).to eq("Please select a PDF file to upload.")
   end
 
   it "rejects non-PDF content" do
     result = described_class.call(user: user, pdf_param: UploadedFile.new("plain text", "receipt.pdf", "application/pdf"))
 
     expect(result).to be_failure
-    expect(result.error).to eq("Only PDF files are supported.")
+    expect(result.failure.error).to eq("Only PDF files are supported.")
   end
 
   it "rejects files over 10MB" do
     result = described_class.call(user: user, pdf_param: UploadedFile.new("%PDF-1.4", "receipt.pdf", "application/pdf", 11.megabytes))
 
     expect(result).to be_failure
-    expect(result.error).to eq("File size exceeds the 10MB limit.")
+    expect(result.failure.error).to eq("File size exceeds the 10MB limit.")
   end
 
   it "creates a payment document and enqueues ingestion" do
@@ -50,7 +50,7 @@ RSpec.describe PaymentIngestions::UploadService do
     expect {
       result = described_class.call(user: user, pdf_param: UploadedFile.new("%PDF-1.4 body", "receipt.pdf", "application/pdf"))
       expect(result).to be_success
-      expect(result.data).to be_a(PaymentDocument)
+      expect(result.value!.data).to be_a(PaymentDocument)
     }.to change(PaymentDocument, :count).by(1)
 
     document = PaymentDocument.last

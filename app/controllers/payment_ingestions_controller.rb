@@ -24,7 +24,7 @@ class PaymentIngestionsController < ApplicationController
     if result.success?
       redirect_to payment_ingestions_path, notice: "Document uploaded successfully and is being processed in the background."
     else
-      redirect_to new_payment_ingestion_path, alert: result.error
+      redirect_to new_payment_ingestion_path, alert: result.failure.error
     end
   end
 
@@ -50,7 +50,7 @@ class PaymentIngestionsController < ApplicationController
       if result.success?
         redirect_to payment_ingestions_path, notice: "Payment confirmed and tenant payment created successfully."
       else
-        redirect_to payment_ingestion_path(@ingestion), alert: result.error
+        redirect_to payment_ingestion_path(@ingestion), alert: result.failure.error
       end
     rescue => e
       Rails.logger.error("Confirm payment ingestion failed: #{e.message}\n#{e.backtrace.join("\n")}")

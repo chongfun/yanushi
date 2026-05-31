@@ -1,20 +1,41 @@
 # app/services/payment_ingestions/tenant_resolver.rb
+require "dry/monads"
+require "dry/struct"
+
 module PaymentIngestions
   class TenantResolver
-    ResolveResult = Struct.new(:tenant, :tenants, :status, keyword_init: true)
+    class ResolveResult < Dry::Struct
+      extend Dry::Monads[:result]
+
+      attribute? :tenant, ServiceResultTypes::Any.optional
+      attribute? :tenants, ServiceResultTypes::Array.of(ServiceResultTypes::Any).optional
+      attribute :status, ServiceResultTypes::Symbol
+
+      def self.matched(tenant:, tenants:)
+        Success(new(tenant: tenant, tenants: tenants, status: :matched))
+      end
+
+      def self.ambiguous(tenants:)
+        Failure(new(tenant: nil, tenants: tenants, status: :ambiguous))
+      end
+
+      def self.unmatched
+        Failure(new(tenant: nil, tenants: [], status: :unmatched))
+      end
+    end
 
     def resolve(user, display_name, username)
-      return ResolveResult.new(status: :unmatched) if display_name.blank? && username.blank?
+      return ResolveResult.unmatched if display_name.blank? && username.blank?
 
       candidates = find_candidates(user, display_name, username)
 
       case candidates.size
       when 0
-        ResolveResult.new(status: :unmatched)
+        ResolveResult.unmatched
       when 1
-        ResolveResult.new(tenant: candidates.first, tenants: candidates, status: :matched)
+        ResolveResult.matched(tenant: candidates.first, tenants: candidates)
       else
-        ResolveResult.new(tenants: candidates, status: :ambiguous)
+        ResolveResult.ambiguous(tenants: candidates)
       end
     end
 

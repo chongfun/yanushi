@@ -150,9 +150,10 @@ module PaymentIngestions
     def build_ingestions(user:, source:, receipt_type:, parser_results:, raw_text:, payment_document:)
       ingestions = []
 
-      parser_results.each do |result|
-        if result.success?
-          resolve_result = TenantResolver.new.resolve(user, result.payer_name, result.payer_username)
+      parser_results.each do |parser_result|
+        if successful_result?(parser_result)
+          result = result_payload(parser_result)
+          resolve_result = unwrap_result(TenantResolver.new.resolve(user, result.payer_name, result.payer_username))
 
           # For bank statements, discard unmatched items to avoid cluttering the UI with other personal expenses/deposits
           if receipt_type == "chase_statement" && resolve_result.status.to_s == "unmatched"
@@ -179,6 +180,8 @@ module PaymentIngestions
             payment_document: payment_document
           )
         else
+          result = result_payload(parser_result)
+
           # For receipts, if parsing failed, we still keep it. For statements, we don't save failed results
           unless receipt_type == "chase_statement"
             ingestions << PaymentIngestion.new(
@@ -202,6 +205,21 @@ module PaymentIngestions
       return true unless lease.termination_date
       date = payment_date || Date.current
       date >= lease.commencement_date && date <= lease.termination_date
+    end
+
+    def unwrap_result(result)
+      result_payload(result)
+    end
+
+    def successful_result?(result)
+      result.respond_to?(:success?) && result.success?
+    end
+
+    def result_payload(result)
+      return result.value! if successful_result?(result) && result.respond_to?(:value!)
+      return result.failure if result.respond_to?(:failure?) && result.failure? && result.respond_to?(:failure)
+
+      result
     end
   end
 end

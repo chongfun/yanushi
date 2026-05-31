@@ -65,11 +65,11 @@ module PaymentIngestions
     end
 
     def success(data)
-      ServiceResult.new(success: true, data:, error: nil, code: nil)
+      ServiceResult.success(data)
     end
 
     def failure(error, code)
-      ServiceResult.new(success: false, data: nil, error:, code:)
+      ServiceResult.failure(error:, code:)
     end
   end
 end

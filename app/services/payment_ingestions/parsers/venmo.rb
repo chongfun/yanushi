@@ -5,7 +5,7 @@ module PaymentIngestions
       def parse(pdf_text)
         raw_payer = extract_payer(pdf_text)
         raw_username = extract_username(pdf_text)
-        IngestionResult.new(
+        IngestionResult.success(
           receipt_type: "venmo",
           payment_method: "venmo",
           raw_text: pdf_text,
@@ -13,16 +13,14 @@ module PaymentIngestions
           payer_username: clean_name(raw_username),
           amount: extract_amount(pdf_text),
           payment_date: extract_date(pdf_text),
-          transaction_number: extract_transaction_id(pdf_text),
-          success: true
+          transaction_number: extract_transaction_id(pdf_text)
         )
       rescue => e
         Rails.logger.error("Venmo parser error: #{e.message}\n#{e.backtrace.join("\n")}")
-        IngestionResult.new(
+        IngestionResult.failure(
           receipt_type: "venmo",
           raw_text: pdf_text,
-          error_message: e.message,
-          success: false
+          error_message: e.message
         )
       end
 
