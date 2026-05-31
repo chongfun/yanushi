@@ -185,30 +185,30 @@ RSpec.describe PaymentIngestions::Ingestion do
       text_column = "Completed\nRené O'Connor-Smith\nIn moments\n$1,300.00\nTransaction number ZELNEW202604\nDec 4, 2023"
       result1 = PaymentIngestions::Parsers::Zelle.new.parse(text_column)
       expect(result1.success?).to be_truthy
-      expect(result1.payer_name).to eq("René O'Connor-Smith")
-      expect(result1.amount).to eq(BigDecimal("1300.00"))
-      expect(result1.payment_date).to eq(Date.new(2023, 12, 4))
-      expect(result1.transaction_number).to eq("ZELNEW202604")
+      expect(result1.value!.payer_name).to eq("René O'Connor-Smith")
+      expect(result1.value!.amount).to eq(BigDecimal("1300.00"))
+      expect(result1.value!.payment_date).to eq(Date.new(2023, 12, 4))
+      expect(result1.value!.transaction_number).to eq("ZELNEW202604")
 
       text_sentence = "René O'Connor-Smith sent you money\n$1,300.00\nTransaction number ZELNEW202604\nDec 4, 2023"
       result2 = PaymentIngestions::Parsers::Zelle.new.parse(text_sentence)
       expect(result2.success?).to be_truthy
-      expect(result2.payer_name).to eq("René O'Connor-Smith")
+      expect(result2.value!.payer_name).to eq("René O'Connor-Smith")
     end
 
     it 'parsers handle exceptions gracefully and return failure result' do
       result_zelle = PaymentIngestions::Parsers::Zelle.new.parse(nil)
       expect(result_zelle.success?).to be_falsey
-      expect(result_zelle.error_message).to match(/undefined method/)
+      expect(result_zelle.failure.error_message).to match(/undefined method/)
 
       result_venmo = PaymentIngestions::Parsers::Venmo.new.parse(nil)
       expect(result_venmo.success?).to be_falsey
-      expect(result_venmo.error_message).to match(/undefined method/)
+      expect(result_venmo.failure.error_message).to match(/undefined method/)
 
       result_chase = PaymentIngestions::Parsers::ChaseStatement.new.parse(nil)
       expect(result_chase.size).to eq(1)
       expect(result_chase.first.success?).to be_falsey
-      expect(result_chase.first.error_message).to match(/undefined method/)
+      expect(result_chase.first.failure.error_message).to match(/undefined method/)
     end
   end
 
@@ -340,6 +340,21 @@ RSpec.describe PaymentIngestions::Ingestion do
       expect {
         ingestion_service.call(user: user, pdf_path_or_io: pdf_path)
       }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it 'treats a dry Failure as failed without re-deriving status from the payload' do
+      pdf_path = Rails.root.join("spec/fixtures/files/receipts/202604 Zelle.pdf")
+      ingestion_service = PaymentIngestions::Ingestion.new
+      failed_result = PaymentIngestions::IngestionResult.failure(
+        receipt_type: "zelle",
+        raw_text: "unparsed receipt"
+      )
+      allow_any_instance_of(PaymentIngestions::Parsers::Zelle).to receive(:parse).and_return(failed_result)
+
+      expect {
+        ingestion = ingestion_service.call(user: user, pdf_path_or_io: pdf_path)
+        expect(ingestion.status).to eq("failed")
+      }.to change(PaymentIngestion, :count).by(1)
     end
   end
 

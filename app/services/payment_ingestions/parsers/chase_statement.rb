@@ -29,7 +29,7 @@ module PaymentIngestions
             payment_date = resolve_date(date_str, start_date, end_date)
             amount = BigDecimal(amount_str.delete(","))
 
-            results << IngestionResult.new(
+            results << IngestionResult.success(
               receipt_type: "chase_statement",
               payment_method: "zelle",
               raw_text: line,
@@ -37,8 +37,7 @@ module PaymentIngestions
               payer_username: nil,
               amount: amount,
               payment_date: payment_date,
-              transaction_number: txn_number,
-              success: true
+              transaction_number: txn_number
             )
 
           # 2. P2P ACH Match
@@ -48,7 +47,7 @@ module PaymentIngestions
             payment_date = resolve_date(date_str, start_date, end_date)
             amount = BigDecimal(amount_str.delete(","))
 
-            results << IngestionResult.new(
+            results << IngestionResult.success(
               receipt_type: "chase_statement",
               payment_method: "p2p",
               raw_text: line,
@@ -56,8 +55,7 @@ module PaymentIngestions
               payer_username: nil,
               amount: amount,
               payment_date: payment_date,
-              transaction_number: web_id,
-              success: true
+              transaction_number: web_id
             )
           end
         end
@@ -66,11 +64,10 @@ module PaymentIngestions
       rescue => e
         Rails.logger.error("ChaseStatement parser error: #{e.message}\n#{e.backtrace.join("\n")}")
         [
-          IngestionResult.new(
+          IngestionResult.failure(
             receipt_type: "chase_statement",
             raw_text: nil,
-            error_message: e.message,
-            success: false
+            error_message: e.message
           )
         ]
       end

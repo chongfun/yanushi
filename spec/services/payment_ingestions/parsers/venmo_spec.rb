@@ -16,11 +16,11 @@ RSpec.describe PaymentIngestions::Parsers::Venmo do
 
       result = parser.parse(pdf_text)
       expect(result.success?).to be_truthy
-      expect(result.payer_name).to eq("Jane Doe")
-      expect(result.payer_username).to eq("@janedoe")
-      expect(result.amount).to eq(BigDecimal("1000.00"))
-      expect(result.payment_date).to eq(Date.new(2024, 3, 1))
-      expect(result.transaction_number).to eq("9991209384910283")
+      expect(result.value!.payer_name).to eq("Jane Doe")
+      expect(result.value!.payer_username).to eq("@janedoe")
+      expect(result.value!.amount).to eq(BigDecimal("1000.00"))
+      expect(result.value!.payment_date).to eq(Date.new(2024, 3, 1))
+      expect(result.value!.transaction_number).to eq("9991209384910283")
     end
 
     it 'returns nil for payer_name if header is missing' do

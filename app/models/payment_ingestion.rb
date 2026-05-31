@@ -34,34 +34,10 @@ class PaymentIngestion < ApplicationRecord
   end
 
   def confirm!(create_alias: false)
-    transaction do
-      lock!
-      raise PaymentIngestions::ConfirmationError, "Already confirmed" if confirmed?
-      raise PaymentIngestions::ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless confirmable?
+    result = PaymentIngestions::ConfirmService.call(user: user, ingestion: self, create_alias: create_alias)
+    raise PaymentIngestions::ConfirmationError, result.failure.error if result.failure?
 
-      # Note: uses current attributes on the ingestion record (which may have been edited by the user)
-      payment = TenantPayment.create!(
-        lease: lease,
-        amount: amount,
-        payment_date: payment_date,
-        payment_method: payment_method,
-        transaction_number: transaction_number
-      )
-
-      if create_alias
-        if tenant.alias_candidate?(payer_name)
-          tenant.tenant_aliases.create!(alias_name: payer_name)
-        end
-        if tenant.alias_candidate?(payer_username)
-          tenant.tenant_aliases.create!(alias_name: payer_username)
-        end
-      end
-
-      update!(status: :confirmed, tenant_payment: payment)
-      payment
-    end
-  rescue ActiveRecord::RecordNotUnique
-    raise PaymentIngestions::ConfirmationError, "This transaction has already been recorded in another tenant payment."
+    result.value!.data
   end
 
   def duplicate_exists?

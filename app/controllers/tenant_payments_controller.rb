@@ -11,15 +11,8 @@ class TenantPaymentsController < ApplicationController
     respond_to do |format|
       format.html
       format.pdf do
-        pdf = Prawn::Document.new
-        pdf.text "Payment Receipt", size: 30, style: :bold
-        pdf.move_down 20
-        pdf.text "Payment Date: #{@tenant_payment.payment_date}"
-        pdf.text "Amount: #{helpers.number_to_currency(@tenant_payment.amount)}"
-        pdf.text "Method: #{@tenant_payment.payment_method}"
-        pdf.text "Transaction Number: #{@tenant_payment.transaction_number}" if @tenant_payment.transaction_number.present?
-        pdf.text "Property: #{@tenant_payment.lease.rental_property.address}"
-        send_data pdf.render, filename: "receipt_#{@tenant_payment.id}.pdf", type: "application/pdf", disposition: "inline"
+        pdf_data = TenantPayments::ReceiptPdfService.call(tenant_payment: @tenant_payment, view_context: helpers)
+        send_data pdf_data, filename: "receipt_#{@tenant_payment.id}.pdf", type: "application/pdf", disposition: "inline"
       end
     end
   end

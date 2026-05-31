@@ -4,7 +4,7 @@ module PaymentIngestions
     class Zelle < Base
       def parse(pdf_text)
         raw_payer = extract_payer(pdf_text)
-        IngestionResult.new(
+        IngestionResult.success(
           receipt_type: "zelle",
           payment_method: "zelle",
           raw_text: pdf_text,
@@ -12,16 +12,14 @@ module PaymentIngestions
           payer_username: nil,
           amount: extract_amount(pdf_text),
           payment_date: extract_date(pdf_text),
-          transaction_number: extract_transaction_id(pdf_text),
-          success: true
+          transaction_number: extract_transaction_id(pdf_text)
         )
       rescue => e
         Rails.logger.error("Zelle parser error: #{e.message}\n#{e.backtrace.join("\n")}")
-        IngestionResult.new(
+        IngestionResult.failure(
           receipt_type: "zelle",
           raw_text: pdf_text,
-          error_message: e.message,
-          success: false
+          error_message: e.message
         )
       end
 

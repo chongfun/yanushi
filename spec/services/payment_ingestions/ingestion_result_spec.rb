@@ -11,25 +11,26 @@ RSpec.describe PaymentIngestions::IngestionResult do
       transaction_number: "TXN123",
       receipt_type: "zelle",
       raw_text: "some raw pdf text",
-      error_message: nil,
-      success: true
+      error_message: nil
     }
   end
 
-  describe '#success?' do
-    it 'returns true when success is true and error_message is nil' do
-      result = described_class.new(valid_attributes)
+  describe '.success' do
+    it 'returns a dry-monads Success with a typed payload' do
+      result = described_class.success(valid_attributes)
+
       expect(result.success?).to be_truthy
+      expect(result.value!).to be_a(described_class)
     end
+  end
 
-    it 'returns false when success is false' do
-      result = described_class.new(valid_attributes.merge(success: false))
-      expect(result.success?).to be_falsey
-    end
+  describe '.failure' do
+    it 'returns a dry-monads Failure with a typed payload' do
+      result = described_class.failure(valid_attributes.merge(error_message: "some parsing failure"))
 
-    it 'returns false when error_message is present' do
-      result = described_class.new(valid_attributes.merge(error_message: "some parsing failure"))
-      expect(result.success?).to be_falsey
+      expect(result.failure?).to be_truthy
+      expect(result.failure).to be_a(described_class)
+      expect(result.failure.error_message).to eq("some parsing failure")
     end
   end
 
@@ -47,7 +48,6 @@ RSpec.describe PaymentIngestions::IngestionResult do
       expect(hash[:receipt_type]).to eq("zelle")
       expect(hash[:raw_text]).to eq("some raw pdf text")
       expect(hash[:error_message]).to be_nil
-      expect(hash).not_to have_key(:success) # success is not serialized in to_h
     end
   end
 end

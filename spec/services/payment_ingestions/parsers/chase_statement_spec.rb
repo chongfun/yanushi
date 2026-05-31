@@ -18,22 +18,22 @@ RSpec.describe PaymentIngestions::Parsers::ChaseStatement do
     # First transaction (Zelle)
     r1 = results[0]
     expect(r1.success?).to be_truthy
-    expect(r1.receipt_type).to eq("chase_statement")
-    expect(r1.payment_method).to eq("zelle")
-    expect(r1.payer_name).to eq("Sam Lopez")
-    expect(r1.amount).to eq(BigDecimal("1300.00"))
-    expect(r1.payment_date).to eq(Date.new(2026, 3, 24))
-    expect(r1.transaction_number).to eq("Pncaa0Yqh12Q")
+    expect(r1.value!.receipt_type).to eq("chase_statement")
+    expect(r1.value!.payment_method).to eq("zelle")
+    expect(r1.value!.payer_name).to eq("Sam Lopez")
+    expect(r1.value!.amount).to eq(BigDecimal("1300.00"))
+    expect(r1.value!.payment_date).to eq(Date.new(2026, 3, 24))
+    expect(r1.value!.transaction_number).to eq("Pncaa0Yqh12Q")
 
     # Second transaction (P2P ACH)
     r2 = results[1]
     expect(r2.success?).to be_truthy
-    expect(r2.receipt_type).to eq("chase_statement")
-    expect(r2.payment_method).to eq("p2p")
-    expect(r2.payer_name).to eq("John Doe")
-    expect(r2.amount).to eq(BigDecimal("1000.00"))
-    expect(r2.payment_date).to eq(Date.new(2026, 4, 1))
-    expect(r2.transaction_number).to eq("3270262278")
+    expect(r2.value!.receipt_type).to eq("chase_statement")
+    expect(r2.value!.payment_method).to eq("p2p")
+    expect(r2.value!.payer_name).to eq("John Doe")
+    expect(r2.value!.amount).to eq(BigDecimal("1000.00"))
+    expect(r2.value!.payment_date).to eq(Date.new(2026, 4, 1))
+    expect(r2.value!.transaction_number).to eq("3270262278")
   end
 
   it 'infers years correctly during December-January rollover' do
@@ -48,10 +48,10 @@ RSpec.describe PaymentIngestions::Parsers::ChaseStatement do
     expect(results.size).to eq(2)
 
     # 12/20 transaction -> should resolve to 2025
-    expect(results[0].payment_date).to eq(Date.new(2025, 12, 20))
+    expect(results[0].value!.payment_date).to eq(Date.new(2025, 12, 20))
 
     # 01/05 transaction -> should resolve to 2026
-    expect(results[1].payment_date).to eq(Date.new(2026, 1, 5))
+    expect(results[1].value!.payment_date).to eq(Date.new(2026, 1, 5))
   end
 
   it 'falls back to current year when statement period is missing' do
@@ -60,7 +60,7 @@ RSpec.describe PaymentIngestions::Parsers::ChaseStatement do
       03/24     Zelle Payment From Sam Lopez Pncaa0Yqh12Q                            1,300.00        2,850.00
     TEXT
     results = parser.parse(pdf_text)
-    expect(results.first.payment_date.year).to eq(current_year)
+    expect(results.first.value!.payment_date.year).to eq(current_year)
   end
 
   it 'skips empty lines' do
@@ -77,6 +77,6 @@ RSpec.describe PaymentIngestions::Parsers::ChaseStatement do
     TEXT
     results = parser.parse(pdf_text)
     expect(results.size).to eq(1)
-    expect(results.first.payment_date).to eq(Date.current)
+    expect(results.first.value!.payment_date).to eq(Date.current)
   end
 end

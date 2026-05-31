@@ -15,25 +15,14 @@ class RentalPropertiesController < ApplicationController
 
   def schedule_e
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
+    summary = RentalProperties::ScheduleESummaryQuery.new(rental_property: @rental_property).call(year: @year)
 
-    start_date = Date.new(@year, 1, 1)
-    end_date   = start_date.end_of_year
-
-    @rents_received = @rental_property.tenant_payments
-                        .where(payment_date: start_date..end_date)
-                        .sum(:amount)
-
-    @utility_reimbursements = 0
-
-    @total_income = @rents_received + @utility_reimbursements
-
-    @expenses_by_category = @rental_property.expenses
-                              .where(expense_date: start_date..end_date)
-                              .group(:category)
-                              .sum(:amount)
-
-    @total_expenses = @expenses_by_category.values.sum
-    @net_income = @total_income - @total_expenses
+    @rents_received = summary.rents_received
+    @utility_reimbursements = summary.utility_reimbursements
+    @total_income = summary.total_income
+    @expenses_by_category = summary.expenses_by_category
+    @total_expenses = summary.total_expenses
+    @net_income = summary.net_income
   end
 
 
