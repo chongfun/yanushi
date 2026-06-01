@@ -1,0 +1,7 @@
+module ActionController
+  class Base
+    def self.allow_browser: (*untyped args, **untyped options) -> untyped
+
+    def self.stale_when_importmap_changes: () -> untyped
+  end
+end
