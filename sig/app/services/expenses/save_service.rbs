@@ -1,0 +1,13 @@
+module Expenses
+  class SaveService
+    def self.call: (expense: Expense) -> untyped
+
+    def initialize: (expense: Expense) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader expense: Expense
+  end
+end
