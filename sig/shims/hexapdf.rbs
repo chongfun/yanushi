@@ -1,4 +1,7 @@
 module HexaPDF
+  class Error < StandardError
+  end
+
   class Document
     def self.new: (?io: untyped) -> untyped
 

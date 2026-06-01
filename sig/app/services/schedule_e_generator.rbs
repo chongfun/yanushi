@@ -1,0 +1,43 @@
+class ScheduleEGenerator
+  MAP_2023_PRESENT: Hash[Symbol, String]
+  MAP_2022: Hash[Symbol, String]
+  MAP_2019_2021: Hash[Symbol, String]
+  MAP_2016_2018: Hash[Symbol, String]
+  MAP_2011_2015: Hash[Symbol, String]
+  CATEGORY_TO_FIELD: Hash[String, Symbol]
+
+  class TemplateMissingError < StandardError
+  end
+
+  def initialize: (RentalProperty rental_property, untyped year) -> void
+
+  def call: () -> String
+
+  private
+
+  def fill_property_info: (untyped form) -> untyped
+
+  def fill_income: (untyped form) -> untyped
+
+  def fill_expenses: (untyped form) -> untyped
+
+  def fill_totals: (untyped form) -> untyped
+
+  def set_field: (untyped form, Symbol key, untyped value) -> untyped
+
+  def field_map: () -> Hash[Symbol, String]
+
+  def template_path: () -> untyped
+
+  def format_amount: (untyped amount) -> String
+
+  def date_range: () -> Range[Date]
+
+  def rents_received: () -> untyped
+
+  def expenses_by_category: () -> Hash[String, untyped]
+
+  def total_expenses: () -> untyped
+
+  def net_income: () -> untyped
+end
