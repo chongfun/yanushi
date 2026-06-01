@@ -1,3 +1,5 @@
+# Action Cable connection base class methods not covered by rbs_collection.
+# Covers identified_by DSL, reject_unauthorized_connection, and cookies.
 module ActionCable
   module Connection
     class Base

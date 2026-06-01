@@ -1,3 +1,4 @@
+# Rails.logger is not covered by the rbs_collection Rails signatures.
 module Rails
   def self.logger: () -> untyped
 end

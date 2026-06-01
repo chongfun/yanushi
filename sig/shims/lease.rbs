@@ -1,3 +1,6 @@
+# Lease model methods not fully covered by rbs_rails generation.
+# Covers transaction, save!, errors, and will_save_change_to_* dirty tracking methods
+# used by Leases::SaveService and Leases::ScheduledRentSyncService.
 class Lease
   def self.transaction: () { () -> untyped } -> untyped
 
