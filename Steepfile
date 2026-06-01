@@ -37,5 +37,7 @@ target :app do
   check "app/jobs/ingest_payment_document_job.rb"
   check "app/models/expense.rb"
   check "app/models/lease.rb"
+  check "app/models/rental_property.rb"
   check "app/models/scheduled_rent.rb"
+  check "app/models/tenant.rb"
 end
