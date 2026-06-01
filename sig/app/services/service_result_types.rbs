@@ -1,0 +1,5 @@
+module ServiceResultTypes
+  Any: untyped
+  String: untyped
+  Symbol: untyped
+end

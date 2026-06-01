@@ -1,5 +1,0 @@
-class ServiceResult
-  def self.success: (?untyped data) -> untyped
-
-  def self.failure: (error: untyped, code: Symbol, ?data: untyped) -> untyped
-end
