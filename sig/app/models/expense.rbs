@@ -1,0 +1,11 @@
+class Expense
+  def reimbursed?: () -> bool
+
+  def raw_reimburse_amount: () -> untyped
+
+  def tenant_reimbursable: () -> bool
+
+  def reimburse_lease_id: () -> untyped
+
+  def reimburse_amount: () -> untyped
+end

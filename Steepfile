@@ -35,4 +35,5 @@ target :app do
   check "app/services/tenant_payments/receipt_pdf_service.rb"
   check "app/jobs/application_job.rb"
   check "app/jobs/ingest_payment_document_job.rb"
+  check "app/models/expense.rb"
 end
