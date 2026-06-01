@@ -1,0 +1,484 @@
+# resolve-type-names: false
+
+class ::RentalProperty < ::ApplicationRecord
+  extend ::ActiveRecord::Base::ClassMethods[::RentalProperty, ::RentalProperty::ActiveRecord_Relation, ::Integer]
+
+  module ::RentalProperty::GeneratedAttributeMethods
+    def id: () -> ::Integer
+
+    def id=: (::Integer) -> ::Integer
+
+    def id?: () -> bool
+
+    def id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def id_will_change!: () -> void
+
+    def id_was: () -> ::Integer?
+
+    def id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def id_previous_change: () -> ::Array[::Integer?]?
+
+    def id_previously_was: () -> ::Integer?
+
+    def id_before_last_save: () -> ::Integer?
+
+    def id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def id_in_database: () -> ::Integer?
+
+    def saved_change_to_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_id!: () -> void
+
+    def clear_id_change: () -> void
+
+    def id_before_type_cast: () -> ::Integer
+
+    def id_for_database: () -> ::Integer
+
+    def address: () -> ::String?
+
+    def address=: (::String?) -> ::String?
+
+    def address?: () -> bool
+
+    def address_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def address_change: () -> [ ::String?, ::String? ]
+
+    def address_will_change!: () -> void
+
+    def address_was: () -> ::String?
+
+    def address_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def address_previous_change: () -> ::Array[::String?]?
+
+    def address_previously_was: () -> ::String?
+
+    def address_before_last_save: () -> ::String?
+
+    def address_change_to_be_saved: () -> ::Array[::String?]?
+
+    def address_in_database: () -> ::String?
+
+    def saved_change_to_address: () -> ::Array[::String?]?
+
+    def saved_change_to_address?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_address?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_address!: () -> void
+
+    def clear_address_change: () -> void
+
+    def address_before_type_cast: () -> ::String?
+
+    def address_for_database: () -> ::String?
+
+    def created_at: () -> ::ActiveSupport::TimeWithZone
+
+    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+    def created_at?: () -> bool
+
+    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+    def created_at_will_change!: () -> void
+
+    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def restore_created_at!: () -> void
+
+    def clear_created_at_change: () -> void
+
+    def created_at_before_type_cast: () -> ::Time
+
+    def created_at_for_database: () -> ::Time
+
+    def property_type: () -> ::String?
+
+    def property_type=: (::Integer | ::String? | ::Symbol) -> ::String?
+
+    def property_type?: () -> bool
+
+    def property_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def property_type_change: () -> [ ::String?, ::String? ]
+
+    def property_type_will_change!: () -> void
+
+    def property_type_was: () -> ::String?
+
+    def property_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def property_type_previous_change: () -> ::Array[::String?]?
+
+    def property_type_previously_was: () -> ::String?
+
+    def property_type_before_last_save: () -> ::String?
+
+    def property_type_change_to_be_saved: () -> ::Array[::String?]?
+
+    def property_type_in_database: () -> ::String?
+
+    def saved_change_to_property_type: () -> ::Array[::String?]?
+
+    def saved_change_to_property_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_property_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_property_type!: () -> void
+
+    def clear_property_type_change: () -> void
+
+    def property_type_before_type_cast: () -> ::Integer?
+
+    def property_type_for_database: () -> ::Integer?
+
+    def square_footage: () -> ::Integer?
+
+    def square_footage=: (::Integer?) -> ::Integer?
+
+    def square_footage?: () -> bool
+
+    def square_footage_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def square_footage_change: () -> [ ::Integer?, ::Integer? ]
+
+    def square_footage_will_change!: () -> void
+
+    def square_footage_was: () -> ::Integer?
+
+    def square_footage_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def square_footage_previous_change: () -> ::Array[::Integer?]?
+
+    def square_footage_previously_was: () -> ::Integer?
+
+    def square_footage_before_last_save: () -> ::Integer?
+
+    def square_footage_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def square_footage_in_database: () -> ::Integer?
+
+    def saved_change_to_square_footage: () -> ::Array[::Integer?]?
+
+    def saved_change_to_square_footage?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_square_footage?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_square_footage!: () -> void
+
+    def clear_square_footage_change: () -> void
+
+    def square_footage_before_type_cast: () -> ::Integer?
+
+    def square_footage_for_database: () -> ::Integer?
+
+    def updated_at: () -> ::ActiveSupport::TimeWithZone
+
+    def updated_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+    def updated_at?: () -> bool
+
+    def updated_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def updated_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+    def updated_at_will_change!: () -> void
+
+    def updated_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def updated_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def updated_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def updated_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+    def saved_change_to_updated_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def saved_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def will_save_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def restore_updated_at!: () -> void
+
+    def clear_updated_at_change: () -> void
+
+    def updated_at_before_type_cast: () -> ::Time
+
+    def updated_at_for_database: () -> ::Time
+
+    def user_id: () -> ::Integer
+
+    def user_id=: (::Integer) -> ::Integer
+
+    def user_id?: () -> bool
+
+    def user_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def user_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def user_id_will_change!: () -> void
+
+    def user_id_was: () -> ::Integer?
+
+    def user_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def user_id_previous_change: () -> ::Array[::Integer?]?
+
+    def user_id_previously_was: () -> ::Integer?
+
+    def user_id_before_last_save: () -> ::Integer?
+
+    def user_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def user_id_in_database: () -> ::Integer?
+
+    def saved_change_to_user_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_user_id!: () -> void
+
+    def clear_user_id_change: () -> void
+
+    def user_id_before_type_cast: () -> ::Integer
+
+    def user_id_for_database: () -> ::Integer
+  end
+  include ::RentalProperty::GeneratedAttributeMethods
+  module ::RentalProperty::GeneratedAliasAttributeMethods
+    include ::RentalProperty::GeneratedAttributeMethods
+
+    alias id_value id
+
+    alias id_value= id=
+
+    alias id_value? id?
+
+    alias id_value_changed? id_changed?
+
+    alias id_value_change id_change
+
+    alias id_value_will_change! id_will_change!
+
+    alias id_value_was id_was
+
+    alias id_value_previously_changed? id_previously_changed?
+
+    alias id_value_previous_change id_previous_change
+
+    alias id_value_previously_was id_previously_was
+
+    alias id_value_before_last_save id_before_last_save
+
+    alias id_value_change_to_be_saved id_change_to_be_saved
+
+    alias id_value_in_database id_in_database
+
+    alias saved_change_to_id_value saved_change_to_id
+
+    alias saved_change_to_id_value? saved_change_to_id?
+
+    alias will_save_change_to_id_value? will_save_change_to_id?
+
+    alias restore_id_value! restore_id!
+
+    alias clear_id_value_change clear_id_change
+
+    alias id_value_before_type_cast id_before_type_cast
+
+    alias id_value_for_database id_for_database
+  end
+  include ::RentalProperty::GeneratedAliasAttributeMethods
+  def leases: () -> ::Lease::ActiveRecord_Associations_CollectionProxy
+  def leases=: (::Lease::ActiveRecord_Associations_CollectionProxy | ::Array[::Lease]) -> (::Lease::ActiveRecord_Associations_CollectionProxy | ::Array[::Lease])
+  def lease_ids: () -> ::Array[::Integer]
+  def lease_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def scheduled_rents: () -> ::ScheduledRent::ActiveRecord_Associations_CollectionProxy
+  def scheduled_rents=: (::ScheduledRent::ActiveRecord_Associations_CollectionProxy | ::Array[::ScheduledRent]) -> (::ScheduledRent::ActiveRecord_Associations_CollectionProxy | ::Array[::ScheduledRent])
+  def scheduled_rent_ids: () -> ::Array[::Integer]
+  def scheduled_rent_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def expenses: () -> ::Expense::ActiveRecord_Associations_CollectionProxy
+  def expenses=: (::Expense::ActiveRecord_Associations_CollectionProxy | ::Array[::Expense]) -> (::Expense::ActiveRecord_Associations_CollectionProxy | ::Array[::Expense])
+  def expense_ids: () -> ::Array[::Integer]
+  def expense_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def tenant_payments: () -> ::TenantPayment::ActiveRecord_Associations_CollectionProxy
+  def tenant_payments=: (::TenantPayment::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantPayment]) -> (::TenantPayment::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantPayment])
+  def tenant_payment_ids: () -> ::Array[::Integer]
+  def tenant_payment_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def tenant_charges: () -> ::TenantCharge::ActiveRecord_Associations_CollectionProxy
+  def tenant_charges=: (::TenantCharge::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantCharge]) -> (::TenantCharge::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantCharge])
+  def tenant_charge_ids: () -> ::Array[::Integer]
+  def tenant_charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+
+  def user: () -> ::User
+  def user=: (::User?) -> ::User?
+  def reload_user: () -> ::User?
+  def build_user: (?untyped) -> ::User
+  def create_user: (?untyped) -> ::User
+  def create_user!: (?untyped) -> ::User
+
+  module ::RentalProperty::GeneratedAssociationMethods
+  end
+  include ::RentalProperty::GeneratedAssociationMethods
+
+  def single_family_residence!: () -> bool
+  def single_family_residence?: () -> bool
+  def multi_family_residence!: () -> bool
+  def multi_family_residence?: () -> bool
+  def vacation_or_short_term_rental!: () -> bool
+  def vacation_or_short_term_rental?: () -> bool
+  def commercial!: () -> bool
+  def commercial?: () -> bool
+  def land!: () -> bool
+  def land?: () -> bool
+  def royalties!: () -> bool
+  def royalties?: () -> bool
+  def self_rental!: () -> bool
+  def self_rental?: () -> bool
+  def other!: () -> bool
+  def other?: () -> bool
+  def self.property_types: () -> ::ActiveSupport::HashWithIndifferentAccess[::String, ::Integer]
+  def self.single_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_single_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.multi_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_multi_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.vacation_or_short_term_rental: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_vacation_or_short_term_rental: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.commercial: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_commercial: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.land: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_land: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.royalties: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_royalties: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.self_rental: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_self_rental: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.other: () -> ::RentalProperty::ActiveRecord_Relation
+  def self.not_other: () -> ::RentalProperty::ActiveRecord_Relation
+
+  module ::RentalProperty::GeneratedRelationMethods
+    def property_types: () -> ::ActiveSupport::HashWithIndifferentAccess[::String, ::Integer]
+
+    def single_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_single_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def multi_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_multi_family_residence: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def vacation_or_short_term_rental: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_vacation_or_short_term_rental: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def commercial: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_commercial: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def land: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_land: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def royalties: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_royalties: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def self_rental: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_self_rental: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def other: () -> ::RentalProperty::ActiveRecord_Relation
+
+    def not_other: () -> ::RentalProperty::ActiveRecord_Relation
+  end
+
+  class ::RentalProperty::ActiveRecord_Relation < ::ActiveRecord::Relation
+    include ::Enumerable[::RentalProperty]
+    include ::RentalProperty::GeneratedRelationMethods
+    include ::ActiveRecord::Relation::Methods[::RentalProperty, ::Integer]
+  end
+
+  class ::RentalProperty::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+    include ::Enumerable[::RentalProperty]
+    include ::RentalProperty::GeneratedRelationMethods
+    include ::ActiveRecord::Relation::Methods[::RentalProperty, ::Integer]
+
+    def build: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::RentalProperty
+             | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::RentalProperty]
+    def create: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::RentalProperty
+              | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::RentalProperty]
+    def create!: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::RentalProperty
+               | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::RentalProperty]
+    def reload: () -> ::Array[::RentalProperty]
+
+    def replace: (::Array[::RentalProperty]) -> void
+    def delete: (*::RentalProperty | ::Integer) -> ::Array[::RentalProperty]
+    def destroy: (*::RentalProperty | ::Integer) -> ::Array[::RentalProperty]
+    def <<: (*::RentalProperty | ::Array[::RentalProperty]) -> self
+    def prepend: (*::RentalProperty | ::Array[::RentalProperty]) -> self
+  end
+end
+
+class ::ApplicationRecord < ::ActiveRecord::Base
+end
+class ::Lease < ::ApplicationRecord
+end
+class ::Lease::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::ScheduledRent < ::ApplicationRecord
+end
+class ::ScheduledRent::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::Expense < ::ApplicationRecord
+end
+class ::Expense::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::TenantPayment < ::ApplicationRecord
+end
+class ::TenantPayment::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::TenantCharge < ::ApplicationRecord
+end
+class ::TenantCharge::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::User < ::ApplicationRecord
+end

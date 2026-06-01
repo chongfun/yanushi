@@ -7,7 +7,6 @@ class Lease
 
   def commencement_date: () -> Date
   def termination_date: () -> Date?
-  def term?: () -> bool
 
   def will_save_change_to_commencement_date?: () -> bool
   def will_save_change_to_termination_date?: () -> bool
