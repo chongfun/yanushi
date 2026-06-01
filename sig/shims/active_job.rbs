@@ -1,0 +1,5 @@
+module ActiveJob
+  class Base
+    def self.queue_as: (Symbol queue_name) -> untyped
+  end
+end
