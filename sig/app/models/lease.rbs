@@ -1,0 +1,15 @@
+class Lease
+  def total_credits: (?as_of: Date) -> untyped
+
+  def total_debits: (?as_of: Date) -> untyped
+
+  def balance_as_of: (?Date date) -> untyped
+
+  def current_balance: () -> untyped
+
+  def active?: (?Date date) -> bool
+
+  private
+
+  def balance_query: () -> Leases::BalanceQuery
+end

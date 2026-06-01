@@ -36,7 +36,11 @@ class Lease < ApplicationRecord
   }
 
   def active?(date = Date.current)
-    commencement_date <= date && (termination_date.nil? || termination_date >= date)
+    starts_on = commencement_date
+    ends_on = termination_date
+    return false unless starts_on
+
+    starts_on <= date && (ends_on.nil? || ends_on >= date)
   end
 
   private
