@@ -76,4 +76,5 @@ target :app do
   check "app/helpers/rent_payments_helper.rb"
   check "app/helpers/scheduled_rents_helper.rb"
   check "app/helpers/tenants_helper.rb"
+  check "app/channels/application_cable/connection.rb"
 end
