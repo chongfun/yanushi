@@ -4,7 +4,7 @@ class TenantPaymentsController < ApplicationController
   before_action :set_form_data, only: %i[ new edit create update ]
 
   def index
-    @tenant_payments = Current.session.user.tenant_payments.includes(lease: :rental_property)
+    @tenant_payments = authenticated_user.tenant_payments.includes(lease: :rental_property)
   end
 
   def show
@@ -21,9 +21,9 @@ class TenantPaymentsController < ApplicationController
   def new
     @tenant_payment = TenantPayment.new
     @tenant_payment.lease = @lease if @lease
-    if @lease
-      owed = @lease.current_balance
-      @tenant_payment.amount = owed < 0 ? owed.abs : 0
+    if lease = @lease
+      owed = lease.current_balance
+      @tenant_payment.amount = owed < 0 ? owed.abs : 0.to_d
     end
     @tenant_payment.payment_date = Date.current
   end
@@ -35,7 +35,7 @@ class TenantPaymentsController < ApplicationController
   def create
     lease_id = tenant_payment_params[:lease_id]
     if lease_id.present?
-      Current.session.user.leases.find(lease_id)
+      authenticated_user.leases.find(lease_id)
     end
 
     @tenant_payment = TenantPayment.new(tenant_payment_params)
@@ -43,9 +43,9 @@ class TenantPaymentsController < ApplicationController
 
     respond_to do |format|
       if @tenant_payment.save
-        if @lease
+        if lease = @lease
           # Submitted from modal
-          rental_property = @lease.rental_property
+          rental_property = lease.rental_property
           year = @tenant_payment.payment_date&.year || Date.current.year
           @financial_items = rental_property.financial_items(year)
           @year = year
@@ -81,7 +81,7 @@ class TenantPaymentsController < ApplicationController
   def update
     lease_id = tenant_payment_params[:lease_id]
     if lease_id.present?
-      Current.session.user.leases.find(lease_id)
+      authenticated_user.leases.find(lease_id)
     end
 
     respond_to do |format|
@@ -106,15 +106,15 @@ class TenantPaymentsController < ApplicationController
 
   private
     def set_tenant_payment
-      @tenant_payment = Current.session.user.tenant_payments.find(params.expect(:id))
+      @tenant_payment = authenticated_user.tenant_payments.find(params.expect(:id))
     end
 
     def set_lease
-      @lease = Current.session.user.leases.find(params[:lease_id]) if params[:lease_id].present?
+      @lease = authenticated_user.leases.find(params[:lease_id]) if params[:lease_id].present?
     end
 
     def set_form_data
-      @leases = Current.session.user.leases.includes(:rental_property, :tenants)
+      @leases = authenticated_user.leases.includes(:rental_property, :tenants)
     end
 
 

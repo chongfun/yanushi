@@ -4,7 +4,7 @@ class ExpensesController < ApplicationController
   before_action :set_form_data, only: %i[ new edit create update ]
 
   def index
-    @expenses = Current.session.user.expenses
+    @expenses = authenticated_user.expenses
   end
 
 
@@ -27,12 +27,12 @@ class ExpensesController < ApplicationController
     permitted_params = expense_params
     property_id = permitted_params[:rental_property_id]
     if property_id.present?
-      Current.session.user.rental_properties.find(property_id)
+      authenticated_user.rental_properties.find(property_id)
     end
 
     lease_id = permitted_params[:reimburse_lease_id]
     if lease_id.present?
-      Current.session.user.leases.find(lease_id)
+      authenticated_user.leases.find(lease_id)
     end
 
     @expense = Expense.new(permitted_params)
@@ -41,23 +41,23 @@ class ExpensesController < ApplicationController
     respond_to do |format|
       result = Expenses::SaveService.call(expense: @expense)
       if result.success?
-        if @rental_property
+        if rental_property = @rental_property
           # Submitted from modal
           year = @expense.expense_date&.year || Date.current.year
-          @financial_items = @rental_property.financial_items(year)
+          @financial_items = rental_property.financial_items(year)
           @year = year
 
           format.turbo_stream {
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
               turbo_stream.update("property_financials", partial: "rental_properties/financials",
-                locals: { rental_property: @rental_property, financial_items: @financial_items, year: @year }),
+                locals: { rental_property: rental_property, financial_items: @financial_items, year: @year }),
               turbo_stream.update("active_lease_balances", partial: "rental_properties/lease_balances",
-                locals: { rental_property: @rental_property }),
+                locals: { rental_property: rental_property }),
               turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
             ]
           }
-          format.html { redirect_to @rental_property, notice: "Expense was successfully created." }
+          format.html { redirect_to rental_property, notice: "Expense was successfully created." }
         else
           format.html { redirect_to @expense, notice: "Expense was successfully created." }
         end
@@ -79,12 +79,12 @@ class ExpensesController < ApplicationController
     permitted_params = expense_params
     property_id = permitted_params[:rental_property_id]
     if property_id.present?
-      Current.session.user.rental_properties.find(property_id)
+      authenticated_user.rental_properties.find(property_id)
     end
 
     lease_id = permitted_params[:reimburse_lease_id]
     if lease_id.present?
-      Current.session.user.leases.find(lease_id)
+      authenticated_user.leases.find(lease_id)
     end
 
     @expense.assign_attributes(permitted_params)
@@ -114,15 +114,15 @@ class ExpensesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_expense
-      @expense = Current.session.user.expenses.find(params.expect(:id))
+      @expense = authenticated_user.expenses.find(params.expect(:id))
     end
 
     def set_rental_property
-      @rental_property = Current.session.user.rental_properties.find(params[:rental_property_id]) if params[:rental_property_id].present?
+      @rental_property = authenticated_user.rental_properties.find(params[:rental_property_id]) if params[:rental_property_id].present?
     end
 
     def set_form_data
-      user = Current.session.user
+      user = authenticated_user
       @rental_properties = user.rental_properties.order(:address)
       @leases = user.leases.includes(:rental_property, :tenants)
     end
