@@ -1,0 +1,13 @@
+module RentalProperties
+  class ScheduleESummaryQuery
+    Result: untyped
+
+    def initialize: (rental_property: untyped) -> void
+
+    def call: (year: untyped) -> untyped
+
+    private
+
+    attr_reader rental_property: untyped
+  end
+end

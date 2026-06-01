@@ -1,0 +1,13 @@
+module Dashboards
+  class PropertySummariesQuery
+    def initialize: (properties: untyped) -> void
+
+    def call: () -> Array[untyped]
+
+    private
+
+    attr_reader properties: untyped
+
+    def summary_for: (untyped property) -> Hash[Symbol, untyped]
+  end
+end
