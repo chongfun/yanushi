@@ -63,4 +63,6 @@ target :app do
   check "app/controllers/payment_ingestions_controller.rb"
   check "app/controllers/tenant_payments_controller.rb"
   check "app/controllers/tenants_controller.rb"
+  check "app/mailers/application_mailer.rb"
+  check "app/mailers/passwords_mailer.rb"
 end
