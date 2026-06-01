@@ -23,7 +23,9 @@ class TenantPaymentsController < ApplicationController
     @tenant_payment.lease = @lease if @lease
     if lease = @lease
       owed = lease.current_balance
-      @tenant_payment.amount = owed < 0 ? owed.abs : 0.to_d
+      # @type var tp: untyped
+      tp = @tenant_payment
+      tp.amount = owed < 0 ? owed.abs : 0
     end
     @tenant_payment.payment_date = Date.current
   end
