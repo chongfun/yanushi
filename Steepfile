@@ -38,6 +38,7 @@ target :app do
   check "app/models/expense.rb"
   check "app/models/lease.rb"
   check "app/models/lease_tenant.rb"
+  check "app/models/payment_ingestion.rb"
   check "app/models/rental_property.rb"
   check "app/models/scheduled_rent.rb"
   check "app/models/tenant.rb"
