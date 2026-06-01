@@ -43,3 +43,6 @@
 
 # Ignore simplecov artifacts
 /coverage
+
+# Ignore locally installed RBS collection signatures
+/.gem_rbs_collection

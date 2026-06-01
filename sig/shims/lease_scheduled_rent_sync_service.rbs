@@ -1,0 +1,5 @@
+module Leases
+  class ScheduledRentSyncService
+    def self.call: (Lease lease, ?previously_new_record: bool) -> untyped
+  end
+end

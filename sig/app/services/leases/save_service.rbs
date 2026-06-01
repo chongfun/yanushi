@@ -1,0 +1,19 @@
+module Leases
+  class SaveService
+    SYNC_ATTRIBUTES: Array[String]
+
+    def self.call: (lease: Lease, ?sync_scheduled_rents: bool?, ?previously_new_record: bool) -> untyped
+
+    def initialize: (lease: Lease, ?sync_scheduled_rents: bool?, ?previously_new_record: bool) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader lease: Lease
+    attr_reader sync_scheduled_rents: bool?
+    attr_reader previously_new_record: bool
+
+    def scheduled_rent_sync_needed?: () -> bool
+  end
+end
