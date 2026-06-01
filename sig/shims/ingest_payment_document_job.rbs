@@ -1,0 +1,3 @@
+class IngestPaymentDocumentJob
+  def self.perform_later: (*untyped args) -> untyped
+end

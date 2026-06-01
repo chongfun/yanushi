@@ -22,4 +22,9 @@ target :app do
   check "app/queries/rental_properties/active_years_query.rb"
   check "app/queries/rental_properties/financial_items_query.rb"
   check "app/queries/rental_properties/schedule_e_summary_query.rb"
+  check "app/services/payment_ingestions/confirm_service.rb"
+  check "app/services/payment_ingestions/ingestion.rb"
+  check "app/services/payment_ingestions/tenant_resolver.rb"
+  check "app/services/payment_ingestions/update_service.rb"
+  check "app/services/payment_ingestions/upload_service.rb"
 end

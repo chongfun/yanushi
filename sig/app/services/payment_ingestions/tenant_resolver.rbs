@@ -1,0 +1,27 @@
+module PaymentIngestions
+  class TenantResolver
+    class ResolveResult < Dry::Struct
+      def self.matched: (tenant: untyped, tenants: Array[untyped]) -> untyped
+
+      def self.ambiguous: (tenants: Array[untyped]) -> untyped
+
+      def self.unmatched: () -> untyped
+
+      def self.Success: (untyped value) -> untyped
+
+      def self.Failure: (untyped value) -> untyped
+
+      def tenant: () -> untyped
+
+      def tenants: () -> Array[untyped]
+
+      def status: () -> Symbol
+    end
+
+    def resolve: (untyped user, untyped display_name, untyped username) -> untyped
+
+    private
+
+    def find_candidates: (untyped user, untyped display_name, untyped username) -> Array[untyped]
+  end
+end

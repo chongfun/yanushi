@@ -1,5 +1,7 @@
 module Dry
   class Struct
+    def self.attribute: (Symbol name, untyped type) -> untyped
+
     def self.attribute?: (Symbol name, untyped type) -> untyped
 
     def initialize: (**untyped attributes) -> void

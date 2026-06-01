@@ -1,0 +1,23 @@
+module PaymentIngestions
+  class UpdateService
+    def self.call: (user: untyped, ingestion: untyped, params: untyped) -> untyped
+
+    def initialize: (user: untyped, ingestion: untyped, params: untyped) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader user: untyped
+    attr_reader ingestion: untyped
+    attr_reader params: untyped
+
+    def promotable_to_matched?: () -> bool
+
+    def promote_to_matched: () -> untyped
+
+    def success: (untyped data) -> untyped
+
+    def failure: (untyped error, Symbol code) -> untyped
+  end
+end

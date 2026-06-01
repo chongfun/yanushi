@@ -42,6 +42,7 @@ module PaymentIngestions
     private
 
     def find_candidates(user, display_name, username)
+      # @type var search_values: Array[String]
       search_values = []
       search_values << username.strip.downcase if username.present?
       search_values << display_name.strip.downcase if display_name.present?
