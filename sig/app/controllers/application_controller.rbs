@@ -8,4 +8,8 @@ class ApplicationController < ActionController::Base
   def self.redirect_to: (untyped target, **untyped options) -> untyped
 
   def self.new_session_path: () -> String
+
+  private
+
+  def authenticated_user: () -> User
 end
