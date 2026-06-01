@@ -1,0 +1,5 @@
+class ScheduledRentsGenerator
+  def initialize: (Lease lease, Integer year, end_date: Date) -> void
+
+  def call: () -> untyped
+end
