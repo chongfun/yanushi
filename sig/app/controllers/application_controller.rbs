@@ -1,2 +1,11 @@
 class ApplicationController < ActionController::Base
+  include Authentication
+
+  def self.allow_unauthenticated_access: (**untyped options) -> untyped
+
+  def self.rate_limit: (**untyped options) -> untyped
+
+  def self.redirect_to: (untyped target, **untyped options) -> untyped
+
+  def self.new_session_path: () -> String
 end

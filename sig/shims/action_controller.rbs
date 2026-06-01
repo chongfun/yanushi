@@ -3,5 +3,7 @@ module ActionController
     def self.allow_browser: (*untyped args, **untyped options) -> untyped
 
     def self.stale_when_importmap_changes: () -> untyped
+
+    def turbo_stream: () -> untyped
   end
 end
