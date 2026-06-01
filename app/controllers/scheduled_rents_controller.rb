@@ -2,7 +2,7 @@ class ScheduledRentsController < ApplicationController
   before_action :set_scheduled_rent, only: %i[ show edit update destroy ]
 
   def index
-    @scheduled_rents = Current.session.user.scheduled_rents.includes(lease: :rental_property)
+    @scheduled_rents = authenticated_user.scheduled_rents.includes(lease: :rental_property)
   end
 
   def show
@@ -52,7 +52,7 @@ class ScheduledRentsController < ApplicationController
 
   private
     def set_scheduled_rent
-      @scheduled_rent = Current.session.user.scheduled_rents.find(params.expect(:id))
+      @scheduled_rent = authenticated_user.scheduled_rents.find(params.expect(:id))
     end
 
 
