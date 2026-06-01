@@ -4,6 +4,10 @@ module ActionController
 
     def self.stale_when_importmap_changes: () -> untyped
 
+    def self.before_action: (*untyped args, **untyped options) -> untyped
+    def self.skip_before_action: (*untyped args, **untyped options) -> untyped
+    def self.helper_method: (*untyped args) -> untyped
+
     def turbo_stream: () -> untyped
   end
 end

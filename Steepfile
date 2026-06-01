@@ -65,4 +65,5 @@ target :app do
   check "app/controllers/tenants_controller.rb"
   check "app/mailers/application_mailer.rb"
   check "app/mailers/passwords_mailer.rb"
+  check "app/controllers/concerns/authentication.rb"
 end
