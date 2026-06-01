@@ -28,6 +28,12 @@ RSpec.describe ScheduledRent, type: :model do
         create(:tenant_payment, lease: lease, amount: 1000.0, payment_date: Date.parse("2026-05-01"))
         expect(rent.covered?).to be_truthy
       end
+
+      it 'returns false when due date is missing' do
+        rent = build(:scheduled_rent, lease: lease, due_date: nil)
+
+        expect(rent.covered?).to be(false)
+      end
     end
 
     describe '#late?' do
@@ -48,6 +54,19 @@ RSpec.describe ScheduledRent, type: :model do
         travel_to Date.parse("2026-05-07") do
           expect(rent.late?).to be_truthy
         end
+      end
+
+      it 'returns false when due date is missing' do
+        rent = build(:scheduled_rent, lease: lease, due_date: nil)
+
+        expect(rent.late?).to be(false)
+      end
+
+      it 'returns false when late period days are missing' do
+        lease = build(:lease, late_period_days: nil)
+        rent = build(:scheduled_rent, lease: lease)
+
+        expect(rent.late?).to be(false)
       end
     end
 

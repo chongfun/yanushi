@@ -1,0 +1,7 @@
+class ScheduledRent
+  def covered?: (?as_of: Date) -> bool
+
+  def late?: (?as_of: Date) -> bool
+
+  def display_name: () -> String
+end
