@@ -30,6 +30,12 @@ RSpec.describe Tenant, type: :model do
       expect(tenant.alias_candidate?("  JANE DOE  ")).to be_falsey
     end
 
+    it 'returns false when tenant name is missing' do
+      tenant = build(:tenant, name: nil)
+
+      expect(tenant.alias_candidate?("Jane")).to be(false)
+    end
+
     it 'returns false if alias already exists' do
       tenant.tenant_aliases.create!(alias_name: "J. Doe")
       expect(tenant.alias_candidate?("J. Doe")).to be_falsey
