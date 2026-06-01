@@ -1,5 +1,34 @@
+# Minimal shim for Dry::Monads used by ServiceResult and IngestionResult.
+# Covers the Result monad returned by extend Dry::Monads[:result].
+
 module Dry
   module Monads
     def self.[]: (*Symbol names) -> Module
+
+    class Result
+      def success?: () -> bool
+      def failure?: () -> bool
+      def value!: () -> untyped
+      def success: () -> untyped
+      def failure: () -> untyped
+
+      class Success < Result
+        def initialize: (untyped value) -> void
+        def value!: () -> untyped
+        def success: () -> untyped
+        def failure: () -> nil
+        def success?: () -> bool
+        def failure?: () -> bool
+      end
+
+      class Failure < Result
+        def initialize: (untyped value) -> void
+        def value!: () -> untyped
+        def success: () -> nil
+        def failure: () -> untyped
+        def success?: () -> bool
+        def failure?: () -> bool
+      end
+    end
   end
 end

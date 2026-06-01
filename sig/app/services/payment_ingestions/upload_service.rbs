@@ -2,21 +2,21 @@ module PaymentIngestions
   class UploadService
     MAX_FILE_SIZE: Integer
 
-    def self.call: (user: untyped, pdf_param: untyped) -> untyped
+    def self.call: (user: User, pdf_param: untyped) -> Dry::Monads::Result
 
-    def initialize: (user: untyped, pdf_param: untyped) -> void
+    def initialize: (user: User, pdf_param: untyped) -> void
 
-    def call: () -> untyped
+    def call: () -> Dry::Monads::Result
 
     private
 
-    attr_reader user: untyped
+    attr_reader user: User
     attr_reader pdf_param: untyped
 
     def pdf?: () -> bool
 
-    def success: (untyped data) -> untyped
+    def success: (untyped data) -> Dry::Monads::Result::Success
 
-    def failure: (untyped error, Symbol code) -> untyped
+    def failure: (untyped error, Symbol code) -> Dry::Monads::Result::Failure
   end
 end
