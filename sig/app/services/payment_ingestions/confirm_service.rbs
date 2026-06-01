@@ -1,0 +1,26 @@
+module PaymentIngestions
+  class ConfirmService
+    def self.call: (user: untyped, ingestion: untyped, ?create_alias: bool) -> untyped
+
+    def initialize: (user: untyped, ingestion: untyped, ?create_alias: bool) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader user: untyped
+    attr_reader ingestion: untyped
+
+    def create_payment: () -> untyped
+
+    def create_aliases: () -> untyped
+
+    def create_aliases?: () -> bool
+
+    def create_alias: (untyped alias_name) -> untyped
+
+    def success: (untyped data) -> untyped
+
+    def failure: (untyped error, Symbol code) -> untyped
+  end
+end

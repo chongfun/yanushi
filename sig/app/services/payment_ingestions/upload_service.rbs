@@ -1,0 +1,22 @@
+module PaymentIngestions
+  class UploadService
+    MAX_FILE_SIZE: Integer
+
+    def self.call: (user: untyped, pdf_param: untyped) -> untyped
+
+    def initialize: (user: untyped, pdf_param: untyped) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader user: untyped
+    attr_reader pdf_param: untyped
+
+    def pdf?: () -> bool
+
+    def success: (untyped data) -> untyped
+
+    def failure: (untyped error, Symbol code) -> untyped
+  end
+end

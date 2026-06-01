@@ -1,0 +1,7 @@
+module HexaPDF
+  class Document
+    def self.new: (?io: untyped) -> untyped
+
+    def self.open: (String path) -> untyped
+  end
+end

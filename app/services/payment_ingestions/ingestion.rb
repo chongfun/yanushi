@@ -74,6 +74,8 @@ module PaymentIngestions
       if pdf_path_or_io.is_a?(PaymentDocument)
         payment_document = pdf_path_or_io
         pdf_bytes = payment_document.has_attribute?(:attachment_file) ? payment_document.attachment_file : PaymentDocument.where(id: payment_document.id).pluck(:attachment_file).first
+        raise PaymentIngestions::ParsingError, "Payment document is missing attachment data" unless pdf_bytes
+
         filename = payment_document.attachment_filename
         io = StringIO.new(pdf_bytes)
         doc = HexaPDF::Document.new(io: io)
@@ -148,6 +150,7 @@ module PaymentIngestions
     end
 
     def build_ingestions(user:, source:, receipt_type:, parser_results:, raw_text:, payment_document:)
+      # @type var ingestions: Array[untyped]
       ingestions = []
 
       parser_results.each do |parser_result|
