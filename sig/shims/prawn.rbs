@@ -1,3 +1,5 @@
+# Prawn gem has no upstream RBS signatures.
+# Covers Document methods used by TenantPayments::ReceiptPdfService.
 module Prawn
   class Document
     def self.new: () -> Document
