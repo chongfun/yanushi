@@ -17,7 +17,7 @@ module PaymentIngestions
       def parse_amount(text)
         match = text.match(/\$\s*([\d,]+\.\d{2})/)
         return nil unless match
-        BigDecimal(match[1].delete(","))
+        BigDecimal(match[1].to_s.delete(","))
       end
 
       def parse_date(text)
