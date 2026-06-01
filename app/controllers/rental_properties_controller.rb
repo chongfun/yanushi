@@ -2,13 +2,13 @@ class RentalPropertiesController < ApplicationController
   before_action :set_rental_property, only: %i[ show edit update destroy schedule_e schedule_e_pdf ]
 
   def index
-    @rental_properties = Current.session.user.rental_properties
+    @rental_properties = authenticated_user.rental_properties
   end
 
 
   def show
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
-    @rental_property = Current.session.user.rental_properties.includes(:expenses, :scheduled_rents, :tenant_payments, :tenant_charges, leases: [ :tenants, :tenant_payments, :scheduled_rents, :tenant_charges ]).find(params.expect(:id))
+    @rental_property = authenticated_user.rental_properties.includes(:expenses, :scheduled_rents, :tenant_payments, :tenant_charges, leases: [ :tenants, :tenant_payments, :scheduled_rents, :tenant_charges ]).find(params.expect(:id))
     @financial_items = @rental_property.financial_items(@year)
   end
 
@@ -51,7 +51,7 @@ class RentalPropertiesController < ApplicationController
 
   def create
     @rental_property = RentalProperty.new(rental_property_params)
-    @rental_property.user = Current.session.user
+    @rental_property.user = authenticated_user
 
     respond_to do |format|
       if @rental_property.save
@@ -90,7 +90,7 @@ class RentalPropertiesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_rental_property
-      @rental_property = Current.session.user.rental_properties.find(params.expect(:id))
+      @rental_property = authenticated_user.rental_properties.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
