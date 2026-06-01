@@ -1,0 +1,19 @@
+module PaymentIngestions
+  class FormDataQuery
+    Result: untyped
+
+    def initialize: (user: untyped) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader user: untyped
+
+    def leases: () -> untyped
+
+    def tenant_leases_map: () -> Hash[untyped, Array[untyped]]
+
+    def lease_tenants_map: () -> Hash[untyped, Array[untyped]]
+  end
+end

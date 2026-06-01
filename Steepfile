@@ -15,4 +15,11 @@ target :app do
   check "app/services/payment_ingestions/parsers/chase_statement.rb"
   check "app/services/payment_ingestions/parsers/venmo.rb"
   check "app/services/payment_ingestions/parsers/zelle.rb"
+  check "app/queries/dashboards/property_summaries_query.rb"
+  check "app/queries/leases/balance_query.rb"
+  check "app/queries/payment_ingestions/form_data_query.rb"
+  check "app/queries/payment_ingestions/index_query.rb"
+  check "app/queries/rental_properties/active_years_query.rb"
+  check "app/queries/rental_properties/financial_items_query.rb"
+  check "app/queries/rental_properties/schedule_e_summary_query.rb"
 end

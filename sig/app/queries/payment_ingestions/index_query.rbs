@@ -1,0 +1,23 @@
+module PaymentIngestions
+  class IndexQuery
+    Result: untyped
+
+    def initialize: (user: untyped) -> void
+
+    def call: (?page: untyped, ?per_page: untyped) -> untyped
+
+    private
+
+    attr_reader user: untyped
+
+    def reviewable_ingestions: () -> untyped
+
+    def confirmed_ingestions_scope: () -> untyped
+
+    def processing_documents: () -> untyped
+
+    def failed_documents: () -> untyped
+
+    def document_columns: () -> Array[Symbol]
+  end
+end

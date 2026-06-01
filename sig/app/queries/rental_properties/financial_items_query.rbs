@@ -1,0 +1,15 @@
+module RentalProperties
+  class FinancialItemsQuery
+    def initialize: (rental_property: untyped) -> void
+
+    def call: (year: untyped) -> Array[Hash[Symbol, untyped]]
+
+    private
+
+    attr_reader rental_property: untyped
+
+    def items_for: (Symbol association_name, Symbol date_attribute, String type, Date start_date, Date end_date) -> Array[Hash[Symbol, untyped]]
+
+    def records_for: (Symbol association_name, Symbol date_attribute, Date start_date, Date end_date) -> untyped
+  end
+end

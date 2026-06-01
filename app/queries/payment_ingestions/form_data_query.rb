@@ -24,6 +24,7 @@ module PaymentIngestions
     end
 
     def tenant_leases_map
+      # @type var map: Hash[untyped, Array[untyped]]
       map = Hash.new { |hash, key| hash[key] = [] }
       LeaseTenant.joins(:tenant).where(tenants: { user_id: user.id }).pluck(:tenant_id, :lease_id).each do |tenant_id, lease_id|
         map[tenant_id] << lease_id
@@ -32,6 +33,7 @@ module PaymentIngestions
     end
 
     def lease_tenants_map
+      # @type var map: Hash[untyped, Array[untyped]]
       map = Hash.new { |hash, key| hash[key] = [] }
       LeaseTenant.joins(lease: :rental_property).where(rental_properties: { user_id: user.id }).pluck(:lease_id, :tenant_id).each do |lease_id, tenant_id|
         map[lease_id] << tenant_id

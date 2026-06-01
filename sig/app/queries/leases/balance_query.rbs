@@ -1,0 +1,19 @@
+module Leases
+  class BalanceQuery
+    def initialize: (lease: untyped) -> void
+
+    def total_credits: (?as_of: Date) -> untyped
+
+    def total_debits: (?as_of: Date) -> untyped
+
+    def balance_as_of: (?Date date) -> untyped
+
+    private
+
+    attr_reader lease: untyped
+
+    def scheduled_rent_debits: (as_of: Date) -> untyped
+
+    def tenant_charge_debits: (as_of: Date) -> untyped
+  end
+end
