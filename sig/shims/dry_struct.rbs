@@ -1,10 +1,20 @@
+# Minimal shim for Dry::Struct base class.
+# Models the constructor and attribute DSL that ServiceResult and IngestionResult use.
+
 module Dry
   class Struct
-    def self.attribute: (Symbol name, untyped type) -> untyped
+    def self.attribute: (Symbol name, untyped type) -> void
 
-    def self.attribute?: (Symbol name, untyped type) -> untyped
+    def self.attribute?: (Symbol name, untyped type) -> void
+
+    # Dry::Monads[:result] extends with Success/Failure constructors
+    def self.Success: (untyped value) -> Dry::Monads::Result::Success
+
+    def self.Failure: (untyped value) -> Dry::Monads::Result::Failure
 
     def initialize: (**untyped attributes) -> void
                   | (Hash[Symbol, untyped] attributes) -> void
+
+    def to_h: () -> Hash[Symbol, untyped]
   end
 end

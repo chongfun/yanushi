@@ -1,23 +1,23 @@
 module PaymentIngestions
   class UpdateService
-    def self.call: (user: untyped, ingestion: untyped, params: untyped) -> untyped
+    def self.call: (user: User, ingestion: PaymentIngestion, params: untyped) -> Dry::Monads::Result
 
-    def initialize: (user: untyped, ingestion: untyped, params: untyped) -> void
+    def initialize: (user: User, ingestion: PaymentIngestion, params: untyped) -> void
 
-    def call: () -> untyped
+    def call: () -> Dry::Monads::Result
 
     private
 
-    attr_reader user: untyped
-    attr_reader ingestion: untyped
+    attr_reader user: User
+    attr_reader ingestion: PaymentIngestion
     attr_reader params: untyped
 
     def promotable_to_matched?: () -> bool
 
     def promote_to_matched: () -> untyped
 
-    def success: (untyped data) -> untyped
+    def success: (untyped data) -> Dry::Monads::Result::Success
 
-    def failure: (untyped error, Symbol code) -> untyped
+    def failure: (untyped error, Symbol code) -> Dry::Monads::Result::Failure
   end
 end

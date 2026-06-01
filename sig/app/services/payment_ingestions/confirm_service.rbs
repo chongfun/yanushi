@@ -1,26 +1,26 @@
 module PaymentIngestions
   class ConfirmService
-    def self.call: (user: untyped, ingestion: untyped, ?create_alias: bool) -> untyped
+    def self.call: (user: User, ingestion: PaymentIngestion, ?create_alias: bool) -> Dry::Monads::Result
 
-    def initialize: (user: untyped, ingestion: untyped, ?create_alias: bool) -> void
+    def initialize: (user: User, ingestion: PaymentIngestion, ?create_alias: bool) -> void
 
-    def call: () -> untyped
+    def call: () -> Dry::Monads::Result
 
     private
 
-    attr_reader user: untyped
-    attr_reader ingestion: untyped
+    attr_reader user: User
+    attr_reader ingestion: PaymentIngestion
 
-    def create_payment: () -> untyped
+    def create_payment: () -> TenantPayment
 
-    def create_aliases: () -> untyped
+    def create_aliases: () -> void
 
     def create_aliases?: () -> bool
 
-    def create_alias: (untyped alias_name) -> untyped
+    def create_alias: (String? alias_name) -> void
 
-    def success: (untyped data) -> untyped
+    def success: (untyped data) -> Dry::Monads::Result::Success
 
-    def failure: (untyped error, Symbol code) -> untyped
+    def failure: (untyped error, Symbol code) -> Dry::Monads::Result::Failure
   end
 end

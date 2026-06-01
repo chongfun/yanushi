@@ -1,10 +1,10 @@
 module Expenses
   class SaveService
-    def self.call: (expense: Expense) -> untyped
+    def self.call: (expense: Expense) -> Dry::Monads::Result
 
     def initialize: (expense: Expense) -> void
 
-    def call: () -> untyped
+    def call: () -> Dry::Monads::Result
 
     private
 

@@ -59,9 +59,10 @@ module PaymentIngestions
     end
 
     def create_alias(alias_name)
-      return unless ingestion.tenant.alias_candidate?(alias_name)
+      tenant = ingestion.tenant
+      return unless tenant&.alias_candidate?(alias_name)
 
-      ingestion.tenant.tenant_aliases.create!(alias_name:)
+      tenant.tenant_aliases.create!(alias_name:)
     end
 
     def success(data)
