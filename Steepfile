@@ -33,4 +33,6 @@ target :app do
   check "app/services/scheduled_rents_generator.rb"
   check "app/services/schedule_e_generator.rb"
   check "app/services/tenant_payments/receipt_pdf_service.rb"
+  check "app/jobs/application_job.rb"
+  check "app/jobs/ingest_payment_document_job.rb"
 end

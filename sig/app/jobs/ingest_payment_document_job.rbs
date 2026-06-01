@@ -1,0 +1,5 @@
+class IngestPaymentDocumentJob < ApplicationJob
+  def self.perform_later: (*untyped args) -> untyped
+
+  def perform: (untyped payment_document_id) -> untyped
+end
