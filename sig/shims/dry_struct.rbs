@@ -1,0 +1,8 @@
+module Dry
+  class Struct
+    def self.attribute?: (Symbol name, untyped type) -> untyped
+
+    def initialize: (**untyped attributes) -> void
+                  | (Hash[Symbol, untyped] attributes) -> void
+  end
+end

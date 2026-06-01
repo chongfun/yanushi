@@ -1,0 +1,15 @@
+class ServiceResult < Dry::Struct
+  def self.success: (?untyped data) -> untyped
+
+  def self.failure: (error: untyped, code: Symbol, ?data: untyped) -> untyped
+
+  def self.Success: (untyped value) -> untyped
+
+  def self.Failure: (untyped value) -> untyped
+
+  def data: () -> untyped
+
+  def error: () -> String?
+
+  def code: () -> Symbol?
+end

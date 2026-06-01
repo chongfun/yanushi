@@ -1,0 +1,3 @@
+module Dry
+  def self.Types: () -> Module
+end
