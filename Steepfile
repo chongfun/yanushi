@@ -27,4 +27,6 @@ target :app do
   check "app/services/payment_ingestions/tenant_resolver.rb"
   check "app/services/payment_ingestions/update_service.rb"
   check "app/services/payment_ingestions/upload_service.rb"
+  check "app/services/expenses/save_service.rb"
+  check "app/services/expenses/tenant_charge_service.rb"
 end
