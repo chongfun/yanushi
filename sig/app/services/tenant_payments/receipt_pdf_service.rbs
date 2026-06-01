@@ -1,0 +1,14 @@
+module TenantPayments
+  class ReceiptPdfService
+    def self.call: (tenant_payment: TenantPayment, view_context: untyped) -> String
+
+    def initialize: (tenant_payment: TenantPayment, view_context: untyped) -> void
+
+    def call: () -> String
+
+    private
+
+    attr_reader tenant_payment: TenantPayment
+    attr_reader view_context: untyped
+  end
+end

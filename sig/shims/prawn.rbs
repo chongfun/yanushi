@@ -1,0 +1,11 @@
+module Prawn
+  class Document
+    def self.new: () -> Document
+
+    def text: (String text, **untyped options) -> untyped
+
+    def move_down: (Integer amount) -> untyped
+
+    def render: () -> String
+  end
+end
