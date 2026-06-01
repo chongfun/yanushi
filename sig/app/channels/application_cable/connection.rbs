@@ -1,0 +1,8 @@
+module ApplicationCable
+  class Connection < ActionCable::Connection::Base
+    def connect: () -> untyped
+
+    private
+    def set_current_user: () -> User?
+  end
+end
