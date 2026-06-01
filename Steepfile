@@ -53,6 +53,7 @@ target :app do
   check "app/controllers/application_controller.rb"
   check "app/controllers/dashboards_controller.rb"
   check "app/controllers/leases_controller.rb"
+  check "app/controllers/passwords_controller.rb"
   check "app/controllers/payment_documents_controller.rb"
   check "app/controllers/rental_properties_controller.rb"
   check "app/controllers/scheduled_rents_controller.rb"
