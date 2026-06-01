@@ -30,7 +30,7 @@ module PaymentIngestions
         # Completed                         JANE DOE
         # Or match from header / sentence: "JANE DOE sent you money"
         match = text.match(/Completed\s+([\p{L}\s'\-]+?)\s+(?:In moments|Scheduled)/i)
-        return match[1].strip if match
+        return match[1].to_s.strip if match
 
         match = text.match(/(.+?)\s+sent you money/i)
         match&.[](1)&.strip
@@ -44,7 +44,7 @@ module PaymentIngestions
         # Look for the date, e.g., "Dec 4, 2023" or "Mar 24, 2026"
         match = text.match(/([a-zA-Z]{3}\s+\d{1,2},\s+\d{4})/i)
         return nil unless match
-        parse_date(match[1].strip)
+        parse_date(match[1].to_s.strip)
       end
 
       def extract_transaction_id(text)

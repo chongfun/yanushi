@@ -1,0 +1,15 @@
+module PaymentIngestions
+  module Parsers
+    class Base
+      def parse: (String pdf_text) -> untyped
+
+      private
+
+      def clean_name: (String? name) -> String?
+
+      def parse_amount: (String text) -> BigDecimal?
+
+      def parse_date: (String text) -> Date?
+    end
+  end
+end
