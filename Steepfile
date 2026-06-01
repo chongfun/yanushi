@@ -55,4 +55,5 @@ target :app do
   check "app/controllers/payment_documents_controller.rb"
   check "app/controllers/sessions_controller.rb"
   check "app/controllers/tenant_charges_controller.rb"
+  check "app/controllers/tenants_controller.rb"
 end
