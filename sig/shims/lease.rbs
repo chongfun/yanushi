@@ -1,0 +1,12 @@
+class Lease
+  def self.transaction: () { () -> untyped } -> untyped
+
+  def save!: () -> untyped
+
+  def errors: () -> untyped
+
+  def will_save_change_to_commencement_date?: () -> bool
+  def will_save_change_to_termination_date?: () -> bool
+  def will_save_change_to_annual_rental_amount?: () -> bool
+  def will_save_change_to_lease_type?: () -> bool
+end
