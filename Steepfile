@@ -1,5 +1,6 @@
 target :app do
   signature "sig/app"
+  signature "sig/rbs_rails"
   signature "sig/shims"
 
   library "date"
