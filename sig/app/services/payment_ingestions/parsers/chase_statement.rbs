@@ -1,7 +1,7 @@
 module PaymentIngestions
   module Parsers
     class ChaseStatement < Base
-      def parse: (String pdf_text) -> Array[untyped]
+      def parse: (String pdf_text) -> Array[Dry::Monads::Result]
 
       private
 

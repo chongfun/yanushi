@@ -1,27 +1,27 @@
 module PaymentIngestions
   class TenantResolver
     class ResolveResult < Dry::Struct
-      def self.matched: (tenant: untyped, tenants: Array[untyped]) -> untyped
+      def self.matched: (tenant: Tenant, tenants: Array[Tenant]) -> Dry::Monads::Result::Success
 
-      def self.ambiguous: (tenants: Array[untyped]) -> untyped
+      def self.ambiguous: (tenants: Array[Tenant]) -> Dry::Monads::Result::Failure
 
-      def self.unmatched: () -> untyped
+      def self.unmatched: () -> Dry::Monads::Result::Failure
 
-      def self.Success: (untyped value) -> untyped
+      def self.Success: (untyped value) -> Dry::Monads::Result::Success
 
-      def self.Failure: (untyped value) -> untyped
+      def self.Failure: (untyped value) -> Dry::Monads::Result::Failure
 
-      def tenant: () -> untyped
+      def tenant: () -> Tenant?
 
-      def tenants: () -> Array[untyped]
+      def tenants: () -> Array[Tenant]
 
       def status: () -> Symbol
     end
 
-    def resolve: (untyped user, untyped display_name, untyped username) -> untyped
+    def resolve: (untyped user, String? display_name, String? username) -> Dry::Monads::Result
 
     private
 
-    def find_candidates: (untyped user, untyped display_name, untyped username) -> Array[untyped]
+    def find_candidates: (untyped user, String? display_name, String? username) -> Array[Tenant]
   end
 end

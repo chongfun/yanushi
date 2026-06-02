@@ -2,7 +2,7 @@ module RentalProperties
   class ActiveYearsQuery
     def initialize: (rental_property: untyped) -> void
 
-    def call: (?additional_years: Array[untyped]) -> Array[Integer]
+    def call: (?additional_years: Array[Integer | String | nil]) -> Array[Integer]
 
     private
 

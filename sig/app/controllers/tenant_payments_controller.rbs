@@ -3,7 +3,7 @@ class TenantPaymentsController < ApplicationController
   @tenant_payment: TenantPayment
   @lease: Lease?
   @leases: Lease::ActiveRecord_Relation
-  @financial_items: Array[untyped]
+  @financial_items: Array[Hash[Symbol, untyped]]
   @year: Integer
 
   def index: () -> untyped

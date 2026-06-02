@@ -12,7 +12,7 @@ module PaymentIngestions
 
     def detect_type: (String text) -> String
 
-    def build_ingestions: (user: untyped, source: String, receipt_type: String, parser_results: Array[untyped], raw_text: String, payment_document: untyped) -> Array[untyped]
+    def build_ingestions: (user: untyped, source: String, receipt_type: String, parser_results: Array[Dry::Monads::Result], raw_text: String, payment_document: untyped) -> Array[PaymentIngestion]
 
     def active_lease?: (untyped lease, untyped payment_date) -> bool
 

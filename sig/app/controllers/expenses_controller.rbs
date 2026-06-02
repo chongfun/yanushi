@@ -4,7 +4,7 @@ class ExpensesController < ApplicationController
   @rental_property: RentalProperty?
   @rental_properties: RentalProperty::ActiveRecord_Relation
   @leases: Lease::ActiveRecord_Relation
-  @financial_items: Array[untyped]
+  @financial_items: Array[Hash[Symbol, untyped]]
   @year: Integer
 
   def index: () -> untyped
