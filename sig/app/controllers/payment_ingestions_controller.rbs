@@ -10,8 +10,8 @@ class PaymentIngestionsController < ApplicationController
   @ingestion: PaymentIngestion
   @tenants: Array[Tenant] | Tenant::ActiveRecord_Relation | untyped
   @leases: Array[Lease] | Lease::ActiveRecord_Relation | untyped
-  @tenant_leases_map: Hash[untyped, untyped]
-  @lease_tenants_map: Hash[untyped, untyped]
+  @tenant_leases_map: Hash[Integer, Array[Integer]]
+  @lease_tenants_map: Hash[Integer, Array[Integer]]
 
   def index: () -> untyped
 
