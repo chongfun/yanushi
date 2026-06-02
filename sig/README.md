@@ -100,6 +100,7 @@ bundle exec rbs collection install
 - Keep shims small and focused on the specific API gap they fill.
 - Add a comment at the top of each shim explaining why it exists and what upstream gap it covers.
 - Prefer `untyped` at gem boundaries over attempting full gem typing.
+- Mirror runtime constant names exactly. For dry-monads results, use `Dry::Monads::Result::Success` and `Dry::Monads::Result::Failure`; the top-level `Dry::Monads::Success` and `Dry::Monads::Failure` constants are not defined at runtime.
 - When upstream RBS support improves, remove the corresponding shim.
 
 ## Known Limitations
