@@ -92,7 +92,7 @@ class LeasesController < ApplicationController
         raise ActiveRecord::RecordNotFound unless user.rental_properties.where(id: permitted_params[:rental_property_id]).exists?
       end
 
-      # @type var tenant_ids: Array[untyped]
+      # @type var tenant_ids: Array[String]
       tenant_ids = Array(permitted_params[:tenant_ids])
       tenant_ids = tenant_ids.reject { |tenant_id| tenant_id.blank? }
       if tenant_ids.any?

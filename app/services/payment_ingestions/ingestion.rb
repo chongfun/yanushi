@@ -150,7 +150,7 @@ module PaymentIngestions
     end
 
     def build_ingestions(user:, source:, receipt_type:, parser_results:, raw_text:, payment_document:)
-      # @type var ingestions: Array[untyped]
+      # @type var ingestions: Array[PaymentIngestion]
       ingestions = []
 
       parser_results.each do |parser_result|

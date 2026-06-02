@@ -1,7 +1,7 @@
 module PaymentIngestions
   module Parsers
     class Zelle < Base
-      def parse: (String pdf_text) -> untyped
+      def parse: (String pdf_text) -> Dry::Monads::Result
 
       private
 

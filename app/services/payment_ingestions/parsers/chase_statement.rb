@@ -15,7 +15,7 @@ module PaymentIngestions
           end_date = Date.current
         end
 
-        # @type var results: Array[untyped]
+        # @type var results: Array[Dry::Monads::Result]
         results = []
 
         # Process line by line

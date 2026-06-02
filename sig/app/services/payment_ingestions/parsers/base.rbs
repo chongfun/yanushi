@@ -1,7 +1,7 @@
 module PaymentIngestions
   module Parsers
     class Base
-      def parse: (String pdf_text) -> untyped
+      def parse: (String pdf_text) -> (Dry::Monads::Result | Array[Dry::Monads::Result])
 
       private
 
