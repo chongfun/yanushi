@@ -12,8 +12,8 @@ module PaymentIngestions
 
     def leases: () -> untyped
 
-    def tenant_leases_map: () -> Hash[untyped, Array[untyped]]
+    def tenant_leases_map: () -> Hash[Integer, Array[Integer]]
 
-    def lease_tenants_map: () -> Hash[untyped, Array[untyped]]
+    def lease_tenants_map: () -> Hash[Integer, Array[Integer]]
   end
 end
