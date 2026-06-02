@@ -1,5 +1,6 @@
 # Minimal shim for Dry::Monads used by ServiceResult and IngestionResult.
 # Covers the Result monad returned by extend Dry::Monads[:result].
+# dry-monads defines Success and Failure under Dry::Monads::Result at runtime.
 
 module Dry
   module Monads

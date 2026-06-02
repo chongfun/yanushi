@@ -296,6 +296,7 @@ Create minimal signatures for the app-owned result objects that parsers and paym
    - `Dry::Struct` base class and constructor
    - `Dry::Monads::Result`, `Dry::Monads::Result::Success`, and `Dry::Monads::Result::Failure`
    - `Dry::Types` module inclusion and the type constants this app references
+   - Match dry-monads' runtime constant layout: `Success` and `Failure` live under `Dry::Monads::Result`, not directly under `Dry::Monads`.
 2. Upgrade `sig/shims/service_result.rbs` to `sig/app/services/service_result.rbs`.
 3. Add signatures for `ServiceResultTypes` and `PaymentIngestions::IngestionResult`.
 4. Keep return payloads permissive where needed. The goal is to unblock method-shape and nilability checks for parsers and services, not to fully model Dry's DSL.
