@@ -1,11 +1,11 @@
 class Lease
-  def total_credits: (?as_of: Date) -> untyped
+  def total_credits: (?as_of: Date) -> BigDecimal
 
-  def total_debits: (?as_of: Date) -> untyped
+  def total_debits: (?as_of: Date) -> BigDecimal
 
-  def balance_as_of: (?Date date) -> untyped
+  def balance_as_of: (?Date date) -> BigDecimal
 
-  def current_balance: () -> untyped
+  def current_balance: () -> BigDecimal
 
   def active?: (?Date date) -> bool
 

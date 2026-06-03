@@ -29,7 +29,8 @@ module PaymentIngestions
           Parsers::ChaseStatement.new.parse(raw_text)
         else
           parser = PARSERS[receipt_type].new
-          [ parser.parse(raw_text) ]
+          res = parser.parse(raw_text)
+          res.is_a?(Array) ? res : [ res ]
         end
 
         ingestions = build_ingestions(
@@ -99,6 +100,13 @@ module PaymentIngestions
         end
         # Fallback for string-converted IO descriptors
         filename = "receipt.pdf" if filename.blank? || filename.include?("#<")
+
+        payment_document = PaymentDocument.new(
+          user: user,
+          attachment_file: pdf_bytes,
+          attachment_filename: filename,
+          attachment_content_type: "application/pdf"
+        )
       end
 
       page_count = doc.pages.count
@@ -112,16 +120,7 @@ module PaymentIngestions
         end
       end.join("\n")
 
-      unless pdf_path_or_io.is_a?(PaymentDocument)
-        payment_document = PaymentDocument.new(
-          user: user,
-          attachment_file: pdf_bytes,
-          attachment_filename: filename,
-          attachment_content_type: "application/pdf"
-        )
-      end
-
-      [ pdf_bytes, filename, page_count, raw_text, payment_document ]
+      [ pdf_bytes, filename || "receipt.pdf", page_count, raw_text, payment_document ]
     end
 
     def read_pdf_bytes(pdf_path_or_io)
