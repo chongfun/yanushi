@@ -1,10 +1,10 @@
 module Leases
   class ScheduledRentSyncService
-    def self.call: (Lease lease, ?previously_new_record: bool) -> untyped
+    def self.call: (Lease lease, ?previously_new_record: bool) -> void
 
     def initialize: (Lease lease, ?previously_new_record: bool) -> void
 
-    def call: () -> untyped
+    def call: () -> void
 
     private
 

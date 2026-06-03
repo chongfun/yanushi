@@ -18,10 +18,10 @@ module PaymentIngestions
       def status: () -> Symbol
     end
 
-    def resolve: (untyped user, String? display_name, String? username) -> Dry::Monads::Result
+    def resolve: (User user, String? display_name, String? username) -> Dry::Monads::Result
 
     private
 
-    def find_candidates: (untyped user, String? display_name, String? username) -> Array[Tenant]
+    def find_candidates: (User user, String? display_name, String? username) -> Array[Tenant]
   end
 end

@@ -19,8 +19,8 @@ module PaymentIngestions
 
     def create_alias: (String? alias_name) -> void
 
-    def success: (untyped data) -> Dry::Monads::Result::Success
+    def success: (TenantPayment data) -> Dry::Monads::Result::Success
 
-    def failure: (untyped error, Symbol code) -> Dry::Monads::Result::Failure
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
   end
 end

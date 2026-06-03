@@ -37,8 +37,11 @@ module PaymentIngestions
     attr_reader :user, :pdf_param
 
     def pdf?
-      header = pdf_param.read(5)
-      pdf_param.rewind
+      file = pdf_param
+      return false unless file
+
+      header = file.read(5)
+      file.rewind
       header == "%PDF-"
     end
 

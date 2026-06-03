@@ -9,35 +9,35 @@ class ScheduleEGenerator
   class TemplateMissingError < StandardError
   end
 
-  def initialize: (RentalProperty rental_property, untyped year) -> void
+  def initialize: (RentalProperty rental_property, Integer | String year) -> void
 
   def call: () -> String
 
   private
 
-  def fill_property_info: (untyped form) -> untyped
+  def fill_property_info: (untyped form) -> void
 
-  def fill_income: (untyped form) -> untyped
+  def fill_income: (untyped form) -> void
 
-  def fill_expenses: (untyped form) -> untyped
+  def fill_expenses: (untyped form) -> void
 
-  def fill_totals: (untyped form) -> untyped
+  def fill_totals: (untyped form) -> void
 
-  def set_field: (untyped form, Symbol key, untyped value) -> untyped
+  def set_field: (untyped form, Symbol key, String | BigDecimal | Numeric | nil value) -> void
 
   def field_map: () -> Hash[Symbol, String]
 
-  def template_path: () -> untyped
+  def template_path: () -> Pathname
 
-  def format_amount: (untyped amount) -> String
+  def format_amount: (BigDecimal amount) -> String
 
   def date_range: () -> Range[Date]
 
-  def rents_received: () -> untyped
+  def rents_received: () -> BigDecimal
 
-  def expenses_by_category: () -> Hash[String, untyped]
+  def expenses_by_category: () -> Hash[String, BigDecimal]
 
-  def total_expenses: () -> untyped
+  def total_expenses: () -> BigDecimal
 
-  def net_income: () -> untyped
+  def net_income: () -> BigDecimal
 end
