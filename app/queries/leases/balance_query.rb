@@ -26,7 +26,7 @@ module Leases
 
     def scheduled_rent_debits(as_of:)
       if lease.scheduled_rents.loaded?
-        lease.scheduled_rents.select { |rent| rent.due_date <= as_of }.sum(&:amount)
+        lease.scheduled_rents.select { |rent| (due = rent.due_date) && due <= as_of }.sum(&:amount)
       else
         lease.scheduled_rents.where("due_date <= ?", as_of).sum(:amount)
       end

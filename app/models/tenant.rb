@@ -14,8 +14,11 @@ class Tenant < ApplicationRecord
   def alias_candidate?(alias_name)
     return false if alias_name.blank?
 
+    tenant_name = name
+    return false if tenant_name.blank?
+
     clean_name = alias_name.strip.downcase
-    return false if clean_name == name.strip.downcase
+    return false if clean_name == tenant_name.strip.downcase
 
     if tenant_aliases.loaded?
       tenant_aliases.none? { |ta| ta.alias_name.strip.downcase == clean_name }

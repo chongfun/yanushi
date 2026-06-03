@@ -1,0 +1,14 @@
+# Minimal shim for Dry::Types.
+# Covers include Dry.Types() used by ServiceResultTypes.
+
+module Dry
+  def self.Types: () -> Module
+
+  module Types
+    # Nominal type constructors used by the application.
+    # Each returns an untyped "type" object consumed by Dry::Struct.attribute.
+    module Nominal
+      def self.optional: () -> untyped
+    end
+  end
+end

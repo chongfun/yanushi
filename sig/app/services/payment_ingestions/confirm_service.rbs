@@ -1,0 +1,26 @@
+module PaymentIngestions
+  class ConfirmService
+    def self.call: (user: User, ingestion: PaymentIngestion, ?create_alias: bool) -> Dry::Monads::Result
+
+    def initialize: (user: User, ingestion: PaymentIngestion, ?create_alias: bool) -> void
+
+    def call: () -> Dry::Monads::Result
+
+    private
+
+    attr_reader user: User
+    attr_reader ingestion: PaymentIngestion
+
+    def create_payment: () -> TenantPayment
+
+    def create_aliases: () -> void
+
+    def create_aliases?: () -> bool
+
+    def create_alias: (String? alias_name) -> void
+
+    def success: (TenantPayment data) -> Dry::Monads::Result::Success
+
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

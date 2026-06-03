@@ -1,0 +1,15 @@
+class Lease
+  def total_credits: (?as_of: Date) -> BigDecimal
+
+  def total_debits: (?as_of: Date) -> BigDecimal
+
+  def balance_as_of: (?Date date) -> BigDecimal
+
+  def current_balance: () -> BigDecimal
+
+  def active?: (?Date date) -> bool
+
+  private
+
+  def balance_query: () -> Leases::BalanceQuery
+end

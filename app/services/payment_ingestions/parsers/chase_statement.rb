@@ -7,14 +7,15 @@ module PaymentIngestions
         period_match = pdf_text.match(/([a-zA-Z]+\s+\d{1,2},\s+\d{4})\s+through\s+([a-zA-Z]+\s+\d{1,2},\s+\d{4})/i)
 
         if period_match
-          start_date = parse_date(period_match[1])
-          end_date = parse_date(period_match[2])
+          start_date = parse_date(period_match[1].to_s) || Date.current.beginning_of_year
+          end_date = parse_date(period_match[2].to_s) || Date.current
         else
           # Fallbacks if statement period is missing
           start_date = Date.current.beginning_of_year
           end_date = Date.current
         end
 
+        # @type var results: Array[Dry::Monads::Result]
         results = []
 
         # Process line by line
@@ -25,7 +26,7 @@ module PaymentIngestions
           # 1. Zelle Match
           # Example: "03/24     Zelle Payment From Sam Lopez Pncaa0Yqh12Q                            1,300.00        2,850.00"
           if (zelle_match = line.match(/^\s*(\d{2}\/\d{2})\s+Zelle Payment From\s+(.+?)\s+(\w+)\s+([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s*$/i))
-            date_str, raw_payer, txn_number, amount_str = zelle_match[1], zelle_match[2], zelle_match[3], zelle_match[4]
+            date_str, raw_payer, txn_number, amount_str = zelle_match[1].to_s, zelle_match[2].to_s, zelle_match[3].to_s, zelle_match[4].to_s
             payment_date = resolve_date(date_str, start_date, end_date)
             amount = BigDecimal(amount_str.delete(","))
 
@@ -43,7 +44,7 @@ module PaymentIngestions
           # 2. P2P ACH Match
           # Example: "04/01     Oak Vly Com Bnk  P2P        John Doe     Web ID: 1770262278                   1,000.00        3,700.00"
           elsif (p2p_match = line.match(/^\s*(\d{2}\/\d{2})\s+(.+?\bP2P)\s+(.+?)\s+Web ID:\s*(\w+)\s+([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s*$/i))
-            date_str, raw_payer, web_id, amount_str = p2p_match[1], p2p_match[3], p2p_match[4], p2p_match[5]
+            date_str, raw_payer, web_id, amount_str = p2p_match[1].to_s, p2p_match[3].to_s, p2p_match[4].to_s, p2p_match[5].to_s
             payment_date = resolve_date(date_str, start_date, end_date)
             amount = BigDecimal(amount_str.delete(","))
 
@@ -75,7 +76,9 @@ module PaymentIngestions
       private
 
       def resolve_date(date_str, start_date, end_date)
-        month, day = date_str.split("/").map(&:to_i)
+        parts = date_str.split("/", 2).map(&:to_i)
+        month = parts.fetch(0)
+        day = parts.fetch(1)
 
         # Try with end_date's year first
         year = end_date.year

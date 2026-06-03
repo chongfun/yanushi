@@ -2,7 +2,7 @@ class TenantsController < ApplicationController
   before_action :set_tenant, only: %i[ show edit update destroy ]
 
   def index
-    @tenants = Current.session.user.tenants
+    @tenants = authenticated_user.tenants
   end
 
 
@@ -20,7 +20,7 @@ class TenantsController < ApplicationController
 
   def create
     @tenant = Tenant.new(tenant_params)
-    @tenant.user = Current.session.user
+    @tenant.user = authenticated_user
 
     respond_to do |format|
       if @tenant.save
@@ -59,7 +59,7 @@ class TenantsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_tenant
-      @tenant = Current.session.user.tenants.find(params.expect(:id))
+      @tenant = authenticated_user.tenants.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

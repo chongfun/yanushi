@@ -10,10 +10,11 @@ module Leases
     end
 
     def call
-      return unless end_date
+      sync_end_date = end_date
+      return unless sync_end_date
 
-      (first_due_date.year..end_date.year).each do |year|
-        ScheduledRentsGenerator.new(@lease, year, end_date: end_date).call
+      (first_due_date.year..sync_end_date.year).each do |year|
+        ScheduledRentsGenerator.new(@lease, year, end_date: sync_end_date).call
       end
     end
 

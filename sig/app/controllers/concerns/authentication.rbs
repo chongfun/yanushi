@@ -1,0 +1,26 @@
+module Authentication : ActionController::Base
+  extend ActiveSupport::Concern
+
+  # Since this is mixed into controllers, declare class methods on the singleton class
+  module ClassMethods
+    def allow_unauthenticated_access: (**untyped options) -> untyped
+  end
+
+  def allow_unauthenticated_access: (**untyped options) -> untyped
+
+  def authenticated?: () -> Session?
+
+  def require_authentication: () -> untyped
+
+  def resume_session: () -> Session?
+
+  def find_session_by_cookie: () -> Session?
+
+  def request_authentication: () -> untyped
+
+  def after_authentication_url: () -> String
+
+  def start_new_session_for: (User user) -> Session
+
+  def terminate_session: () -> untyped
+end

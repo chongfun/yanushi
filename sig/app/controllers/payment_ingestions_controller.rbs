@@ -1,0 +1,39 @@
+class PaymentIngestionsController < ApplicationController
+  @reviewable_ingestions: PaymentIngestion::ActiveRecord_Relation
+  @per_page: Integer
+  @page: Integer
+  @total_confirmed_count: Integer
+  @total_pages: Integer
+  @confirmed_ingestions: PaymentIngestion::ActiveRecord_Relation
+  @processing_documents: Array[PaymentDocument] | PaymentDocument::ActiveRecord_Relation | untyped
+  @failed_documents: Array[PaymentDocument] | PaymentDocument::ActiveRecord_Relation | untyped
+  @ingestion: PaymentIngestion
+  @tenants: Array[Tenant] | Tenant::ActiveRecord_Relation | untyped
+  @leases: Array[Lease] | Lease::ActiveRecord_Relation | untyped
+  @tenant_leases_map: Hash[Integer, Array[Integer]]
+  @lease_tenants_map: Hash[Integer, Array[Integer]]
+
+  def index: () -> untyped
+
+  def new: () -> untyped
+
+  def create: () -> untyped
+
+  def show: () -> untyped
+
+  def update: () -> untyped
+
+  def confirm: () -> untyped
+
+  def download: () -> untyped
+
+  def destroy: () -> untyped
+
+  private
+
+  def set_ingestion: () -> untyped
+
+  def payment_ingestion_params: () -> untyped
+
+  def set_form_data: () -> untyped
+end

@@ -56,10 +56,10 @@ module PaymentIngestions
       def extract_date(text)
         # Look for e.g. "Mar 1, 2024, 6:41 PM" or "Mar 1, 2024"
         match = text.match(/([a-zA-Z]{3}\s+\d{1,2},\s+\d{4},\s+\d{1,2}:\d{2}\s+(?:AM|PM))/i)
-        return parse_date(match[1].strip) if match
+        return parse_date(match[1].to_s.strip) if match
 
         match = text.match(/([a-zA-Z]{3}\s+\d{1,2},\s+\d{4})/i)
-        return parse_date(match[1].strip) if match
+        return parse_date(match[1].to_s.strip) if match
         nil
       end
 

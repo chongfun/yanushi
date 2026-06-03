@@ -1,0 +1,492 @@
+# resolve-type-names: false
+
+class ::PaymentDocument < ::ApplicationRecord
+  extend ::ActiveRecord::Base::ClassMethods[::PaymentDocument, ::PaymentDocument::ActiveRecord_Relation, ::Integer]
+
+  module ::PaymentDocument::GeneratedAttributeMethods
+    def id: () -> ::Integer
+
+    def id=: (::Integer) -> ::Integer
+
+    def id?: () -> bool
+
+    def id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def id_will_change!: () -> void
+
+    def id_was: () -> ::Integer?
+
+    def id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def id_previous_change: () -> ::Array[::Integer?]?
+
+    def id_previously_was: () -> ::Integer?
+
+    def id_before_last_save: () -> ::Integer?
+
+    def id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def id_in_database: () -> ::Integer?
+
+    def saved_change_to_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_id!: () -> void
+
+    def clear_id_change: () -> void
+
+    def id_before_type_cast: () -> ::Integer
+
+    def id_for_database: () -> ::Integer
+
+    def attachment_content_type: () -> ::String?
+
+    def attachment_content_type=: (::String?) -> ::String?
+
+    def attachment_content_type?: () -> bool
+
+    def attachment_content_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def attachment_content_type_change: () -> [ ::String?, ::String? ]
+
+    def attachment_content_type_will_change!: () -> void
+
+    def attachment_content_type_was: () -> ::String?
+
+    def attachment_content_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def attachment_content_type_previous_change: () -> ::Array[::String?]?
+
+    def attachment_content_type_previously_was: () -> ::String?
+
+    def attachment_content_type_before_last_save: () -> ::String?
+
+    def attachment_content_type_change_to_be_saved: () -> ::Array[::String?]?
+
+    def attachment_content_type_in_database: () -> ::String?
+
+    def saved_change_to_attachment_content_type: () -> ::Array[::String?]?
+
+    def saved_change_to_attachment_content_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_attachment_content_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_attachment_content_type!: () -> void
+
+    def clear_attachment_content_type_change: () -> void
+
+    def attachment_content_type_before_type_cast: () -> ::String?
+
+    def attachment_content_type_for_database: () -> ::String?
+
+    def attachment_file: () -> ::String?
+
+    def attachment_file=: (::String?) -> ::String?
+
+    def attachment_file?: () -> bool
+
+    def attachment_file_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def attachment_file_change: () -> [ ::String?, ::String? ]
+
+    def attachment_file_will_change!: () -> void
+
+    def attachment_file_was: () -> ::String?
+
+    def attachment_file_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def attachment_file_previous_change: () -> ::Array[::String?]?
+
+    def attachment_file_previously_was: () -> ::String?
+
+    def attachment_file_before_last_save: () -> ::String?
+
+    def attachment_file_change_to_be_saved: () -> ::Array[::String?]?
+
+    def attachment_file_in_database: () -> ::String?
+
+    def saved_change_to_attachment_file: () -> ::Array[::String?]?
+
+    def saved_change_to_attachment_file?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_attachment_file?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_attachment_file!: () -> void
+
+    def clear_attachment_file_change: () -> void
+
+    def attachment_file_before_type_cast: () -> ::String?
+
+    def attachment_file_for_database: () -> ::String?
+
+    def attachment_filename: () -> ::String?
+
+    def attachment_filename=: (::String?) -> ::String?
+
+    def attachment_filename?: () -> bool
+
+    def attachment_filename_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def attachment_filename_change: () -> [ ::String?, ::String? ]
+
+    def attachment_filename_will_change!: () -> void
+
+    def attachment_filename_was: () -> ::String?
+
+    def attachment_filename_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def attachment_filename_previous_change: () -> ::Array[::String?]?
+
+    def attachment_filename_previously_was: () -> ::String?
+
+    def attachment_filename_before_last_save: () -> ::String?
+
+    def attachment_filename_change_to_be_saved: () -> ::Array[::String?]?
+
+    def attachment_filename_in_database: () -> ::String?
+
+    def saved_change_to_attachment_filename: () -> ::Array[::String?]?
+
+    def saved_change_to_attachment_filename?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_attachment_filename?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_attachment_filename!: () -> void
+
+    def clear_attachment_filename_change: () -> void
+
+    def attachment_filename_before_type_cast: () -> ::String?
+
+    def attachment_filename_for_database: () -> ::String?
+
+    def created_at: () -> ::ActiveSupport::TimeWithZone
+
+    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+    def created_at?: () -> bool
+
+    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+    def created_at_will_change!: () -> void
+
+    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def restore_created_at!: () -> void
+
+    def clear_created_at_change: () -> void
+
+    def created_at_before_type_cast: () -> ::Time
+
+    def created_at_for_database: () -> ::Time
+
+    def error_message: () -> ::String?
+
+    def error_message=: (::String?) -> ::String?
+
+    def error_message?: () -> bool
+
+    def error_message_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def error_message_change: () -> [ ::String?, ::String? ]
+
+    def error_message_will_change!: () -> void
+
+    def error_message_was: () -> ::String?
+
+    def error_message_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def error_message_previous_change: () -> ::Array[::String?]?
+
+    def error_message_previously_was: () -> ::String?
+
+    def error_message_before_last_save: () -> ::String?
+
+    def error_message_change_to_be_saved: () -> ::Array[::String?]?
+
+    def error_message_in_database: () -> ::String?
+
+    def saved_change_to_error_message: () -> ::Array[::String?]?
+
+    def saved_change_to_error_message?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_error_message?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_error_message!: () -> void
+
+    def clear_error_message_change: () -> void
+
+    def error_message_before_type_cast: () -> ::String?
+
+    def error_message_for_database: () -> ::String?
+
+    def status: () -> ::String
+
+    def status=: (::String | ::Symbol) -> ::String
+
+    def status?: () -> bool
+
+    def status_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def status_change: () -> [ ::String?, ::String? ]
+
+    def status_will_change!: () -> void
+
+    def status_was: () -> ::String?
+
+    def status_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def status_previous_change: () -> ::Array[::String?]?
+
+    def status_previously_was: () -> ::String?
+
+    def status_before_last_save: () -> ::String?
+
+    def status_change_to_be_saved: () -> ::Array[::String?]?
+
+    def status_in_database: () -> ::String?
+
+    def saved_change_to_status: () -> ::Array[::String?]?
+
+    def saved_change_to_status?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_status?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_status!: () -> void
+
+    def clear_status_change: () -> void
+
+    def status_before_type_cast: () -> ::String
+
+    def status_for_database: () -> ::String
+
+    def updated_at: () -> ::ActiveSupport::TimeWithZone
+
+    def updated_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+    def updated_at?: () -> bool
+
+    def updated_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def updated_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+    def updated_at_will_change!: () -> void
+
+    def updated_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def updated_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def updated_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def updated_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+    def saved_change_to_updated_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def saved_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def will_save_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def restore_updated_at!: () -> void
+
+    def clear_updated_at_change: () -> void
+
+    def updated_at_before_type_cast: () -> ::Time
+
+    def updated_at_for_database: () -> ::Time
+
+    def user_id: () -> ::Integer
+
+    def user_id=: (::Integer) -> ::Integer
+
+    def user_id?: () -> bool
+
+    def user_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def user_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def user_id_will_change!: () -> void
+
+    def user_id_was: () -> ::Integer?
+
+    def user_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def user_id_previous_change: () -> ::Array[::Integer?]?
+
+    def user_id_previously_was: () -> ::Integer?
+
+    def user_id_before_last_save: () -> ::Integer?
+
+    def user_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def user_id_in_database: () -> ::Integer?
+
+    def saved_change_to_user_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_user_id!: () -> void
+
+    def clear_user_id_change: () -> void
+
+    def user_id_before_type_cast: () -> ::Integer
+
+    def user_id_for_database: () -> ::Integer
+  end
+  include ::PaymentDocument::GeneratedAttributeMethods
+  module ::PaymentDocument::GeneratedAliasAttributeMethods
+    include ::PaymentDocument::GeneratedAttributeMethods
+
+    alias id_value id
+
+    alias id_value= id=
+
+    alias id_value? id?
+
+    alias id_value_changed? id_changed?
+
+    alias id_value_change id_change
+
+    alias id_value_will_change! id_will_change!
+
+    alias id_value_was id_was
+
+    alias id_value_previously_changed? id_previously_changed?
+
+    alias id_value_previous_change id_previous_change
+
+    alias id_value_previously_was id_previously_was
+
+    alias id_value_before_last_save id_before_last_save
+
+    alias id_value_change_to_be_saved id_change_to_be_saved
+
+    alias id_value_in_database id_in_database
+
+    alias saved_change_to_id_value saved_change_to_id
+
+    alias saved_change_to_id_value? saved_change_to_id?
+
+    alias will_save_change_to_id_value? will_save_change_to_id?
+
+    alias restore_id_value! restore_id!
+
+    alias clear_id_value_change clear_id_change
+
+    alias id_value_before_type_cast id_before_type_cast
+
+    alias id_value_for_database id_for_database
+  end
+  include ::PaymentDocument::GeneratedAliasAttributeMethods
+  def payment_ingestions: () -> ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy
+  def payment_ingestions=: (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion]) -> (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion])
+  def payment_ingestion_ids: () -> ::Array[::Integer]
+  def payment_ingestion_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+
+  def user: () -> ::User
+  def user=: (::User?) -> ::User?
+  def reload_user: () -> ::User?
+  def build_user: (?untyped) -> ::User
+  def create_user: (?untyped) -> ::User
+  def create_user!: (?untyped) -> ::User
+
+  module ::PaymentDocument::GeneratedAssociationMethods
+  end
+  include ::PaymentDocument::GeneratedAssociationMethods
+
+  def processing!: () -> bool
+  def processing?: () -> bool
+  def success!: () -> bool
+  def success?: () -> bool
+  def failed!: () -> bool
+  def failed?: () -> bool
+  def self.statuses: () -> ::ActiveSupport::HashWithIndifferentAccess[::String, ::String]
+  def self.processing: () -> ::PaymentDocument::ActiveRecord_Relation
+  def self.not_processing: () -> ::PaymentDocument::ActiveRecord_Relation
+  def self.success: () -> ::PaymentDocument::ActiveRecord_Relation
+  def self.not_success: () -> ::PaymentDocument::ActiveRecord_Relation
+  def self.failed: () -> ::PaymentDocument::ActiveRecord_Relation
+  def self.not_failed: () -> ::PaymentDocument::ActiveRecord_Relation
+
+  module ::PaymentDocument::GeneratedRelationMethods
+    def statuses: () -> ::ActiveSupport::HashWithIndifferentAccess[::String, ::String]
+
+    def processing: () -> ::PaymentDocument::ActiveRecord_Relation
+
+    def not_processing: () -> ::PaymentDocument::ActiveRecord_Relation
+
+    def success: () -> ::PaymentDocument::ActiveRecord_Relation
+
+    def not_success: () -> ::PaymentDocument::ActiveRecord_Relation
+
+    def failed: () -> ::PaymentDocument::ActiveRecord_Relation
+
+    def not_failed: () -> ::PaymentDocument::ActiveRecord_Relation
+  end
+
+  class ::PaymentDocument::ActiveRecord_Relation < ::ActiveRecord::Relation
+    include ::Enumerable[::PaymentDocument]
+    include ::PaymentDocument::GeneratedRelationMethods
+    include ::ActiveRecord::Relation::Methods[::PaymentDocument, ::Integer]
+  end
+
+  class ::PaymentDocument::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+    include ::Enumerable[::PaymentDocument]
+    include ::PaymentDocument::GeneratedRelationMethods
+    include ::ActiveRecord::Relation::Methods[::PaymentDocument, ::Integer]
+
+    def build: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::PaymentDocument
+             | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::PaymentDocument]
+    def create: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::PaymentDocument
+              | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::PaymentDocument]
+    def create!: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::PaymentDocument
+               | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::PaymentDocument]
+    def reload: () -> ::Array[::PaymentDocument]
+
+    def replace: (::Array[::PaymentDocument]) -> void
+    def delete: (*::PaymentDocument | ::Integer) -> ::Array[::PaymentDocument]
+    def destroy: (*::PaymentDocument | ::Integer) -> ::Array[::PaymentDocument]
+    def <<: (*::PaymentDocument | ::Array[::PaymentDocument]) -> self
+    def prepend: (*::PaymentDocument | ::Array[::PaymentDocument]) -> self
+  end
+end
+
+class ::ApplicationRecord < ::ActiveRecord::Base
+end
+class ::PaymentIngestion < ::ApplicationRecord
+end
+class ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::User < ::ApplicationRecord
+end

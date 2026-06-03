@@ -1,0 +1,5 @@
+class RentalProperty
+  def financial_items: (untyped year) -> Array[Hash[Symbol, untyped]]
+
+  def active_years: (?Array[Integer | String | nil] additional_years) -> Array[Integer]
+end

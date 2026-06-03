@@ -1,0 +1,16 @@
+# ActionController::Base methods not covered by rbs_collection.
+# Covers callback DSL (before_action, skip_before_action, helper_method),
+# Rails 8 browser guard (allow_browser), importmap staleness check, and turbo_stream.
+module ActionController
+  class Base
+    def self.allow_browser: (*untyped args, **untyped options) -> untyped
+
+    def self.stale_when_importmap_changes: () -> untyped
+
+    def self.before_action: (*untyped args, **untyped options) -> untyped
+    def self.skip_before_action: (*untyped args, **untyped options) -> untyped
+    def self.helper_method: (*untyped args) -> untyped
+
+    def turbo_stream: () -> untyped
+  end
+end

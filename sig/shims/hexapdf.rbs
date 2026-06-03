@@ -1,0 +1,12 @@
+# HexaPDF gem has no upstream RBS signatures.
+# Covers Document constructor and Error class used by PaymentIngestions::Ingestion.
+module HexaPDF
+  class Error < StandardError
+  end
+
+  class Document
+    def self.new: (?io: untyped) -> untyped
+
+    def self.open: (String | Pathname path) -> untyped
+  end
+end

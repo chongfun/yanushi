@@ -1,0 +1,13 @@
+module Dashboards
+  class PropertySummariesQuery
+    def initialize: (properties: RentalProperty::ActiveRecord_Relation | Array[RentalProperty]) -> void
+
+    def call: () -> Array[{ property: RentalProperty, income: BigDecimal, expenses: BigDecimal, net_income: BigDecimal, lease_balances: Array[{ lease: Lease, balance: BigDecimal }] }]
+
+    private
+
+    attr_reader properties: RentalProperty::ActiveRecord_Relation | Array[RentalProperty]
+
+    def summary_for: (RentalProperty property) -> { property: RentalProperty, income: BigDecimal, expenses: BigDecimal, net_income: BigDecimal, lease_balances: Array[{ lease: Lease, balance: BigDecimal }] }
+  end
+end

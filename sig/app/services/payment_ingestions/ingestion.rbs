@@ -1,0 +1,25 @@
+module PaymentIngestions
+  class Ingestion
+    PARSERS: Hash[String, singleton(Parsers::Base)]
+
+    def call: (user: User, pdf_path_or_io: untyped, ?source: String) -> (Array[PaymentIngestion] | PaymentIngestion)
+
+    private
+
+    def extract_pdf_data: (untyped pdf_path_or_io, User user) -> [String, String, Integer, String, PaymentDocument]
+
+    def read_pdf_bytes: (untyped pdf_path_or_io) -> String
+
+    def detect_type: (String text) -> String
+
+    def build_ingestions: (user: User, source: String, receipt_type: String, parser_results: Array[Dry::Monads::Result], raw_text: String, payment_document: PaymentDocument) -> Array[PaymentIngestion]
+
+    def active_lease?: (Lease lease, Date? payment_date) -> bool
+
+    def unwrap_result: (untyped result) -> untyped
+
+    def successful_result?: (untyped result) -> bool
+
+    def result_payload: (untyped result) -> untyped
+  end
+end

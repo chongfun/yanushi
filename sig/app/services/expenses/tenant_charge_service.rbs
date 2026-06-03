@@ -1,0 +1,23 @@
+module Expenses
+  class TenantChargeService
+    def self.call: (Expense expense) -> void
+
+    def initialize: (Expense expense) -> void
+
+    def call: () -> void
+
+    private
+
+    def upsert_tenant_charge: () -> void
+
+    def charge_amount: (TenantCharge charge) -> BigDecimal
+
+    def submitted_amount: (BigDecimal? previous_charge_amount, BigDecimal? old_expense_amount) -> BigDecimal
+
+    def charge_previously_matched_expense?: (BigDecimal submitted_amount, BigDecimal? previous_charge_amount, BigDecimal? old_expense_amount) -> bool?
+
+    def parsed_reimburse_amount: () -> BigDecimal?
+
+    def raw_reimburse_amount: () -> (String | BigDecimal | nil)
+  end
+end
