@@ -89,3 +89,40 @@ From the property ledger, click the **"Record Payment"** button next to any sche
    ```
 
 Visit `http://localhost:3000` to start managing your properties.
+
+---
+
+## Development Workflow
+
+### Type Checking
+
+Yanushi uses RBS and Steep for gradual static type checking. Hand-written application signatures live in `sig/app/`, local shims live in `sig/shims/`, and generated Rails signatures live in `sig/rbs_rails/`.
+
+Run the type checks locally before opening a PR:
+
+```bash
+bundle exec rbs validate
+bundle exec steep check
+```
+
+When adding or changing typed application code:
+
+1. Add or update the matching RBS file under `sig/app/`.
+2. Add new source files to the `check` list in `Steepfile`.
+3. Keep `untyped` at Rails or third-party gem boundaries where precision is not worth the maintenance cost.
+4. Re-run `bundle exec rbs validate` and `bundle exec steep check`.
+
+After schema migrations, regenerate Rails-aware signatures:
+
+```bash
+bin/rails rbs_rails:all
+bundle exec steep check
+```
+
+After gem updates, refresh third-party signatures:
+
+```bash
+bundle exec rbs collection install
+```
+
+See `sig/README.md` for signature ownership, shim conventions, editor setup, and known limitations.
