@@ -1,0 +1,11 @@
+class Expense
+  def reimbursed?: () -> bool
+
+  def raw_reimburse_amount: () -> (String | BigDecimal | nil)
+
+  def tenant_reimbursable: () -> bool?
+
+  def reimburse_lease_id: () -> (Integer | String)?
+
+  def reimburse_amount: () -> (BigDecimal | String)
+end

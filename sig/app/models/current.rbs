@@ -1,0 +1,7 @@
+class Current < ActiveSupport::CurrentAttributes
+  def self.session: () -> Session?
+
+  def self.session=: (Session? session) -> Session?
+
+  def self.user: () -> User?
+end

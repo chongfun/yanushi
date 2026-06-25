@@ -1,0 +1,15 @@
+# Lease model methods not fully covered by rbs_rails generation.
+# Covers transaction, save!, errors, and will_save_change_to_* dirty tracking methods
+# used by Leases::SaveService and Leases::ScheduledRentSyncService.
+class Lease
+  def self.transaction: () { () -> untyped } -> untyped
+
+  def save!: () -> untyped
+
+  def errors: () -> untyped
+
+  def will_save_change_to_commencement_date?: () -> bool
+  def will_save_change_to_termination_date?: () -> bool
+  def will_save_change_to_annual_rental_amount?: () -> bool
+  def will_save_change_to_lease_type?: () -> bool
+end

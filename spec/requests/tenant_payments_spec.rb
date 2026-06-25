@@ -42,7 +42,7 @@ RSpec.describe "TenantPayments", type: :request do
       allow_any_instance_of(Lease).to receive(:current_balance).and_return(200)
       get new_tenant_payment_url, params: { lease_id: lease.id }
       expect(response).to be_successful
-      expect(response.body).to include('value="0"')
+      expect(response.body).to include('value="0.0"')
     end
   end
 

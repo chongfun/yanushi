@@ -15,6 +15,7 @@ module PaymentIngestions
       return failure("Already confirmed", :already_confirmed) if ingestion.confirmed?
       return failure("Cannot confirm: missing required fields or duplicate exists", :not_confirmable) unless ingestion.confirmable?
 
+      # @type var payment: TenantPayment?
       payment = nil
       ingestion.transaction do
         ingestion.lock!
@@ -26,7 +27,11 @@ module PaymentIngestions
         ingestion.update!(status: :confirmed, tenant_payment: payment)
       end
 
-      success(payment)
+      if payment
+        success(payment)
+      else
+        failure("Failed to create tenant payment", :confirmation_error)
+      end
     rescue ActiveRecord::RecordNotUnique
       failure("This transaction has already been recorded in another tenant payment.", :duplicate)
     rescue ConfirmationError => e
@@ -59,9 +64,10 @@ module PaymentIngestions
     end
 
     def create_alias(alias_name)
-      return unless ingestion.tenant.alias_candidate?(alias_name)
+      tenant = ingestion.tenant
+      return unless tenant&.alias_candidate?(alias_name)
 
-      ingestion.tenant.tenant_aliases.create!(alias_name:)
+      tenant.tenant_aliases.create!(alias_name:)
     end
 
     def success(data)

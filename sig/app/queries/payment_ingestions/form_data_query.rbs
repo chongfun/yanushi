@@ -1,0 +1,25 @@
+module PaymentIngestions
+  class FormDataQuery
+    class Result
+      def tenants: () -> (Tenant::ActiveRecord_Relation | Tenant::ActiveRecord_Associations_CollectionProxy)
+      def leases: () -> Lease::ActiveRecord_Relation
+      def tenant_leases_map: () -> Hash[Integer, Array[Integer]]
+      def lease_tenants_map: () -> Hash[Integer, Array[Integer]]
+      def self.new: (tenants: Tenant::ActiveRecord_Relation | Tenant::ActiveRecord_Associations_CollectionProxy, leases: Lease::ActiveRecord_Relation, tenant_leases_map: Hash[Integer, Array[Integer]], lease_tenants_map: Hash[Integer, Array[Integer]]) -> Result
+    end
+
+    def initialize: (user: User) -> void
+
+    def call: () -> Result
+
+    private
+
+    attr_reader user: User
+
+    def leases: () -> Lease::ActiveRecord_Relation
+
+    def tenant_leases_map: () -> Hash[Integer, Array[Integer]]
+
+    def lease_tenants_map: () -> Hash[Integer, Array[Integer]]
+  end
+end

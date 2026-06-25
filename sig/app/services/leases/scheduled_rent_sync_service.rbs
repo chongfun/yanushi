@@ -1,0 +1,15 @@
+module Leases
+  class ScheduledRentSyncService
+    def self.call: (Lease lease, ?previously_new_record: bool) -> void
+
+    def initialize: (Lease lease, ?previously_new_record: bool) -> void
+
+    def call: () -> void
+
+    private
+
+    def first_due_date: () -> Date?
+
+    def end_date: () -> Date?
+  end
+end

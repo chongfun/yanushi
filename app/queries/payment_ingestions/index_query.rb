@@ -54,14 +54,14 @@ module PaymentIngestions
     def processing_documents
       user.payment_documents
           .processing
-          .select(document_columns)
+          .select(*document_columns)
           .order(created_at: :desc)
     end
 
     def failed_documents
       user.payment_documents
           .failed
-          .select(document_columns)
+          .select(*document_columns)
           .order(created_at: :desc)
     end
 

@@ -220,5 +220,11 @@ RSpec.describe Lease, type: :model do
       expect(active_leases).not_to include(future_lease)
       expect(active_leases).not_to include(past_lease)
     end
+
+    it 'returns false when commencement date is missing' do
+      lease = build(:lease, commencement_date: nil)
+
+      expect(lease.active?).to be(false)
+    end
   end
 end

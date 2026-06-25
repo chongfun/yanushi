@@ -1,0 +1,21 @@
+class PaymentIngestion
+  PAYMENT_METHODS: Array[[String, String]]
+
+  def confirmable?: () -> bool
+
+  def confirm!: (?create_alias: bool) -> TenantPayment
+
+  def duplicate_exists?: () -> bool
+
+  def ingestion_duplicate_exists?: () -> bool
+
+  def attachment_attached?: () -> bool
+
+  def attachment_image?: () -> bool?
+
+  private
+
+  def validate_parse_status: () -> untyped
+
+  def ensure_not_duplicate_payment: () -> untyped
+end

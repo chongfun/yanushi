@@ -1,0 +1,24 @@
+module PaymentIngestions
+  class IngestionResult < Dry::Struct
+    def self.success: (Hash[Symbol, untyped] attributes) -> Dry::Monads::Result::Success
+
+    def self.failure: (Hash[Symbol, untyped] attributes) -> Dry::Monads::Result::Failure
+
+    # Inherited from Dry::Struct via extend Dry::Monads[:result]
+    def self.Success: (untyped value) -> Dry::Monads::Result::Success
+
+    def self.Failure: (untyped value) -> Dry::Monads::Result::Failure
+
+    def payer_name: () -> String?
+    def payer_username: () -> String?
+    def amount: () -> BigDecimal?
+    def payment_date: () -> Date?
+    def payment_method: () -> String?
+    def transaction_number: () -> String?
+    def receipt_type: () -> String?
+    def raw_text: () -> String?
+    def error_message: () -> String?
+
+    def to_h: () -> Hash[Symbol, untyped]
+  end
+end

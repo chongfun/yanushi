@@ -1,0 +1,19 @@
+module PaymentIngestions
+  class UpdateService
+    def self.call: (user: User, ingestion: PaymentIngestion, params: ActionController::Parameters) -> Dry::Monads::Result
+    def initialize: (user: User, ingestion: PaymentIngestion, params: ActionController::Parameters) -> void
+    def call: () -> Dry::Monads::Result
+
+    private
+
+    attr_reader user: User
+    attr_reader ingestion: PaymentIngestion
+    attr_reader params: ActionController::Parameters
+
+    def promotable_to_matched?: () -> bool
+
+    def promote_to_matched: () -> void
+    def success: (PaymentIngestion data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

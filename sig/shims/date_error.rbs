@@ -1,0 +1,5 @@
+# Date::Error is defined in Ruby's date stdlib but missing from the RBS stdlib signatures.
+class Date
+  class Error < StandardError
+  end
+end

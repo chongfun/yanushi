@@ -2,7 +2,7 @@ class PaymentIngestionsController < ApplicationController
   before_action :set_ingestion, only: %i[ show update destroy confirm download ]
 
   def index
-    user = Current.session.user
+    user = authenticated_user
     result = PaymentIngestions::IndexQuery.new(user: user).call(page: params[:page])
 
     @reviewable_ingestions = result.reviewable_ingestions
@@ -16,11 +16,11 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def new
-    @ingestion = Current.session.user.payment_ingestions.build
+    @ingestion = authenticated_user.payment_ingestions.build
   end
 
   def create
-    result = PaymentIngestions::UploadService.call(user: Current.session.user, pdf_param: params.dig(:payment_ingestion, :pdf_file))
+    result = PaymentIngestions::UploadService.call(user: authenticated_user, pdf_param: params.dig(:payment_ingestion, :pdf_file))
     if result.success?
       redirect_to payment_ingestions_path, notice: "Document uploaded successfully and is being processed in the background."
     else
@@ -33,7 +33,7 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def update
-    result = PaymentIngestions::UpdateService.call(user: Current.session.user, ingestion: @ingestion, params: payment_ingestion_params)
+    result = PaymentIngestions::UpdateService.call(user: authenticated_user, ingestion: @ingestion, params: payment_ingestion_params)
     if result.success?
       redirect_to payment_ingestion_path(@ingestion), notice: "Ingestion record updated successfully."
     else
@@ -46,7 +46,7 @@ class PaymentIngestionsController < ApplicationController
     create_alias = params[:create_alias] == "1"
 
     begin
-      result = PaymentIngestions::ConfirmService.call(user: Current.session.user, ingestion: @ingestion, create_alias: create_alias)
+      result = PaymentIngestions::ConfirmService.call(user: authenticated_user, ingestion: @ingestion, create_alias: create_alias)
       if result.success?
         redirect_to payment_ingestions_path, notice: "Payment confirmed and tenant payment created successfully."
       else
@@ -59,11 +59,11 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def download
-    if @ingestion.attachment_attached?
-      send_data @ingestion.payment_document.attachment_file,
-                type: @ingestion.payment_document.attachment_content_type,
+    if @ingestion.attachment_attached? && (doc = @ingestion.payment_document)
+      send_data doc.attachment_file,
+                type: doc.attachment_content_type,
                 disposition: "inline",
-                filename: @ingestion.payment_document.attachment_filename
+                filename: doc.attachment_filename
     else
       redirect_to payment_ingestion_path(@ingestion), alert: "Receipt attachment data is missing."
     end
@@ -77,7 +77,7 @@ class PaymentIngestionsController < ApplicationController
   private
 
   def set_ingestion
-    @ingestion = Current.session.user.payment_ingestions.find(params[:id])
+    @ingestion = authenticated_user.payment_ingestions.find(params[:id])
   end
 
   def payment_ingestion_params
@@ -85,7 +85,7 @@ class PaymentIngestionsController < ApplicationController
       :tenant_id, :lease_id, :amount, :payment_date, :payment_method, :transaction_number
     )
 
-    user = Current.session.user
+    user = authenticated_user
     if permitted_params[:tenant_id].present?
       raise ActiveRecord::RecordNotFound unless user.tenants.where(id: permitted_params[:tenant_id]).exists?
     end
@@ -96,7 +96,7 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def set_form_data
-    result = PaymentIngestions::FormDataQuery.new(user: Current.session.user).call
+    result = PaymentIngestions::FormDataQuery.new(user: authenticated_user).call
     @tenants = result.tenants
     @leases = result.leases
     @tenant_leases_map = result.tenant_leases_map

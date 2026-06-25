@@ -1,0 +1,19 @@
+module Leases
+  class BalanceQuery
+    def initialize: (lease: Lease) -> void
+
+    def total_credits: (?as_of: Date) -> BigDecimal
+
+    def total_debits: (?as_of: Date) -> BigDecimal
+
+    def balance_as_of: (?Date date) -> BigDecimal
+
+    private
+
+    attr_reader lease: Lease
+
+    def scheduled_rent_debits: (as_of: Date) -> BigDecimal
+
+    def tenant_charge_debits: (as_of: Date) -> BigDecimal
+  end
+end

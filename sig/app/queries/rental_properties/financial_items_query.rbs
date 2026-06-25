@@ -1,0 +1,15 @@
+module RentalProperties
+  class FinancialItemsQuery
+    def initialize: (rental_property: RentalProperty) -> void
+
+    def call: (year: Integer | String) -> Array[{ date: Date, type: String, amount: BigDecimal, object: ScheduledRent | TenantPayment | TenantCharge | Expense }]
+
+    private
+
+    attr_reader rental_property: RentalProperty
+
+    def items_for: (Symbol association_name, Symbol date_attribute, String type, Date start_date, Date end_date) -> Array[{ date: Date, type: String, amount: BigDecimal, object: ScheduledRent | TenantPayment | TenantCharge | Expense }]
+
+    def records_for: (Symbol association_name, Symbol date_attribute, Date start_date, Date end_date) -> untyped
+  end
+end

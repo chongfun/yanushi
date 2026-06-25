@@ -29,7 +29,8 @@ module PaymentIngestions
           Parsers::ChaseStatement.new.parse(raw_text)
         else
           parser = PARSERS[receipt_type].new
-          [ parser.parse(raw_text) ]
+          res = parser.parse(raw_text)
+          res.is_a?(Array) ? res : [ res ]
         end
 
         ingestions = build_ingestions(
@@ -74,6 +75,8 @@ module PaymentIngestions
       if pdf_path_or_io.is_a?(PaymentDocument)
         payment_document = pdf_path_or_io
         pdf_bytes = payment_document.has_attribute?(:attachment_file) ? payment_document.attachment_file : PaymentDocument.where(id: payment_document.id).pluck(:attachment_file).first
+        raise PaymentIngestions::ParsingError, "Payment document is missing attachment data" unless pdf_bytes
+
         filename = payment_document.attachment_filename
         io = StringIO.new(pdf_bytes)
         doc = HexaPDF::Document.new(io: io)
@@ -97,6 +100,13 @@ module PaymentIngestions
         end
         # Fallback for string-converted IO descriptors
         filename = "receipt.pdf" if filename.blank? || filename.include?("#<")
+
+        payment_document = PaymentDocument.new(
+          user: user,
+          attachment_file: pdf_bytes,
+          attachment_filename: filename,
+          attachment_content_type: "application/pdf"
+        )
       end
 
       page_count = doc.pages.count
@@ -110,16 +120,7 @@ module PaymentIngestions
         end
       end.join("\n")
 
-      unless pdf_path_or_io.is_a?(PaymentDocument)
-        payment_document = PaymentDocument.new(
-          user: user,
-          attachment_file: pdf_bytes,
-          attachment_filename: filename,
-          attachment_content_type: "application/pdf"
-        )
-      end
-
-      [ pdf_bytes, filename, page_count, raw_text, payment_document ]
+      [ pdf_bytes, filename || "receipt.pdf", page_count, raw_text, payment_document ]
     end
 
     def read_pdf_bytes(pdf_path_or_io)
@@ -148,6 +149,7 @@ module PaymentIngestions
     end
 
     def build_ingestions(user:, source:, receipt_type:, parser_results:, raw_text:, payment_document:)
+      # @type var ingestions: Array[PaymentIngestion]
       ingestions = []
 
       parser_results.each do |parser_result|

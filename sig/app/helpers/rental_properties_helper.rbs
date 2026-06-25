@@ -1,0 +1,5 @@
+module RentalPropertiesHelper
+  def active_lease_for: (RentalProperty rental_property) -> Lease?
+
+  def active_leases_for: (RentalProperty rental_property) -> Array[Lease]
+end

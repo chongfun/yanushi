@@ -1,0 +1,17 @@
+module PaymentIngestions
+  module Parsers
+    class Zelle < Base
+      def parse: (String pdf_text) -> Dry::Monads::Result
+
+      private
+
+      def extract_payer: (String text) -> String?
+
+      def extract_amount: (String text) -> BigDecimal?
+
+      def extract_date: (String text) -> Date?
+
+      def extract_transaction_id: (String text) -> String?
+    end
+  end
+end

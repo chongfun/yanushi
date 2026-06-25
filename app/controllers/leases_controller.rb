@@ -3,7 +3,7 @@ class LeasesController < ApplicationController
   before_action :set_form_data, only: %i[ new edit create update ]
 
   def index
-    @leases = Current.session.user.leases.includes(:rental_property, :tenants)
+    @leases = authenticated_user.leases.includes(:rental_property, :tenants)
   end
 
 
@@ -74,25 +74,27 @@ class LeasesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_lease
-      @lease = Current.session.user.leases.find(params.expect(:id))
+      @lease = authenticated_user.leases.find(params.expect(:id))
     end
 
     def set_form_data
-      user = Current.session.user
+      user = authenticated_user
       @rental_properties = user.rental_properties.order(:address)
       @tenants = user.tenants.order(:name)
     end
 
     # Only allow a list of trusted parameters through.
     def lease_params
-      permitted_params = params.expect(lease: [ :rental_property_id, :lease_type, :commencement_date, :termination_date, :annual_rental_amount, :late_period_days, :security_deposit, tenant_ids: [] ])
+      permitted_params = params.expect(lease: [ :rental_property_id, :lease_type, :commencement_date, :termination_date, :annual_rental_amount, :late_period_days, :security_deposit, tenant_ids: Array.new ])
 
-      user = Current.session.user
+      user = authenticated_user
       if permitted_params[:rental_property_id].present?
         raise ActiveRecord::RecordNotFound unless user.rental_properties.where(id: permitted_params[:rental_property_id]).exists?
       end
 
-      tenant_ids = Array(permitted_params[:tenant_ids]).reject(&:blank?)
+      # @type var tenant_ids: Array[String]
+      tenant_ids = Array(permitted_params[:tenant_ids])
+      tenant_ids = tenant_ids.reject { |tenant_id| tenant_id.blank? }
       if tenant_ids.any?
         raise ActiveRecord::RecordNotFound unless user.tenants.where(id: tenant_ids).count == tenant_ids.count
       end

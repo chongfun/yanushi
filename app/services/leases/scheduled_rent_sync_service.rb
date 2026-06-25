@@ -10,19 +10,24 @@ module Leases
     end
 
     def call
-      return unless end_date
+      sync_start_date = first_due_date
+      sync_end_date = end_date
+      return unless sync_start_date && sync_end_date
 
-      (first_due_date.year..end_date.year).each do |year|
-        ScheduledRentsGenerator.new(@lease, year, end_date: end_date).call
+      (sync_start_date.year..sync_end_date.year).each do |year|
+        ScheduledRentsGenerator.new(@lease, year, end_date: sync_end_date).call
       end
     end
 
     private
       def first_due_date
-        if @lease.commencement_date.day == 1
-          @lease.commencement_date
+        starts_on = @lease.commencement_date
+        return unless starts_on
+
+        if starts_on.day == 1
+          starts_on
         else
-          (@lease.commencement_date + 1.month).beginning_of_month
+          (starts_on + 1.month).beginning_of_month
         end
       end
 
@@ -30,9 +35,11 @@ module Leases
         @end_date ||= if @lease.term?
           @lease.termination_date
         elsif @previously_new_record
-          first_due_date + 11.months
+          first_due = first_due_date
+          first_due + 11.months if first_due
         else
-          [ first_due_date + 11.months, Date.current + 12.months ].max
+          first_due = first_due_date
+          first_due ? [ first_due + 11.months, Date.current + 12.months ].max : nil
         end
       end
   end

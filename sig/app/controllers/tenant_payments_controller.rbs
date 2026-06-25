@@ -1,0 +1,32 @@
+class TenantPaymentsController < ApplicationController
+  @tenant_payments: TenantPayment::ActiveRecord_Relation
+  @tenant_payment: TenantPayment
+  @lease: Lease?
+  @leases: Lease::ActiveRecord_Relation
+  @financial_items: Array[Hash[Symbol, untyped]]
+  @year: Integer
+
+  def index: () -> untyped
+
+  def show: () -> untyped
+
+  def new: () -> untyped
+
+  def edit: () -> untyped
+
+  def create: () -> untyped
+
+  def update: () -> untyped
+
+  def destroy: () -> untyped
+
+  private
+
+  def set_tenant_payment: () -> untyped
+
+  def set_lease: () -> untyped
+
+  def set_form_data: () -> untyped
+
+  def tenant_payment_params: () -> untyped
+end

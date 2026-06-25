@@ -1,0 +1,13 @@
+module RentalProperties
+  class ActiveYearsQuery
+    def initialize: (rental_property: RentalProperty) -> void
+
+    def call: (?additional_years: Array[Integer | String | nil]) -> Array[Integer]
+
+    private
+
+    attr_reader rental_property: RentalProperty
+
+    def years_for: (Symbol association_name, Symbol date_attribute) -> Array[Integer]
+  end
+end

@@ -11,7 +11,12 @@ module RentalProperties
       years.merge(years_for(:tenant_payments, :payment_date))
       years.merge(years_for(:tenant_charges, :charge_date))
       years.merge(years_for(:expenses, :expense_date))
-      years.merge(additional_years.map { |year| year.to_i if year.respond_to?(:to_i) }.compact.reject(&:zero?))
+      additional_years.each do |year|
+        next unless year.respond_to?(:to_i)
+
+        parsed_year = year.to_i
+        years << parsed_year unless parsed_year.zero?
+      end
       years.to_a.sort
     end
 

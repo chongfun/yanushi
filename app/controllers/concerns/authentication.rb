@@ -2,12 +2,15 @@ module Authentication
   extend ActiveSupport::Concern
 
   included do
+    # @type self: singleton(ActionController::Base)
     before_action :require_authentication
     helper_method :authenticated?
   end
 
   class_methods do
+    # @type method allow_unauthenticated_access: (**untyped options) -> untyped
     def allow_unauthenticated_access(**options)
+      # @type self: singleton(ActionController::Base)
       skip_before_action :require_authentication, **options
     end
   end
@@ -46,7 +49,7 @@ module Authentication
     end
 
     def terminate_session
-      Current.session.destroy
+      Current.session&.destroy
       cookies.delete(:session_id)
     end
 end

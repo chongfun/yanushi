@@ -1,0 +1,16 @@
+class ServiceResult < Dry::Struct
+  def self.success: (?untyped data) -> Dry::Monads::Result::Success
+
+  def self.failure: (error: untyped, code: Symbol, ?data: untyped) -> Dry::Monads::Result::Failure
+
+  # Inherited from Dry::Struct via extend Dry::Monads[:result]
+  def self.Success: (untyped value) -> Dry::Monads::Result::Success
+
+  def self.Failure: (untyped value) -> Dry::Monads::Result::Failure
+
+  def data: () -> untyped
+
+  def error: () -> String?
+
+  def code: () -> Symbol?
+end

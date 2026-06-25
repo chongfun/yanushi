@@ -1,0 +1,11 @@
+class ApplicationController < ActionController::Base
+  include Authentication
+
+  def self.allow_unauthenticated_access: (**untyped options) -> untyped
+
+  def self.rate_limit: (**untyped options) -> untyped
+
+  private
+
+  def authenticated_user: () -> User
+end

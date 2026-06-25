@@ -1,0 +1,42 @@
+module PaymentIngestions
+  class IndexQuery
+    class Result
+      def reviewable_ingestions: () -> PaymentIngestion::ActiveRecord_Relation
+      def confirmed_ingestions: () -> PaymentIngestion::ActiveRecord_Relation
+      def processing_documents: () -> PaymentDocument::ActiveRecord_Relation
+      def failed_documents: () -> PaymentDocument::ActiveRecord_Relation
+      def page: () -> Integer
+      def per_page: () -> Integer
+      def total_pages: () -> Integer
+      def total_confirmed_count: () -> Integer
+      def self.new: (
+        reviewable_ingestions: PaymentIngestion::ActiveRecord_Relation,
+        confirmed_ingestions: PaymentIngestion::ActiveRecord_Relation,
+        processing_documents: PaymentDocument::ActiveRecord_Relation,
+        failed_documents: PaymentDocument::ActiveRecord_Relation,
+        page: Integer,
+        per_page: Integer,
+        total_pages: Integer,
+        total_confirmed_count: Integer
+      ) -> Result
+    end
+
+    def initialize: (user: User) -> void
+
+    def call: (?page: Integer | String, ?per_page: Integer) -> Result
+
+    private
+
+    attr_reader user: User
+
+    def reviewable_ingestions: () -> PaymentIngestion::ActiveRecord_Relation
+
+    def confirmed_ingestions_scope: () -> PaymentIngestion::ActiveRecord_Relation
+
+    def processing_documents: () -> PaymentDocument::ActiveRecord_Relation
+
+    def failed_documents: () -> PaymentDocument::ActiveRecord_Relation
+
+    def document_columns: () -> Array[Symbol]
+  end
+end
