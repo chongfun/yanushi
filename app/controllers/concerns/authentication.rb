@@ -8,6 +8,7 @@ module Authentication
   end
 
   class_methods do
+    # @type method allow_unauthenticated_access: (**untyped options) -> untyped
     def allow_unauthenticated_access(**options)
       # @type self: singleton(ActionController::Base)
       skip_before_action :require_authentication, **options

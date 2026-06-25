@@ -8,7 +8,7 @@ module Leases
 
     private
 
-    def first_due_date: () -> Date
+    def first_due_date: () -> Date?
 
     def end_date: () -> Date?
   end

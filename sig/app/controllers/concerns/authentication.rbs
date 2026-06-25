@@ -6,8 +6,6 @@ module Authentication : ActionController::Base
     def allow_unauthenticated_access: (**untyped options) -> untyped
   end
 
-  def allow_unauthenticated_access: (**untyped options) -> untyped
-
   def authenticated?: () -> Session?
 
   def require_authentication: () -> untyped

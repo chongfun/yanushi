@@ -5,12 +5,6 @@ class ApplicationController < ActionController::Base
 
   def self.rate_limit: (**untyped options) -> untyped
 
-  def self.redirect_to: (untyped target, **untyped options) -> untyped
-
-  def self.new_session_path: () -> String
-
-  def self.new_password_path: () -> String
-
   private
 
   def authenticated_user: () -> User
