@@ -83,4 +83,4 @@ gem "dry-struct", "~> 1.8.1"
 gem "dry-types", "~> 1.9.1"
 gem "hexapdf", "~> 1.9"
 
-gem "tailwindcss-rails", "~> 4.4"
+gem "tailwindcss-rails", "~> 4.6"
