@@ -6,7 +6,7 @@ module Leases
 
     def total_credits(as_of: Date.current)
       if lease.tenant_payments.loaded?
-        lease.tenant_payments.select { |payment| payment.payment_date <= as_of }.sum(&:amount)
+        lease.tenant_payments.select { |payment| payment.payment_date <= as_of }.sum { |p| p.amount }
       else
         lease.tenant_payments.where("payment_date <= ?", as_of).sum(:amount)
       end
@@ -26,7 +26,7 @@ module Leases
 
     def scheduled_rent_debits(as_of:)
       if lease.scheduled_rents.loaded?
-        lease.scheduled_rents.select { |rent| (due = rent.due_date) && due <= as_of }.sum(&:amount)
+        lease.scheduled_rents.select { |rent| (due = rent.due_date) && due <= as_of }.sum { |r| r.amount }
       else
         lease.scheduled_rents.where("due_date <= ?", as_of).sum(:amount)
       end
@@ -34,7 +34,7 @@ module Leases
 
     def tenant_charge_debits(as_of:)
       if lease.tenant_charges.loaded?
-        lease.tenant_charges.select { |charge| charge.charge_date <= as_of }.sum(&:amount)
+        lease.tenant_charges.select { |charge| charge.charge_date <= as_of }.sum { |c| c.amount }
       else
         lease.tenant_charges.where("charge_date <= ?", as_of).sum(:amount)
       end
