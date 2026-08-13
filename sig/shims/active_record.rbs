@@ -1,0 +1,7 @@
+module ActiveRecord
+  class Relation
+    module Methods[Model, PrimaryKey]
+      def each: () { (Model) -> void } -> void
+    end
+  end
+end
