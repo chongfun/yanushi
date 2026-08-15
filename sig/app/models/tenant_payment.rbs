@@ -1,7 +1,7 @@
 class TenantPayment
   private
 
-  def assign_user_from_lease: () -> untyped
+  def assign_user_from_tenancy: () -> untyped
 
-  def user_matches_lease_owner: () -> untyped
+  def user_matches_tenancy_owner: () -> untyped
 end

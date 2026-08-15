@@ -1,0 +1,2 @@
+module RentTermsHelper
+end

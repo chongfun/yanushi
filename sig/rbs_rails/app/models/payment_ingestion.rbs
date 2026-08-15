@@ -164,45 +164,45 @@ class ::PaymentIngestion < ::ApplicationRecord
 
     def error_message_for_database: () -> ::String?
 
-    def lease_id: () -> ::Integer?
+    def tenancy_id: () -> ::Integer?
 
-    def lease_id=: (::Integer?) -> ::Integer?
+    def tenancy_id=: (::Integer?) -> ::Integer?
 
-    def lease_id?: () -> bool
+    def tenancy_id?: () -> bool
 
-    def lease_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def tenancy_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def lease_id_change: () -> [ ::Integer?, ::Integer? ]
+    def tenancy_id_change: () -> [ ::Integer?, ::Integer? ]
 
-    def lease_id_will_change!: () -> void
+    def tenancy_id_will_change!: () -> void
 
-    def lease_id_was: () -> ::Integer?
+    def tenancy_id_was: () -> ::Integer?
 
-    def lease_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def tenancy_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def lease_id_previous_change: () -> ::Array[::Integer?]?
+    def tenancy_id_previous_change: () -> ::Array[::Integer?]?
 
-    def lease_id_previously_was: () -> ::Integer?
+    def tenancy_id_previously_was: () -> ::Integer?
 
-    def lease_id_before_last_save: () -> ::Integer?
+    def tenancy_id_before_last_save: () -> ::Integer?
 
-    def lease_id_change_to_be_saved: () -> ::Array[::Integer?]?
+    def tenancy_id_change_to_be_saved: () -> ::Array[::Integer?]?
 
-    def lease_id_in_database: () -> ::Integer?
+    def tenancy_id_in_database: () -> ::Integer?
 
-    def saved_change_to_lease_id: () -> ::Array[::Integer?]?
+    def saved_change_to_tenancy_id: () -> ::Array[::Integer?]?
 
-    def saved_change_to_lease_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def saved_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def will_save_change_to_lease_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def will_save_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def restore_lease_id!: () -> void
+    def restore_tenancy_id!: () -> void
 
-    def clear_lease_id_change: () -> void
+    def clear_tenancy_id_change: () -> void
 
-    def lease_id_before_type_cast: () -> ::Integer?
+    def tenancy_id_before_type_cast: () -> ::Integer?
 
-    def lease_id_for_database: () -> ::Integer?
+    def tenancy_id_for_database: () -> ::Integer?
 
     def payer_name: () -> ::String?
 
@@ -564,45 +564,45 @@ class ::PaymentIngestion < ::ApplicationRecord
 
     def status_for_database: () -> ::String
 
-    def tenant_id: () -> ::Integer?
+    def party_id: () -> ::Integer?
 
-    def tenant_id=: (::Integer?) -> ::Integer?
+    def party_id=: (::Integer?) -> ::Integer?
 
-    def tenant_id?: () -> bool
+    def party_id?: () -> bool
 
-    def tenant_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def party_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def tenant_id_change: () -> [ ::Integer?, ::Integer? ]
+    def party_id_change: () -> [ ::Integer?, ::Integer? ]
 
-    def tenant_id_will_change!: () -> void
+    def party_id_will_change!: () -> void
 
-    def tenant_id_was: () -> ::Integer?
+    def party_id_was: () -> ::Integer?
 
-    def tenant_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def party_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def tenant_id_previous_change: () -> ::Array[::Integer?]?
+    def party_id_previous_change: () -> ::Array[::Integer?]?
 
-    def tenant_id_previously_was: () -> ::Integer?
+    def party_id_previously_was: () -> ::Integer?
 
-    def tenant_id_before_last_save: () -> ::Integer?
+    def party_id_before_last_save: () -> ::Integer?
 
-    def tenant_id_change_to_be_saved: () -> ::Array[::Integer?]?
+    def party_id_change_to_be_saved: () -> ::Array[::Integer?]?
 
-    def tenant_id_in_database: () -> ::Integer?
+    def party_id_in_database: () -> ::Integer?
 
-    def saved_change_to_tenant_id: () -> ::Array[::Integer?]?
+    def saved_change_to_party_id: () -> ::Array[::Integer?]?
 
-    def saved_change_to_tenant_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def saved_change_to_party_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def will_save_change_to_tenant_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def will_save_change_to_party_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def restore_tenant_id!: () -> void
+    def restore_party_id!: () -> void
 
-    def clear_tenant_id_change: () -> void
+    def clear_party_id_change: () -> void
 
-    def tenant_id_before_type_cast: () -> ::Integer?
+    def party_id_before_type_cast: () -> ::Integer?
 
-    def tenant_id_for_database: () -> ::Integer?
+    def party_id_for_database: () -> ::Integer?
 
     def tenant_payment_id: () -> ::Integer?
 
@@ -816,18 +816,18 @@ class ::PaymentIngestion < ::ApplicationRecord
   def build_user: (?untyped) -> ::User
   def create_user: (?untyped) -> ::User
   def create_user!: (?untyped) -> ::User
-  def tenant: () -> ::Tenant?
-  def tenant=: (::Tenant?) -> ::Tenant?
-  def reload_tenant: () -> ::Tenant?
-  def build_tenant: (?untyped) -> ::Tenant
-  def create_tenant: (?untyped) -> ::Tenant
-  def create_tenant!: (?untyped) -> ::Tenant
-  def lease: () -> ::Lease?
-  def lease=: (::Lease?) -> ::Lease?
-  def reload_lease: () -> ::Lease?
-  def build_lease: (?untyped) -> ::Lease
-  def create_lease: (?untyped) -> ::Lease
-  def create_lease!: (?untyped) -> ::Lease
+  def party: () -> ::Party?
+  def party=: (::Party?) -> ::Party?
+  def reload_party: () -> ::Party?
+  def build_party: (?untyped) -> ::Party
+  def create_party: (?untyped) -> ::Party
+  def create_party!: (?untyped) -> ::Party
+  def tenancy: () -> ::Tenancy?
+  def tenancy=: (::Tenancy?) -> ::Tenancy?
+  def reload_tenancy: () -> ::Tenancy?
+  def build_tenancy: (?untyped) -> ::Tenancy
+  def create_tenancy: (?untyped) -> ::Tenancy
+  def create_tenancy!: (?untyped) -> ::Tenancy
   def tenant_payment: () -> ::TenantPayment?
   def tenant_payment=: (::TenantPayment?) -> ::TenantPayment?
   def reload_tenant_payment: () -> ::TenantPayment?
@@ -933,9 +933,9 @@ class ::ApplicationRecord < ::ActiveRecord::Base
 end
 class ::User < ::ApplicationRecord
 end
-class ::Tenant < ::ApplicationRecord
+class ::Party < ::ApplicationRecord
 end
-class ::Lease < ::ApplicationRecord
+class ::Tenancy < ::ApplicationRecord
 end
 class ::TenantPayment < ::ApplicationRecord
 end

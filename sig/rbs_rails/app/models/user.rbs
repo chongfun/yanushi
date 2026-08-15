@@ -293,14 +293,18 @@ class ::User < ::ApplicationRecord
   def sessions=: (::Session::ActiveRecord_Associations_CollectionProxy | ::Array[::Session]) -> (::Session::ActiveRecord_Associations_CollectionProxy | ::Array[::Session])
   def session_ids: () -> ::Array[::Integer]
   def session_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def rental_properties: () -> ::RentalProperty::ActiveRecord_Associations_CollectionProxy
-  def rental_properties=: (::RentalProperty::ActiveRecord_Associations_CollectionProxy | ::Array[::RentalProperty]) -> (::RentalProperty::ActiveRecord_Associations_CollectionProxy | ::Array[::RentalProperty])
-  def rental_property_ids: () -> ::Array[::Integer]
-  def rental_property_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def leases: () -> ::Lease::ActiveRecord_Associations_CollectionProxy
-  def leases=: (::Lease::ActiveRecord_Associations_CollectionProxy | ::Array[::Lease]) -> (::Lease::ActiveRecord_Associations_CollectionProxy | ::Array[::Lease])
-  def lease_ids: () -> ::Array[::Integer]
-  def lease_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def properties: () -> ::Property::ActiveRecord_Associations_CollectionProxy
+  def properties=: (::Property::ActiveRecord_Associations_CollectionProxy | ::Array[::Property]) -> (::Property::ActiveRecord_Associations_CollectionProxy | ::Array[::Property])
+  def property_ids: () -> ::Array[::Integer]
+  def property_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def rentable_units: () -> ::RentableUnit::ActiveRecord_Associations_CollectionProxy
+  def rentable_units=: (::RentableUnit::ActiveRecord_Associations_CollectionProxy | ::Array[::RentableUnit]) -> (::RentableUnit::ActiveRecord_Associations_CollectionProxy | ::Array[::RentableUnit])
+  def rentable_unit_ids: () -> ::Array[::Integer]
+  def rentable_unit_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def tenancies: () -> ::Tenancy::ActiveRecord_Associations_CollectionProxy
+  def tenancies=: (::Tenancy::ActiveRecord_Associations_CollectionProxy | ::Array[::Tenancy]) -> (::Tenancy::ActiveRecord_Associations_CollectionProxy | ::Array[::Tenancy])
+  def tenancy_ids: () -> ::Array[::Integer]
+  def tenancy_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def expenses: () -> ::Expense::ActiveRecord_Associations_CollectionProxy
   def expenses=: (::Expense::ActiveRecord_Associations_CollectionProxy | ::Array[::Expense]) -> (::Expense::ActiveRecord_Associations_CollectionProxy | ::Array[::Expense])
   def expense_ids: () -> ::Array[::Integer]
@@ -317,10 +321,10 @@ class ::User < ::ApplicationRecord
   def tenant_charges=: (::TenantCharge::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantCharge]) -> (::TenantCharge::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantCharge])
   def tenant_charge_ids: () -> ::Array[::Integer]
   def tenant_charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def tenants: () -> ::Tenant::ActiveRecord_Associations_CollectionProxy
-  def tenants=: (::Tenant::ActiveRecord_Associations_CollectionProxy | ::Array[::Tenant]) -> (::Tenant::ActiveRecord_Associations_CollectionProxy | ::Array[::Tenant])
-  def tenant_ids: () -> ::Array[::Integer]
-  def tenant_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def parties: () -> ::Party::ActiveRecord_Associations_CollectionProxy
+  def parties=: (::Party::ActiveRecord_Associations_CollectionProxy | ::Array[::Party]) -> (::Party::ActiveRecord_Associations_CollectionProxy | ::Array[::Party])
+  def party_ids: () -> ::Array[::Integer]
+  def party_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def payment_ingestions: () -> ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy
   def payment_ingestions=: (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion]) -> (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion])
   def payment_ingestion_ids: () -> ::Array[::Integer]
@@ -382,13 +386,17 @@ class ::Session < ::ApplicationRecord
 end
 class ::Session::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::RentalProperty < ::ApplicationRecord
+class ::Property < ::ApplicationRecord
 end
-class ::RentalProperty::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::Property::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::Lease < ::ApplicationRecord
+class ::RentableUnit < ::ApplicationRecord
 end
-class ::Lease::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::RentableUnit::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::Tenancy < ::ApplicationRecord
+end
+class ::Tenancy::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Expense < ::ApplicationRecord
 end
@@ -406,9 +414,9 @@ class ::TenantCharge < ::ApplicationRecord
 end
 class ::TenantCharge::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::Tenant < ::ApplicationRecord
+class ::Party < ::ApplicationRecord
 end
-class ::Tenant::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::Party::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::PaymentIngestion < ::ApplicationRecord
 end

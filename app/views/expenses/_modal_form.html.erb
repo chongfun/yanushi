@@ -1,14 +1,14 @@
-<%# Modal form for creating an expense against a specific rental property %>
-<% rental_property ||= expense.rental_property %>
+<%# Modal form for creating an expense against a specific property %>
+<% property ||= expense.property %>
 
 <div class="mb-4 p-3 bg-base-200 rounded-box text-sm">
   <div class="flex justify-between">
     <span class="text-base-content/70">Property</span>
-    <span class="font-semibold"><%= rental_property.address %></span>
+    <span class="font-semibold"><%= property.address %></span>
   </div>
 </div>
 
-<%= form_with(model: [rental_property, expense], data: { turbo: true }) do |form| %>
+<%= form_with(model: [property, expense], data: { turbo: true }) do |form| %>
   <% if expense.errors.any? %>
     <div class="alert alert-error mb-4">
       <ul>
@@ -49,10 +49,10 @@
   </div>
 
   <div class="form-control w-full mb-4">
-    <%= form.label :reimburse_lease_id, "Lease to Charge", class: "label font-semibold" %>
-    <%= form.select :reimburse_lease_id, 
-          rental_property.leases.map { |l| ["Lease ##{l.id} (#{l.tenants.pluck(:name).join(', ')})", l.id] }, 
-          { include_blank: "Select active lease..." }, 
+    <%= form.label :reimburse_tenancy_id, "Tenancy to Charge", class: "label font-semibold" %>
+    <%= form.select :reimburse_tenancy_id, 
+          property.tenancies.map { |t| ["Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] }, 
+          { include_blank: "Select active tenancy..." }, 
           { class: "select select-bordered w-full" } %>
   </div>
 

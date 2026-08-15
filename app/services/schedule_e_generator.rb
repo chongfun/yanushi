@@ -181,10 +181,20 @@ class ScheduleEGenerator
 
   def fill_property_info(form)
     set_field(form, :property_address, @property.address)
-    type_code = RentalProperty.property_types[@property.property_type] || 8
+    type_code = schedule_e_type_code(@property.asset_type)
     set_field(form, :property_type, type_code.to_s)
     set_field(form, :fair_rental_days, "365")
     set_field(form, :personal_use_days, "0")
+  end
+
+  def schedule_e_type_code(asset_type)
+    case asset_type.to_s
+    when "single_family" then 1
+    when "multifamily" then 2
+    when "commercial" then 4
+    when "land" then 5
+    else 8
+    end
   end
 
   def fill_income(form)

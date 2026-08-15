@@ -144,8 +144,8 @@
                   <%= ingestion.payment_date.present? ? ingestion.payment_date.strftime("%b %d, %Y") : "—" %>
                 </td>
                 <td>
-                  <% if ingestion.tenant %>
-                    <span class="text-sm font-semibold"><%= ingestion.tenant.name %></span>
+                  <% if ingestion.party %>
+                    <span class="text-sm font-semibold"><%= ingestion.party.display_name %></span>
                   <% else %>
                     <span class="text-xs text-base-content/40 italic">Not matched</span>
                   <% end %>
@@ -218,7 +218,7 @@
                   <%= ingestion.payment_date.strftime("%b %d, %Y") %>
                 </td>
                 <td class="font-medium text-xs">
-                  <%= ingestion.tenant&.name %>
+                  <%= ingestion.party&.display_name %>
                 </td>
                 <td class="text-xs capitalize">
                   <%= ingestion.payment_method %>

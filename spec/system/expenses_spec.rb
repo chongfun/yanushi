@@ -1,11 +1,10 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Expenses", type: :system do
   let!(:user) { create(:user) }
-  let!(:property) { create(:rental_property, user: user, address: "999 Expense Ave") }
+  let!(:property) { create(:property, user: user, address: "999 Expense Ave") }
 
   before do
-    # Log in
     visit new_session_path
     fill_in "email", with: user.email
     fill_in "password", with: "password"
@@ -17,7 +16,7 @@ RSpec.describe "Expenses", type: :system do
 
     click_on "New expense"
 
-    select property.address, from: "Rental property"
+    select property.address, from: "Property"
     select "Repairs", from: "Category"
     fill_in "Expense date", with: Date.today.to_s
     fill_in "Amount", with: "450.00"

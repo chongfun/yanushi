@@ -1,0 +1,5 @@
+class Party < ApplicationRecord
+  PARTY_TYPES: Array[String]
+
+  def alias_candidate?: (String? alias_name) -> bool
+end

@@ -1,0 +1,2 @@
+module RentableUnitsHelper
+end

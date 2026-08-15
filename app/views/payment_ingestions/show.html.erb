@@ -121,16 +121,16 @@
         <h3 class="card-title text-xl font-bold text-base-content">Extracted & Match Details</h3>
 
         <% unless @ingestion.confirmed? %>
-          <%= form_with(model: @ingestion, local: true, class: "space-y-4", data: { controller: "payment-ingestion-form", payment_ingestion_form_tenant_leases_value: @tenant_leases_map.to_json, payment_ingestion_form_lease_tenants_value: @lease_tenants_map.to_json }) do |f| %>
+          <%= form_with(model: @ingestion, local: true, class: "space-y-4", data: { controller: "payment-ingestion-form", payment_ingestion_form_party_tenancies_value: @party_tenancies_map.to_json, payment_ingestion_form_tenancy_parties_value: @tenancy_parties_map.to_json }) do |f| %>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">Tenant</span></label>
-                <%= f.select :tenant_id, @tenants.map { |t| [t.name, t.id] }, { include_blank: "Select Tenant" }, class: "select select-bordered w-full", data: { payment_ingestion_form_target: "tenantSelect", action: "change->payment-ingestion-form#tenantChanged" } %>
+                <label class="label"><span class="label-text font-semibold">Party / Tenant</span></label>
+                <%= f.select :party_id, @parties.map { |p| [p.display_name, p.id] }, { include_blank: "Select Party" }, class: "select select-bordered w-full", data: { payment_ingestion_form_target: "partySelect", action: "change->payment-ingestion-form#partyChanged" } %>
               </div>
 
               <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">Lease</span></label>
-                <%= f.select :lease_id, @leases.map { |l| [ "#{l.rental_property.address} - #{l.lease_type.titleize} (Commenced #{l.commencement_date.strftime('%b %Y')})", l.id ] }, { include_blank: "Select Lease" }, class: "select select-bordered w-full", data: { payment_ingestion_form_target: "leaseSelect", action: "change->payment-ingestion-form#leaseChanged" } %>
+                <label class="label"><span class="label-text font-semibold">Tenancy</span></label>
+                <%= f.select :tenancy_id, @tenancies.map { |t| [ "#{t.property.address} - #{t.agreement_type.titleize} (Commenced #{t.commencement_date.strftime('%b %Y')})", t.id ] }, { include_blank: "Select Tenancy" }, class: "select select-bordered w-full", data: { payment_ingestion_form_target: "tenancySelect", action: "change->payment-ingestion-form#tenancyChanged" } %>
               </div>
             </div>
 
@@ -207,8 +207,8 @@
               <div class="bg-base-200 border border-base-300 rounded-lg p-4 text-center">
                 <p class="text-sm text-base-content/60 mb-2">To confirm this payment, please correct the form above to ensure all fields are complete.</p>
                 <div class="flex flex-wrap justify-center gap-2 text-xs">
-                  <span class="badge <%= @ingestion.tenant_id ? 'badge-success' : 'badge-neutral/30' %>">Tenant</span>
-                  <span class="badge <%= @ingestion.lease_id ? 'badge-success' : 'badge-neutral/30' %>">Lease</span>
+                  <span class="badge <%= @ingestion.party_id ? 'badge-success' : 'badge-neutral/30' %>">Tenant</span>
+                  <span class="badge <%= @ingestion.tenancy_id ? 'badge-success' : 'badge-neutral/30' %>">Tenancy</span>
                   <span class="badge <%= @ingestion.amount ? 'badge-success' : 'badge-neutral/30' %>">Amount</span>
                   <span class="badge <%= @ingestion.payment_date ? 'badge-success' : 'badge-neutral/30' %>">Date</span>
                   <span class="badge <%= !@ingestion.duplicate_exists? ? 'badge-success' : 'badge-error' %>">Not Duplicate</span>
@@ -223,12 +223,12 @@
           <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4 text-sm border-t border-base-200 pt-4">
               <div>
-                <span class="text-base-content/50 block">Tenant</span>
-                <span class="font-bold text-base-content"><%= @ingestion.tenant&.name %></span>
+                <span class="text-base-content/50 block">Tenant / Party</span>
+                <span class="font-bold text-base-content"><%= @ingestion.party&.display_name %></span>
               </div>
               <div>
-                <span class="text-base-content/50 block">Property / Lease</span>
-                <span class="font-bold text-base-content"><%= @ingestion.lease&.rental_property&.address %></span>
+                <span class="text-base-content/50 block">Property / Tenancy</span>
+                <span class="font-bold text-base-content"><%= @ingestion.tenancy&.property&.address %></span>
               </div>
               <div>
                 <span class="text-base-content/50 block">Payment Date</span>

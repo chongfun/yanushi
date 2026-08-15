@@ -1,0 +1,11 @@
+module Properties
+  class ActiveYearsQuery
+    def initialize: (property: Property) -> void
+    def call: (?additional_years: Array[untyped]) -> Array[Integer]
+
+    private
+
+    attr_reader property: Property
+    def years_for: (Symbol association_name, Symbol date_attribute) -> Array[Integer]
+  end
+end

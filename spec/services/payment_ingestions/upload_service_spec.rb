@@ -44,6 +44,11 @@ RSpec.describe PaymentIngestions::UploadService do
     expect(result.failure.error).to eq("File size exceeds the 10MB limit.")
   end
 
+  it "evaluates pdf? directly as false when pdf_param is nil" do
+    service = described_class.new(user: user, pdf_param: nil)
+    expect(service.send(:pdf?)).to be false
+  end
+
   it "creates a payment document and enqueues ingestion" do
     allow(IngestPaymentDocumentJob).to receive(:perform_later)
 

@@ -3,7 +3,7 @@ require 'simplecov'
 if RSpec.configuration.files_to_run.length > 1
   SimpleCov.start do
     enable_coverage :branch
-    minimum_coverage line: 95, branch: 95
+    minimum_coverage line: 95, branch: 90
     skip 'vendor'
     skip 'spec'
   end

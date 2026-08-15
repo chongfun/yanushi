@@ -1,0 +1,6 @@
+module PropertiesHelper
+  def active_tenancy_for: (Property property) -> Tenancy?
+  def active_tenancies_for: (Property property) -> Array[Tenancy]
+  def active_lease_for: (Property property) -> Tenancy?
+  def active_leases_for: (Property property) -> Array[Tenancy]
+end

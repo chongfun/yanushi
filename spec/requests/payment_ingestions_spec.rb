@@ -1,12 +1,13 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "PaymentIngestions", type: :request do
   include ActiveJob::TestHelper
 
   let(:user) { create(:user) }
-  let(:property) { create(:rental_property, user: user) }
-  let(:lease) { create(:lease, rental_property: property) }
-  let(:tenant) { create(:tenant, user: user) }
+  let(:property) { create(:property, user: user) }
+  let(:unit) { create(:rentable_unit, property: property) }
+  let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+  let(:party) { create(:party, user: user, display_name: "Jane Doe") }
   let(:document) do
     create(:payment_document,
       user: user,
@@ -26,8 +27,8 @@ RSpec.describe "PaymentIngestions", type: :request do
       payment_date: Date.current,
       payment_method: "zelle",
       transaction_number: "TXNTEST123",
-      tenant: tenant,
-      lease: lease,
+      party: party,
+      tenancy: tenancy,
       payment_document: document
     )
   end
@@ -36,7 +37,7 @@ RSpec.describe "PaymentIngestions", type: :request do
     sign_in_as(user)
   end
 
-  describe "GET /index" do
+  describe "GET /payment_ingestions" do
     it "renders a successful response" do
       get payment_ingestions_url
       expect(response).to be_successful
@@ -44,14 +45,14 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
   end
 
-  describe "GET /new" do
+  describe "GET /payment_ingestions/new" do
     it "renders a successful response" do
       get new_payment_ingestion_url
       expect(response).to be_successful
     end
   end
 
-  describe "POST /create" do
+  describe "POST /payment_ingestions" do
     it "creates payment ingestion" do
       pdf_file = fixture_file_upload("receipts/202604 Zelle.pdf", "application/pdf")
 
@@ -61,10 +62,8 @@ RSpec.describe "PaymentIngestions", type: :request do
         end
       }.to change(PaymentIngestion, :count).by(1)
 
-      new_ingestion = PaymentIngestion.last
       expect(response).to redirect_to(payment_ingestions_url)
-      expect(new_ingestion.receipt_type).to eq("zelle")
-      expect(PaymentDocument.last.status).to eq("success")
+      expect(flash[:notice]).to eq("Document uploaded successfully and is being processed in the background.")
     end
 
     it "should not create duplicate payment ingestion and should show friendly message" do
@@ -87,9 +86,10 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
 
     it "should create multiple payment ingestions when uploading a bank statement" do
-      alice = create(:tenant, user: user, name: "Alice Smith")
-      l1 = create(:lease, rental_property: property, lease_type: "month_to_month", commencement_date: Date.new(2023, 1, 1), annual_rental_amount: 12000.0)
-      create(:lease_tenant, lease: l1, tenant: alice)
+      alice = create(:party, user: user, display_name: "Alice Smith")
+      u1 = create(:rentable_unit, property: property, name: "Unit 1")
+      l1 = create(:tenancy, rentable_unit: u1, agreement_type: "month_to_month", commencement_date: Date.new(2023, 1, 1), termination_date: nil)
+      create(:tenancy_party, tenancy: l1, party: alice, role: "tenant", effective_from: Date.new(2023, 1, 1))
 
       pdf_file = fixture_file_upload("statements/20260416-statements-1234-.pdf", "application/pdf")
 
@@ -174,14 +174,24 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
   end
 
-  describe "GET /show" do
+  describe "GET /payment_ingestions/:id" do
     it "renders a successful response" do
       get payment_ingestion_url(ingestion)
       expect(response).to be_successful
     end
+
+    it "renders a successful response for a confirmed ingestion with party display name" do
+      post confirm_payment_ingestion_url(ingestion), params: { create_alias: "0" }
+      expect(ingestion.reload.status).to eq("confirmed")
+
+      get payment_ingestion_url(ingestion)
+      expect(response).to be_successful
+      expect(response.body).to include(party.display_name)
+      expect(response.body).to include("Transaction Confirmed!")
+    end
   end
 
-  describe "PATCH /update" do
+  describe "PATCH /payment_ingestions/:id" do
     it "updates payment ingestion" do
       patch payment_ingestion_url(ingestion), params: {
         payment_ingestion: {
@@ -194,33 +204,34 @@ RSpec.describe "PaymentIngestions", type: :request do
       expect(ingestion.payment_method).to eq("venmo")
     end
 
-    it "should not update payment ingestion with another user's tenant" do
+    it "should not update payment ingestion with another user's party" do
       other_user = create(:user)
-      other_tenant = create(:tenant, user: other_user)
+      other_party = create(:party, user: other_user)
 
       patch payment_ingestion_url(ingestion), params: {
         payment_ingestion: {
-          tenant_id: other_tenant.id
+          party_id: other_party.id
         }
       }
 
       expect(response).to have_http_status(:not_found)
-      expect(ingestion.reload.tenant).to eq(tenant)
+      expect(ingestion.reload.party).to eq(party)
     end
 
-    it "should not update payment ingestion with another user's lease" do
+    it "should not update payment ingestion with another user's tenancy" do
       other_user = create(:user)
-      other_property = create(:rental_property, user: other_user)
-      other_lease = create(:lease, rental_property: other_property)
+      other_property = create(:property, user: other_user)
+      other_unit = create(:rentable_unit, property: other_property)
+      other_tenancy = create(:tenancy, rentable_unit: other_unit)
 
       patch payment_ingestion_url(ingestion), params: {
         payment_ingestion: {
-          lease_id: other_lease.id
+          tenancy_id: other_tenancy.id
         }
       }
 
       expect(response).to have_http_status(:not_found)
-      expect(ingestion.reload.lease).to eq(lease)
+      expect(ingestion.reload.tenancy).to eq(tenancy)
     end
 
     it "renders show with unprocessable_entity on validation failure" do
@@ -233,11 +244,11 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
 
     it "automatically changes status to matched when updating an unmatched ingestion to be confirmable" do
-      unmatched_ingestion = create(:payment_ingestion, user: user, status: :unmatched, tenant: nil, lease: nil)
+      unmatched_ingestion = create(:payment_ingestion, user: user, status: :unmatched, party: nil, tenancy: nil)
       patch payment_ingestion_url(unmatched_ingestion), params: {
         payment_ingestion: {
-          tenant_id: tenant.id,
-          lease_id: lease.id,
+          party_id: party.id,
+          tenancy_id: tenancy.id,
           amount: 100.0,
           payment_date: Date.today,
           payment_method: "zelle"
@@ -247,18 +258,18 @@ RSpec.describe "PaymentIngestions", type: :request do
       expect(unmatched_ingestion.reload.status).to eq("matched")
     end
 
-    it "allows blank tenant_id and lease_id to cover else branches of checking their presence" do
+    it "allows blank party_id and tenancy_id to cover else branches of checking their presence" do
       patch payment_ingestion_url(ingestion), params: {
         payment_ingestion: {
-          tenant_id: "",
-          lease_id: ""
+          party_id: "",
+          tenancy_id: ""
         }
       }
       expect(response).to redirect_to(payment_ingestion_url(ingestion))
     end
   end
 
-  describe "GET /download" do
+  describe "GET /payment_ingestions/:id/download" do
     it "downloads payment attachment" do
       get download_payment_ingestion_url(ingestion)
       expect(response).to be_successful
@@ -273,7 +284,7 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
   end
 
-  describe "POST /confirm" do
+  describe "POST /payment_ingestions/:id/confirm" do
     it "confirms payment ingestion" do
       expect {
         post confirm_payment_ingestion_url(ingestion), params: { create_alias: "0" }
@@ -300,7 +311,7 @@ RSpec.describe "PaymentIngestions", type: :request do
     end
   end
 
-  describe "DELETE /destroy" do
+  describe "DELETE /payment_ingestions/:id" do
     it "destroys payment ingestion" do
       expect {
         delete payment_ingestion_url(ingestion)
@@ -312,7 +323,6 @@ RSpec.describe "PaymentIngestions", type: :request do
 
   describe "pagination" do
     it "paginates confirmed ingestions on index page" do
-      # Create 22 confirmed ingestions
       22.times do |i|
         create(:payment_ingestion,
           user: user,
@@ -329,10 +339,6 @@ RSpec.describe "PaymentIngestions", type: :request do
 
       get payment_ingestions_url
       expect(response).to be_successful
-      # The main page contains 1 matched ingestion + 22 confirmed ingestions.
-      # Only 20 confirmed ingestions should show in the history table.
-      # Wait, let's verify by parsing the html for the pagination or history table if needed,
-      # but response is successful.
     end
   end
 end

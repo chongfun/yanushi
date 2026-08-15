@@ -1,11 +1,14 @@
-class Expense
+class Expense < ApplicationRecord
   def reimbursed?: () -> bool
 
   def raw_reimburse_amount: () -> (String | BigDecimal | nil)
 
   def tenant_reimbursable: () -> bool?
 
+  def reimburse_tenancy_id: () -> (Integer | String)?
+  def reimburse_tenancy_id=: (untyped val) -> void
   def reimburse_lease_id: () -> (Integer | String)?
+  def reimburse_lease_id=: (untyped val) -> void
 
   def reimburse_amount: () -> (BigDecimal | String)
 end

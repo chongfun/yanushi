@@ -1,0 +1,7 @@
+class Property < ApplicationRecord
+  ASSET_TYPES: Array[String]
+
+  def financial_items: (*untyped, ?year: Integer?) -> Array[untyped]
+  def active_years: (?Array[untyped]) -> Array[Integer]
+  def schedule_e_summary: (*untyped, ?year: Integer?) -> Properties::ScheduleESummaryQuery::Result
+end

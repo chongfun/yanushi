@@ -1,0 +1,4 @@
+class RentableUnit < ApplicationRecord
+  def display_name: () -> String
+  def occupied?: (?Date as_of) -> bool
+end

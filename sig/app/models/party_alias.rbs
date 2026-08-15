@@ -1,0 +1,2 @@
+class PartyAlias < ApplicationRecord
+end

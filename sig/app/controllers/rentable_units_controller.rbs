@@ -1,0 +1,16 @@
+class RentableUnitsController < ApplicationController
+  @property: Property
+  @rentable_unit: RentableUnit
+
+  def new: () -> void
+  def edit: () -> void
+  def create: () -> void
+  def update: () -> void
+  def destroy: () -> void
+
+  private
+
+  def set_property: () -> Property
+  def set_rentable_unit: () -> RentableUnit
+  def rentable_unit_params: () -> ActionController::Parameters
+end

@@ -1,0 +1,34 @@
+<% content_for :title, "Tenancies" %>
+
+<% content_for :breadcrumbs do %>
+  <li>Tenancies</li>
+<% end %>
+
+<div class="flex justify-between items-center mb-6">
+  <div>
+    <h1 class="text-3xl font-bold">Tenancies</h1>
+    <p class="text-sm text-base-content/60">Manage occupancy agreements, participants, and effective rent terms</p>
+  </div>
+  <%= link_to "New Tenancy", new_tenancy_path, class: "btn btn-primary" %>
+</div>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Property / Unit</th>
+        <th>Agreement</th>
+        <th>Period</th>
+        <th>Tenants</th>
+        <th>Current Rent</th>
+        <th>Balance</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tenancies">
+      <% @tenancies.each do |tenancy| %>
+        <%= render tenancy %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

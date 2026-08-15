@@ -1,63 +1,55 @@
 class ExpensesController < ApplicationController
-  before_action :set_expense, only: %i[ show edit update destroy ]
-  before_action :set_rental_property, only: %i[ new create ]
-  before_action :set_form_data, only: %i[ new edit create update ]
+  before_action :set_expense, only: %i[show edit update destroy]
+  before_action :set_property, only: %i[new create]
+  before_action :set_form_data, only: %i[new edit create update]
 
   def index
     @expenses = authenticated_user.expenses
   end
 
-
   def show
   end
 
-
   def new
     @expense = Expense.new
-    @expense.rental_property = @rental_property if @rental_property
+    @expense.property = @property if @property
     @expense.expense_date = Date.current
   end
-
 
   def edit
   end
 
-
   def create
     permitted_params = expense_params
-    property_id = permitted_params[:rental_property_id]
-    if property_id.present?
-      authenticated_user.rental_properties.find(property_id)
-    end
+    property_id = permitted_params[:property_id]
+    authenticated_user.properties.find(property_id) if property_id.present?
 
-    lease_id = permitted_params[:reimburse_lease_id]
-    if lease_id.present?
-      authenticated_user.leases.find(lease_id)
-    end
+    tenancy_id = permitted_params[:reimburse_tenancy_id]
+    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
 
     @expense = Expense.new(permitted_params)
-    @expense.rental_property = @rental_property if @rental_property
+    @expense.property = @property if @property
 
     respond_to do |format|
       result = Expenses::SaveService.call(expense: @expense)
       if result.success?
-        if rental_property = @rental_property
+        if property = @property
           # Submitted from modal
           year = @expense.expense_date&.year || Date.current.year
-          @financial_items = rental_property.financial_items(year)
+          @financial_items = property.financial_items(year)
           @year = year
 
           format.turbo_stream {
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
-              turbo_stream.update("property_financials", partial: "rental_properties/financials",
-                locals: { rental_property: rental_property, financial_items: @financial_items, year: @year }),
-              turbo_stream.update("active_lease_balances", partial: "rental_properties/lease_balances",
-                locals: { rental_property: rental_property }),
+              turbo_stream.update("property_financials", partial: "properties/financials",
+                                  locals: { property: property, financial_items: @financial_items, year: @year }),
+              turbo_stream.update("active_lease_balances", partial: "properties/lease_balances",
+                                  locals: { property: property }),
               turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
             ]
           }
-          format.html { redirect_to rental_property, notice: "Expense was successfully created." }
+          format.html { redirect_to property, notice: "Expense was successfully created." }
         else
           format.html { redirect_to @expense, notice: "Expense was successfully created." }
         end
@@ -67,25 +59,20 @@ class ExpensesController < ApplicationController
         format.json { render json: @expense.errors, status: :unprocessable_content }
         format.turbo_stream {
           render turbo_stream: turbo_stream.update("modal-frame",
-            partial: "expenses/modal_form",
-            locals: { expense: @expense, rental_property: @rental_property })
+                                                   partial: "expenses/modal_form",
+                                                   locals: { expense: @expense, property: @property })
         }
       end
     end
   end
 
-
   def update
     permitted_params = expense_params
-    property_id = permitted_params[:rental_property_id]
-    if property_id.present?
-      authenticated_user.rental_properties.find(property_id)
-    end
+    property_id = permitted_params[:property_id]
+    authenticated_user.properties.find(property_id) if property_id.present?
 
-    lease_id = permitted_params[:reimburse_lease_id]
-    if lease_id.present?
-      authenticated_user.leases.find(lease_id)
-    end
+    tenancy_id = permitted_params[:reimburse_tenancy_id]
+    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
 
     @expense.assign_attributes(permitted_params)
 
@@ -101,7 +88,6 @@ class ExpensesController < ApplicationController
     end
   end
 
-
   def destroy
     @expense.destroy!
 
@@ -112,23 +98,26 @@ class ExpensesController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
+
     def set_expense
       @expense = authenticated_user.expenses.find(params.expect(:id))
     end
 
-    def set_rental_property
-      @rental_property = authenticated_user.rental_properties.find(params[:rental_property_id]) if params[:rental_property_id].present?
+    def set_property
+      prop_id = params[:property_id] || params[:rental_property_id]
+      @property = authenticated_user.properties.find(prop_id) if prop_id.present?
     end
 
     def set_form_data
       user = authenticated_user
-      @rental_properties = user.rental_properties.order(:address)
-      @leases = user.leases.includes(:rental_property, :tenants)
+      @properties = user.properties.order(:address)
+      @tenancies = user.tenancies.includes({ rentable_unit: :property }, :parties)
     end
 
-    # Only allow a list of trusted parameters through.
     def expense_params
-      params.expect(expense: [ :rental_property_id, :category, :amount, :expense_date, :description, :tenant_reimbursable, :reimburse_lease_id, :reimburse_amount ])
+      params.require(:expense).permit(
+        :property_id, :category, :amount, :expense_date, :description,
+        :tenant_reimbursable, :reimburse_tenancy_id, :reimburse_amount
+      )
     end
 end

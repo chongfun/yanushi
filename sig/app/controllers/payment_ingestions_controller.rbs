@@ -8,10 +8,10 @@ class PaymentIngestionsController < ApplicationController
   @processing_documents: Array[PaymentDocument] | PaymentDocument::ActiveRecord_Relation | untyped
   @failed_documents: Array[PaymentDocument] | PaymentDocument::ActiveRecord_Relation | untyped
   @ingestion: PaymentIngestion
-  @tenants: Array[Tenant] | Tenant::ActiveRecord_Relation | untyped
-  @leases: Array[Lease] | Lease::ActiveRecord_Relation | untyped
-  @tenant_leases_map: Hash[Integer, Array[Integer]]
-  @lease_tenants_map: Hash[Integer, Array[Integer]]
+  @parties: Array[Party] | Party::ActiveRecord_Relation | untyped
+  @tenancies: Array[Tenancy] | Tenancy::ActiveRecord_Relation | untyped
+  @party_tenancies_map: Hash[Integer, Array[Integer]]
+  @tenancy_parties_map: Hash[Integer, Array[Integer]]
 
   def index: () -> untyped
 

@@ -1,0 +1,20 @@
+<% content_for :title, "New Property" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Properties", properties_path %></li>
+  <li class="font-bold">New Property</li>
+<% end %>
+
+<div class="max-w-xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold mb-6">New Property</h2>
+
+      <%= render "form", property: @property %>
+
+      <div class="mt-6 flex justify-between">
+        <%= link_to "Back to Properties", properties_path, class: "btn btn-ghost" %>
+      </div>
+    </div>
+  </div>
+</div>

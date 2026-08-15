@@ -1,0 +1,17 @@
+class TenancyPartiesController < ApplicationController
+  @tenancy: Tenancy
+  @tenancy_party: TenancyParty
+  @parties: Party::ActiveRecord_Relation
+
+  def new: () -> void
+  def edit: () -> void
+  def create: () -> void
+  def update: () -> void
+  def destroy: () -> void
+
+  private
+
+  def set_tenancy: () -> Tenancy
+  def set_tenancy_party: () -> TenancyParty
+  def tenancy_party_params: () -> ActionController::Parameters
+end

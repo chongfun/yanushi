@@ -1,9 +1,9 @@
 module PaymentIngestions
   class TenantResolver
     class ResolveResult < Dry::Struct
-      def self.matched: (tenant: Tenant, tenants: Array[Tenant]) -> Dry::Monads::Result::Success
+      def self.matched: (party: Party, ?parties: Array[Party]) -> Dry::Monads::Result::Success
 
-      def self.ambiguous: (tenants: Array[Tenant]) -> Dry::Monads::Result::Failure
+      def self.ambiguous: (?parties: Array[Party]) -> Dry::Monads::Result::Failure
 
       def self.unmatched: () -> Dry::Monads::Result::Failure
 
@@ -11,9 +11,9 @@ module PaymentIngestions
 
       def self.Failure: (untyped value) -> Dry::Monads::Result::Failure
 
-      def tenant: () -> Tenant?
+      def party: () -> Party?
 
-      def tenants: () -> Array[Tenant]
+      def parties: () -> Array[Party]
 
       def status: () -> Symbol
     end
@@ -22,6 +22,6 @@ module PaymentIngestions
 
     private
 
-    def find_candidates: (User user, String? display_name, String? username) -> Array[Tenant]
+    def find_candidates: (User user, String? display_name, String? username) -> Array[Party]
   end
 end

@@ -1,0 +1,23 @@
+<tr id="<%= dom_id property %>">
+  <td>
+    <div class="flex items-center gap-3">
+      <div class="bg-primary/10 p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      </div>
+      <div class="font-bold"><%= property.address %></div>
+    </div>
+  </td>
+  <td><span class="badge badge-ghost"><%= property.asset_type.titleize %></span></td>
+  <td class="font-mono text-sm"><%= property.square_footage.present? ? "#{property.square_footage} sqft" : "—" %></td>
+  <td>
+    <div class="badge badge-secondary badge-sm"><%= property.rentable_units.count %> <%= "Unit".pluralize(property.rentable_units.count) %></div>
+  </td>
+  <td>
+    <div class="badge badge-neutral badge-sm"><%= property.tenancies.count %> <%= "Tenancy".pluralize(property.tenancies.count) %></div>
+  </td>
+  <th class="text-right">
+    <%= link_to "View Details", property, class: "btn btn-ghost btn-xs" %>
+  </th>
+</tr>

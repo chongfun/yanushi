@@ -1,11 +1,16 @@
 module PaymentIngestions
   class FormDataQuery
     class Result
-      def tenants: () -> (Tenant::ActiveRecord_Relation | Tenant::ActiveRecord_Associations_CollectionProxy)
-      def leases: () -> Lease::ActiveRecord_Relation
-      def tenant_leases_map: () -> Hash[Integer, Array[Integer]]
-      def lease_tenants_map: () -> Hash[Integer, Array[Integer]]
-      def self.new: (tenants: Tenant::ActiveRecord_Relation | Tenant::ActiveRecord_Associations_CollectionProxy, leases: Lease::ActiveRecord_Relation, tenant_leases_map: Hash[Integer, Array[Integer]], lease_tenants_map: Hash[Integer, Array[Integer]]) -> Result
+      def parties: () -> (Party::ActiveRecord_Relation | Party::ActiveRecord_Associations_CollectionProxy)
+      def tenancies: () -> Tenancy::ActiveRecord_Relation
+      def party_tenancies_map: () -> Hash[Integer, Array[Integer]]
+      def tenancy_parties_map: () -> Hash[Integer, Array[Integer]]
+      def self.new: (
+        parties: Party::ActiveRecord_Relation | Party::ActiveRecord_Associations_CollectionProxy,
+        tenancies: Tenancy::ActiveRecord_Relation,
+        party_tenancies_map: Hash[Integer, Array[Integer]],
+        tenancy_parties_map: Hash[Integer, Array[Integer]]
+      ) -> Result
     end
 
     def initialize: (user: User) -> void
@@ -16,10 +21,8 @@ module PaymentIngestions
 
     attr_reader user: User
 
-    def leases: () -> Lease::ActiveRecord_Relation
+    def party_tenancies_map: () -> Hash[Integer, Array[Integer]]
 
-    def tenant_leases_map: () -> Hash[Integer, Array[Integer]]
-
-    def lease_tenants_map: () -> Hash[Integer, Array[Integer]]
+    def tenancy_parties_map: () -> Hash[Integer, Array[Integer]]
   end
 end

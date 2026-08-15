@@ -2,23 +2,25 @@ require "rails_helper"
 
 RSpec.describe PaymentIngestions::FormDataQuery do
   let(:user) { create(:user) }
-  let(:property) { create(:rental_property, user: user) }
-  let(:lease) { create(:lease, rental_property: property) }
-  let(:tenant) { create(:tenant, user: user) }
+  let(:property) { create(:property, user: user) }
+  let(:unit) { create(:rentable_unit, property: property) }
+  let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+  let(:party) { create(:party, user: user) }
 
-  it "returns tenant and lease form data scoped to the user" do
-    create(:lease_tenant, lease: lease, tenant: tenant)
+  it "returns party and tenancy form data scoped to the user" do
+    create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: Date.current)
     other_user = create(:user)
-    other_property = create(:rental_property, user: other_user)
-    other_lease = create(:lease, rental_property: other_property)
-    other_tenant = create(:tenant, user: other_user)
-    create(:lease_tenant, lease: other_lease, tenant: other_tenant)
+    other_property = create(:property, user: other_user)
+    other_unit = create(:rentable_unit, property: other_property)
+    other_tenancy = create(:tenancy, rentable_unit: other_unit)
+    other_party = create(:party, user: other_user)
+    create(:tenancy_party, tenancy: other_tenancy, party: other_party, role: "tenant", effective_from: Date.current)
 
     result = described_class.new(user: user).call
 
-    expect(result.tenants).to contain_exactly(tenant)
-    expect(result.leases).to contain_exactly(lease)
-    expect(result.tenant_leases_map[tenant.id]).to eq([ lease.id ])
-    expect(result.lease_tenants_map[lease.id]).to eq([ tenant.id ])
+    expect(result.parties).to contain_exactly(party)
+    expect(result.tenancies).to contain_exactly(tenancy)
+    expect(result.party_tenancies_map[party.id]).to eq([ tenancy.id ])
+    expect(result.tenancy_parties_map[tenancy.id]).to eq([ party.id ])
   end
 end

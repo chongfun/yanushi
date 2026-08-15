@@ -1,88 +1,88 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["tenantSelect", "leaseSelect"]
+  static targets = ["partySelect", "tenancySelect"]
   static values = {
-    tenantLeases: Object,
-    leaseTenants: Object
+    partyTenancies: Object,
+    tenancyParties: Object
   }
 
   connect() {
     // Store original options
-    this.allLeaseOptions = Array.from(this.leaseSelectTarget.options).map(opt => ({
+    this.allTenancyOptions = Array.from(this.tenancySelectTarget.options).map(opt => ({
       value: opt.value,
       text: opt.text
     }))
-    this.allTenantOptions = Array.from(this.tenantSelectTarget.options).map(opt => ({
+    this.allPartyOptions = Array.from(this.partySelectTarget.options).map(opt => ({
       value: opt.value,
       text: opt.text
     }))
 
     // Perform initial filtering based on selection
-    this.filterLeases(false)
-    this.filterTenants(false)
+    this.filterTenancies(false)
+    this.filterParties(false)
   }
 
-  tenantChanged() {
-    this.filterLeases(true)
+  partyChanged() {
+    this.filterTenancies(true)
   }
 
-  leaseChanged() {
-    this.filterTenants(true)
+  tenancyChanged() {
+    this.filterParties(true)
   }
 
-  filterLeases(resetSelectionIfInvalid) {
-    const selectedTenantId = this.tenantSelectTarget.value
-    const currentSelectedLeaseId = this.leaseSelectTarget.value
+  filterTenancies(resetSelectionIfInvalid) {
+    const selectedPartyId = this.partySelectTarget.value
+    const currentSelectedTenancyId = this.tenancySelectTarget.value
 
-    if (!selectedTenantId) {
-      // Restore all leases
-      this.populateSelect(this.leaseSelectTarget, this.allLeaseOptions, currentSelectedLeaseId)
+    if (!selectedPartyId) {
+      // Restore all tenancies
+      this.populateSelect(this.tenancySelectTarget, this.allTenancyOptions, currentSelectedTenancyId)
       return
     }
 
-    const allowedLeaseIds = this.tenantLeasesValue[selectedTenantId] || []
-    
+    const allowedTenancyIds = this.partyTenanciesValue[selectedPartyId] || []
+
     // Filter options
-    const filteredOptions = this.allLeaseOptions.filter(opt => {
-      return !opt.value || allowedLeaseIds.includes(parseInt(opt.value))
+    const filteredOptions = this.allTenancyOptions.filter(opt => {
+      return !opt.value || allowedTenancyIds.includes(parseInt(opt.value))
     })
 
-    const isCurrentValid = allowedLeaseIds.includes(parseInt(currentSelectedLeaseId))
-    let nextSelectedId = isCurrentValid ? currentSelectedLeaseId : ""
+    const isCurrentValid = allowedTenancyIds.includes(parseInt(currentSelectedTenancyId))
+    let nextSelectedId = isCurrentValid ? currentSelectedTenancyId : ""
 
-    if (!isCurrentValid && allowedLeaseIds.length === 1) {
-      nextSelectedId = allowedLeaseIds[0].toString()
+    if (!isCurrentValid && allowedTenancyIds.length === 1) {
+      nextSelectedId = allowedTenancyIds[0].toString()
     }
 
-    this.populateSelect(this.leaseSelectTarget, filteredOptions, resetSelectionIfInvalid ? nextSelectedId : currentSelectedLeaseId)
+    this.populateSelect(this.tenancySelectTarget, filteredOptions, resetSelectionIfInvalid ? nextSelectedId : currentSelectedTenancyId)
   }
 
-  filterTenants(resetSelectionIfInvalid) {
-    const selectedLeaseId = this.leaseSelectTarget.value
-    const currentSelectedTenantId = this.tenantSelectTarget.value
+  filterParties(resetSelectionIfInvalid) {
+    const selectedTenancyId = this.tenancySelectTarget.value
+    const currentSelectedPartyId = this.partySelectTarget.value
 
-    if (!selectedLeaseId) {
-      // Restore all tenants
-      this.populateSelect(this.tenantSelectTarget, this.allTenantOptions, currentSelectedTenantId)
+    if (!selectedTenancyId) {
+      // Restore all parties
+      this.populateSelect(this.partySelectTarget, this.allPartyOptions, currentSelectedPartyId)
       return
     }
 
-    const allowedTenantIds = this.leaseTenantsValue[selectedLeaseId] || []
+    const allowedPartyIds = this.tenancyPartiesValue[selectedTenancyId] || []
 
     // Filter options
-    const filteredOptions = this.allTenantOptions.filter(opt => {
-      return !opt.value || allowedTenantIds.includes(parseInt(opt.value))
+    const filteredOptions = this.allPartyOptions.filter(opt => {
+      return !opt.value || allowedPartyIds.includes(parseInt(opt.value))
     })
 
-    const isCurrentValid = allowedTenantIds.includes(parseInt(currentSelectedTenantId))
-    let nextSelectedId = isCurrentValid ? currentSelectedTenantId : ""
+    const isCurrentValid = allowedPartyIds.includes(parseInt(currentSelectedPartyId))
+    let nextSelectedId = isCurrentValid ? currentSelectedPartyId : ""
 
-    if (!isCurrentValid && allowedTenantIds.length === 1) {
-      nextSelectedId = allowedTenantIds[0].toString()
+    if (!isCurrentValid && allowedPartyIds.length === 1) {
+      nextSelectedId = allowedPartyIds[0].toString()
     }
 
-    this.populateSelect(this.tenantSelectTarget, filteredOptions, resetSelectionIfInvalid ? nextSelectedId : currentSelectedTenantId)
+    this.populateSelect(this.partySelectTarget, filteredOptions, resetSelectionIfInvalid ? nextSelectedId : currentSelectedPartyId)
   }
 
   populateSelect(selectElement, options, selectedValue) {

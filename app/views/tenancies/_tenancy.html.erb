@@ -1,0 +1,38 @@
+<tr id="<%= dom_id tenancy %>">
+  <td>
+    <div class="font-bold"><%= tenancy.property.address %></div>
+    <div class="text-xs text-base-content/60"><%= tenancy.rentable_unit.display_name %></div>
+  </td>
+  <td>
+    <span class="badge badge-ghost badge-sm"><%= tenancy.agreement_type.titleize %></span>
+  </td>
+  <td>
+    <div class="text-sm font-medium"><%= tenancy.commencement_date.strftime("%b %d, %Y") %></div>
+    <div class="text-xs text-base-content/50">to <%= tenancy.termination_date&.strftime("%b %d, %Y") || "Month-to-Month" %></div>
+  </td>
+  <td>
+    <div class="flex flex-wrap gap-1">
+      <% tenancy.parties.each do |party| %>
+        <span class="badge badge-neutral badge-xs"><%= party.display_name %></span>
+      <% end %>
+    </div>
+  </td>
+  <td>
+    <% current_term = tenancy.current_rent_term %>
+    <% if current_term %>
+      <div class="font-mono text-sm font-bold"><%= number_to_currency(current_term.amount_cents / 100.0) %>/mo</div>
+      <div class="text-xs text-base-content/50">Due day: <%= current_term.due_day %></div>
+    <% else %>
+      <span class="text-base-content/40 text-xs">—</span>
+    <% end %>
+  </td>
+  <td>
+    <% balance = tenancy.current_balance %>
+    <span class="font-bold text-sm <%= balance >= 0 ? 'text-success' : 'text-error' %>">
+      <%= balance >= 0 ? '+' : '' %><%= number_to_currency(balance) %>
+    </span>
+  </td>
+  <th class="text-right">
+    <%= link_to "View Tenancy", tenancy, class: "btn btn-ghost btn-xs" %>
+  </th>
+</tr>
