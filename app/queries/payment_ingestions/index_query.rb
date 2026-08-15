@@ -40,14 +40,14 @@ module PaymentIngestions
 
     def reviewable_ingestions
       user.payment_ingestions
-          .includes(:tenant, lease: :rental_property)
+          .includes(:party, tenancy: { rentable_unit: :property })
           .reviewable
           .order(created_at: :desc)
     end
 
     def confirmed_ingestions_scope
       user.payment_ingestions
-          .includes(:tenant, lease: :rental_property)
+          .includes(:party, tenancy: { rentable_unit: :property })
           .confirmed
     end
 

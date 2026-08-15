@@ -1,8 +1,8 @@
 class TenantPaymentsController < ApplicationController
   @tenant_payments: TenantPayment::ActiveRecord_Relation
   @tenant_payment: TenantPayment
-  @lease: Lease?
-  @leases: Lease::ActiveRecord_Relation
+  @tenancy: Tenancy?
+  @tenancies: Tenancy::ActiveRecord_Relation
   @financial_items: Array[Hash[Symbol, untyped]]
   @year: Integer
 
@@ -24,7 +24,7 @@ class TenantPaymentsController < ApplicationController
 
   def set_tenant_payment: () -> untyped
 
-  def set_lease: () -> untyped
+  def set_tenancy: () -> untyped
 
   def set_form_data: () -> untyped
 

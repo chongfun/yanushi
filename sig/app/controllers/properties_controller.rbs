@@ -1,0 +1,28 @@
+class PropertiesController < ApplicationController
+  @properties: Property::ActiveRecord_Relation
+  @property: Property
+  @year: Integer
+  @financial_items: Array[untyped]
+  @rents_received: Float
+  @utility_reimbursements: Float
+  @total_income: Float
+  @expenses_by_category: Hash[String, Float]
+  @total_expenses: Float
+  @net_income: Float
+
+  def index: () -> void
+  def show: () -> void
+  def schedule_e: () -> void
+  def schedule_e_pdf: () -> void
+  def new: () -> void
+  def edit: () -> void
+  def create: () -> void
+  def update: () -> void
+  def destroy: () -> void
+
+  private
+
+  def set_property: () -> Property
+  def property_params: () -> ActionController::Parameters
+  def unit_params: () -> ActionController::Parameters?
+end

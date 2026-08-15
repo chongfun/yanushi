@@ -1,129 +1,348 @@
-ActiveRecord::Schema[7.1].define(version: 1) do
-  create_table "solid_queue_blocked_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "queue_name", null: false
-    t.integer "priority", default: 0, null: false
-    t.string "concurrency_key", null: false
-    t.datetime "expires_at", null: false
+# This file is auto-generated from the current state of the database. Instead
+# of editing this file, please use the migrations feature of Active Record to
+# incrementally modify your database, and then regenerate this schema definition.
+#
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
+#
+# It's strongly recommended that you check this file into your version control system.
+
+ActiveRecord::Schema[8.1].define(version: 2026_08_15_000001) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
+
+  create_table "expenses", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2
+    t.string "category"
     t.datetime "created_at", null: false
-    t.index [ "concurrency_key", "priority", "job_id" ], name: "index_solid_queue_blocked_executions_for_release"
-    t.index [ "expires_at", "concurrency_key" ], name: "index_solid_queue_blocked_executions_for_maintenance"
-    t.index [ "job_id" ], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
+    t.string "description"
+    t.date "expense_date"
+    t.bigint "property_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["property_id"], name: "index_expenses_on_property_id"
+  end
+
+  create_table "parties", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "display_name", null: false
+    t.string "email_address"
+    t.string "mailing_address"
+    t.string "party_type", null: false
+    t.string "phone_number"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_parties_on_user_id"
+  end
+
+  create_table "party_aliases", force: :cascade do |t|
+    t.string "alias_name", null: false
+    t.datetime "created_at", null: false
+    t.bigint "party_id", null: false
+    t.datetime "updated_at", null: false
+    t.index "party_id, lower((alias_name)::text)", name: "index_tenant_aliases_on_tenant_id_and_lower_alias_name", unique: true
+    t.index ["party_id"], name: "index_party_aliases_on_party_id"
+  end
+
+  create_table "payment_documents", force: :cascade do |t|
+    t.string "attachment_content_type"
+    t.binary "attachment_file"
+    t.string "attachment_filename"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "status", default: "processing", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_payment_documents_on_user_id"
+  end
+
+  create_table "payment_ingestions", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.bigint "party_id"
+    t.string "payer_name"
+    t.string "payer_username"
+    t.date "payment_date"
+    t.bigint "payment_document_id"
+    t.string "payment_method"
+    t.text "raw_text"
+    t.string "receipt_type"
+    t.string "source", null: false
+    t.string "status", default: "pending", null: false
+    t.bigint "tenancy_id"
+    t.bigint "tenant_payment_id"
+    t.string "transaction_number"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["party_id"], name: "index_payment_ingestions_on_party_id"
+    t.index ["payment_document_id"], name: "index_payment_ingestions_on_payment_document_id"
+    t.index ["tenancy_id"], name: "index_payment_ingestions_on_tenancy_id"
+    t.index ["tenant_payment_id"], name: "index_payment_ingestions_on_tenant_payment_id"
+    t.index ["user_id", "payment_method", "transaction_number"], name: "idx_payment_ingestions_dup_check"
+    t.index ["user_id"], name: "index_payment_ingestions_on_user_id"
+  end
+
+  create_table "properties", force: :cascade do |t|
+    t.string "address", null: false
+    t.string "asset_type", null: false
+    t.datetime "created_at", null: false
+    t.integer "square_footage"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_properties_on_user_id"
+  end
+
+  create_table "rent_terms", force: :cascade do |t|
+    t.bigint "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.integer "due_day", default: 1, null: false
+    t.date "effective_from", null: false
+    t.date "effective_until"
+    t.string "frequency", default: "monthly", null: false
+    t.bigint "tenancy_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenancy_id", "effective_from"], name: "index_rent_terms_on_tenancy_id_and_effective_from", unique: true
+    t.index ["tenancy_id"], name: "index_rent_terms_on_tenancy_id"
+  end
+
+  create_table "rentable_units", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "property_id", null: false
+    t.integer "square_footage"
+    t.string "unit_identifier"
+    t.datetime "updated_at", null: false
+    t.index "property_id, lower((unit_identifier)::text)", name: "index_rentable_units_on_property_id_and_lower_identifier", unique: true, where: "(unit_identifier IS NOT NULL)"
+    t.index ["property_id"], name: "index_rentable_units_on_property_id"
+  end
+
+  create_table "scheduled_rents", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.date "due_date"
+    t.bigint "tenancy_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenancy_id"], name: "index_scheduled_rents_on_tenancy_id"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "solid_queue_blocked_executions", force: :cascade do |t|
+    t.string "concurrency_key", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "job_id", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
+    t.index ["concurrency_key", "priority", "job_id"], name: "index_solid_queue_blocked_executions_for_release"
+    t.index ["expires_at", "concurrency_key"], name: "index_solid_queue_blocked_executions_for_maintenance"
+    t.index ["job_id"], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_claimed_executions", force: :cascade do |t|
+    t.datetime "created_at", null: false
     t.bigint "job_id", null: false
     t.bigint "process_id"
-    t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
-    t.index [ "process_id", "job_id" ], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
+    t.index ["job_id"], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
+    t.index ["process_id", "job_id"], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
   end
 
   create_table "solid_queue_failed_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.text "error"
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_failed_executions_on_job_id", unique: true
+    t.text "error"
+    t.bigint "job_id", null: false
+    t.index ["job_id"], name: "index_solid_queue_failed_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_jobs", force: :cascade do |t|
-    t.string "queue_name", null: false
-    t.string "class_name", null: false
-    t.text "arguments"
-    t.integer "priority", default: 0, null: false
     t.string "active_job_id"
-    t.datetime "scheduled_at"
-    t.datetime "finished_at"
+    t.text "arguments"
+    t.string "class_name", null: false
     t.string "concurrency_key"
     t.datetime "created_at", null: false
+    t.datetime "finished_at"
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
+    t.datetime "scheduled_at"
     t.datetime "updated_at", null: false
-    t.index [ "active_job_id" ], name: "index_solid_queue_jobs_on_active_job_id"
-    t.index [ "class_name" ], name: "index_solid_queue_jobs_on_class_name"
-    t.index [ "finished_at" ], name: "index_solid_queue_jobs_on_finished_at"
-    t.index [ "queue_name", "finished_at" ], name: "index_solid_queue_jobs_for_filtering"
-    t.index [ "scheduled_at", "finished_at" ], name: "index_solid_queue_jobs_for_alerting"
+    t.index ["active_job_id"], name: "index_solid_queue_jobs_on_active_job_id"
+    t.index ["class_name"], name: "index_solid_queue_jobs_on_class_name"
+    t.index ["finished_at"], name: "index_solid_queue_jobs_on_finished_at"
+    t.index ["queue_name", "finished_at"], name: "index_solid_queue_jobs_for_filtering"
+    t.index ["scheduled_at", "finished_at"], name: "index_solid_queue_jobs_for_alerting"
   end
 
   create_table "solid_queue_pauses", force: :cascade do |t|
-    t.string "queue_name", null: false
     t.datetime "created_at", null: false
-    t.index [ "queue_name" ], name: "index_solid_queue_pauses_on_queue_name", unique: true
+    t.string "queue_name", null: false
+    t.index ["queue_name"], name: "index_solid_queue_pauses_on_queue_name", unique: true
   end
 
   create_table "solid_queue_processes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "hostname"
     t.string "kind", null: false
     t.datetime "last_heartbeat_at", null: false
-    t.bigint "supervisor_id"
-    t.integer "pid", null: false
-    t.string "hostname"
     t.text "metadata"
-    t.datetime "created_at", null: false
     t.string "name", null: false
-    t.index [ "last_heartbeat_at" ], name: "index_solid_queue_processes_on_last_heartbeat_at"
-    t.index [ "name", "supervisor_id" ], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
-    t.index [ "supervisor_id" ], name: "index_solid_queue_processes_on_supervisor_id"
+    t.integer "pid", null: false
+    t.bigint "supervisor_id"
+    t.index ["last_heartbeat_at"], name: "index_solid_queue_processes_on_last_heartbeat_at"
+    t.index ["name", "supervisor_id"], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
+    t.index ["supervisor_id"], name: "index_solid_queue_processes_on_supervisor_id"
   end
 
   create_table "solid_queue_ready_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "queue_name", null: false
-    t.integer "priority", default: 0, null: false
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_ready_executions_on_job_id", unique: true
-    t.index [ "priority", "job_id" ], name: "index_solid_queue_poll_all"
-    t.index [ "queue_name", "priority", "job_id" ], name: "index_solid_queue_poll_by_queue"
+    t.bigint "job_id", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
+    t.index ["job_id"], name: "index_solid_queue_ready_executions_on_job_id", unique: true
+    t.index ["priority", "job_id"], name: "index_solid_queue_poll_all"
+    t.index ["queue_name", "priority", "job_id"], name: "index_solid_queue_poll_by_queue"
   end
 
   create_table "solid_queue_recurring_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "task_key", null: false
-    t.datetime "run_at", null: false
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
-    t.index [ "task_key", "run_at" ], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
+    t.bigint "job_id", null: false
+    t.datetime "run_at", null: false
+    t.string "task_key", null: false
+    t.index ["job_id"], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
+    t.index ["task_key", "run_at"], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
   end
 
   create_table "solid_queue_recurring_tasks", force: :cascade do |t|
-    t.string "key", null: false
-    t.string "schedule", null: false
-    t.string "command", limit: 2048
-    t.string "class_name"
     t.text "arguments"
-    t.string "queue_name"
-    t.integer "priority", default: 0
-    t.boolean "static", default: true, null: false
-    t.text "description"
+    t.string "class_name"
+    t.string "command", limit: 2048
     t.datetime "created_at", null: false
+    t.text "description"
+    t.string "key", null: false
+    t.integer "priority", default: 0
+    t.string "queue_name"
+    t.string "schedule", null: false
+    t.boolean "static", default: true, null: false
     t.datetime "updated_at", null: false
-    t.index [ "key" ], name: "index_solid_queue_recurring_tasks_on_key", unique: true
-    t.index [ "static" ], name: "index_solid_queue_recurring_tasks_on_static"
+    t.index ["key"], name: "index_solid_queue_recurring_tasks_on_key", unique: true
+    t.index ["static"], name: "index_solid_queue_recurring_tasks_on_static"
   end
 
   create_table "solid_queue_scheduled_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "queue_name", null: false
-    t.integer "priority", default: 0, null: false
-    t.datetime "scheduled_at", null: false
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
-    t.index [ "scheduled_at", "priority", "job_id" ], name: "index_solid_queue_dispatch_all"
+    t.bigint "job_id", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
+    t.datetime "scheduled_at", null: false
+    t.index ["job_id"], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
+    t.index ["scheduled_at", "priority", "job_id"], name: "index_solid_queue_dispatch_all"
   end
 
   create_table "solid_queue_semaphores", force: :cascade do |t|
-    t.string "key", null: false
-    t.integer "value", default: 1, null: false
-    t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "key", null: false
     t.datetime "updated_at", null: false
-    t.index [ "expires_at" ], name: "index_solid_queue_semaphores_on_expires_at"
-    t.index [ "key", "value" ], name: "index_solid_queue_semaphores_on_key_and_value"
-    t.index [ "key" ], name: "index_solid_queue_semaphores_on_key", unique: true
+    t.integer "value", default: 1, null: false
+    t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
+    t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
+    t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "tenancies", force: :cascade do |t|
+    t.string "agreement_type", null: false
+    t.date "commencement_date", null: false
+    t.datetime "created_at", null: false
+    t.integer "late_period_days", default: 0, null: false
+    t.bigint "rentable_unit_id", null: false
+    t.date "termination_date"
+    t.datetime "updated_at", null: false
+    t.index ["rentable_unit_id"], name: "index_tenancies_on_rentable_unit_id"
+  end
+
+  create_table "tenancy_parties", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "effective_from", null: false
+    t.date "effective_until"
+    t.bigint "party_id", null: false
+    t.string "role", null: false
+    t.bigint "tenancy_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_tenancy_parties_on_party_id"
+    t.index ["tenancy_id", "party_id", "role", "effective_from"], name: "idx_tenancy_parties_exact_dup", unique: true
+    t.index ["tenancy_id"], name: "index_tenancy_parties_on_tenancy_id"
+  end
+
+  create_table "tenant_charges", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.date "charge_date", null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.bigint "expense_id", null: false
+    t.bigint "tenancy_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expense_id"], name: "index_tenant_charges_on_expense_id"
+    t.index ["tenancy_id"], name: "index_tenant_charges_on_tenancy_id"
+  end
+
+  create_table "tenant_payments", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.date "payment_date", null: false
+    t.string "payment_method", null: false
+    t.bigint "tenancy_id", null: false
+    t.string "transaction_number"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["tenancy_id"], name: "index_tenant_payments_on_tenancy_id"
+    t.index ["user_id", "payment_method", "transaction_number"], name: "index_tenant_payments_on_user_payment_method_transaction_number", unique: true, where: "(transaction_number IS NOT NULL)"
+    t.index ["user_id"], name: "index_tenant_payments_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.string "timezone", default: "UTC", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+  end
+
+  add_foreign_key "expenses", "properties"
+  add_foreign_key "parties", "users"
+  add_foreign_key "party_aliases", "parties"
+  add_foreign_key "payment_documents", "users"
+  add_foreign_key "payment_ingestions", "parties"
+  add_foreign_key "payment_ingestions", "payment_documents"
+  add_foreign_key "payment_ingestions", "tenancies"
+  add_foreign_key "payment_ingestions", "tenant_payments"
+  add_foreign_key "payment_ingestions", "users"
+  add_foreign_key "properties", "users"
+  add_foreign_key "rent_terms", "tenancies"
+  add_foreign_key "rentable_units", "properties"
+  add_foreign_key "scheduled_rents", "tenancies"
+  add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "tenancies", "rentable_units"
+  add_foreign_key "tenancy_parties", "parties"
+  add_foreign_key "tenancy_parties", "tenancies"
+  add_foreign_key "tenant_charges", "expenses"
+  add_foreign_key "tenant_charges", "tenancies"
+  add_foreign_key "tenant_payments", "tenancies"
+  add_foreign_key "tenant_payments", "users"
 end

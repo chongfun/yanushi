@@ -43,16 +43,26 @@
 
         <div class="divider md:divider-horizontal"></div>
 
-        <!-- Property & Lease Details -->
+        <!-- Property & Tenancy Details -->
         <div class="space-y-6 flex-1">
           <div>
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Property Address</div>
-            <div class="text-lg font-bold leading-tight"><%= @tenant_payment.lease.rental_property.address %></div>
+            <div class="text-lg font-bold leading-tight"><%= @tenant_payment.tenancy.property.address %></div>
+            <div class="text-sm text-base-content/60"><%= @tenant_payment.tenancy.rentable_unit.display_name %></div>
           </div>
 
           <div>
-            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Lease Period</div>
-            <div class="font-medium"><%= @tenant_payment.lease.commencement_date.strftime("%b %d, %Y") %> – <%= @tenant_payment.lease.termination_date ? @tenant_payment.lease.termination_date.strftime("%b %d, %Y") : "Month-to-Month" %></div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Tenancy Period</div>
+            <div class="font-medium"><%= @tenant_payment.tenancy.commencement_date.strftime("%b %d, %Y") %> – <%= @tenant_payment.tenancy.termination_date ? @tenant_payment.tenancy.termination_date.strftime("%b %d, %Y") : "Month-to-Month" %></div>
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Tenants</div>
+            <div class="flex flex-wrap gap-1">
+              <% @tenant_payment.tenancy.parties.each do |party| %>
+                <span class="badge badge-neutral badge-sm"><%= party.display_name %></span>
+              <% end %>
+            </div>
           </div>
         </div>
       </div>

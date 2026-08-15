@@ -1,0 +1,58 @@
+<% content_for :title, "Change Rent" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li><%= link_to "Tenancy ##{@tenancy.id}", @tenancy %></li>
+  <li class="font-bold">Change Rent</li>
+<% end %>
+
+<div class="max-w-xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold mb-2">Change Rent for Tenancy ##{@tenancy.id}</h2>
+      <p class="text-xs text-base-content/60 mb-6">Changing rent creates a new effective-dated term and closes the prior term. Historical terms remain unchanged.</p>
+
+      <%= form_with(model: [@tenancy, @rent_term]) do |form| %>
+        <% if @rent_term.errors.any? %>
+          <div class="alert alert-error shadow-lg mb-6 text-error-content">
+            <div>
+              <h3 class="font-bold"><%= pluralize(@rent_term.errors.count, "error") %> prohibited this rent change:</h3>
+              <ul class="list-disc pl-5 mt-1 text-sm">
+                <% @rent_term.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="form-control w-full mb-4">
+          <%= form.label :amount, "New Monthly Rent ($)", class: "label font-semibold" %>
+          <%= form.number_field :amount, value: (@rent_term.amount_cents ? @rent_term.amount_cents / 100.0 : nil), step: 0.01, min: 0, class: "input input-bordered w-full font-mono", placeholder: "2150.00", required: true %>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="form-control w-full">
+            <%= form.label :effective_from, "Effective From Date", class: "label font-semibold" %>
+            <%= form.date_field :effective_from, class: "input input-bordered w-full", required: true %>
+          </div>
+
+          <div class="form-control w-full">
+            <%= form.label :due_day, "Due Day of Month", class: "label font-semibold" %>
+            <%= form.number_field :due_day, min: 1, max: 31, class: "input input-bordered w-full font-mono", required: true %>
+          </div>
+        </div>
+
+        <div class="form-control w-full mb-6">
+          <%= form.label :frequency, "Frequency", class: "label font-semibold" %>
+          <%= form.select :frequency, RentTerm::FREQUENCIES.map { |f| [f.titleize, f] }, {}, { class: "select select-bordered w-full" } %>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4">
+          <%= link_to "Cancel", @tenancy, class: "btn btn-ghost" %>
+          <%= form.submit "Apply Rent Change", class: "btn btn-primary px-8" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

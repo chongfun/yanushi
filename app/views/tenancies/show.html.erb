@@ -1,0 +1,210 @@
+<% content_for :title, "Tenancy ##{@tenancy.id}" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li class="font-bold">Tenancy #<%= @tenancy.id %></li>
+<% end %>
+
+<div class="max-w-5xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Tenancy Agreement</h1>
+      <p class="text-base-content/60"><%= @tenancy.property.address %> — <%= @tenancy.rentable_unit.display_name %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", tenancies_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Details", edit_tenancy_path(@tenancy), class: "btn btn-outline" %>
+      <%= link_to "View Property", property_path(@tenancy.property), class: "btn btn-outline btn-secondary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Details & Participants -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Tenancy Info Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <h2 class="card-title text-xl mb-4">Agreement Details</h2>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-1">Agreement Type</div>
+              <div class="font-medium"><%= @tenancy.agreement_type.titleize %></div>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-1">Commencement</div>
+              <div class="font-medium"><%= @tenancy.commencement_date.strftime("%B %d, %Y") %></div>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-1">Termination</div>
+              <div class="font-medium"><%= @tenancy.termination_date&.strftime("%B %d, %Y") || "Month-to-Month" %></div>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-1">Late Period</div>
+              <div class="font-medium"><%= @tenancy.late_period_days %> Days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Participants Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="card-title text-xl font-bold">Participants</h2>
+              <p class="text-xs text-base-content/60">Tenants, guarantors, and occupants with effective participation dates</p>
+            </div>
+            <%= link_to "＋ Add Participant", new_tenancy_tenancy_party_path(@tenancy), class: "btn btn-sm btn-primary" %>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Role</th>
+                  <th>Effective Range</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @tenancy.tenancy_parties.includes(:party).each do |tp| %>
+                  <tr>
+                    <td>
+                      <div class="font-bold"><%= link_to tp.party.display_name, tp.party, class: "link link-hover" %></div>
+                      <div class="text-xs text-base-content/50"><%= tp.party.email_address || tp.party.phone_number %></div>
+                    </td>
+                    <td>
+                      <span class="badge <%= tp.tenant? ? 'badge-primary' : 'badge-ghost' %> badge-sm">
+                        <%= tp.role.titleize %>
+                      </span>
+                    </td>
+                    <td class="text-sm">
+                      <%= tp.effective_from.strftime("%b %d, %Y") %>
+                      <% if tp.effective_until.present? %>
+                        to <%= tp.effective_until.strftime("%b %d, %Y") %>
+                      <% else %>
+                        <span class="text-base-content/50">(Current)</span>
+                      <% end %>
+                    </td>
+                    <td class="text-right space-x-1">
+                      <%= link_to "Edit", edit_tenancy_tenancy_party_path(@tenancy, tp), class: "btn btn-ghost btn-xs" %>
+                      <%= button_to "Remove", [@tenancy, tp], method: :delete, class: "btn btn-ghost btn-xs text-error", form: { data: { turbo_confirm: "Are you sure you want to remove this participant?" } } %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rent Terms & History Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="card-title text-xl font-bold">Rent Terms History</h2>
+              <p class="text-xs text-base-content/60">Effective-dated rental amounts and due schedule</p>
+            </div>
+            <%= link_to "＋ Change Rent", new_tenancy_rent_term_path(@tenancy), class: "btn btn-sm btn-accent" %>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Monthly Rent</th>
+                  <th>Due Day</th>
+                  <th>Frequency</th>
+                  <th>Effective Period</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @tenancy.rent_terms.order(effective_from: :desc).each do |term| %>
+                  <tr>
+                    <td class="font-mono font-bold text-base"><%= number_to_currency(term.amount_cents / 100.0) %></td>
+                    <td>Day <%= term.due_day %></td>
+                    <td><%= term.frequency.titleize %></td>
+                    <td class="text-sm">
+                      <%= term.effective_from.strftime("%b %d, %Y") %>
+                      <% if term.effective_until.present? %>
+                        to <%= term.effective_until.strftime("%b %d, %Y") %>
+                      <% else %>
+                        onward
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if term.active? %>
+                        <span class="badge badge-success badge-sm">Current</span>
+                      <% elsif term.effective_from > Date.current %>
+                        <span class="badge badge-info badge-sm">Upcoming</span>
+                      <% else %>
+                        <span class="badge badge-ghost badge-sm">Past</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+        <div class="card-body p-0">
+          <div class="bg-error/10 p-6 flex justify-between items-center">
+            <div>
+              <h4 class="font-bold text-error">Danger Zone</h4>
+              <p class="text-xs text-error/80">Deleting a tenancy will remove associated records.</p>
+            </div>
+            <%= button_to "Delete Tenancy Record", @tenancy, method: :delete, 
+                class: "btn btn-error btn-sm", 
+                form: { data: { turbo_confirm: "Are you sure you want to delete this tenancy? All associated data will be removed." } } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Financial Summary -->
+    <div class="space-y-6">
+      <div class="card bg-primary text-primary-content shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg opacity-80">Current Rent</h2>
+          <% current_term = @tenancy.current_rent_term %>
+          <div class="mt-4 space-y-4">
+            <div>
+              <div class="text-xs uppercase font-bold opacity-70">Monthly Amount</div>
+              <div class="text-3xl font-black">
+                <%= current_term ? number_to_currency(current_term.amount_cents / 100.0) : "—" %>
+              </div>
+            </div>
+            <% if current_term %>
+              <div>
+                <div class="text-xs uppercase font-bold opacity-70">Payment Due</div>
+                <div class="text-base font-medium">Day <%= current_term.due_day %> of each month</div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Account Balance</div>
+          <% balance = @tenancy.current_balance %>
+          <div class="text-3xl font-black <%= balance >= 0 ? 'text-success' : 'text-error' %>">
+            <%= balance >= 0 ? '+' : '' %><%= number_to_currency(balance) %>
+          </div>
+          <div class="text-xs text-base-content/50 mt-1">
+            <%= balance >= 0 ? "Account has credit or zero balance" : "Tenancy owes outstanding balance" %>
+          </div>
+          <div class="divider my-3"></div>
+          <%= link_to "＋ Record Payment", new_tenancy_tenant_payment_path(@tenancy), class: "btn btn-primary btn-sm w-full" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

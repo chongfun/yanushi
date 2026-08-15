@@ -1,0 +1,12 @@
+class RentTermsController < ApplicationController
+  @tenancy: Tenancy
+  @rent_term: RentTerm
+
+  def new: () -> void
+  def create: () -> void
+
+  private
+
+  def set_tenancy: () -> Tenancy
+  def rent_term_params: () -> ActionController::Parameters
+end

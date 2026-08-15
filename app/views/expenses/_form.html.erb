@@ -12,13 +12,13 @@
   <% end %>
 
   <div class="form-control w-full mb-4">
-    <%= form.label :rental_property_id, class: "label font-semibold" %>
-    <%= form.collection_select :rental_property_id, @rental_properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
+    <%= form.label :property_id, "Property", class: "label font-semibold" %>
+    <%= form.collection_select :property_id, @properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="form-control w-full mb-4">
     <%= form.label :category, class: "label font-semibold" %>
-    <%= form.select :category, Expense.categories.keys.map { |k| [k.humanize, k] }, {}, { class: "select select-bordered w-full" } %>
+    <%= form.select :category, Expense.categories.keys.map { |k| [k.titleize, k] }, {}, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="form-control w-full mb-4">
@@ -46,10 +46,10 @@
   </div>
 
   <div class="form-control w-full mb-4">
-    <%= form.label :reimburse_lease_id, "Lease to Charge", class: "label font-semibold" %>
-    <%= form.select :reimburse_lease_id, 
-          @leases.map { |l| ["#{l.rental_property.address} - Lease ##{l.id} (#{l.tenants.map(&:name).join(', ')})", l.id] },
-          { include_blank: "Select a lease (or auto-assign active lease)..." },
+    <%= form.label :reimburse_tenancy_id, "Tenancy to Charge", class: "label font-semibold" %>
+    <%= form.select :reimburse_tenancy_id, 
+          @tenancies.map { |t| ["#{t.property.address} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
+          { include_blank: "Select a tenancy (or auto-assign active tenancy)..." },
           { class: "select select-bordered w-full" } %>
   </div>
 

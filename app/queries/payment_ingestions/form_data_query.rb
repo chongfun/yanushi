@@ -1,44 +1,46 @@
 module PaymentIngestions
   class FormDataQuery
-    Result = Data.define(:tenants, :leases, :tenant_leases_map, :lease_tenants_map)
+    Result = Struct.new(
+      :parties, :tenancies, :party_tenancies_map, :tenancy_parties_map,
+      keyword_init: true
+    )
 
     def initialize(user:)
       @user = user
     end
 
     def call
+      parties = user.parties.order(:display_name)
+      tenancies = user.tenancies.includes(rentable_unit: :property).distinct
+      p_t_map = party_tenancies_map
+      t_p_map = tenancy_parties_map
+
       Result.new(
-        tenants: user.tenants.order(:name),
-        leases: leases,
-        tenant_leases_map: tenant_leases_map,
-        lease_tenants_map: lease_tenants_map
+        parties: parties,
+        tenancies: tenancies,
+        party_tenancies_map: p_t_map,
+        tenancy_parties_map: t_p_map
       )
     end
 
     private
 
-    attr_reader :user
+      attr_reader :user
 
-    def leases
-      Lease.joins(:tenants).where(tenants: { user_id: user.id }).includes(:rental_property).distinct
-    end
-
-    def tenant_leases_map
-      # @type var map: Hash[Integer, Array[Integer]]
-      map = Hash.new { |hash, key| hash[key] = [] }
-      LeaseTenant.joins(:tenant).where(tenants: { user_id: user.id }).pluck(:tenant_id, :lease_id).each do |tenant_id, lease_id|
-        map[tenant_id] << lease_id
+      def party_tenancies_map
+        map = Hash.new { |hash, key| hash[key] = [] }
+        TenancyParty.joins(:party).where(parties: { user_id: user.id }).pluck(:party_id, :tenancy_id).each do |party_id, tenancy_id|
+          map[party_id] << tenancy_id
+        end
+        map
       end
-      map
-    end
 
-    def lease_tenants_map
-      # @type var map: Hash[Integer, Array[Integer]]
-      map = Hash.new { |hash, key| hash[key] = [] }
-      LeaseTenant.joins(lease: :rental_property).where(rental_properties: { user_id: user.id }).pluck(:lease_id, :tenant_id).each do |lease_id, tenant_id|
-        map[lease_id] << tenant_id
+      def tenancy_parties_map
+        map = Hash.new { |hash, key| hash[key] = [] }
+        TenancyParty.joins(tenancy: { rentable_unit: :property }).where(properties: { user_id: user.id }).pluck(:tenancy_id, :party_id).each do |tenancy_id, party_id|
+          map[tenancy_id] << party_id
+        end
+        map
       end
-      map
-    end
   end
 end

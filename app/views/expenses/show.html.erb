@@ -48,9 +48,9 @@
         <div class="space-y-6 flex-1">
           <div>
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Associated Property</div>
-            <div class="text-lg font-bold leading-tight"><%= @expense.rental_property.address %></div>
+            <div class="text-lg font-bold leading-tight"><%= @expense.property.address %></div>
             <div class="text-sm text-base-content/60 mt-1">
-              Type: <%= @expense.rental_property.property_type&.humanize %>
+              Type: <%= @expense.property.asset_type.titleize %>
             </div>
           </div>
         </div>

@@ -42,16 +42,16 @@
 
         <div class="divider md:divider-horizontal"></div>
 
-        <!-- Property & Lease Details -->
+        <!-- Property & Tenancy Details -->
         <div class="space-y-6 flex-1">
           <div>
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Property Address</div>
-            <div class="text-lg font-bold leading-tight"><%= @tenant_charge.lease.rental_property.address %></div>
+            <div class="text-lg font-bold leading-tight"><%= @tenant_charge.tenancy.property.address %></div>
           </div>
 
           <div>
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Tenant Name</div>
-            <div class="text-lg font-semibold"><%= @tenant_charge.lease.tenants.pluck(:name).join(', ') %></div>
+            <div class="text-lg font-semibold"><%= @tenant_charge.tenancy.parties.pluck(:display_name).join(', ') %></div>
           </div>
         </div>
       </div>

@@ -1,9 +1,9 @@
 class ExpensesController < ApplicationController
   @expense: Expense
   @expenses: Expense::ActiveRecord_Relation
-  @rental_property: RentalProperty?
-  @rental_properties: RentalProperty::ActiveRecord_Relation
-  @leases: Lease::ActiveRecord_Relation
+  @property: Property?
+  @properties: Property::ActiveRecord_Relation
+  @tenancies: Tenancy::ActiveRecord_Relation
   @financial_items: Array[Hash[Symbol, untyped]]
   @year: Integer
 
@@ -25,7 +25,7 @@ class ExpensesController < ApplicationController
 
   def set_expense: () -> untyped
 
-  def set_rental_property: () -> untyped
+  def set_property: () -> untyped
 
   def set_form_data: () -> untyped
 

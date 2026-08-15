@@ -1,0 +1,21 @@
+module Properties
+  class ScheduleESummaryQuery
+    class Result
+      attr_reader rents_received: BigDecimal | Numeric
+      attr_reader utility_reimbursements: BigDecimal | Numeric
+      attr_reader total_income: BigDecimal | Numeric
+      attr_reader expenses_by_category: Hash[String, BigDecimal]
+      attr_reader total_expenses: BigDecimal | Numeric
+      attr_reader net_income: BigDecimal | Numeric
+
+      def initialize: (rents_received: BigDecimal | Numeric, utility_reimbursements: BigDecimal | Numeric, total_income: BigDecimal | Numeric, expenses_by_category: Hash[String, BigDecimal], total_expenses: BigDecimal | Numeric, net_income: BigDecimal | Numeric) -> void
+    end
+
+    def initialize: (property: Property) -> void
+    def call: (year: Integer | String) -> Result
+
+    private
+
+    attr_reader property: Property
+  end
+end

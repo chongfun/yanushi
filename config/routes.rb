@@ -1,41 +1,39 @@
 Rails.application.routes.draw do
+  root "dashboards#index"
   get "dashboards/index"
+
+  resources :properties do
+    resources :rentable_units
+    resources :expenses, only: %i[new create]
+
+    member do
+      get :schedule_e
+      get :schedule_e_pdf
+    end
+  end
+
+  resources :parties
+
+  resources :tenancies do
+    resources :tenant_payments, only: %i[new create]
+    resources :tenancy_parties, only: %i[new create edit update destroy]
+    resources :rent_terms, only: %i[new create]
+  end
+
   resources :expenses
   resources :tenant_payments
-  resources :tenant_charges, only: [ :show, :destroy ]
-  resources :scheduled_rents
-  resources :leases do
-    resources :tenant_payments, only: [ :new, :create ]
-    post :generate_scheduled_rents, on: :member
-  end
-  resources :tenants
+  resources :tenant_charges, only: %i[show destroy]
+  resources :scheduled_rents, only: %i[index show]
   resources :payment_ingestions do
     member do
       post :confirm
       get :download
     end
   end
-  resources :payment_documents, only: [ :destroy ]
-  resources :rental_properties do
-    resources :expenses, only: [ :new, :create ]
-    member do
-      get :schedule_e
-      get :schedule_e_pdf
-    end
-  end
+  resources :payment_documents, only: %i[destroy]
+
   resource :session
   resources :passwords, param: :token
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  root "dashboards#index"
 end

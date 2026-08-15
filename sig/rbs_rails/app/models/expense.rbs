@@ -244,45 +244,45 @@ class ::Expense < ::ApplicationRecord
 
     def expense_date_for_database: () -> ::Date?
 
-    def rental_property_id: () -> ::Integer
+    def property_id: () -> ::Integer
 
-    def rental_property_id=: (::Integer) -> ::Integer
+    def property_id=: (::Integer) -> ::Integer
 
-    def rental_property_id?: () -> bool
+    def property_id?: () -> bool
 
-    def rental_property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def rental_property_id_change: () -> [ ::Integer?, ::Integer? ]
+    def property_id_change: () -> [ ::Integer?, ::Integer? ]
 
-    def rental_property_id_will_change!: () -> void
+    def property_id_will_change!: () -> void
 
-    def rental_property_id_was: () -> ::Integer?
+    def property_id_was: () -> ::Integer?
 
-    def rental_property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def rental_property_id_previous_change: () -> ::Array[::Integer?]?
+    def property_id_previous_change: () -> ::Array[::Integer?]?
 
-    def rental_property_id_previously_was: () -> ::Integer?
+    def property_id_previously_was: () -> ::Integer?
 
-    def rental_property_id_before_last_save: () -> ::Integer?
+    def property_id_before_last_save: () -> ::Integer?
 
-    def rental_property_id_change_to_be_saved: () -> ::Array[::Integer?]?
+    def property_id_change_to_be_saved: () -> ::Array[::Integer?]?
 
-    def rental_property_id_in_database: () -> ::Integer?
+    def property_id_in_database: () -> ::Integer?
 
-    def saved_change_to_rental_property_id: () -> ::Array[::Integer?]?
+    def saved_change_to_property_id: () -> ::Array[::Integer?]?
 
-    def saved_change_to_rental_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def saved_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def will_save_change_to_rental_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def will_save_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def restore_rental_property_id!: () -> void
+    def restore_property_id!: () -> void
 
-    def clear_rental_property_id_change: () -> void
+    def clear_property_id_change: () -> void
 
-    def rental_property_id_before_type_cast: () -> ::Integer
+    def property_id_before_type_cast: () -> ::Integer
 
-    def rental_property_id_for_database: () -> ::Integer
+    def property_id_for_database: () -> ::Integer
 
     def updated_at: () -> ::ActiveSupport::TimeWithZone
 
@@ -376,12 +376,12 @@ class ::Expense < ::ApplicationRecord
   def create_tenant_charge: (?untyped) -> ::TenantCharge
   def create_tenant_charge!: (?untyped) -> ::TenantCharge
   def reload_tenant_charge: () -> ::TenantCharge?
-  def rental_property: () -> ::RentalProperty
-  def rental_property=: (::RentalProperty?) -> ::RentalProperty?
-  def reload_rental_property: () -> ::RentalProperty?
-  def build_rental_property: (?untyped) -> ::RentalProperty
-  def create_rental_property: (?untyped) -> ::RentalProperty
-  def create_rental_property!: (?untyped) -> ::RentalProperty
+  def property: () -> ::Property
+  def property=: (::Property?) -> ::Property?
+  def reload_property: () -> ::Property?
+  def build_property: (?untyped) -> ::Property
+  def create_property: (?untyped) -> ::Property
+  def create_property!: (?untyped) -> ::Property
 
   module ::Expense::GeneratedAssociationMethods
   end
@@ -544,5 +544,5 @@ class ::ApplicationRecord < ::ActiveRecord::Base
 end
 class ::TenantCharge < ::ApplicationRecord
 end
-class ::RentalProperty < ::ApplicationRecord
+class ::Property < ::ApplicationRecord
 end

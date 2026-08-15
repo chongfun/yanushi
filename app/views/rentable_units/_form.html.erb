@@ -1,0 +1,40 @@
+<%= form_with(model: [@property, rentable_unit]) do |form| %>
+  <% if rentable_unit.errors.any? %>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+      <div>
+        <h3 class="font-bold"><%= pluralize(rentable_unit.errors.count, "error") %> prohibited this rentable unit from being saved:</h3>
+        <ul>
+          <% rentable_unit.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :name, "Unit Name (e.g. Unit A, Apt 1, Main House)", class: "label font-semibold" %>
+    <%= form.text_field :name, class: "input input-bordered w-full", required: true %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :unit_identifier, "Unit Identifier (Optional, e.g. 101, 2B)", class: "label font-semibold" %>
+    <%= form.text_field :unit_identifier, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :square_footage, class: "label font-semibold" %>
+    <%= form.number_field :square_footage, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control mb-4">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= form.check_box :active, class: "checkbox checkbox-primary" %>
+      <span class="label-text font-semibold">Active Unit</span>
+    </label>
+  </div>
+
+  <div>
+    <%= form.submit class: "btn btn-primary w-full mt-4" %>
+  </div>
+<% end %>

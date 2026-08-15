@@ -1,0 +1,23 @@
+class TenanciesController < ApplicationController
+  @tenancies: Tenancy::ActiveRecord_Relation
+  @tenancy: Tenancy
+  @properties: Property::ActiveRecord_Relation
+  @parties: Party::ActiveRecord_Relation
+
+  def index: () -> void
+  def show: () -> void
+  def new: () -> void
+  def edit: () -> void
+  def create: () -> void
+  def update: () -> void
+  def destroy: () -> void
+
+  private
+
+  def set_tenancy: () -> Tenancy
+  def set_form_data: () -> void
+  def tenancy_create_params: () -> ActionController::Parameters
+  def tenancy_update_params: () -> ActionController::Parameters
+  def participants_params: () -> Array[ActionController::Parameters | Hash[Symbol, untyped]]
+  def initial_rent_params: () -> (ActionController::Parameters | Hash[Symbol, untyped])
+end

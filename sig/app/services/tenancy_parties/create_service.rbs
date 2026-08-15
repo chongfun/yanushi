@@ -1,0 +1,13 @@
+module TenancyParties
+  class CreateService
+    def self.call: (tenancy: Tenancy, ?user: User?, ?params: untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (tenancy: Tenancy, user: User?, params: Hash[Symbol, untyped]) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader user: User?
+    attr_reader params: Hash[Symbol, untyped]
+  end
+end

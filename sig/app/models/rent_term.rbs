@@ -1,0 +1,15 @@
+class RentTerm < ApplicationRecord
+  FREQUENCIES: Array[String]
+
+  def amount: () -> Float?
+  def amount=: (untyped val) -> void
+  def amount_cents=: (Integer?) -> Integer?
+  def active?: (?Date date, ?as_of: untyped) -> bool
+  def due_date_for: (Integer year, Integer month) -> Date
+
+  private
+
+  def effective_until_after_effective_from: () -> void
+  def effective_dates_within_tenancy_bounds: () -> void
+  def no_overlapping_rent_terms: () -> void
+end

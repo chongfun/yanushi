@@ -1,15 +1,17 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe IngestPaymentDocumentJob, type: :job do
   let(:user) { create(:user) }
-  let!(:tenant) { create(:tenant, user: user, name: "Jane Smith") }
-  let!(:lease) { create(:lease, rental_property: create(:rental_property, user: user), lease_type: "month_to_month", commencement_date: Date.new(2023, 1, 1), annual_rental_amount: 12000.0) }
+  let!(:party) { create(:party, user: user, display_name: "Jane Smith") }
+  let!(:property) { create(:property, user: user) }
+  let!(:unit) { create(:rentable_unit, property: property) }
+  let!(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.new(2023, 1, 1), termination_date: nil) }
 
   before do
-    create(:lease_tenant, lease: lease, tenant: tenant)
+    create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: Date.new(2023, 1, 1))
   end
 
-  it 'performs successfully for valid pdf' do
+  it "performs successfully for valid pdf" do
     pdf_path = Rails.root.join("spec/fixtures/files/receipts/202604 Zelle.pdf")
     pdf_bytes = File.binread(pdf_path)
 
@@ -31,11 +33,11 @@ RSpec.describe IngestPaymentDocumentJob, type: :job do
 
     ingestion = PaymentIngestion.last
     expect(ingestion.receipt_type).to eq("zelle")
-    expect(ingestion.tenant).to eq(tenant)
-    expect(ingestion.lease).to eq(lease)
+    expect(ingestion.party).to eq(party)
+    expect(ingestion.tenancy).to eq(tenancy)
   end
 
-  it 'fails and updates document on invalid document structure' do
+  it "fails and updates document on invalid document structure" do
     doc = create(:payment_document,
       user: user,
       attachment_file: "invalid pdf data",
@@ -53,7 +55,7 @@ RSpec.describe IngestPaymentDocumentJob, type: :job do
     expect(doc.error_message).not_to be_nil
   end
 
-  it 'transaction rolls back all ingestion creation on parsing failure' do
+  it "transaction rolls back all ingestion creation on parsing failure" do
     pdf_path = Rails.root.join("spec/fixtures/files/receipts/202604 Zelle.pdf")
     pdf_bytes = File.binread(pdf_path)
 
@@ -65,7 +67,6 @@ RSpec.describe IngestPaymentDocumentJob, type: :job do
       status: :processing
     )
 
-    # Mock TenantResolver.resolve to raise an error
     allow_any_instance_of(PaymentIngestions::TenantResolver).to receive(:resolve).and_raise("Forced resolve error")
 
     expect {

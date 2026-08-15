@@ -1,0 +1,13 @@
+module Properties
+  class CreateService
+    def self.call: (user: User, ?property_params: untyped, ?unit_params: untyped, ?params: untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, property_params: Hash[Symbol, untyped], ?unit_params: Hash[Symbol, untyped]?) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader user: User
+    attr_reader property_params: Hash[Symbol, untyped]
+    attr_reader unit_params: Hash[Symbol, untyped]?
+  end
+end

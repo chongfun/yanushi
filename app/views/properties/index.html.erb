@@ -1,0 +1,30 @@
+<% content_for :title, "Properties" %>
+
+<% content_for :breadcrumbs do %>
+  <li>Properties</li>
+<% end %>
+
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">Properties</h1>
+  <%= link_to "New Property", new_property_path, class: "btn btn-primary" %>
+</div>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Address</th>
+        <th>Asset Type</th>
+        <th>Size</th>
+        <th>Units</th>
+        <th>Tenancies</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="properties">
+      <% @properties.each do |property| %>
+        <%= render property %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

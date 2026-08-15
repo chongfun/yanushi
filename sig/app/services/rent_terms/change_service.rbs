@@ -1,0 +1,15 @@
+module RentTerms
+  class ChangeService
+    def self.call: (tenancy: Tenancy, ?user: User?, ?amount_cents: Integer?, ?effective_from: untyped, ?due_day: Integer?, ?frequency: String?, ?params: untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (tenancy: Tenancy, amount_cents: Integer?, effective_from: untyped, ?due_day: Integer?, ?frequency: String?) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader amount_cents: Integer?
+    attr_reader effective_from: Date?
+    attr_reader due_day: Integer?
+    attr_reader frequency: String
+  end
+end

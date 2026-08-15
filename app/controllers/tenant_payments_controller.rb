@@ -1,10 +1,10 @@
 class TenantPaymentsController < ApplicationController
-  before_action :set_tenant_payment, only: %i[ show edit update destroy ]
-  before_action :set_lease, only: %i[ new create ]
-  before_action :set_form_data, only: %i[ new edit create update ]
+  before_action :set_tenant_payment, only: %i[show edit update destroy]
+  before_action :set_tenancy, only: %i[new create]
+  before_action :set_form_data, only: %i[new edit create update]
 
   def index
-    @tenant_payments = authenticated_user.tenant_payments.includes(lease: :rental_property)
+    @tenant_payments = authenticated_user.tenant_payments.includes(tenancy: { rentable_unit: :property })
   end
 
   def show
@@ -17,15 +17,13 @@ class TenantPaymentsController < ApplicationController
     end
   end
 
-
   def new
     @tenant_payment = TenantPayment.new
-    @tenant_payment.lease = @lease if @lease
-    if lease = @lease
-      owed = lease.current_balance
-      # @type var tp: ::TenantPayment
+    @tenant_payment.tenancy = @tenancy if @tenancy
+    if tenancy = @tenancy
+      owed = tenancy.current_balance
       tp = @tenant_payment
-      tp.amount = owed < BigDecimal(0) ? owed.abs : BigDecimal(0)
+      tp.amount = owed < BigDecimal("0") ? owed.abs : BigDecimal("0")
     end
     @tenant_payment.payment_date = Date.current
   end
@@ -33,37 +31,33 @@ class TenantPaymentsController < ApplicationController
   def edit
   end
 
-
   def create
-    lease_id = tenant_payment_params[:lease_id]
-    if lease_id.present?
-      authenticated_user.leases.find(lease_id)
-    end
+    tenancy_id = tenant_payment_params[:tenancy_id]
+    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
 
     @tenant_payment = TenantPayment.new(tenant_payment_params)
-    @tenant_payment.lease = @lease if @lease
+    @tenant_payment.tenancy = @tenancy if @tenancy
 
     respond_to do |format|
       if @tenant_payment.save
-        if lease = @lease
+        if (tenancy = @tenancy) && (property = tenancy.property)
           # Submitted from modal
-          rental_property = lease.rental_property
           year = @tenant_payment.payment_date&.year || Date.current.year
-          @financial_items = rental_property.financial_items(year)
+          @financial_items = property.financial_items(year)
           @year = year
 
           format.turbo_stream {
             flash.now[:notice] = "Payment recorded successfully."
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
-              turbo_stream.update("property_financials", partial: "rental_properties/financials",
-                locals: { rental_property: rental_property, financial_items: @financial_items, year: @year }),
-              turbo_stream.update("active_lease_balances", partial: "rental_properties/lease_balances",
-                locals: { rental_property: rental_property }),
+              turbo_stream.update("property_financials", partial: "properties/financials",
+                                  locals: { property: property, financial_items: @financial_items, year: @year }),
+              turbo_stream.update("active_lease_balances", partial: "properties/lease_balances",
+                                  locals: { property: property }),
               turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Payment recorded successfully." })
             ]
           }
-          format.html { redirect_to rental_property, notice: "Payment recorded successfully." }
+          format.html { redirect_to property, notice: "Payment recorded successfully." }
         else
           format.html { redirect_to @tenant_payment, notice: "Payment was successfully created." }
         end
@@ -73,18 +67,16 @@ class TenantPaymentsController < ApplicationController
         format.json { render json: @tenant_payment.errors, status: :unprocessable_content }
         format.turbo_stream {
           render turbo_stream: turbo_stream.update("modal-frame",
-            partial: "tenant_payments/modal_form",
-            locals: { tenant_payment: @tenant_payment, lease: @lease })
+                                                   partial: "tenant_payments/modal_form",
+                                                   locals: { tenant_payment: @tenant_payment, tenancy: @tenancy })
         }
       end
     end
   end
 
   def update
-    lease_id = tenant_payment_params[:lease_id]
-    if lease_id.present?
-      authenticated_user.leases.find(lease_id)
-    end
+    tenancy_id = tenant_payment_params[:tenancy_id]
+    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
 
     respond_to do |format|
       if @tenant_payment.update(tenant_payment_params)
@@ -107,20 +99,27 @@ class TenantPaymentsController < ApplicationController
   end
 
   private
+
     def set_tenant_payment
       @tenant_payment = authenticated_user.tenant_payments.find(params.expect(:id))
     end
 
-    def set_lease
-      @lease = authenticated_user.leases.find(params[:lease_id]) if params[:lease_id].present?
+    def set_tenancy
+      t_id = params[:tenancy_id] || params[:lease_id]
+      @tenancy = authenticated_user.tenancies.find(t_id) if t_id.present?
     end
 
     def set_form_data
-      @leases = authenticated_user.leases.includes(:rental_property, :tenants)
+      @tenancies = authenticated_user.tenancies.includes({ rentable_unit: :property }, :parties)
     end
 
-
     def tenant_payment_params
-      params.expect(tenant_payment: [ :lease_id, :payment_date, :amount, :payment_method, :transaction_number ])
+      raw_params = params.require(:tenant_payment).permit(
+        :tenancy_id, :lease_id, :payment_date, :amount, :payment_method, :transaction_number
+      )
+      if raw_params[:lease_id].present? && raw_params[:tenancy_id].blank?
+        raw_params[:tenancy_id] = raw_params.delete(:lease_id)
+      end
+      raw_params
     end
 end

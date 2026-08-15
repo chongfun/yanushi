@@ -15,16 +15,16 @@
             class: "btn btn-ghost btn-sm #{'btn-active' if current_page?(root_path)}" %>
       </li>
       <li>
-        <%= link_to "Properties", rental_properties_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/rental_properties')}" %>
+        <%= link_to "Properties", properties_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/properties')}" %>
       </li>
       <li>
-        <%= link_to "Tenants", tenants_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/tenants')}" %>
+        <%= link_to "Tenants & Payers", parties_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/parties')}" %>
       </li>
       <li>
-        <%= link_to "Leases", leases_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/leases')}" %>
+        <%= link_to "Tenancies", tenancies_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/tenancies')}" %>
       </li>
       <li>
         <%= link_to "Payments", tenant_payments_path,
@@ -51,9 +51,9 @@
       </div>
       <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[100] p-2 shadow bg-base-100 rounded-box w-52 border border-base-200">
         <li><%= link_to "Dashboard", root_path %></li>
-        <li><%= link_to "Properties", rental_properties_path %></li>
-        <li><%= link_to "Tenants", tenants_path %></li>
-        <li><%= link_to "Leases", leases_path %></li>
+        <li><%= link_to "Properties", properties_path %></li>
+        <li><%= link_to "Tenants & Payers", parties_path %></li>
+        <li><%= link_to "Tenancies", tenancies_path %></li>
         <li><%= link_to "Payments", tenant_payments_path %></li>
         <li><%= link_to "Ingestions", payment_ingestions_path %></li>
         <li><%= link_to "Expenses", expenses_path %></li>

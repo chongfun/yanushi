@@ -1,0 +1,14 @@
+module Tenancies
+  class CreateService
+    def self.call: (user: User, ?tenancy_params: untyped, ?participants: untyped, ?initial_rent: untyped, ?params: untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, tenancy_params: Hash[Symbol, untyped], participants: Array[untyped], initial_rent: Hash[Symbol, untyped]) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader user: User
+    attr_reader tenancy_params: Hash[Symbol, untyped]
+    attr_reader participants: Array[untyped]
+    attr_reader initial_rent: Hash[Symbol, untyped]
+  end
+end

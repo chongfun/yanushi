@@ -1,0 +1,68 @@
+<%= form_with(model: [@tenancy, tenancy_party]) do |form| %>
+  <% if tenancy_party.errors.any? %>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+      <div>
+        <h3 class="font-bold"><%= pluralize(tenancy_party.errors.count, "error") %> prohibited this participant from being saved:</h3>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+          <% tenancy_party.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <% if tenancy_party.new_record? %>
+    <div class="form-control w-full mb-4">
+      <%= form.label :party_id, "Select Party", class: "label font-semibold" %>
+      <%= form.select :party_id, @parties.map { |p| [p.display_name, p.id] }, {}, { class: "select select-bordered w-full", required: true } %>
+    </div>
+
+    <div class="form-control w-full mb-4">
+      <%= form.label :role, "Role", class: "label font-semibold" %>
+      <%= form.select :role, TenancyParty::ROLES.map { |r| [r.titleize, r] }, {}, { class: "select select-bordered w-full", required: true } %>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="form-control w-full">
+        <%= form.label :effective_from, "Effective From Date", class: "label font-semibold" %>
+        <%= form.date_field :effective_from, class: "input input-bordered w-full", required: true %>
+      </div>
+
+      <div class="form-control w-full">
+        <%= form.label :effective_until, "Effective Until Date (Optional)", class: "label font-semibold" %>
+        <%= form.date_field :effective_until, class: "input input-bordered w-full" %>
+      </div>
+    </div>
+  <% else %>
+    <div class="bg-base-200/50 p-4 rounded-box mb-6 space-y-3">
+      <div>
+        <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Participant</div>
+        <div class="text-lg font-bold"><%= tenancy_party.party.display_name %></div>
+      </div>
+      <div class="flex gap-6">
+        <div>
+          <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Role</div>
+          <span class="badge badge-primary badge-sm font-semibold mt-1"><%= tenancy_party.role.titleize %></span>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Effective From</div>
+          <div class="text-sm font-medium mt-1"><%= tenancy_party.effective_from&.to_fs(:rfc822) %></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-control w-full mb-4">
+      <%= form.label :effective_until, "Effective Until Date (End of participation)", class: "label font-semibold" %>
+      <%= form.date_field :effective_until, class: "input input-bordered w-full" %>
+      <label class="label">
+        <span class="label-text-alt text-base-content/60">To change a participant's role or start a new period, add a new participant record.</span>
+      </label>
+    </div>
+  <% end %>
+
+  <div class="flex justify-end gap-3 pt-4">
+    <%= link_to "Cancel", @tenancy, class: "btn btn-ghost" %>
+    <%= form.submit class: "btn btn-primary px-8" %>
+  </div>
+<% end %>
