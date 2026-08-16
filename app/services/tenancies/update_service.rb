@@ -61,6 +61,15 @@ module Tenancies
             code: :validation_error
           )
         end
+
+        if tenancy.charges.where(charge_kind: "rent").active.where("service_period_end > ?", new_term_date).exists?
+          tenancy.errors.add(:termination_date, "cannot precede existing rent charges end date")
+          return ServiceResult.failure(
+            data: { tenancy: tenancy },
+            error: "Cannot set termination date before existing rent charges end date. Void the affected charges first.",
+            code: :conflict
+          )
+        end
       end
 
       Tenancy.transaction do

@@ -1,4 +1,3 @@
-
 <div class="max-w-3xl mx-auto py-8">
   <div class="flex justify-between items-center mb-6">
     <div>
@@ -56,12 +55,98 @@
         </div>
       </div>
 
-      <div class="card-actions justify-end mt-10 border-t border-base-200 pt-8">
-        <%= button_to "Delete Expense", @expense, method: :delete, 
-            class: "btn btn-error btn-ghost", 
-            form: { data: { turbo_confirm: "Are you sure you want to delete this expense record?" } } %>
+      <!-- Reimbursements Section -->
+      <div class="divider my-6">Tenant Reimbursements</div>
+
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="font-bold text-base">Reimbursement Charges</h3>
+            <p class="text-xs text-base-content/60">
+              Reimbursed: <%= number_to_currency(@expense.total_active_reimbursement_cents / 100.0) %> of <%= number_to_currency(@expense.amount) %>
+              (<%= number_to_currency(@expense.remaining_reimbursable_amount) %> available)
+            </p>
+          </div>
+          <% if @expense.fully_reimbursed? %>
+            <span class="badge badge-success">Fully Reimbursed</span>
+          <% else %>
+            <%= link_to "＋ Add Reimbursement Charge", new_expense_reimbursement_path(@expense), class: "btn btn-sm btn-primary" %>
+          <% end %>
+        </div>
+
+        <% reimbursements = @expense.reimbursement_charges.order(created_at: :asc) %>
+        <% if reimbursements.any? %>
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Tenancy</th>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th class="text-right">Amount</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% reimbursements.each do |charge| %>
+                  <tr class="<%= 'opacity-60 bg-base-200/50' if charge.voided? %>">
+                    <td>
+                      <div class="font-medium"><%= charge.tenancy.rentable_unit.display_name %></div>
+                      <div class="text-xs text-base-content/60">Tenancy #<%= charge.tenancy_id %></div>
+                    </td>
+                    <td><%= charge.charge_date.strftime("%b %d, %Y") %></td>
+                    <td class="text-xs text-base-content/70 truncate max-w-xs"><%= charge.description %></td>
+                    <td class="font-mono text-right font-medium <%= charge.voided? ? 'line-through text-base-content/40' : 'text-error' %>">
+                      <%= number_to_currency(charge.amount) %>
+                    </td>
+                    <td>
+                      <% if charge.voided? %>
+                        <span class="badge badge-xs badge-error">Voided</span>
+                      <% else %>
+                        <span class="badge badge-xs badge-success">Active</span>
+                      <% end %>
+                    </td>
+                    <td class="text-right flex justify-end gap-1 items-center">
+                      <%= link_to "View", charge_path(charge), class: "btn btn-xs btn-ghost" %>
+                      <% if charge.active? %>
+                        <%= button_to "Void", void_charge_path(charge), method: :post,
+                            class: "btn btn-xs btn-outline btn-error",
+                            form: { data: { turbo_confirm: "Are you sure you want to void this reimbursement charge?" } } %>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="text-xs text-base-content/60 p-4 bg-base-200/40 rounded-lg border border-base-300 text-center">
+            No tenant reimbursement charges have been posted for this expense.
+          </div>
+        <% end %>
+      </div>
+
+      <div class="card-actions justify-between items-center mt-10 border-t border-base-200 pt-8">
+        <div>
+          <% if @expense.charges.exists? %>
+            <span class="text-xs text-base-content/50">
+              Linked to <%= pluralize(@expense.charges.count, "posted charge") %> • Deletion restricted
+            </span>
+          <% end %>
+        </div>
+        <div>
+          <% if @expense.charges.exists? %>
+            <button class="btn btn-disabled btn-sm" disabled title="Cannot delete expense with linked charges">
+              Delete Expense
+            </button>
+          <% else %>
+            <%= button_to "Delete Expense", @expense, method: :delete, 
+                class: "btn btn-error btn-ghost btn-sm", 
+                form: { data: { turbo_confirm: "Are you sure you want to delete this expense record?" } } %>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
 </div>
-

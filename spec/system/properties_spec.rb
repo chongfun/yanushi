@@ -28,7 +28,7 @@ RSpec.describe "Properties", type: :system do
     property = create(:property, user: user, address: "999 Ledger St")
     unit = create(:rentable_unit, property: property)
     tenancy = create(:tenancy, rentable_unit: unit, commencement_date: Date.current)
-    create(:scheduled_rent, tenancy: tenancy, due_date: Date.current, amount: 1000.0)
+    create(:charge, :other_charge, tenancy: tenancy, charge_date: Date.current, amount_cents: 100_000, description: "Current Charge")
 
     past_year = Date.current.year - 1
 
@@ -42,12 +42,12 @@ RSpec.describe "Properties", type: :system do
 
     visit property_path(property)
 
-    expect(page).to have_text("Scheduled Rent")
+    expect(page).to have_text("Current Charge")
     expect(page).not_to have_text("Past year plumbing")
 
     visit property_path(property, year: past_year)
 
     expect(page).to have_text("Past year plumbing")
-    expect(page).not_to have_text("Scheduled Rent")
+    expect(page).not_to have_text("Current Charge")
   end
 end

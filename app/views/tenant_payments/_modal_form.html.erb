@@ -8,8 +8,10 @@
   </div>
   <div class="flex justify-between mt-1">
     <span class="text-base-content/70">Current Balance</span>
-    <span class="font-semibold <%= tenancy.current_balance >= 0 ? 'text-success' : 'text-error' %>">
-      <%= tenancy.current_balance >= 0 ? "+" : "" %><%= number_to_currency(tenancy.current_balance) %>
+    <% bal = tenancy.current_balance %>
+    <% text_class = if bal > 0 then 'text-error' elsif bal < 0 then 'text-success' else 'text-base-content/70' end %>
+    <span class="font-semibold <%= text_class %>">
+      <%= bal < 0 ? '-' : '' %><%= number_to_currency(bal.abs) %>
     </span>
   </div>
 </div>

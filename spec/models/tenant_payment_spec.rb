@@ -101,4 +101,24 @@ RSpec.describe TenantPayment, type: :model do
       expect(payment.accounting_user).to be_nil
     end
   end
+
+  describe "immutability" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+    let(:payment) { create(:tenant_payment, tenancy: tenancy, amount: 500) }
+
+    it "prevents updating attributes on persisted payment" do
+      payment.amount = 600
+      expect(payment.save).to be(false)
+      expect(payment.errors[:base]).to include("Tenant payments are immutable once recorded.")
+    end
+
+    it "prevents destroying persisted payment" do
+      expect(payment.destroy).to be(false)
+      expect(payment.errors[:base]).to include("Tenant payments cannot be destroyed once recorded.")
+      expect(TenantPayment.exists?(payment.id)).to be(true)
+    end
+  end
 end

@@ -1,7 +1,7 @@
 class TenantPaymentsController < ApplicationController
-  before_action :set_tenant_payment, only: %i[show edit update destroy]
+  before_action :set_tenant_payment, only: %i[show]
   before_action :set_tenancy, only: %i[new create]
-  before_action :set_form_data, only: %i[new edit create update]
+  before_action :set_form_data, only: %i[new create]
 
   def index
     @tenant_payments = authenticated_user.tenant_payments.includes(tenancy: { rentable_unit: :property })
@@ -23,24 +23,24 @@ class TenantPaymentsController < ApplicationController
     if tenancy = @tenancy
       owed = tenancy.current_balance
       tp = @tenant_payment
-      tp.amount = owed < BigDecimal("0") ? owed.abs : BigDecimal("0")
+      tp.amount = owed > BigDecimal("0") ? owed : BigDecimal("0")
     end
     @tenant_payment.payment_date = Date.current
   end
 
-  def edit
-  end
-
   def create
     tenancy_id = tenant_payment_params[:tenancy_id]
-    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
+    tenancy = @tenancy || (tenancy_id.present? ? authenticated_user.tenancies.find(tenancy_id) : nil)
 
-    @tenant_payment = TenantPayment.new(tenant_payment_params)
-    @tenant_payment.tenancy = @tenancy if @tenancy
+    result = TenantPayments::CreateService.call(
+      tenancy: tenancy,
+      params: tenant_payment_params
+    )
 
     respond_to do |format|
-      if @tenant_payment.save
-        if (tenancy = @tenancy) && (property = tenancy.property)
+      if result.success?
+        @tenant_payment = result.value!.data[:tenant_payment]
+        if (t = @tenancy) && (property = t.property)
           # Submitted from modal
           year = @tenant_payment.payment_date&.year || Date.current.year
           @financial_items = property.financial_items(year)
@@ -63,6 +63,8 @@ class TenantPaymentsController < ApplicationController
         end
         format.json { render :show, status: :created, location: @tenant_payment }
       else
+        @tenant_payment = result.failure.data&.dig(:tenant_payment) || TenantPayment.new(tenant_payment_params)
+        @tenant_payment.tenancy = tenancy if tenancy
         format.html { render :new, status: :unprocessable_content }
         format.json { render json: @tenant_payment.errors, status: :unprocessable_content }
         format.turbo_stream {
@@ -71,30 +73,6 @@ class TenantPaymentsController < ApplicationController
                                                    locals: { tenant_payment: @tenant_payment, tenancy: @tenancy })
         }
       end
-    end
-  end
-
-  def update
-    tenancy_id = tenant_payment_params[:tenancy_id]
-    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
-
-    respond_to do |format|
-      if @tenant_payment.update(tenant_payment_params)
-        format.html { redirect_to @tenant_payment, notice: "Payment was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @tenant_payment }
-      else
-        format.html { render :edit, status: :unprocessable_content }
-        format.json { render json: @tenant_payment.errors, status: :unprocessable_content }
-      end
-    end
-  end
-
-  def destroy
-    @tenant_payment.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to tenant_payments_path, notice: "Payment was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
     end
   end
 

@@ -13,7 +13,14 @@
 
   <div class="form-control w-full mb-4">
     <%= form.label :property_id, "Property", class: "label font-semibold" %>
-    <%= form.collection_select :property_id, @properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
+    <% if expense.persisted? && expense.charges.exists? %>
+      <div class="input input-bordered w-full bg-base-200 flex items-center font-medium opacity-80 cursor-not-allowed">
+        <%= expense.property.address %>
+      </div>
+      <div class="text-xs text-base-content/60 mt-1">Property cannot be changed after reimbursement charges have been posted.</div>
+    <% else %>
+      <%= form.collection_select :property_id, @properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
+    <% end %>
   </div>
 
   <div class="form-control w-full mb-4">
@@ -38,25 +45,74 @@
 
   <div class="divider">Tenant Reimbursement</div>
 
-  <div class="form-control mb-4">
-    <label class="label cursor-pointer justify-start gap-4">
-      <%= form.check_box :tenant_reimbursable, class: "checkbox checkbox-primary" %>
-      <span class="label-text font-semibold">Tenant Reimbursable (Charges Tenant Running Account)</span>
-    </label>
-  </div>
+  <% if expense.persisted? %>
+    <div class="space-y-3 mb-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="font-bold text-sm">Linked Reimbursement Charges (<%= expense.reimbursement_charges.count %>)</div>
+          <div class="text-xs text-base-content/60">
+            Reimbursed: <%= number_to_currency(expense.total_active_reimbursement_cents / 100.0) %> / <%= number_to_currency(expense.amount) %>
+            (<%= number_to_currency(expense.remaining_reimbursable_amount) %> remaining)
+          </div>
+        </div>
+        <% if expense.fully_reimbursed? %>
+          <span class="badge badge-success badge-sm">Fully Reimbursed</span>
+        <% else %>
+          <%= link_to "＋ Add Reimbursement Charge", new_expense_reimbursement_path(expense), class: "btn btn-xs btn-outline btn-primary" %>
+        <% end %>
+      </div>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :reimburse_tenancy_id, "Tenancy to Charge", class: "label font-semibold" %>
-    <%= form.select :reimburse_tenancy_id, 
-          @tenancies.map { |t| ["#{t.property.address} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
-          { include_blank: "Select a tenancy (or auto-assign active tenancy)..." },
-          { class: "select select-bordered w-full" } %>
-  </div>
+      <% if expense.reimbursed? %>
+        <% expense.reimbursement_charges.order(created_at: :asc).each do |charge| %>
+          <div class="card bg-base-200/60 border border-base-300 p-3 text-sm">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="font-semibold">Tenancy #<%= charge.tenancy_id %> (<%= charge.tenancy.rentable_unit.display_name %>)</div>
+                <div class="text-xs text-base-content/60"><%= charge.charge_date.strftime("%b %d, %Y") %> • <%= charge.description %></div>
+              </div>
+              <div class="text-right font-mono font-bold <%= charge.voided? ? 'line-through text-base-content/40' : 'text-error' %>">
+                <%= number_to_currency(charge.amount) %>
+                <div>
+                  <% if charge.voided? %>
+                    <span class="badge badge-xs badge-error">Voided</span>
+                  <% else %>
+                    <span class="badge badge-xs badge-success">Active</span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            <div class="mt-2 flex justify-end">
+              <%= link_to "View / Void Charge", charge_path(charge), class: "link link-primary text-xs" %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="text-xs text-base-content/60 p-3 bg-base-200/40 rounded-lg border border-base-300">
+          No reimbursement charges have been posted yet. You can add one using the button above.
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="form-control mb-4">
+      <label class="label cursor-pointer justify-start gap-4">
+        <%= form.check_box :tenant_reimbursable, class: "checkbox checkbox-primary" %>
+        <span class="label-text font-semibold">Tenant Reimbursable (Charges Tenant Running Account)</span>
+      </label>
+    </div>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :reimburse_amount, "Charge Amount (Defaults to expense amount if left blank)", class: "label font-semibold" %>
-    <%= form.number_field :reimburse_amount, step: "0.01", class: "input input-bordered w-full", placeholder: "e.g. 150.00" %>
-  </div>
+    <div class="form-control w-full mb-4">
+      <%= form.label :reimburse_tenancy_id, "Tenancy to Charge", class: "label font-semibold" %>
+      <%= form.select :reimburse_tenancy_id, 
+            @tenancies.map { |t| ["#{t.property.address} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
+            { include_blank: "Select a tenancy (or auto-assign active tenancy)..." },
+            { class: "select select-bordered w-full" } %>
+    </div>
+
+    <div class="form-control w-full mb-4">
+      <%= form.label :reimburse_amount, "Charge Amount (Defaults to expense amount if left blank)", class: "label font-semibold" %>
+      <%= form.number_field :reimburse_amount, step: "0.01", class: "input input-bordered w-full", placeholder: "e.g. 150.00" %>
+    </div>
+  <% end %>
 
   <div>
     <%= form.submit class: "btn btn-primary w-full mt-4" %>

@@ -28,8 +28,9 @@
   </td>
   <td>
     <% balance = tenancy.current_balance %>
-    <span class="font-bold text-sm <%= balance >= 0 ? 'text-success' : 'text-error' %>">
-      <%= balance >= 0 ? '+' : '' %><%= number_to_currency(balance) %>
+    <% text_class = if balance > 0 then 'text-error' elsif balance < 0 then 'text-success' else 'text-base-content/70' end %>
+    <span class="font-bold text-sm <%= text_class %>">
+      <%= balance < 0 ? '-' : '' %><%= number_to_currency(balance.abs) %>
     </span>
   </td>
   <th class="text-right">

@@ -1,43 +1,34 @@
 module Tenancies
   class BalanceQuery
+    def self.call(tenancy:, as_of: nil)
+      new(tenancy: tenancy).balance_as_of(as_of || Date.current)
+    end
+
     def initialize(tenancy:)
       @tenancy = tenancy
     end
 
-    def total_credits(as_of: Date.current)
-      if tenancy.tenant_payments.loaded?
-        tenancy.tenant_payments.select { |payment| payment.payment_date <= as_of }.sum { |p| p.amount }
-      else
-        tenancy.tenant_payments.where("payment_date <= ?", as_of).sum(:amount)
-      end
+    def balance_cents_as_of(as_of = Date.current)
+      account = tenancy.accounting_user&.accounts&.find_by(key: "tenant_receivable")
+      return 0 unless account
+
+      tenancy.accounting_postings
+             .joins(:journal_entry)
+             .where(account_id: account.id)
+             .where("journal_entries.occurred_on <= ?", as_of)
+             .sum(:amount_cents)
     end
 
-    def total_debits(as_of: Date.current)
-      scheduled_rent_debits(as_of: as_of) + tenant_charge_debits(as_of: as_of)
+    def balance_as_of(as_of = Date.current)
+      BigDecimal(balance_cents_as_of(as_of)) / 100
     end
 
-    def balance_as_of(date = Date.current)
-      total_credits(as_of: date) - total_debits(as_of: date)
+    def current_balance
+      balance_as_of(Date.current)
     end
 
     private
 
       attr_reader :tenancy
-
-      def scheduled_rent_debits(as_of:)
-        if tenancy.scheduled_rents.loaded?
-          tenancy.scheduled_rents.select { |rent| (due = rent.due_date) && due <= as_of }.sum { |r| r.amount }
-        else
-          tenancy.scheduled_rents.where("due_date <= ?", as_of).sum(:amount)
-        end
-      end
-
-      def tenant_charge_debits(as_of:)
-        if tenancy.tenant_charges.loaded?
-          tenancy.tenant_charges.select { |charge| charge.charge_date <= as_of }.sum { |c| c.amount }
-        else
-          tenancy.tenant_charges.where("charge_date <= ?", as_of).sum(:amount)
-        end
-      end
   end
 end

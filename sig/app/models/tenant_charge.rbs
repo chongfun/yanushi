@@ -1,3 +1,0 @@
-class TenantCharge < ApplicationRecord
-  def accounting_user: () -> User?
-end

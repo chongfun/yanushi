@@ -369,13 +369,15 @@ class ::Expense < ::ApplicationRecord
     alias id_value_for_database id_for_database
   end
   include ::Expense::GeneratedAliasAttributeMethods
+  def charges: () -> ::Charge::ActiveRecord_Associations_CollectionProxy
+  def charges=: (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge]) -> (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge])
+  def charge_ids: () -> ::Array[::Integer]
+  def charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def reimbursement_charges: () -> ::Charge::ActiveRecord_Associations_CollectionProxy
+  def reimbursement_charges=: (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge]) -> (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge])
+  def reimbursement_charge_ids: () -> ::Array[::Integer]
+  def reimbursement_charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
-  def tenant_charge: () -> ::TenantCharge?
-  def tenant_charge=: (::TenantCharge?) -> ::TenantCharge?
-  def build_tenant_charge: (?untyped) -> ::TenantCharge
-  def create_tenant_charge: (?untyped) -> ::TenantCharge
-  def create_tenant_charge!: (?untyped) -> ::TenantCharge
-  def reload_tenant_charge: () -> ::TenantCharge?
   def property: () -> ::Property
   def property=: (::Property?) -> ::Property?
   def reload_property: () -> ::Property?
@@ -542,7 +544,9 @@ end
 
 class ::ApplicationRecord < ::ActiveRecord::Base
 end
-class ::TenantCharge < ::ApplicationRecord
+class ::Charge < ::ApplicationRecord
+end
+class ::Charge::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Property < ::ApplicationRecord
 end

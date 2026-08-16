@@ -7,10 +7,10 @@ RSpec.describe Properties::ActiveYearsQuery do
   let(:tenancy) { create(:tenancy, rentable_unit: unit) }
 
   it "returns current, activity, and valid additional years" do
-    create(:scheduled_rent, tenancy: tenancy, due_date: Date.new(2026, 4, 1))
+    create(:charge, :other_charge, tenancy: tenancy, charge_date: Date.new(2026, 4, 1))
     create(:tenant_payment, tenancy: tenancy, payment_date: Date.new(2025, 4, 1))
     create(:expense, property: property, expense_date: Date.new(2024, 4, 1))
-    create(:tenant_charge, tenancy: tenancy, charge_date: Date.new(2023, 4, 1))
+    create(:charge, :late_fee_charge, tenancy: tenancy, charge_date: Date.new(2023, 4, 1))
 
     unresponsive_obj = Object.new
     def unresponsive_obj.respond_to?(method, *)

@@ -16,14 +16,20 @@ Rails.application.routes.draw do
 
   resources :tenancies do
     resources :tenant_payments, only: %i[new create]
+    resources :charges, only: %i[new create]
     resources :tenancy_parties, only: %i[new create edit update destroy]
     resources :rent_terms, only: %i[new create]
   end
 
-  resources :expenses
-  resources :tenant_payments
-  resources :tenant_charges, only: %i[show destroy]
-  resources :scheduled_rents, only: %i[index show]
+  resources :expenses do
+    resources :reimbursements, only: %i[new create], controller: "expense_reimbursements"
+  end
+  resources :tenant_payments, only: %i[index show new create]
+  resources :charges, only: %i[show] do
+    member do
+      post :void
+    end
+  end
   resources :payment_ingestions do
     member do
       post :confirm

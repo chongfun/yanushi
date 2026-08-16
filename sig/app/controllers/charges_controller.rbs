@@ -1,0 +1,15 @@
+class ChargesController < ApplicationController
+  @tenancy: Tenancy
+  @charge: Charge
+
+  def new: () -> void
+  def show: () -> void
+  def create: () -> void
+  def void: () -> void
+
+  private
+
+  def set_tenancy: () -> void
+  def set_charge: () -> void
+  def charge_params: () -> ActionController::Parameters
+end

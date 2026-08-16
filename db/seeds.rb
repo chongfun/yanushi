@@ -29,14 +29,15 @@ if Rails.env.development?
     effective_from: Date.current - 1.year
   )
 
+  RentCharges::GenerateThroughService.call(tenancy: tenancy, through: Date.current)
+
   (1..11).each do |months_ago|
     due_date = (Date.current - months_ago.months).beginning_of_month
-    sr = ScheduledRent.create!(tenancy: tenancy, amount: 1200.0, due_date: due_date)
     payment_date = due_date + rand(tenancy.late_period_days || 3)
-    TenantPayment.create!(tenancy: tenancy, amount: 1200.0, payment_date: payment_date, payment_method: "ach")
+    TenantPayments::CreateService.call(tenancy: tenancy, amount: 1200.0, payment_date: payment_date, payment_method: "ach")
 
     expense_amount = rand(100...200)
-    expense = Expense.create!(
+    expense = Expense.new(
       property: property,
       amount: expense_amount,
       category: "utilities",
@@ -45,8 +46,8 @@ if Rails.env.development?
       reimburse_tenancy_id: tenancy.id,
       reimburse_amount: expense_amount
     )
-    Expenses::TenantChargeService.call(expense)
-    TenantPayment.create!(tenancy: tenancy, amount: expense_amount, payment_date: payment_date, payment_method: "ach")
+    Expenses::SaveService.call(expense: expense)
+    TenantPayments::CreateService.call(tenancy: tenancy, amount: expense_amount, payment_date: payment_date, payment_method: "ach")
   end
 
   Expense.create!(property: property, amount: rand(200...300), category: "repairs", expense_date: Date.current - 1.year, description: "A/C tune-up")

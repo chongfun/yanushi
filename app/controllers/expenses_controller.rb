@@ -89,11 +89,15 @@ class ExpensesController < ApplicationController
   end
 
   def destroy
-    @expense.destroy!
-
     respond_to do |format|
-      format.html { redirect_to expenses_path, notice: "Expense was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+      if @expense.destroy
+        format.html { redirect_to expenses_path, notice: "Expense was successfully destroyed.", status: :see_other }
+        format.json { head :no_content }
+      else
+        error_msg = @expense.errors.full_messages.to_sentence.presence || "dependent charges exist."
+        format.html { redirect_to @expense, alert: "Cannot delete expense: #{error_msg}", status: :see_other }
+        format.json { render json: { error: error_msg }, status: :unprocessable_content }
+      end
     end
   end
 

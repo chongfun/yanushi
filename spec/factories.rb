@@ -69,12 +69,6 @@ FactoryBot.define do
     effective_until { tenancy&.termination_date }
   end
 
-  factory :scheduled_rent do
-    association :tenancy
-    amount { 1200.0 }
-    due_date { Date.current }
-  end
-
   factory :tenant_payment do
     association :tenancy
     amount { 1200.0 }
@@ -89,14 +83,6 @@ FactoryBot.define do
     amount { 100.0 }
     expense_date { Date.current }
     description { "Fixing faucet" }
-  end
-
-  factory :tenant_charge do
-    association :tenancy
-    association :expense
-    amount { 100.0 }
-    charge_date { Date.current }
-    description { "Reimbursable repair" }
   end
 
   factory :payment_document do
@@ -134,5 +120,55 @@ FactoryBot.define do
     association :journal_entry
     account { association :account, user: journal_entry.user }
     amount_cents { 10_000 }
+  end
+
+  factory :charge do
+    association :tenancy
+    charge_kind { "other" }
+    amount_cents { 10_000 }
+    charge_date { Date.current }
+    due_on { Date.current }
+    description { "General charge" }
+
+    trait :rent_charge do
+      charge_kind { "rent" }
+      description { "Monthly Rent" }
+      rent_term do
+        association :rent_term,
+          tenancy: tenancy,
+          amount_cents: amount_cents,
+          effective_from: tenancy.commencement_date,
+          effective_until: tenancy.termination_date
+      end
+      service_period_start { tenancy.commencement_date || Date.current.beginning_of_month }
+      service_period_end { tenancy.termination_date || (service_period_start + 1.month - 1.day) }
+    end
+
+    trait :late_fee_charge do
+      charge_kind { "late_fee" }
+      description { "Late Fee" }
+    end
+
+    trait :reimbursement_charge do
+      charge_kind { "reimbursement" }
+      description { "Utility Reimbursement" }
+      source_expense do
+        association :expense,
+          property: tenancy.property || association(:property, user: tenancy.accounting_user)
+      end
+    end
+
+    trait :other_charge do
+      charge_kind { "other" }
+      description { "Other Charge" }
+    end
+
+    trait :voided_charge do
+      voided_at { Time.current }
+    end
+
+    trait :posted do
+      posted_at { Time.current }
+    end
   end
 end

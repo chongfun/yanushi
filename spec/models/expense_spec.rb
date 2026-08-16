@@ -3,7 +3,8 @@ require "rails_helper"
 RSpec.describe Expense, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:property) }
-    it { is_expected.to have_one(:tenant_charge).dependent(:destroy) }
+    it { is_expected.to have_many(:charges).with_foreign_key(:source_expense_id).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:reimbursement_charges).class_name("Charge").with_foreign_key(:source_expense_id).dependent(:restrict_with_error) }
   end
 
   describe "enums" do
@@ -45,12 +46,7 @@ RSpec.describe Expense, type: :model do
     let(:unit) { create(:rentable_unit, property: property) }
     let(:tenancy) { create(:tenancy, rentable_unit: unit) }
 
-    def save_with_tenant_charge!(expense)
-      expense.save!
-      Expenses::TenantChargeService.call(expense)
-    end
-
-    it "creates a reimbursable expense and a matching tenant charge" do
+    it "creates a reimbursable expense and a matching reimbursement Charge" do
       expense = build(:expense,
         property: property,
         amount: 150.00,
@@ -62,12 +58,15 @@ RSpec.describe Expense, type: :model do
       )
 
       expect {
-        save_with_tenant_charge!(expense)
-      }.to change(TenantCharge, :count).by(1)
+        result = Expenses::SaveService.call(expense: expense)
+        expect(result).to be_success
+      }.to change(Charge, :count).by(1)
 
-      charge = expense.tenant_charge
+      charge = expense.reimbursement_charges.first
       expect(charge.amount).to eq(150.00)
       expect(charge.tenancy_id).to eq(tenancy.id)
+      expect(charge.reimbursement?).to be true
+      expect(charge.posted?).to be true
     end
 
     it "creates a reimbursable expense with a custom amount" do
@@ -82,106 +81,145 @@ RSpec.describe Expense, type: :model do
         reimburse_amount: 75.00
       )
 
-      save_with_tenant_charge!(expense)
-      expect(expense.tenant_charge.amount).to eq(75.00)
-    end
-
-    it "updates charge amount automatically when expense amount is changed (unless custom)" do
-      expense = create(:expense,
-        property: property,
-        amount: 150.00,
-        category: "utilities",
-        expense_date: Date.current,
-        description: "Water bill"
-      )
-      expense.assign_attributes(tenant_reimbursable: true, reimburse_tenancy_id: tenancy.id)
-      save_with_tenant_charge!(expense)
-
-      expense.assign_attributes(amount: 200.00, reimburse_amount: "150.00")
-      save_with_tenant_charge!(expense)
-
-      expect(expense.tenant_charge.amount).to eq(200.00)
-    end
-
-    it "does not update charge amount when expense is changed if the charge was custom" do
-      expense = create(:expense,
-        property: property,
-        amount: 150.00,
-        category: "utilities",
-        expense_date: Date.current,
-        description: "Water bill"
-      )
-      expense.assign_attributes(tenant_reimbursable: true, reimburse_tenancy_id: tenancy.id, reimburse_amount: 50.00)
-      save_with_tenant_charge!(expense)
-
-      expense.assign_attributes(amount: 200.00, reimburse_amount: "50.00")
-      save_with_tenant_charge!(expense)
-
-      expect(expense.tenant_charge.amount).to eq(50.00)
-    end
-
-    it "clears custom reimbursement amount when reimburse_amount is set to empty" do
-      expense = create(:expense,
-        property: property,
-        amount: 150.00,
-        category: "utilities",
-        expense_date: Date.current,
-        description: "Water bill"
-      )
-      expense.assign_attributes(tenant_reimbursable: true, reimburse_tenancy_id: tenancy.id, reimburse_amount: 50.00)
-      save_with_tenant_charge!(expense)
-
-      expense.assign_attributes(amount: 150.00, reimburse_amount: "")
-      save_with_tenant_charge!(expense)
-
-      expect(expense.tenant_charge.amount).to eq(150.00)
-    end
-
-    it "syncs programmatic updates when not custom" do
-      expense = create(:expense,
-        property: property,
-        amount: 150.00,
-        category: "utilities",
-        expense_date: Date.current,
-        description: "Water bill"
-      )
-      expense.assign_attributes(tenant_reimbursable: true, reimburse_tenancy_id: tenancy.id)
-      save_with_tenant_charge!(expense)
-
-      expense.update!(amount: 180.00)
-      Expenses::TenantChargeService.call(expense)
-
-      expect(expense.tenant_charge.reload.amount).to eq(180.00)
-    end
-
-    it "does not sync programmatic updates when custom" do
-      expense = create(:expense,
-        property: property,
-        amount: 150.00,
-        category: "utilities",
-        expense_date: Date.current,
-        description: "Water bill"
-      )
-      expense.assign_attributes(tenant_reimbursable: true, reimburse_tenancy_id: tenancy.id, reimburse_amount: 50.00)
-      save_with_tenant_charge!(expense)
-
-      expense.update!(amount: 180.00)
-      Expenses::TenantChargeService.call(expense)
-
-      expect(expense.tenant_charge.reload.amount).to eq(50.00)
+      Expenses::SaveService.call(expense: expense)
+      expect(expense.reimbursement_charges.first.amount).to eq(75.00)
     end
   end
 
   describe "#reimburse_tenancy_id" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+
     it "returns @reimburse_tenancy_id when present" do
       expense = build(:expense, reimburse_tenancy_id: 123)
       expect(expense.reimburse_tenancy_id).to eq(123)
     end
 
-    it "returns tenant_charge tenancy_id when @reimburse_tenancy_id is blank" do
-      charge = build(:tenant_charge, tenancy_id: 456)
-      expense = build(:expense, tenant_charge: charge)
-      expect(expense.reimburse_tenancy_id).to eq(456)
+    it "returns first reimbursement_charge tenancy_id when @reimburse_tenancy_id is blank" do
+      expense = create(:expense, property: property, amount: 100)
+      create(:charge, :reimbursement_charge, tenancy: tenancy, source_expense: expense, amount_cents: 10_000)
+      expect(expense.reload.reimburse_tenancy_id).to eq(tenancy.id)
+    end
+  end
+
+  describe "#prevent_property_change_with_charges" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:other_property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+    let(:expense) { create(:expense, property: property, amount: 100) }
+
+    it "allows changing property when no charges exist" do
+      expense.property = other_property
+      expect(expense).to be_valid
+    end
+
+    it "rejects changing property when reimbursement charges exist" do
+      Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 50.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+
+      expense.property = other_property
+      expect(expense).not_to be_valid
+      expect(expense.errors[:property]).to include("cannot change after reimbursement charges have been posted")
+    end
+  end
+
+  describe "reimbursement amount tracking" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+    let(:expense) { create(:expense, property: property, amount: 200.0) }
+
+    it "calculates remaining reimbursable amount correctly" do
+      expect(expense.remaining_reimbursable_cents).to eq(20_000)
+      expect(expense.remaining_reimbursable_amount).to eq(200.0)
+      expect(expense.fully_reimbursed?).to be false
+
+      # Create partial reimbursement
+      charge1 = Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 75.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      ).value!.data[:charge]
+
+      expect(expense.total_active_reimbursement_cents).to eq(7500)
+      expect(expense.remaining_reimbursable_cents).to eq(12_500)
+      expect(expense.remaining_reimbursable_amount).to eq(125.0)
+      expect(expense.fully_reimbursed?).to be false
+
+      # Create second reimbursement to fully reimburse
+      Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 125.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+
+      expect(expense.total_active_reimbursement_cents).to eq(20_000)
+      expect(expense.remaining_reimbursable_cents).to eq(0)
+      expect(expense.remaining_reimbursable_amount).to eq(0.0)
+      expect(expense.fully_reimbursed?).to be true
+
+      # Voiding the first charge frees up available amount
+      Charges::VoidService.call(charge: charge1)
+      expect(expense.total_active_reimbursement_cents).to eq(12_500)
+      expect(expense.remaining_reimbursable_cents).to eq(7500)
+      expect(expense.remaining_reimbursable_amount).to eq(75.0)
+      expect(expense.fully_reimbursed?).to be false
+    end
+  end
+
+  describe "#prevent_amount_reduction_below_reimbursements" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+    let(:expense) { create(:expense, property: property, amount: 300.0) }
+
+    before do
+      Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 200.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+    end
+
+    it "rejects reducing amount below active reimbursement total" do
+      expense.amount = 150.0
+      expect(expense).not_to be_valid
+      expect(expense.errors[:amount]).to include("cannot be reduced below total active reimbursement charges ($200.00)")
+    end
+
+    it "allows reducing amount down to the exact active reimbursement total" do
+      expense.amount = 200.0
+      expect(expense).to be_valid
+    end
+
+    it "allows reducing amount above the active reimbursement total" do
+      expense.amount = 250.0
+      expect(expense).to be_valid
+    end
+
+    it "allows reducing amount after active reimbursement is voided" do
+      charge = expense.reimbursement_charges.first
+      Charges::VoidService.call(charge: charge)
+
+      expense.amount = 100.0
+      expect(expense).to be_valid
     end
   end
 
