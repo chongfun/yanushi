@@ -1,0 +1,3 @@
+class PaymentDocument < ApplicationRecord
+  def accounting_user: () -> User?
+end

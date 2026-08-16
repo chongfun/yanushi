@@ -111,4 +111,13 @@ RSpec.describe Party, type: :model do
       expect(unloaded_party.alias_candidate?("Alice S.")).to be true
     end
   end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:party) { create(:party, user: user) }
+
+    it "returns the user who owns the party" do
+      expect(party.accounting_user).to eq(user)
+    end
+  end
 end

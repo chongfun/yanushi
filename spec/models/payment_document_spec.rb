@@ -38,4 +38,13 @@ RSpec.describe PaymentDocument, type: :model do
       failed: "failed"
     ).backed_by_column_of_type(:string) }
   end
+
+  describe '#accounting_user' do
+    let(:user) { create(:user) }
+    let(:doc) { build(:payment_document, user: user) }
+
+    it 'returns the user' do
+      expect(doc.accounting_user).to eq(user)
+    end
+  end
 end

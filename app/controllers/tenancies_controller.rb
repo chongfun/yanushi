@@ -125,9 +125,9 @@ class TenanciesController < ApplicationController
             effective_until: p[:effective_until]
           }
         end
-      elsif params[:tenancy][:party_ids].present?
-        party_ids = params[:tenancy][:party_ids]
-        party_ids.compact_blank.map do |party_id|
+      elsif (pids = params[:tenancy][:party_ids]).present?
+        pids.to_a.filter_map do |party_id|
+          next if party_id.blank?
           { party_id: party_id, role: "tenant" }
         end
       else

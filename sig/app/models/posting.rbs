@@ -1,0 +1,14 @@
+class Posting < ApplicationRecord
+  def debit?: () -> bool
+  def credit?: () -> bool
+  def debit_amount: () -> Integer?
+  def credit_amount: () -> Integer?
+  def accounting_user: () -> User?
+
+  private
+
+  def prevent_mutation: () -> void
+  def account_belongs_to_journal_entry_user: () -> void
+  def dimensions_belong_to_journal_entry_user: () -> void
+  def dimension_hierarchy_coherent: () -> void
+end

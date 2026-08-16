@@ -4,4 +4,5 @@ class ScheduledRent
   def late?: (?as_of: Date) -> bool
 
   def display_name: () -> String
+  def accounting_user: () -> User?
 end

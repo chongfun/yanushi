@@ -6,6 +6,7 @@ class Property < ApplicationRecord
   has_many :scheduled_rents, through: :tenancies
   has_many :tenant_payments, through: :tenancies
   has_many :tenant_charges, through: :tenancies
+  has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
 
   ASSET_TYPES = %w[
     single_family
@@ -36,5 +37,9 @@ class Property < ApplicationRecord
   def schedule_e_summary(*args, year: nil)
     target_year = year || args.first || Date.current.year
     Properties::ScheduleESummaryQuery.new(property: self).call(year: target_year)
+  end
+
+  def accounting_user
+    user
   end
 end

@@ -184,4 +184,19 @@ RSpec.describe Expense, type: :model do
       expect(expense.reimburse_tenancy_id).to eq(456)
     end
   end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:expense) { create(:expense, property: property) }
+
+    it "returns the property user" do
+      expect(expense.accounting_user).to eq(user)
+    end
+
+    it "returns nil when property is absent" do
+      orphan = build(:expense, property: nil)
+      expect(orphan.accounting_user).to be_nil
+    end
+  end
 end

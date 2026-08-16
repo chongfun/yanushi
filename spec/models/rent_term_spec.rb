@@ -110,10 +110,10 @@ RSpec.describe RentTerm, type: :model do
       expect(term.amount_cents).to eq(175050)
 
       term.amount = nil
-      expect(term.amount_cents).to be_nil
+      expect(term.amount_cents).to eq(0)
 
       term.amount = "   "
-      expect(term.amount_cents).to be_nil
+      expect(term.amount_cents).to eq(0)
     end
   end
 
@@ -129,6 +129,23 @@ RSpec.describe RentTerm, type: :model do
       expect(term.active?(Date.new(2024, 12, 31))).to be false
       expect(term.active?(Date.new(2025, 7, 1))).to be false
       expect(term.active?(as_of: { fallback: true })).to be_in([ true, false ])
+    end
+  end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.new(2025, 1, 1), termination_date: nil) }
+    let(:term) { create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.new(2025, 1, 1)) }
+
+    it "returns the user owning the property" do
+      expect(term.accounting_user).to eq(user)
+    end
+
+    it "returns nil when tenancy is absent" do
+      orphan_term = build(:rent_term, tenancy: nil)
+      expect(orphan_term.accounting_user).to be_nil
     end
   end
 end

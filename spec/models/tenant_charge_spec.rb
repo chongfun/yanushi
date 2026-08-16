@@ -21,4 +21,21 @@ RSpec.describe TenantCharge, type: :model do
       expect(tc).not_to be_valid
     end
   end
+
+  describe "#accounting_user" do
+    it "returns the user who owns the tenancy property" do
+      user = create(:user)
+      property = create(:property, user: user)
+      unit = create(:rentable_unit, property: property)
+      tenancy = create(:tenancy, rentable_unit: unit)
+      expense = create(:expense, property: property)
+      charge = create(:tenant_charge, tenancy: tenancy, expense: expense)
+      expect(charge.accounting_user).to eq(user)
+    end
+
+    it "returns nil if tenancy is absent" do
+      charge = build(:tenant_charge, tenancy: nil)
+      expect(charge.accounting_user).to be_nil
+    end
+  end
 end

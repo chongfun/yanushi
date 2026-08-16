@@ -79,4 +79,19 @@ RSpec.describe RentableUnit, type: :model do
       expect(unit.occupied?(Date.current)).to be true
     end
   end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+
+    it "returns the property user" do
+      expect(unit.accounting_user).to eq(user)
+    end
+
+    it "returns nil if property is absent" do
+      orphan = build(:rentable_unit, property: nil)
+      expect(orphan.accounting_user).to be_nil
+    end
+  end
 end

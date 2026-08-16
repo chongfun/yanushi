@@ -12,6 +12,7 @@ class PaymentIngestion
   def attachment_attached?: () -> bool
 
   def attachment_image?: () -> bool?
+  def accounting_user: () -> User?
 
   private
 

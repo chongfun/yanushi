@@ -353,6 +353,10 @@ class ::Property < ::ApplicationRecord
   def tenant_charges=: (::TenantCharge::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantCharge]) -> (::TenantCharge::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantCharge])
   def tenant_charge_ids: () -> ::Array[::Integer]
   def tenant_charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def accounting_postings: () -> ::Posting::ActiveRecord_Associations_CollectionProxy
+  def accounting_postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
+  def accounting_posting_ids: () -> ::Array[::Integer]
+  def accounting_posting_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def user: () -> ::User
   def user=: (::User?) -> ::User?
@@ -471,6 +475,10 @@ end
 class ::TenantCharge < ::ApplicationRecord
 end
 class ::TenantCharge::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::Posting < ::ApplicationRecord
+end
+class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::User < ::ApplicationRecord
 end

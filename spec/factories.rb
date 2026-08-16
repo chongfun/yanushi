@@ -111,4 +111,28 @@ FactoryBot.define do
     source { "pdf_upload" }
     status { "pending" }
   end
+
+  factory :account do
+    association :user
+    sequence(:key) { |n| "custom_account_#{n}" }
+    sequence(:name) { |n| "Custom Account #{n}" }
+    account_type { "asset" }
+    active { true }
+  end
+
+  factory :journal_entry do
+    association :user
+    source_type { "Expense" }
+    sequence(:source_id) { |n| 1000 + n }
+    event_type { "expense_posted" }
+    occurred_on { Date.current }
+    posted_at { Time.current }
+    description { "Test journal entry" }
+  end
+
+  factory :posting do
+    association :journal_entry
+    account { association :account, user: journal_entry.user }
+    amount_cents { 10_000 }
+  end
 end

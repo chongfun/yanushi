@@ -32,6 +32,10 @@ class TenancyParty < ApplicationRecord
     starts_on <= target_date && (ends_on.nil? || ends_on >= target_date)
   end
 
+  def accounting_user
+    tenancy&.property&.user
+  end
+
   private
 
     def effective_until_after_effective_from

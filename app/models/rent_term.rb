@@ -24,9 +24,13 @@ class RentTerm < ApplicationRecord
 
   def amount=(val)
     if val.present? && val.to_s.strip.present?
-      self.amount_cents = (BigDecimal(val.to_s) * 100).round rescue nil
+      begin
+        self.amount_cents = (BigDecimal(val.to_s) * 100).round
+      rescue StandardError
+        self.amount_cents = 0
+      end
     else
-      self.amount_cents = nil
+      self.amount_cents = 0
     end
   end
 
@@ -43,6 +47,10 @@ class RentTerm < ApplicationRecord
   def due_date_for(year, month)
     max_days = Date.new(year, month, -1).day
     Date.new(year, month, [ due_day, max_days ].min)
+  end
+
+  def accounting_user
+    tenancy&.property&.user
   end
 
   private

@@ -373,6 +373,10 @@ class ::RentableUnit < ::ApplicationRecord
   def tenancies=: (::Tenancy::ActiveRecord_Associations_CollectionProxy | ::Array[::Tenancy]) -> (::Tenancy::ActiveRecord_Associations_CollectionProxy | ::Array[::Tenancy])
   def tenancy_ids: () -> ::Array[::Integer]
   def tenancy_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def accounting_postings: () -> ::Posting::ActiveRecord_Associations_CollectionProxy
+  def accounting_postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
+  def accounting_posting_ids: () -> ::Array[::Integer]
+  def accounting_posting_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def property: () -> ::Property
   def property=: (::Property?) -> ::Property?
@@ -420,6 +424,10 @@ end
 class ::Tenancy < ::ApplicationRecord
 end
 class ::Tenancy::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::Posting < ::ApplicationRecord
+end
+class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Property < ::ApplicationRecord
 end

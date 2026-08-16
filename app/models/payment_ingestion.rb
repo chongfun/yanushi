@@ -66,6 +66,10 @@ class PaymentIngestion < ApplicationRecord
     payment_document&.attachment_content_type&.start_with?("image/")
   end
 
+  def accounting_user
+    user
+  end
+
   private
 
     def validate_parse_status

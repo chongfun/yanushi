@@ -121,4 +121,22 @@ RSpec.describe TenancyParty, type: :model do
       end
     end
   end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.new(2025, 1, 1), termination_date: nil) }
+    let(:party) { create(:party, user: user) }
+    let(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: Date.new(2025, 1, 1)) }
+
+    it "returns the user owning the property" do
+      expect(tenancy_party.accounting_user).to eq(user)
+    end
+
+    it "returns nil when tenancy is absent" do
+      orphan = build(:tenancy_party, tenancy: nil, party: party)
+      expect(orphan.accounting_user).to be_nil
+    end
+  end
 end

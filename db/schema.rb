@@ -10,9 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "accounts", force: :cascade do |t|
+    t.string "account_type", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "key"], name: "index_accounts_on_user_id_and_key", unique: true
+    t.index ["user_id"], name: "index_accounts_on_user_id"
+    t.check_constraint "account_type::text = ANY (ARRAY['asset'::character varying, 'liability'::character varying, 'equity'::character varying, 'income'::character varying, 'expense'::character varying]::text[])", name: "check_accounts_account_type"
+  end
 
   create_table "expenses", force: :cascade do |t|
     t.decimal "amount", precision: 12, scale: 2
@@ -23,6 +36,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000001) do
     t.integer "property_id", null: false
     t.datetime "updated_at", null: false
     t.index ["property_id"], name: "index_expenses_on_property_id"
+  end
+
+  create_table "journal_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "event_type", null: false
+    t.date "occurred_on", null: false
+    t.datetime "posted_at", null: false
+    t.bigint "reversal_of_id"
+    t.bigint "source_id", null: false
+    t.string "source_type", null: false
+    t.bigint "user_id", null: false
+    t.index ["occurred_on"], name: "index_journal_entries_on_occurred_on"
+    t.index ["reversal_of_id"], name: "idx_journal_entries_single_reversal", unique: true, where: "(reversal_of_id IS NOT NULL)"
+    t.index ["user_id", "source_type", "source_id", "event_type"], name: "idx_journal_entries_source_event", unique: true
+    t.index ["user_id"], name: "index_journal_entries_on_user_id"
+    t.check_constraint "source_id > 0", name: "check_journal_entries_source_id_positive"
   end
 
   create_table "parties", force: :cascade do |t|
@@ -83,6 +113,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000001) do
     t.index ["tenant_payment_id"], name: "index_payment_ingestions_on_tenant_payment_id"
     t.index ["user_id", "payment_method", "transaction_number"], name: "idx_payment_ingestions_dup_check"
     t.index ["user_id"], name: "index_payment_ingestions_on_user_id"
+  end
+
+  create_table "postings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.bigint "journal_entry_id", null: false
+    t.string "memo"
+    t.bigint "party_id"
+    t.bigint "property_id"
+    t.bigint "rentable_unit_id"
+    t.bigint "tenancy_id"
+    t.index ["account_id", "property_id"], name: "index_postings_on_account_id_and_property_id"
+    t.index ["account_id", "tenancy_id"], name: "index_postings_on_account_id_and_tenancy_id"
+    t.index ["account_id"], name: "index_postings_on_account_id"
+    t.index ["journal_entry_id"], name: "index_postings_on_journal_entry_id"
+    t.index ["party_id"], name: "index_postings_on_party_id"
+    t.index ["property_id"], name: "index_postings_on_property_id"
+    t.index ["rentable_unit_id"], name: "index_postings_on_rentable_unit_id"
+    t.index ["tenancy_id"], name: "index_postings_on_tenancy_id"
+    t.check_constraint "amount_cents <> 0", name: "check_postings_amount_cents_nonzero"
   end
 
   create_table "properties", force: :cascade do |t|
@@ -197,7 +248,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000001) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "accounts", "users"
   add_foreign_key "expenses", "properties"
+  add_foreign_key "journal_entries", "journal_entries", column: "reversal_of_id"
+  add_foreign_key "journal_entries", "users"
   add_foreign_key "parties", "users"
   add_foreign_key "party_aliases", "parties"
   add_foreign_key "payment_documents", "users"
@@ -206,6 +260,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000001) do
   add_foreign_key "payment_ingestions", "tenancies"
   add_foreign_key "payment_ingestions", "tenant_payments"
   add_foreign_key "payment_ingestions", "users"
+  add_foreign_key "postings", "accounts"
+  add_foreign_key "postings", "journal_entries"
+  add_foreign_key "postings", "parties"
+  add_foreign_key "postings", "properties"
+  add_foreign_key "postings", "rentable_units"
+  add_foreign_key "postings", "tenancies"
   add_foreign_key "properties", "users"
   add_foreign_key "rent_terms", "tenancies"
   add_foreign_key "rentable_units", "properties"

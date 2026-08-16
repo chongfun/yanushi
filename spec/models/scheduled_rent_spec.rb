@@ -73,9 +73,20 @@ RSpec.describe ScheduledRent, type: :model do
         expect(rent.display_name).to eq("#{property.address} - 2026-05-01")
       end
 
-      it "returns display name when tenancy has no property" do
-        allow(tenancy).to receive(:property).and_return(nil)
-        expect(rent.display_name).to eq(" - 2026-05-01")
+      it "falls back to default when tenancy/property is absent" do
+        orphan_rent = build(:scheduled_rent, tenancy: nil, due_date: Date.new(2026, 5, 1))
+        expect(orphan_rent.display_name).to eq("Property - 2026-05-01")
+      end
+    end
+
+    describe "#accounting_user" do
+      it "returns the user of the tenancy property" do
+        expect(rent.accounting_user).to eq(user)
+      end
+
+      it "returns nil when tenancy is absent" do
+        orphan_rent = build(:scheduled_rent, tenancy: nil)
+        expect(orphan_rent.accounting_user).to be_nil
       end
     end
   end

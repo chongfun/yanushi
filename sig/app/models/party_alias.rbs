@@ -1,2 +1,3 @@
 class PartyAlias < ApplicationRecord
+  def accounting_user: () -> User?
 end
