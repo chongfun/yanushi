@@ -69,12 +69,29 @@ FactoryBot.define do
     effective_until { tenancy&.termination_date }
   end
 
-  factory :tenant_payment do
+  factory :receipt do
     association :tenancy
-    amount { 1200.0 }
-    payment_date { Date.current }
+    user { tenancy.rentable_unit.property.user }
+    payer_party { association :party, user: user }
+    amount_cents { 120_000 }
+    received_on { Date.current }
     payment_method { "check" }
-    sequence(:transaction_number) { |n| "TXN#{n}" }
+    sequence(:external_reference) { |n| "REC#{n}" }
+
+    trait :posted do
+      posted_at { Time.current }
+    end
+
+    trait :voided do
+      posted_at { 1.day.ago }
+      voided_at { Time.current }
+    end
+
+    trait :superseded do
+      posted_at { 1.day.ago }
+      voided_at { Time.current }
+      superseded_by { association :receipt, tenancy: tenancy, user: user, payer_party: payer_party }
+    end
   end
 
   factory :expense do

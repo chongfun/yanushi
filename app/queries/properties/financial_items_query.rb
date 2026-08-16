@@ -10,7 +10,7 @@ module Properties
 
       [
         items_for(:charges, :charge_date, "Charge", start_date, end_date),
-        items_for(:tenant_payments, :payment_date, "Tenant Payment", start_date, end_date),
+        items_for(:receipts, :received_on, "Payment", start_date, end_date),
         items_for(:expenses, :expense_date, "Expense", start_date, end_date)
       ].flatten.sort_by { |item| item[:date] }
     end

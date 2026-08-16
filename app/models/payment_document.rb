@@ -7,6 +7,8 @@ class PaymentDocument < ApplicationRecord
   validates :attachment_content_type, presence: true
   validates :status, presence: true
 
+  before_destroy :prevent_destroy_if_confirmed_ingestions_exist, prepend: true
+
   enum :status, {
     processing: "processing",
     success: "success",
@@ -16,4 +18,13 @@ class PaymentDocument < ApplicationRecord
   def accounting_user
     user
   end
+
+  private
+
+    def prevent_destroy_if_confirmed_ingestions_exist
+      if payment_ingestions.confirmed.exists?
+        errors.add(:base, "Cannot delete document with confirmed payment ingestions")
+        throw(:abort)
+      end
+    end
 end

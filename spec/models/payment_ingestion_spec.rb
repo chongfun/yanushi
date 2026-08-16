@@ -5,7 +5,7 @@ RSpec.describe PaymentIngestion, type: :model do
     it { is_expected.to belong_to(:user) }
     it { is_expected.to belong_to(:party).optional }
     it { is_expected.to belong_to(:tenancy).optional }
-    it { is_expected.to belong_to(:tenant_payment).optional }
+    it { is_expected.to belong_to(:receipt).optional }
     it { is_expected.to belong_to(:payment_document).optional }
   end
 
@@ -75,18 +75,20 @@ RSpec.describe PaymentIngestion, type: :model do
       expect(ingestion.confirmable?).to be_falsey
     end
 
-    it "returns false for confirmable? when a duplicate payment exists" do
-      create(:tenant_payment,
+    it "returns false for confirmable? when a duplicate payment receipt exists" do
+      create(:receipt,
+        user: user,
         tenancy: tenancy,
-        amount: 500.0,
-        payment_date: Date.current,
+        payer_party: party,
+        amount_cents: 50_000,
+        received_on: Date.current,
         payment_method: "zelle",
-        transaction_number: "TXN123"
+        external_reference: "TXN123"
       )
       expect(ingestion.confirmable?).to be_falsey
     end
 
-    it "confirm! creates tenant payment and updates status" do
+    it "confirm! creates receipt and updates status" do
       ingestion_to_confirm = create(:payment_ingestion,
         user: user,
         source: "pdf_upload",
@@ -100,15 +102,16 @@ RSpec.describe PaymentIngestion, type: :model do
       )
 
       expect {
-        payment = ingestion_to_confirm.confirm!
-        expect(payment.amount).to eq(1200.0)
-        expect(payment.payment_method).to eq("venmo")
-        expect(payment.transaction_number).to eq("TXN456")
-        expect(payment.tenancy).to eq(tenancy)
-      }.to change(TenantPayment, :count).by(1)
+        receipt = ingestion_to_confirm.confirm!
+        expect(receipt.amount).to eq(1200.0)
+        expect(receipt.payment_method).to eq("venmo")
+        expect(receipt.external_reference).to eq("TXN456")
+        expect(receipt.tenancy).to eq(tenancy)
+        expect(receipt.payer_party).to eq(party)
+      }.to change(Receipt, :count).by(1)
 
       expect(ingestion_to_confirm.reload.status).to eq("confirmed")
-      expect(ingestion_to_confirm.tenant_payment).not_to be_nil
+      expect(ingestion_to_confirm.receipt).not_to be_nil
     end
 
     it "confirm! with create_alias: true creates alias" do
@@ -134,38 +137,24 @@ RSpec.describe PaymentIngestion, type: :model do
       expect(party.party_aliases.exists?(alias_name: "@samlopez")).to be_truthy
     end
 
-    it "confirm! rescues RecordNotUnique and raises ConfirmationError" do
-      create(:tenant_payment,
-        user: user,
-        tenancy: tenancy,
-        amount: 500.0,
-        payment_date: Date.current,
-        payment_method: "zelle",
-        transaction_number: "TXNDUP"
-      )
-
-      dup_ingestion = build(:payment_ingestion,
+    it "confirm! returns existing receipt if called again on already confirmed ingestion" do
+      confirmed_ingestion = create(:payment_ingestion,
         user: user,
         source: "pdf_upload",
         status: "matched",
         party: party,
         tenancy: tenancy,
-        amount: 1000.0,
+        amount: 1200.0,
         payment_date: Date.current,
-        payment_method: "zelle",
-        transaction_number: "TXNDUP"
+        payment_method: "venmo",
+        transaction_number: "TXNIDEM"
       )
 
+      first_receipt = confirmed_ingestion.confirm!
       expect {
-        dup_ingestion.confirm!
-      }.to raise_error(PaymentIngestions::ConfirmationError)
-    end
-
-    it "confirm! rescues RecordNotUnique and raises ConfirmationError when TenantPayment creation raises RecordNotUnique" do
-      allow(TenantPayments::CreateService).to receive(:call).and_raise(ActiveRecord::RecordNotUnique.new("Duplicate key error"))
-      expect {
-        ingestion.confirm!
-      }.to raise_error(PaymentIngestions::ConfirmationError, /This transaction has already been recorded/)
+        second_receipt = confirmed_ingestion.confirm!
+        expect(second_receipt).to eq(first_receipt)
+      }.not_to change(Receipt, :count)
     end
   end
 
@@ -182,12 +171,14 @@ RSpec.describe PaymentIngestion, type: :model do
     let(:tenancy_two) { create(:tenancy, rentable_unit: unit_two) }
 
     it "only flags duplicates within the same user" do
-      create(:tenant_payment,
+      create(:receipt,
+        user: user_two,
         tenancy: tenancy_two,
-        amount: 1000.0,
-        payment_date: Date.current,
+        payer_party: party_two,
+        amount_cents: 100_000,
+        received_on: Date.current,
         payment_method: "zelle",
-        transaction_number: "TXNSCOPED"
+        external_reference: "TXNSCOPED"
       )
 
       ingestion = build(:payment_ingestion,
@@ -205,14 +196,15 @@ RSpec.describe PaymentIngestion, type: :model do
       expect(ingestion.duplicate_exists?).to be_falsey
       expect(ingestion).to be_valid
 
-      # When payment exists for user one with matching transaction number
-      create(:tenant_payment,
+      # When receipt exists for user one with matching transaction number
+      create(:receipt,
         tenancy: tenancy_one,
         user: user_one,
-        amount: 1000.0,
-        payment_date: Date.current,
+        payer_party: party_one,
+        amount_cents: 100_000,
+        received_on: Date.current,
         payment_method: "zelle",
-        transaction_number: "TXNSCOPED_MATCH"
+        external_reference: "TXNSCOPED_MATCH"
       )
       ingestion.transaction_number = "TXNSCOPED_MATCH"
 
@@ -228,7 +220,7 @@ RSpec.describe PaymentIngestion, type: :model do
     let(:unit) { create(:rentable_unit, property: property) }
     let(:tenancy) { create(:tenancy, rentable_unit: unit) }
 
-    it "prevents race conditions and raises already confirmed on concurrent calls" do
+    it "prevents race conditions and safely handles concurrent confirmations" do
       ingestion = create(:payment_ingestion,
         user: user,
         source: "pdf_upload",
@@ -241,26 +233,23 @@ RSpec.describe PaymentIngestion, type: :model do
         transaction_number: "TXNRACE"
       )
 
-      exceptions = []
+      results = []
       threads = []
 
       2.times do
         threads << Thread.new do
           ActiveRecord::Base.connection_pool.with_connection do
-            begin
-              PaymentIngestion.find(ingestion.id).confirm!
-            rescue => e
-              exceptions << e
-            end
+            results << PaymentIngestion.find(ingestion.id).confirm!
           end
         end
       end
 
       threads.each(&:join)
 
-      expect(exceptions.size).to eq(1)
-      expect(exceptions.first).to be_a(PaymentIngestions::ConfirmationError)
-      expect(exceptions.first.message).to match(/Already confirmed/)
+      expect(results.size).to eq(2)
+      expect(results.first).to be_a(Receipt)
+      expect(results.last).to be_a(Receipt)
+      expect(results.first.id).to eq(results.last.id)
       expect(ingestion.reload.status).to eq("confirmed")
     end
   end
@@ -355,6 +344,91 @@ RSpec.describe PaymentIngestion, type: :model do
     it "returns the user via #accounting_user" do
       ingestion = build(:payment_ingestion, user: user)
       expect(ingestion.accounting_user).to eq(user)
+    end
+  end
+
+  describe "immutability and undeletability after confirmation" do
+    let(:user) { create(:user) }
+    let(:party) { create(:party, user: user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+    let!(:confirmed_ingestion) do
+      create(:payment_ingestion,
+        user: user,
+        source: "pdf_upload",
+        status: "confirmed",
+        party: party,
+        tenancy: tenancy,
+        amount: 1500.0,
+        payment_date: Date.new(2026, 1, 15),
+        payment_method: "zelle",
+        transaction_number: "ZEL12345"
+      )
+    end
+
+    it "prevents updating party_id on confirmed ingestion" do
+      other_party = create(:party, user: user)
+      confirmed_ingestion.party = other_party
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating amount on confirmed ingestion" do
+      confirmed_ingestion.amount = 2000.0
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating payment_date on confirmed ingestion" do
+      confirmed_ingestion.payment_date = Date.new(2026, 2, 1)
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating payment_method on confirmed ingestion" do
+      confirmed_ingestion.payment_method = "venmo"
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating transaction_number on confirmed ingestion" do
+      confirmed_ingestion.transaction_number = "NEW_TXN"
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents changing status from confirmed to matched" do
+      confirmed_ingestion.status = :matched
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating raw_text on confirmed ingestion" do
+      confirmed_ingestion.raw_text = "new parsed text"
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating payer_name on confirmed ingestion" do
+      confirmed_ingestion.payer_name = "New Payer"
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents updating payment_document on confirmed ingestion" do
+      other_doc = create(:payment_document, user: user)
+      confirmed_ingestion.payment_document = other_doc
+      expect(confirmed_ingestion).not_to be_valid
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot modify a confirmed payment ingestion")
+    end
+
+    it "prevents destroying a confirmed ingestion" do
+      expect {
+        confirmed_ingestion.destroy
+      }.not_to change(PaymentIngestion, :count)
+
+      expect(confirmed_ingestion.errors[:base]).to include("Cannot delete a confirmed payment ingestion")
     end
   end
 end

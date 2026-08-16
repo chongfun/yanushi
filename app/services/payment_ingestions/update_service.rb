@@ -13,11 +13,15 @@ module PaymentIngestions
     def call
       return failure("Payment ingestion was not found.", :not_found) unless ingestion.user_id == user.id
 
-      if ingestion.update(params)
-        promote_to_matched if promotable_to_matched?
-        success(ingestion)
-      else
-        failure(ingestion.errors.full_messages.to_sentence, :validation_error)
+      ingestion.with_lock do
+        return failure("Cannot update a confirmed payment ingestion", :immutable) if ingestion.confirmed?
+
+        if ingestion.update(params)
+          promote_to_matched if promotable_to_matched?
+          success(ingestion)
+        else
+          failure(ingestion.errors.full_messages.to_sentence, :validation_error)
+        end
       end
     end
 

@@ -12,28 +12,48 @@ module PaymentIngestions
 
     def call
       return failure("Payment ingestion was not found.", :not_found) unless ingestion.user_id == user.id
-      return failure("Already confirmed", :already_confirmed) if ingestion.confirmed?
+
+      if ingestion.confirmed?
+        if ingestion.receipt.present?
+          return success(ingestion.receipt)
+        else
+          return failure("Already confirmed but receipt record is missing", :confirmation_error)
+        end
+      end
+
       return failure("Cannot confirm: missing required fields or duplicate exists", :not_confirmable) unless ingestion.confirmable?
 
-      payment = nil # : TenantPayment?
+      receipt = nil # : Receipt?
       ingestion.transaction do
+        ingestion.payment_document&.lock!
         ingestion.lock!
-        raise ConfirmationError, "Already confirmed" if ingestion.confirmed?
+
+        if ingestion.confirmed?
+          if ingestion.receipt.present?
+            receipt = ingestion.receipt
+            next
+          else
+            raise ConfirmationError, "Already confirmed but receipt record is missing"
+          end
+        end
+
         raise ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless ingestion.confirmable?
 
-        created = create_payment
+        created = create_receipt
         create_aliases if create_aliases?
-        ingestion.update!(status: :confirmed, tenant_payment: created)
-        payment = created
+        ingestion.update!(status: :confirmed, receipt: created)
+        receipt = created
       end
 
-      if payment
-        success(payment)
+      if receipt
+        success(receipt)
       else
-        failure("Failed to create tenant payment", :confirmation_error)
+        failure("Failed to create receipt", :confirmation_error)
       end
     rescue ActiveRecord::RecordNotUnique
-      failure("This transaction has already been recorded in another tenant payment.", :duplicate)
+      failure("This transaction has already been recorded in another payment receipt.", :duplicate)
+    rescue ActiveRecord::RecordNotFound
+      failure("Payment ingestion was not found.", :not_found)
     rescue ConfirmationError => e
       failure(e.message, :confirmation_error)
     rescue ActiveRecord::RecordInvalid => e
@@ -44,19 +64,23 @@ module PaymentIngestions
 
       attr_reader :user, :ingestion
 
-      def create_payment
+      def create_receipt
         tenancy = ingestion.tenancy
         raise ConfirmationError, "Missing tenancy" unless tenancy
 
-        result = TenantPayments::CreateService.call(
+        party = ingestion.party
+        raise ConfirmationError, "Missing payer party" unless party
+
+        result = Receipts::CreateService.call(
           tenancy: tenancy,
+          payer_party: party,
           amount: ingestion.amount,
-          payment_date: ingestion.payment_date,
+          received_on: ingestion.payment_date,
           payment_method: ingestion.payment_method,
-          transaction_number: ingestion.transaction_number
+          external_reference: ingestion.transaction_number
         )
         if result.success?
-          result.value!.data[:tenant_payment]
+          result.value!.data[:receipt]
         else
           raise ConfirmationError, result.failure.error
         end

@@ -11,8 +11,8 @@ class PropertiesController < ApplicationController
       :rentable_units,
       :expenses,
       :charges,
-      :tenant_payments,
-      tenancies: %i[parties tenant_payments charges]
+      :receipts,
+      tenancies: %i[parties receipts charges]
     ).find(params.expect(:id))
     @financial_items = @property.financial_items(@year)
   end

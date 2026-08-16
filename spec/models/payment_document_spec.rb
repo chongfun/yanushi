@@ -47,4 +47,25 @@ RSpec.describe PaymentDocument, type: :model do
       expect(doc.accounting_user).to eq(user)
     end
   end
+
+  describe 'destruction' do
+    let(:user) { create(:user) }
+    let(:doc) { create(:payment_document, user: user) }
+
+    it 'allows destroying document with unconfirmed ingestions' do
+      create(:payment_ingestion, user: user, payment_document: doc, status: :matched)
+      expect {
+        doc.destroy
+      }.to change(PaymentDocument, :count).by(-1).and change(PaymentIngestion, :count).by(-1)
+    end
+
+    it 'prevents destroying document with confirmed ingestions' do
+      create(:payment_ingestion, user: user, payment_document: doc, status: :confirmed)
+      expect {
+        doc.destroy
+      }.not_to change(PaymentDocument, :count)
+
+      expect(doc.errors[:base]).to include("Cannot delete document with confirmed payment ingestions")
+    end
+  end
 end

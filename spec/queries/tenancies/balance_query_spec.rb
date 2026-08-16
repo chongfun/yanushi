@@ -4,6 +4,7 @@ RSpec.describe Tenancies::BalanceQuery do
   let(:user) { create(:user) }
   let(:property) { create(:property, user: user) }
   let(:unit) { create(:rentable_unit, property: property) }
+  let(:party) { create(:party, user: user) }
   let(:tenancy) do
     create(:tenancy,
       rentable_unit: unit,
@@ -11,6 +12,7 @@ RSpec.describe Tenancies::BalanceQuery do
       termination_date: Date.new(2026, 12, 31)
     )
   end
+  let!(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant") }
   let!(:rent_term) do
     create(:rent_term,
       tenancy: tenancy,
@@ -53,10 +55,12 @@ RSpec.describe Tenancies::BalanceQuery do
         service_period_end: Date.new(2026, 1, 31)
       )
 
-      TenantPayments::CreateService.call(
+      Receipts::CreateService.call(
         tenancy: tenancy,
+        payer_party: party,
         amount_cents: 150_000,
-        payment_date: Date.new(2026, 1, 5)
+        received_on: Date.new(2026, 1, 5),
+        payment_method: "other"
       )
 
       query = described_class.new(tenancy: tenancy)
@@ -65,10 +69,12 @@ RSpec.describe Tenancies::BalanceQuery do
     end
 
     it "reflects negative balance on overpayment / credit balance" do
-      TenantPayments::CreateService.call(
+      Receipts::CreateService.call(
         tenancy: tenancy,
+        payer_party: party,
         amount_cents: 50_000,
-        payment_date: Date.new(2026, 1, 5)
+        received_on: Date.new(2026, 1, 5),
+        payment_method: "other"
       )
 
       query = described_class.new(tenancy: tenancy)
@@ -115,6 +121,18 @@ RSpec.describe Tenancies::BalanceQuery do
 
       Charges::VoidService.call(charge: charge, occurred_on: Date.new(2026, 1, 12))
       expect(described_class.call(tenancy: tenancy)).to eq(0)
+    end
+
+    it "supports current_balance and as_of in class call" do
+      query = described_class.new(tenancy: tenancy)
+      expect(query.current_balance).to eq(0)
+      expect(described_class.call(tenancy: tenancy, as_of: Date.yesterday)).to eq(0)
+    end
+
+    it "returns 0 if tenant_receivable account is missing" do
+      allow(tenancy).to receive(:accounting_user).and_return(nil)
+      query = described_class.new(tenancy: tenancy)
+      expect(query.balance_cents_as_of).to eq(0)
     end
   end
 end

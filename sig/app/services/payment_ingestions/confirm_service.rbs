@@ -11,7 +11,7 @@ module PaymentIngestions
     attr_reader user: User
     attr_reader ingestion: PaymentIngestion
 
-    def create_payment: () -> TenantPayment
+    def create_receipt: () -> Receipt
 
     def create_aliases: () -> void
 
@@ -19,7 +19,7 @@ module PaymentIngestions
 
     def create_alias: (String? alias_name) -> void
 
-    def success: (TenantPayment data) -> Dry::Monads::Result::Success
+    def success: (Receipt? data) -> Dry::Monads::Result::Success
 
     def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
   end

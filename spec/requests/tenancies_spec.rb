@@ -248,7 +248,7 @@ RSpec.describe "Tenancies", type: :request do
     end
 
     it "prevents deleting a tenancy with financial history (HTML & JSON)" do
-      create(:tenant_payment, tenancy: tenancy, amount: 1500.0, payment_date: Date.current)
+      create(:receipt, tenancy: tenancy, amount_cents: 150_000, received_on: Date.current)
 
       expect {
         delete tenancy_url(tenancy)
@@ -256,7 +256,7 @@ RSpec.describe "Tenancies", type: :request do
 
       expect(response).to redirect_to(tenancy_url(tenancy))
       follow_redirect!
-      expect(response.body).to include("Cannot delete record because dependent tenant payments exist")
+      expect(response.body).to include("Cannot delete record because dependent receipts exist")
 
       delete tenancy_url(tenancy, format: :json)
       expect(response).to have_http_status(:unprocessable_content)

@@ -1,0 +1,30 @@
+class Receipt < ApplicationRecord
+  VALID_PAYMENT_METHODS: Array[String]
+
+  attr_reader amount_error: String?
+
+  def self.active: () -> ActiveRecord::Relation
+  def self.voided: () -> ActiveRecord::Relation
+
+  def posted?: () -> bool
+  def voided?: () -> bool
+  def superseded?: () -> bool
+  def active?: () -> bool
+
+  def amount: () -> BigDecimal?
+  def amount=: ((BigDecimal | Numeric | String | nil) val) -> void
+
+  def balance_cents_as_of: (?as_of: Date) -> Integer
+  def balance_as_of: (?as_of: Date) -> BigDecimal
+  def accounting_user: () -> User?
+
+  private
+
+  def normalize_attributes: () -> void
+  def validate_not_future_dated: () -> void
+  def validate_amount_format: () -> void
+  def validate_tenancy_party_alignment: () -> void
+  def ensure_immutable_after_posting: () -> void
+  def prevent_destroy_if_posted: () -> void
+  def parse_amount_to_cents: ((BigDecimal | Numeric | String | nil) value) -> Integer?
+end

@@ -169,6 +169,24 @@ RSpec.describe "Charges", type: :request do
       expect(charge.reload).to be_voided
     end
 
+    it "voids the charge via json" do
+      post void_charge_path(charge, format: :json), params: { reason: "Customer dispute" }
+      expect(response).to be_successful
+      expect(response.parsed_body["status"]).to eq("ok")
+    end
+
+    it "handles void failure gracefully" do
+      allow(Charges::VoidService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Void failed", code: :void_failed)
+      )
+      post void_charge_path(charge)
+      expect(response).to redirect_to(tenancy_path(tenancy))
+      expect(flash[:alert]).to include("Failed to void charge")
+
+      post void_charge_path(charge, format: :json)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "rejects voiding another user's charge" do
       other_charge = Charges::CreateFeeService.call(
         tenancy: other_tenancy,

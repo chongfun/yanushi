@@ -6,7 +6,7 @@ class Tenancy < ApplicationRecord
   has_many :rent_terms, dependent: :destroy
 
   has_many :charges, dependent: :restrict_with_error
-  has_many :tenant_payments, dependent: :restrict_with_error
+  has_many :receipts, dependent: :restrict_with_error
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
   has_many :payment_ingestions, dependent: :nullify
 
@@ -91,7 +91,7 @@ class Tenancy < ApplicationRecord
   end
 
   def financial_history?
-    charges.exists? || tenant_payments.exists? || accounting_postings.exists?
+    charges.exists? || receipts.exists? || accounting_postings.exists?
   end
 
   def balance_cents(as_of: Date.current)

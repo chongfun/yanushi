@@ -267,6 +267,17 @@ RSpec.describe "PaymentIngestions", type: :request do
       }
       expect(response).to redirect_to(payment_ingestion_url(ingestion))
     end
+    it "rejects updating a confirmed payment ingestion" do
+      ingestion.update_columns(status: "confirmed")
+
+      patch payment_ingestion_url(ingestion), params: {
+        payment_ingestion: {
+          amount: 2000.0
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(ingestion.reload.amount).to eq(1300.0)
+    end
   end
 
   describe "GET /payment_ingestions/:id/download" do
@@ -288,10 +299,36 @@ RSpec.describe "PaymentIngestions", type: :request do
     it "confirms payment ingestion" do
       expect {
         post confirm_payment_ingestion_url(ingestion), params: { create_alias: "0" }
-      }.to change(TenantPayment, :count).by(1)
+      }.to change(Receipt, :count).by(1)
 
       expect(response).to redirect_to(payment_ingestions_url)
       expect(ingestion.reload.status).to eq("confirmed")
+    end
+
+    it "allows updating and confirming ingestion with a non-tenancy-member payer party" do
+      third_party_payer = create(:party, user: user, display_name: "ACME Corp")
+      # Note: third_party_payer is NOT a TenancyParty on tenancy
+
+      patch payment_ingestion_url(ingestion), params: {
+        payment_ingestion: {
+          party_id: third_party_payer.id,
+          tenancy_id: tenancy.id,
+          amount: 1500.0,
+          payment_date: Date.current,
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to redirect_to(payment_ingestion_url(ingestion))
+      expect(ingestion.reload.party).to eq(third_party_payer)
+
+      expect {
+        post confirm_payment_ingestion_url(ingestion), params: { create_alias: "0" }
+      }.to change(Receipt, :count).by(1)
+
+      receipt = Receipt.last
+      expect(receipt.payer_party).to eq(third_party_payer)
+      expect(receipt.tenancy).to eq(tenancy)
+      expect(receipt.amount_cents).to eq(150_000)
     end
 
     it "handles ConfirmationError during confirm" do
@@ -318,6 +355,17 @@ RSpec.describe "PaymentIngestions", type: :request do
       }.to change(PaymentIngestion, :count).by(-1)
 
       expect(response).to redirect_to(payment_ingestions_url)
+    end
+
+    it "rejects deleting a confirmed payment ingestion" do
+      ingestion.update_columns(status: "confirmed")
+
+      expect {
+        delete payment_ingestion_url(ingestion)
+      }.not_to change(PaymentIngestion, :count)
+
+      expect(response).to redirect_to(payment_ingestion_path(ingestion))
+      expect(flash[:alert]).to include("Cannot delete a confirmed payment ingestion")
     end
   end
 

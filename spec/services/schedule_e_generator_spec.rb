@@ -33,7 +33,7 @@ RSpec.describe ScheduleEGenerator do
   before do
     Charge.delete_all
     Expense.delete_all
-    TenantPayment.delete_all
+    Receipt.delete_all
   end
 
   def create_data_for_year(year)
@@ -49,18 +49,18 @@ RSpec.describe ScheduleEGenerator do
       )
     end
 
-    create(:tenant_payment,
+    create(:receipt,
       tenancy: tenancy,
-      payment_date: date_in_year,
-      amount: RENT_AMOUNT,
+      received_on: date_in_year,
+      amount_cents: (RENT_AMOUNT * 100).to_i,
       payment_method: "check",
-      transaction_number: "TEST-#{year}"
+      external_reference: "TEST-#{year}"
     )
 
-    create(:tenant_payment,
+    create(:receipt,
       tenancy: tenancy,
-      amount: UTILITY_AMOUNT,
-      payment_date: date_in_year,
+      amount_cents: (UTILITY_AMOUNT * 100).to_i,
+      received_on: date_in_year,
       payment_method: "zelle"
     )
   end
@@ -128,7 +128,7 @@ RSpec.describe ScheduleEGenerator do
 
         Charge.delete_all
         Expense.delete_all
-        TenantPayment.delete_all
+        Receipt.delete_all
       end
     end
   end
@@ -142,7 +142,7 @@ RSpec.describe ScheduleEGenerator do
 
     it "handles net loss and covers net loss branches" do
       create(:expense, property: property, category: "repairs", amount: 1500, expense_date: Date.new(2025, 6, 1))
-      create(:tenant_payment, tenancy: tenancy, payment_date: Date.new(2025, 6, 1), amount: 1000, payment_method: "check")
+      create(:receipt, tenancy: tenancy, received_on: Date.new(2025, 6, 1), amount_cents: 100_000, payment_method: "check")
 
       generator = described_class.new(property, 2025)
       pdf_data = generator.call

@@ -1,0 +1,15 @@
+module PaymentIngestions
+  class DestroyService
+    def self.call: (user: User, ingestion: PaymentIngestion) -> Dry::Monads::Result
+    def initialize: (user: User, ingestion: PaymentIngestion) -> void
+    def call: () -> Dry::Monads::Result
+
+    private
+
+    attr_reader user: User
+    attr_reader ingestion: PaymentIngestion
+
+    def success: (PaymentIngestion data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end
