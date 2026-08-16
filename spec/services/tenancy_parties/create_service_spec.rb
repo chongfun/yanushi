@@ -35,6 +35,19 @@ RSpec.describe TenancyParties::CreateService do
       )
 
       expect(result).to be_success
+      tp = result.value!.data[:tenancy_party]
+      expect(tp.effective_until).to eq(Date.new(2025, 12, 31))
+    end
+
+    it "derives owner when user is omitted with explicit effective_until" do
+      result = described_class.call(
+        tenancy: tenancy,
+        params: { party_id: party.id, role: "tenant", effective_from: Date.new(2025, 1, 1), effective_until: Date.new(2025, 6, 30) }
+      )
+
+      expect(result).to be_success
+      tp = result.value!.data[:tenancy_party]
+      expect(tp.effective_until).to eq(Date.new(2025, 6, 30))
     end
 
     it "fails when tenancy has no property and user is omitted" do

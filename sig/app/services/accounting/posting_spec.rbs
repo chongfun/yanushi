@@ -1,0 +1,13 @@
+module Accounting
+  class PostingSpec
+    attr_reader account_key: String
+    attr_reader amount_cents: Integer
+    attr_reader property: Property?
+    attr_reader rentable_unit: RentableUnit?
+    attr_reader tenancy: Tenancy?
+    attr_reader party: Party?
+    attr_reader memo: String?
+
+    def initialize: (account_key: untyped, amount_cents: Integer, ?property: Property?, ?rentable_unit: RentableUnit?, ?tenancy: Tenancy?, ?party: Party?, ?memo: String?) -> void
+  end
+end

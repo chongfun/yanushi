@@ -23,31 +23,35 @@ module TenancyParties
         )
       end
 
+      created_party = nil
       Tenancy.transaction do
-        tenancy.reload
+        rentable_unit = tenancy.rentable_unit
+        rentable_unit.lock! if rentable_unit
+
         tenancy.lock!
 
         role = params[:role].presence || "tenant"
         eff_from = params[:effective_from].presence || tenancy.commencement_date
         eff_until = params[:effective_until].presence || tenancy.termination_date
 
-        created_tp = tenancy.tenancy_parties.new(
+        tp = tenancy.tenancy_parties.new(
           party: party,
           role: role,
           effective_from: eff_from,
           effective_until: eff_until
         )
 
-        if created_tp.save
-          ServiceResult.success({ tenancy_party: created_tp })
-        else
-          ServiceResult.failure(
-            data: { tenancy_party: created_tp },
-            error: created_tp.errors.full_messages.to_sentence,
+        unless tp.save
+          return ServiceResult.failure(
+            data: { tenancy_party: tp },
+            error: tp.errors.full_messages.to_sentence,
             code: :validation_error
           )
         end
+        created_party = tp
       end
+
+      ServiceResult.success({ tenancy_party: created_party })
     end
 
     private

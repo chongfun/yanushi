@@ -17,7 +17,7 @@ module TenantPayments
       pdf.text "Amount: #{view_context.number_to_currency(tenant_payment.amount)}"
       pdf.text "Method: #{tenant_payment.payment_method}"
       pdf.text "Transaction Number: #{tenant_payment.transaction_number}" if tenant_payment.transaction_number.present?
-      pdf.text "Property: #{tenant_payment.tenancy.property&.address}"
+      pdf.text "Property: #{tenant_payment.tenancy&.property&.address}"
       pdf.render
     end
 

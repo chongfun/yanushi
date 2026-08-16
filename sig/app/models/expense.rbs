@@ -11,4 +11,5 @@ class Expense < ApplicationRecord
   def reimburse_lease_id=: (untyped val) -> void
 
   def reimburse_amount: () -> (BigDecimal | String)
+  def accounting_user: () -> User?
 end

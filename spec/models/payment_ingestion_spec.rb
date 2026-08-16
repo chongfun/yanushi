@@ -344,5 +344,10 @@ RSpec.describe PaymentIngestion, type: :model do
 
       expect(party.party_aliases.exists?(alias_name: "Samantha Lopez Custom Alias")).to be_truthy
     end
+
+    it "returns the user via #accounting_user" do
+      ingestion = build(:payment_ingestion, user: user)
+      expect(ingestion.accounting_user).to eq(user)
+    end
   end
 end

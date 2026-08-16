@@ -1,0 +1,537 @@
+# resolve-type-names: false
+
+class ::Posting < ::ApplicationRecord
+  extend ::ActiveRecord::Base::ClassMethods[::Posting, ::Posting::ActiveRecord_Relation, ::Integer]
+
+  module ::Posting::GeneratedAttributeMethods
+    def id: () -> ::Integer
+
+    def id=: (::Integer) -> ::Integer
+
+    def id?: () -> bool
+
+    def id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def id_will_change!: () -> void
+
+    def id_was: () -> ::Integer?
+
+    def id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def id_previous_change: () -> ::Array[::Integer?]?
+
+    def id_previously_was: () -> ::Integer?
+
+    def id_before_last_save: () -> ::Integer?
+
+    def id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def id_in_database: () -> ::Integer?
+
+    def saved_change_to_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_id!: () -> void
+
+    def clear_id_change: () -> void
+
+    def id_before_type_cast: () -> ::Integer
+
+    def id_for_database: () -> ::Integer
+
+    def journal_entry_id: () -> ::Integer
+
+    def journal_entry_id=: (::Integer) -> ::Integer
+
+    def journal_entry_id?: () -> bool
+
+    def journal_entry_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def journal_entry_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def journal_entry_id_will_change!: () -> void
+
+    def journal_entry_id_was: () -> ::Integer?
+
+    def journal_entry_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def journal_entry_id_previous_change: () -> ::Array[::Integer?]?
+
+    def journal_entry_id_previously_was: () -> ::Integer?
+
+    def journal_entry_id_before_last_save: () -> ::Integer?
+
+    def journal_entry_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def journal_entry_id_in_database: () -> ::Integer?
+
+    def saved_change_to_journal_entry_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_journal_entry_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_journal_entry_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_journal_entry_id!: () -> void
+
+    def clear_journal_entry_id_change: () -> void
+
+    def journal_entry_id_before_type_cast: () -> ::Integer
+
+    def journal_entry_id_for_database: () -> ::Integer
+
+    def account_id: () -> ::Integer
+
+    def account_id=: (::Integer) -> ::Integer
+
+    def account_id?: () -> bool
+
+    def account_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def account_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def account_id_will_change!: () -> void
+
+    def account_id_was: () -> ::Integer?
+
+    def account_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def account_id_previous_change: () -> ::Array[::Integer?]?
+
+    def account_id_previously_was: () -> ::Integer?
+
+    def account_id_before_last_save: () -> ::Integer?
+
+    def account_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def account_id_in_database: () -> ::Integer?
+
+    def saved_change_to_account_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_account_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_account_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_account_id!: () -> void
+
+    def clear_account_id_change: () -> void
+
+    def account_id_before_type_cast: () -> ::Integer
+
+    def account_id_for_database: () -> ::Integer
+
+    def amount_cents: () -> ::Integer
+
+    def amount_cents=: (::Integer) -> ::Integer
+
+    def amount_cents?: () -> bool
+
+    def amount_cents_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def amount_cents_change: () -> [ ::Integer?, ::Integer? ]
+
+    def amount_cents_will_change!: () -> void
+
+    def amount_cents_was: () -> ::Integer?
+
+    def amount_cents_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def amount_cents_previous_change: () -> ::Array[::Integer?]?
+
+    def amount_cents_previously_was: () -> ::Integer?
+
+    def amount_cents_before_last_save: () -> ::Integer?
+
+    def amount_cents_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def amount_cents_in_database: () -> ::Integer?
+
+    def saved_change_to_amount_cents: () -> ::Array[::Integer?]?
+
+    def saved_change_to_amount_cents?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_amount_cents?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_amount_cents!: () -> void
+
+    def clear_amount_cents_change: () -> void
+
+    def amount_cents_before_type_cast: () -> ::Integer
+
+    def amount_cents_for_database: () -> ::Integer
+
+    def property_id: () -> ::Integer?
+
+    def property_id=: (::Integer?) -> ::Integer?
+
+    def property_id?: () -> bool
+
+    def property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def property_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def property_id_will_change!: () -> void
+
+    def property_id_was: () -> ::Integer?
+
+    def property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def property_id_previous_change: () -> ::Array[::Integer?]?
+
+    def property_id_previously_was: () -> ::Integer?
+
+    def property_id_before_last_save: () -> ::Integer?
+
+    def property_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def property_id_in_database: () -> ::Integer?
+
+    def saved_change_to_property_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_property_id!: () -> void
+
+    def clear_property_id_change: () -> void
+
+    def property_id_before_type_cast: () -> ::Integer?
+
+    def property_id_for_database: () -> ::Integer?
+
+    def rentable_unit_id: () -> ::Integer?
+
+    def rentable_unit_id=: (::Integer?) -> ::Integer?
+
+    def rentable_unit_id?: () -> bool
+
+    def rentable_unit_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def rentable_unit_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def rentable_unit_id_will_change!: () -> void
+
+    def rentable_unit_id_was: () -> ::Integer?
+
+    def rentable_unit_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def rentable_unit_id_previous_change: () -> ::Array[::Integer?]?
+
+    def rentable_unit_id_previously_was: () -> ::Integer?
+
+    def rentable_unit_id_before_last_save: () -> ::Integer?
+
+    def rentable_unit_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def rentable_unit_id_in_database: () -> ::Integer?
+
+    def saved_change_to_rentable_unit_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_rentable_unit_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_rentable_unit_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_rentable_unit_id!: () -> void
+
+    def clear_rentable_unit_id_change: () -> void
+
+    def rentable_unit_id_before_type_cast: () -> ::Integer?
+
+    def rentable_unit_id_for_database: () -> ::Integer?
+
+    def tenancy_id: () -> ::Integer?
+
+    def tenancy_id=: (::Integer?) -> ::Integer?
+
+    def tenancy_id?: () -> bool
+
+    def tenancy_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tenancy_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def tenancy_id_will_change!: () -> void
+
+    def tenancy_id_was: () -> ::Integer?
+
+    def tenancy_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tenancy_id_previous_change: () -> ::Array[::Integer?]?
+
+    def tenancy_id_previously_was: () -> ::Integer?
+
+    def tenancy_id_before_last_save: () -> ::Integer?
+
+    def tenancy_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def tenancy_id_in_database: () -> ::Integer?
+
+    def saved_change_to_tenancy_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_tenancy_id!: () -> void
+
+    def clear_tenancy_id_change: () -> void
+
+    def tenancy_id_before_type_cast: () -> ::Integer?
+
+    def tenancy_id_for_database: () -> ::Integer?
+
+    def party_id: () -> ::Integer?
+
+    def party_id=: (::Integer?) -> ::Integer?
+
+    def party_id?: () -> bool
+
+    def party_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def party_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def party_id_will_change!: () -> void
+
+    def party_id_was: () -> ::Integer?
+
+    def party_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def party_id_previous_change: () -> ::Array[::Integer?]?
+
+    def party_id_previously_was: () -> ::Integer?
+
+    def party_id_before_last_save: () -> ::Integer?
+
+    def party_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def party_id_in_database: () -> ::Integer?
+
+    def saved_change_to_party_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_party_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_party_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_party_id!: () -> void
+
+    def clear_party_id_change: () -> void
+
+    def party_id_before_type_cast: () -> ::Integer?
+
+    def party_id_for_database: () -> ::Integer?
+
+    def memo: () -> ::String?
+
+    def memo=: (::String?) -> ::String?
+
+    def memo?: () -> bool
+
+    def memo_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def memo_change: () -> [ ::String?, ::String? ]
+
+    def memo_will_change!: () -> void
+
+    def memo_was: () -> ::String?
+
+    def memo_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def memo_previous_change: () -> ::Array[::String?]?
+
+    def memo_previously_was: () -> ::String?
+
+    def memo_before_last_save: () -> ::String?
+
+    def memo_change_to_be_saved: () -> ::Array[::String?]?
+
+    def memo_in_database: () -> ::String?
+
+    def saved_change_to_memo: () -> ::Array[::String?]?
+
+    def saved_change_to_memo?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_memo?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_memo!: () -> void
+
+    def clear_memo_change: () -> void
+
+    def memo_before_type_cast: () -> ::String?
+
+    def memo_for_database: () -> ::String?
+
+    def created_at: () -> ::ActiveSupport::TimeWithZone
+
+    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+    def created_at?: () -> bool
+
+    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+    def created_at_will_change!: () -> void
+
+    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def restore_created_at!: () -> void
+
+    def clear_created_at_change: () -> void
+
+    def created_at_before_type_cast: () -> ::Time
+
+    def created_at_for_database: () -> ::Time
+  end
+  include ::Posting::GeneratedAttributeMethods
+  module ::Posting::GeneratedAliasAttributeMethods
+    include ::Posting::GeneratedAttributeMethods
+
+    alias id_value id
+
+    alias id_value= id=
+
+    alias id_value? id?
+
+    alias id_value_changed? id_changed?
+
+    alias id_value_change id_change
+
+    alias id_value_will_change! id_will_change!
+
+    alias id_value_was id_was
+
+    alias id_value_previously_changed? id_previously_changed?
+
+    alias id_value_previous_change id_previous_change
+
+    alias id_value_previously_was id_previously_was
+
+    alias id_value_before_last_save id_before_last_save
+
+    alias id_value_change_to_be_saved id_change_to_be_saved
+
+    alias id_value_in_database id_in_database
+
+    alias saved_change_to_id_value saved_change_to_id
+
+    alias saved_change_to_id_value? saved_change_to_id?
+
+    alias will_save_change_to_id_value? will_save_change_to_id?
+
+    alias restore_id_value! restore_id!
+
+    alias clear_id_value_change clear_id_change
+
+    alias id_value_before_type_cast id_before_type_cast
+
+    alias id_value_for_database id_for_database
+  end
+  include ::Posting::GeneratedAliasAttributeMethods
+
+  def journal_entry: () -> ::JournalEntry
+  def journal_entry=: (::JournalEntry?) -> ::JournalEntry?
+  def reload_journal_entry: () -> ::JournalEntry?
+  def build_journal_entry: (?untyped) -> ::JournalEntry
+  def create_journal_entry: (?untyped) -> ::JournalEntry
+  def create_journal_entry!: (?untyped) -> ::JournalEntry
+  def account: () -> ::Account
+  def account=: (::Account?) -> ::Account?
+  def reload_account: () -> ::Account?
+  def build_account: (?untyped) -> ::Account
+  def create_account: (?untyped) -> ::Account
+  def create_account!: (?untyped) -> ::Account
+  def property: () -> ::Property?
+  def property=: (::Property?) -> ::Property?
+  def reload_property: () -> ::Property?
+  def build_property: (?untyped) -> ::Property
+  def create_property: (?untyped) -> ::Property
+  def create_property!: (?untyped) -> ::Property
+  def rentable_unit: () -> ::RentableUnit?
+  def rentable_unit=: (::RentableUnit?) -> ::RentableUnit?
+  def reload_rentable_unit: () -> ::RentableUnit?
+  def build_rentable_unit: (?untyped) -> ::RentableUnit
+  def create_rentable_unit: (?untyped) -> ::RentableUnit
+  def create_rentable_unit!: (?untyped) -> ::RentableUnit
+  def tenancy: () -> ::Tenancy?
+  def tenancy=: (::Tenancy?) -> ::Tenancy?
+  def reload_tenancy: () -> ::Tenancy?
+  def build_tenancy: (?untyped) -> ::Tenancy
+  def create_tenancy: (?untyped) -> ::Tenancy
+  def create_tenancy!: (?untyped) -> ::Tenancy
+  def party: () -> ::Party?
+  def party=: (::Party?) -> ::Party?
+  def reload_party: () -> ::Party?
+  def build_party: (?untyped) -> ::Party
+  def create_party: (?untyped) -> ::Party
+  def create_party!: (?untyped) -> ::Party
+
+  module ::Posting::GeneratedAssociationMethods
+  end
+  include ::Posting::GeneratedAssociationMethods
+
+  module ::Posting::GeneratedRelationMethods
+  end
+
+  class ::Posting::ActiveRecord_Relation < ::ActiveRecord::Relation
+    include ::Enumerable[::Posting]
+    include ::Posting::GeneratedRelationMethods
+    include ::ActiveRecord::Relation::Methods[::Posting, ::Integer]
+  end
+
+  class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+    include ::Enumerable[::Posting]
+    include ::Posting::GeneratedRelationMethods
+    include ::ActiveRecord::Relation::Methods[::Posting, ::Integer]
+
+    def build: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::Posting
+             | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::Posting]
+    def create: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::Posting
+              | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::Posting]
+    def create!: (?::ActiveRecord::Associations::CollectionProxy::_EachPair attributes) ?{ () -> untyped } -> ::Posting
+               | (::Array[::ActiveRecord::Associations::CollectionProxy::_EachPair] attributes) ?{ () -> untyped } -> ::Array[::Posting]
+    def reload: () -> ::Array[::Posting]
+
+    def replace: (::Array[::Posting]) -> void
+    def delete: (*::Posting | ::Integer) -> ::Array[::Posting]
+    def destroy: (*::Posting | ::Integer) -> ::Array[::Posting]
+    def <<: (*::Posting | ::Array[::Posting]) -> self
+    def prepend: (*::Posting | ::Array[::Posting]) -> self
+  end
+end
+
+class ::ApplicationRecord < ::ActiveRecord::Base
+end
+class ::JournalEntry < ::ApplicationRecord
+end
+class ::Account < ::ApplicationRecord
+end
+class ::Property < ::ApplicationRecord
+end
+class ::RentableUnit < ::ApplicationRecord
+end
+class ::Tenancy < ::ApplicationRecord
+end
+class ::Party < ::ApplicationRecord
+end

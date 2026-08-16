@@ -1,0 +1,8 @@
+class Account < ApplicationRecord
+  ACCOUNT_TYPES: Array[String]
+  def accounting_user: () -> User?
+
+  private
+
+  def identity_fields_immutable: () -> void
+end

@@ -1,7 +1,10 @@
-class TenantPayment
+class TenantPayment < ApplicationRecord
+  def amount: () -> BigDecimal
+  def amount=: (BigDecimal | Numeric | String | nil) -> untyped
+  def accounting_user: () -> User?
+
   private
 
-  def assign_user_from_tenancy: () -> untyped
-
-  def user_matches_tenancy_owner: () -> untyped
+  def assign_user_from_tenancy: () -> void
+  def user_matches_tenancy_owner: () -> void
 end

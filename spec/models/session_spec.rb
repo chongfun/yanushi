@@ -10,6 +10,7 @@ RSpec.describe Session, type: :model do
       user = create(:user)
       session = create(:session, user: user)
       expect(session.user).to eq(user)
+      expect(session.accounting_user).to eq(user)
     end
   end
 end

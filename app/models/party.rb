@@ -3,6 +3,7 @@ class Party < ApplicationRecord
   has_many :party_aliases, dependent: :destroy
   has_many :tenancy_parties, dependent: :restrict_with_error
   has_many :tenancies, through: :tenancy_parties
+  has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
   has_many :payment_ingestions, dependent: :nullify
 
   PARTY_TYPES = %w[
@@ -33,5 +34,9 @@ class Party < ApplicationRecord
     else
       !party_aliases.where("LOWER(TRIM(alias_name)) = ?", clean_name).exists?
     end
+  end
+
+  def accounting_user
+    user
   end
 end

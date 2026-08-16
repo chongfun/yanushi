@@ -1,4 +1,10 @@
 module ActiveRecord
+  class Base
+    def accounting_user: () -> User?
+    def user: () -> User?
+    def user_id: () -> Integer?
+  end
+
   class Relation
     module Methods[Model, PrimaryKey]
       def each: () { (Model) -> void } -> void

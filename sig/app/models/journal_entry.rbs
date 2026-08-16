@@ -1,0 +1,9 @@
+class JournalEntry < ApplicationRecord
+  def reversed?: () -> bool
+  def reversal?: () -> bool
+  def accounting_user: () -> User?
+
+  private
+
+  def prevent_mutation: () -> void
+end

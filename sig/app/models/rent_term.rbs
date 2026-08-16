@@ -6,6 +6,7 @@ class RentTerm < ApplicationRecord
   def amount_cents=: (Integer?) -> Integer?
   def active?: (?Date date, ?as_of: untyped) -> bool
   def due_date_for: (Integer year, Integer month) -> Date
+  def accounting_user: () -> User?
 
   private
 

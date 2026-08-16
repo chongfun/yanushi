@@ -15,15 +15,16 @@ module PaymentIngestions
       return failure("Already confirmed", :already_confirmed) if ingestion.confirmed?
       return failure("Cannot confirm: missing required fields or duplicate exists", :not_confirmable) unless ingestion.confirmable?
 
-      payment = ingestion.transaction do
+      payment = nil # : TenantPayment?
+      ingestion.transaction do
         ingestion.lock!
         raise ConfirmationError, "Already confirmed" if ingestion.confirmed?
         raise ConfirmationError, "Cannot confirm: missing required fields or duplicate exists" unless ingestion.confirmable?
 
-        created_payment = create_payment
+        created = create_payment
         create_aliases if create_aliases?
-        ingestion.update!(status: :confirmed, tenant_payment: created_payment)
-        created_payment
+        ingestion.update!(status: :confirmed, tenant_payment: created)
+        payment = created
       end
 
       if payment

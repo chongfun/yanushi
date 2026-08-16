@@ -12,4 +12,8 @@ class PaymentDocument < ApplicationRecord
     success: "success",
     failed: "failed"
   }
+
+  def accounting_user
+    user
+  end
 end
