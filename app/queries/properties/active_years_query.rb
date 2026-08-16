@@ -7,9 +7,8 @@ module Properties
     def call(additional_years: [])
       years = Set.new
       years << Date.current.year
-      years.merge(years_for(:scheduled_rents, :due_date))
+      years.merge(years_for(:charges, :charge_date))
       years.merge(years_for(:tenant_payments, :payment_date))
-      years.merge(years_for(:tenant_charges, :charge_date))
       years.merge(years_for(:expenses, :expense_date))
       additional_years.each do |year|
         next unless year.respond_to?(:to_i)

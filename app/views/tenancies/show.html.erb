@@ -153,6 +153,46 @@
         </div>
       </div>
 
+      <!-- Charges Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="card-title text-xl font-bold">Charges & Obligations</h2>
+              <p class="text-xs text-base-content/60">Rent, late fees, utilities, and reimbursement charges posted to ledger</p>
+            </div>
+            <%= link_to "＋ Add Charge", new_tenancy_charge_path(@tenancy), class: "btn btn-sm btn-primary" %>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Period / Memo</th>
+                  <th class="text-right">Amount</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% charges = @tenancy.charges.order(charge_date: :desc, created_at: :desc) %>
+                <% if charges.any? %>
+                  <%= render partial: "charges/charge", collection: charges %>
+                <% else %>
+                  <tr>
+                    <td colspan="6" class="text-center py-6 text-base-content/60">
+                      No charges recorded yet.
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
         <div class="card-body p-0">
           <div class="bg-error/10 p-6 flex justify-between items-center">
@@ -195,14 +235,19 @@
         <div class="card-body">
           <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Account Balance</div>
           <% balance = @tenancy.current_balance %>
-          <div class="text-3xl font-black <%= balance >= 0 ? 'text-success' : 'text-error' %>">
-            <%= balance >= 0 ? '+' : '' %><%= number_to_currency(balance) %>
+          <% text_class = if balance > 0 then 'text-error' elsif balance < 0 then 'text-success' else 'text-base-content/70' end %>
+          <% sub_text = if balance > 0 then 'Tenancy owes outstanding balance' elsif balance < 0 then 'Account has credit balance' else 'Account is settled ($0.00)' end %>
+          <div class="text-3xl font-black <%= text_class %>">
+            <%= balance < 0 ? '-' : '' %><%= number_to_currency(balance.abs) %>
           </div>
           <div class="text-xs text-base-content/50 mt-1">
-            <%= balance >= 0 ? "Account has credit or zero balance" : "Tenancy owes outstanding balance" %>
+            <%= sub_text %>
           </div>
           <div class="divider my-3"></div>
-          <%= link_to "＋ Record Payment", new_tenancy_tenant_payment_path(@tenancy), class: "btn btn-primary btn-sm w-full" %>
+          <div class="space-y-2">
+            <%= link_to "＋ Record Payment", new_tenancy_tenant_payment_path(@tenancy), class: "btn btn-primary btn-sm w-full" %>
+            <%= link_to "＋ Add Charge", new_tenancy_charge_path(@tenancy), class: "btn btn-outline btn-sm w-full" %>
+          </div>
         </div>
       </div>
     </div>

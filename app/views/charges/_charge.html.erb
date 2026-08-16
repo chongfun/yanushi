@@ -1,0 +1,37 @@
+<tr id="<%= dom_id charge %>" class="<%= 'opacity-60 bg-base-200/50' if charge.voided? %>">
+  <td>
+    <div class="font-medium text-sm"><%= charge.charge_date.strftime("%b %d, %Y") %></div>
+    <div class="text-xs text-base-content/60">Due: <%= charge.due_on.strftime("%b %d, %Y") %></div>
+  </td>
+  <td>
+    <span class="badge badge-sm <%= charge.charge_kind == 'rent' ? 'badge-primary' : 'badge-neutral' %> badge-outline uppercase font-mono">
+      <%= charge.charge_kind.titleize %>
+    </span>
+  </td>
+  <td>
+    <% if charge.service_period_start && charge.service_period_end %>
+      <div class="text-xs font-mono">
+        <%= charge.service_period_start.strftime("%b %d") %> – <%= charge.service_period_end.strftime("%b %d, %Y") %>
+      </div>
+    <% end %>
+    <div class="text-xs text-base-content/70 truncate max-w-xs"><%= charge.description %></div>
+  </td>
+  <td class="font-mono text-right font-medium <%= charge.voided? ? 'line-through text-base-content/40' : 'text-error' %>">
+    <%= number_to_currency(charge.amount) %>
+  </td>
+  <td>
+    <% if charge.voided? %>
+      <span class="badge badge-xs badge-error">Voided</span>
+    <% else %>
+      <span class="badge badge-xs badge-success">Active</span>
+    <% end %>
+  </td>
+  <td class="text-right flex justify-end gap-1 items-center">
+    <%= link_to "View", charge_path(charge), class: "btn btn-xs btn-ghost" %>
+    <% if charge.active? %>
+      <%= button_to "Void", void_charge_path(charge), method: :post,
+          class: "btn btn-xs btn-outline btn-error",
+          form: { data: { turbo_confirm: "Are you sure you want to void this charge?" } } %>
+    <% end %>
+  </td>
+</tr>

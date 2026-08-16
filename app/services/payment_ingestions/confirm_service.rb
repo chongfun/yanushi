@@ -45,13 +45,21 @@ module PaymentIngestions
       attr_reader :user, :ingestion
 
       def create_payment
-        TenantPayment.create!(
-          tenancy: ingestion.tenancy,
+        tenancy = ingestion.tenancy
+        raise ConfirmationError, "Missing tenancy" unless tenancy
+
+        result = TenantPayments::CreateService.call(
+          tenancy: tenancy,
           amount: ingestion.amount,
           payment_date: ingestion.payment_date,
           payment_method: ingestion.payment_method,
           transaction_number: ingestion.transaction_number
         )
+        if result.success?
+          result.value!.data[:tenant_payment]
+        else
+          raise ConfirmationError, result.failure.error
+        end
       end
 
       def create_aliases

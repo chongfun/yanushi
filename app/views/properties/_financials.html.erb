@@ -50,30 +50,26 @@
               <td><%= item[:date].strftime("%b %d, %Y") %></td>
               <td>
                 <% case item[:type] %>
-                <% when 'Scheduled Rent' %>
+                <% when 'Charge' %>
                   <div class="badge badge-info gap-2 text-xs"><%= item[:type] %></div>
                 <% when 'Tenant Payment' %>
                   <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
                 <% when 'Expense' %>
                   <div class="badge badge-error gap-2 text-xs text-error-content"><%= item[:type] %></div>
-                <% when 'Tenant Charge' %>
-                  <div class="badge badge-warning gap-2 text-xs text-warning-content"><%= item[:type] %></div>
                 <% end %>
               </td>
               <td class="text-sm">
-                <% if item[:type] == 'Scheduled Rent' %>
-                  <% if item[:object].covered? %>
-                    <span class="badge badge-success badge-sm badge-outline font-medium">Paid</span>
-                  <% else %>
-                    <span class="badge badge-error badge-sm badge-outline font-medium">Unpaid</span>
-                    <% if item[:date] < Date.current %>
-                      <span class="text-error ml-2 text-xs font-semibold">Overdue</span>
-                    <% end %>
+                <% if item[:type] == 'Charge' %>
+                  <% charge = item[:object] %>
+                  <span class="font-medium"><%= charge.charge_kind.titleize %></span>
+                  <% if charge.description.present? %>
+                    - <%= charge.description %>
+                  <% end %>
+                  <% if charge.voided? %>
+                    <span class="badge badge-ghost text-xs ml-2">Voided</span>
                   <% end %>
                 <% elsif item[:type] == 'Tenant Payment' %>
                   Tenancy #<%= item[:object].tenancy_id %> (Method: <%= item[:object].payment_method %>)
-                <% elsif item[:type] == 'Tenant Charge' %>
-                  Charge: <%= item[:object].description %>
                 <% elsif item[:type] == 'Expense' %>
                   <%= item[:object].category.titleize %> - <%= item[:object].description %>
                   <% if item[:object].reimbursed? %>
@@ -84,12 +80,10 @@
               <td class="text-right font-medium">
                 <% if item[:type] == 'Expense' %>
                   <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
-                <% elsif item[:type] == 'Tenant Charge' %>
-                  <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
+                <% elsif item[:type] == 'Charge' %>
+                  <span class="text-base-content/75"><%= number_to_currency(item[:amount]) %></span>
                 <% elsif item[:type] == 'Tenant Payment' %>
                   <span class="text-success">+<%= number_to_currency(item[:amount]) %></span>
-                <% elsif item[:type] == 'Scheduled Rent' %>
-                  <span class="text-base-content/75"><%= number_to_currency(item[:amount]) %></span>
                 <% else %>
                   <%= number_to_currency(item[:amount]) %>
                 <% end %>

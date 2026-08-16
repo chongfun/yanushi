@@ -31,7 +31,7 @@ RSpec.describe ScheduleEGenerator do
   TEST_YEARS = [ 2025, 2022, 2021, 2018, 2015 ].freeze
 
   before do
-    TenantCharge.delete_all
+    Charge.delete_all
     Expense.delete_all
     TenantPayment.delete_all
   end
@@ -126,7 +126,7 @@ RSpec.describe ScheduleEGenerator do
           expect(read_field(doc, map[:total_expenses])).to eq(total_expected)
         end
 
-        TenantCharge.delete_all
+        Charge.delete_all
         Expense.delete_all
         TenantPayment.delete_all
       end

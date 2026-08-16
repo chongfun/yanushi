@@ -161,8 +161,8 @@ RSpec.describe PaymentIngestion, type: :model do
       }.to raise_error(PaymentIngestions::ConfirmationError)
     end
 
-    it "confirm! rescues RecordNotUnique and raises ConfirmationError when TenantPayment.create! raises RecordNotUnique" do
-      allow(TenantPayment).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique.new("Duplicate key error"))
+    it "confirm! rescues RecordNotUnique and raises ConfirmationError when TenantPayment creation raises RecordNotUnique" do
+      allow(TenantPayments::CreateService).to receive(:call).and_raise(ActiveRecord::RecordNotUnique.new("Duplicate key error"))
       expect {
         ingestion.confirm!
       }.to raise_error(PaymentIngestions::ConfirmationError, /This transaction has already been recorded/)
@@ -205,9 +205,16 @@ RSpec.describe PaymentIngestion, type: :model do
       expect(ingestion.duplicate_exists?).to be_falsey
       expect(ingestion).to be_valid
 
-      # Reassign payment to user one
-      payment = TenantPayment.find_by!(transaction_number: "TXNSCOPED")
-      payment.update!(tenancy: tenancy_one, user: user_one)
+      # When payment exists for user one with matching transaction number
+      create(:tenant_payment,
+        tenancy: tenancy_one,
+        user: user_one,
+        amount: 1000.0,
+        payment_date: Date.current,
+        payment_method: "zelle",
+        transaction_number: "TXNSCOPED_MATCH"
+      )
+      ingestion.transaction_number = "TXNSCOPED_MATCH"
 
       expect(ingestion.duplicate_exists?).to be_truthy
       expect(ingestion).not_to be_valid

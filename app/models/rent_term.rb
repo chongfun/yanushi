@@ -1,5 +1,7 @@
 class RentTerm < ApplicationRecord
   belongs_to :tenancy
+  has_many :charges, dependent: :restrict_with_error
+  has_many :rent_charges, -> { where(charge_kind: "rent") }, class_name: "Charge", dependent: :restrict_with_error
 
   FREQUENCIES = %w[monthly].freeze
 

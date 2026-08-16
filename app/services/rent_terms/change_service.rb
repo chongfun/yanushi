@@ -57,6 +57,24 @@ module RentTerms
           )
         end
 
+        if effective_from != effective_from.beginning_of_month
+          return ServiceResult.failure(
+            data: nil,
+            error: "Rent change effective date must be the first day of a month (proration is not supported)",
+            code: :validation_error
+          )
+        end
+
+        conflicting_charge = tenancy.charges.where(charge_kind: "rent").active.where("service_period_start >= ?", effective_from).order(:service_period_start).first
+        if conflicting_charge
+          period_str = conflicting_charge.service_period_start&.strftime("%B %Y") || conflicting_charge.charge_date.to_s
+          return ServiceResult.failure(
+            data: nil,
+            error: "Rent for #{period_str} has already been charged. Void the affected rent charge before changing the rent term.",
+            code: :conflict
+          )
+        end
+
         current_terms = tenancy.rent_terms.order(effective_from: :asc).lock
         previous_term = current_terms.find { |t| t.effective_until.nil? } || current_terms.last
 
@@ -83,6 +101,13 @@ module RentTerms
           due_day: resolved_due_day,
           frequency: frequency
         )
+
+        if effective_from <= Date.current
+          gen_result = RentCharges::GenerateThroughService.call(tenancy: tenancy, through: Date.current)
+          unless gen_result.success?
+            raise ActiveRecord::RecordInvalid, new_term
+          end
+        end
       end
 
       ServiceResult.success({ rent_term: new_term })

@@ -9,6 +9,7 @@ module Accounting
       { key: "rental_income", name: "Rental Income", account_type: "income" }.freeze,
       { key: "late_fee_income", name: "Late Fee Income", account_type: "income" }.freeze,
       { key: "reimbursement_income", name: "Reimbursement Income", account_type: "income" }.freeze,
+      { key: "other_tenant_income", name: "Other Tenant Income", account_type: "income" }.freeze,
       { key: "expense_advertising", name: "Advertising", account_type: "expense" }.freeze,
       { key: "expense_cleaning_maintenance", name: "Cleaning and Maintenance", account_type: "expense" }.freeze,
       { key: "expense_insurance", name: "Insurance", account_type: "expense" }.freeze,

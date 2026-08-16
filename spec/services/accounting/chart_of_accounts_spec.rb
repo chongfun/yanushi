@@ -4,8 +4,8 @@ RSpec.describe Accounting::ChartOfAccounts do
   let!(:user) { create(:user) }
 
   describe "user provisioning on create" do
-    it "automatically provisions all 17 system accounts on user creation" do
-      expect(user.accounts.count).to eq(17)
+    it "automatically provisions all 18 system accounts on user creation" do
+      expect(user.accounts.count).to eq(18)
 
       described_class::SYSTEM_ACCOUNTS.each do |defn|
         acc = user.accounts.find_by(key: defn[:key])
@@ -18,8 +18,8 @@ RSpec.describe Accounting::ChartOfAccounts do
 
     it "provisions charts independently for different users" do
       other_user = create(:user)
-      expect(user.accounts.count).to eq(17)
-      expect(other_user.accounts.count).to eq(17)
+      expect(user.accounts.count).to eq(18)
+      expect(other_user.accounts.count).to eq(18)
 
       cash1 = user.accounts.find_by(key: "cash")
       cash2 = other_user.accounts.find_by(key: "cash")

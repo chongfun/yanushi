@@ -63,7 +63,7 @@ RSpec.describe PaymentIngestions::ConfirmService do
 
   it "handles duplicate transaction number ActiveRecord::RecordNotUnique" do
     ingestion = build_ingestion(transaction_number: "DUPLICATETXN")
-    allow(TenantPayment).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique)
+    allow(TenantPayments::CreateService).to receive(:call).and_raise(ActiveRecord::RecordNotUnique)
 
     result = described_class.call(user: user, ingestion: ingestion)
     expect(result).to be_failure
@@ -74,7 +74,7 @@ RSpec.describe PaymentIngestions::ConfirmService do
     ingestion = build_ingestion(transaction_number: "INVALIDTXN")
     invalid_tp = TenantPayment.new
     invalid_tp.errors.add(:amount, "is invalid")
-    allow(TenantPayment).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(invalid_tp))
+    allow(TenantPayments::CreateService).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(invalid_tp))
 
     result = described_class.call(user: user, ingestion: ingestion)
     expect(result).to be_failure

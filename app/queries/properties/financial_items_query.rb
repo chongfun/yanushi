@@ -9,9 +9,8 @@ module Properties
       end_date = start_date.end_of_year
 
       [
-        items_for(:scheduled_rents, :due_date, "Scheduled Rent", start_date, end_date),
+        items_for(:charges, :charge_date, "Charge", start_date, end_date),
         items_for(:tenant_payments, :payment_date, "Tenant Payment", start_date, end_date),
-        items_for(:tenant_charges, :charge_date, "Tenant Charge", start_date, end_date),
         items_for(:expenses, :expense_date, "Expense", start_date, end_date)
       ].flatten.sort_by { |item| item[:date] }
     end

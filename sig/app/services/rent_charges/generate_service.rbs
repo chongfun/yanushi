@@ -1,0 +1,13 @@
+module RentCharges
+  class GenerateService
+    def self.call: (tenancy: Tenancy, service_month: Date | String | untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (tenancy: Tenancy, service_month: Date | String | untyped) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader service_month: Date?
+    def parse_month: (untyped val) -> Date?
+  end
+end

@@ -1,0 +1,14 @@
+module Charges
+  class PostService
+    INCOME_ACCOUNTS: Hash[String, String]
+
+    def self.call: (charge: Charge) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (charge: Charge) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader charge: Charge
+    def default_description: () -> String
+  end
+end

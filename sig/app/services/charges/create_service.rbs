@@ -1,0 +1,49 @@
+module Charges
+  class CreateService
+    def self.call: (
+      tenancy: Tenancy,
+      charge_kind: String | Symbol,
+      ?amount_cents: Integer?,
+      ?amount: (BigDecimal | Numeric | String)?,
+      ?charge_date: Date?,
+      ?due_on: Date?,
+      ?description: String?,
+      ?rent_term: RentTerm?,
+      ?source_expense: Expense?,
+      ?service_period_start: Date?,
+      ?service_period_end: Date?
+    ) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    def initialize: (
+      tenancy: Tenancy,
+      charge_kind: String | Symbol,
+      ?amount_cents: Integer?,
+      ?amount: (BigDecimal | Numeric | String)?,
+      ?charge_date: Date?,
+      ?due_on: Date?,
+      ?description: String?,
+      ?rent_term: RentTerm?,
+      ?source_expense: Expense?,
+      ?service_period_start: Date?,
+      ?service_period_end: Date?
+    ) -> void
+
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader charge_kind: String
+    attr_reader amount_cents: Integer?
+    attr_reader amount: (BigDecimal | Numeric | String)?
+    attr_reader charge_date: Date
+    attr_reader due_on: Date
+    attr_reader description: String?
+    attr_reader rent_term: RentTerm?
+    attr_reader source_expense: Expense?
+    attr_reader service_period_start: Date?
+    attr_reader service_period_end: Date?
+
+    def default_rent_term: () -> RentTerm?
+  end
+end

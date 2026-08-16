@@ -6,8 +6,8 @@ class Tenancy < ApplicationRecord
   def current_rent_term: (?Date date, ?as_of: untyped) -> RentTerm?
   def most_recent_rent_term: () -> RentTerm?
   def financial_history?: () -> bool
-  def total_credits: (?as_of: Date) -> BigDecimal
-  def total_debits: (?as_of: Date) -> BigDecimal
+  def balance_cents: (?as_of: Date) -> Integer
+  def current_balance_cents: () -> Integer
   def balance_as_of: (?Date date) -> BigDecimal
   def current_balance: () -> BigDecimal
   def accounting_user: () -> User?

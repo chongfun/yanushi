@@ -5,6 +5,8 @@ class TenantPayment < ApplicationRecord
 
   private
 
+  def prevent_mutation_after_creation: () -> void
+  def prevent_destroy: () -> void
   def assign_user_from_tenancy: () -> void
   def user_matches_tenancy_owner: () -> void
 end

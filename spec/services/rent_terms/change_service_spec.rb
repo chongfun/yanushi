@@ -188,6 +188,55 @@ RSpec.describe RentTerms::ChangeService do
       end
     end
 
+    context "when effective_from is not on the first day of the month" do
+      it "returns a failure rejecting mid-month rent change" do
+        result = described_class.call(
+          tenancy: tenancy,
+          amount_cents: 220_000,
+          effective_from: Date.new(2025, 7, 15)
+        )
+        expect(result).to be_failure
+        expect(result.failure.error).to include("Rent change effective date must be the first day of a month")
+      end
+    end
+
+    context "when active rent charges exist for the target period" do
+      let!(:live_charge) do
+        create(:charge, :rent_charge,
+          tenancy: tenancy,
+          rent_term: initial_term,
+          amount_cents: 200_000,
+          charge_date: Date.new(2025, 7, 1),
+          due_on: Date.new(2025, 7, 1),
+          service_period_start: Date.new(2025, 7, 1),
+          service_period_end: Date.new(2025, 7, 31),
+          posted_at: Time.current
+        )
+      end
+
+      it "rejects retroactive rent change if live rent charge already exists" do
+        result = described_class.call(
+          tenancy: tenancy,
+          amount_cents: 250_000,
+          effective_from: Date.new(2025, 7, 1)
+        )
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:conflict)
+        expect(result.failure.error).to include("Rent for July 2025 has already been charged. Void the affected rent charge before changing the rent term.")
+      end
+
+      it "allows rent change if the prior charge has been voided" do
+        live_charge.update_columns(voided_at: Time.current)
+
+        result = described_class.call(
+          tenancy: tenancy,
+          amount_cents: 250_000,
+          effective_from: Date.new(2025, 7, 1)
+        )
+        expect(result).to be_success
+      end
+    end
+
     context "when new rent term has validation errors" do
       it "returns failure with validation errors on invalid amount" do
         result = described_class.call(
