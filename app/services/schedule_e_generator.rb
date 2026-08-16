@@ -299,9 +299,9 @@ class ScheduleEGenerator
   end
 
   def rents_received
-    @rents_received ||= @property.tenant_payments
-             .where(payment_date: date_range)
-             .sum(:amount)
+    @rents_received ||= BigDecimal(@property.receipts.active
+             .where(received_on: date_range)
+             .sum(:amount_cents).to_s) / 100
   end
 
   def expenses_by_category

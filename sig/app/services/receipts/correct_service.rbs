@@ -1,0 +1,46 @@
+module Receipts
+  class CorrectService
+    def self.call: (
+      receipt: Receipt,
+      ?tenancy: Tenancy?,
+      ?payer_party: Party?,
+      ?amount_cents: Integer?,
+      ?amount: (BigDecimal | Numeric | String)?,
+      ?received_on: (Date | String | Object)?,
+      ?payment_method: (String | Symbol)?,
+      ?external_reference: String?,
+      ?memo: String?
+    ) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    def initialize: (
+      receipt: Receipt,
+      ?tenancy: Tenancy?,
+      ?payer_party: Party?,
+      ?amount_cents: Integer?,
+      ?amount: (BigDecimal | Numeric | String)?,
+      ?received_on: (Date | String | Object)?,
+      ?payment_method: (String | Symbol)?,
+      ?external_reference: String?,
+      ?memo: String?
+    ) -> void
+
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader receipt: Receipt
+    attr_reader tenancy: Tenancy?
+    attr_reader payer_party: Party?
+    attr_reader amount_cents: Integer?
+    attr_reader amount: (BigDecimal | Numeric | String)?
+    attr_reader raw_received_on: untyped
+    attr_reader received_on: Date?
+    attr_reader payment_method: (String | Symbol)?
+    attr_reader external_reference: String?
+    attr_reader memo: String?
+
+    def parse_date: (untyped val) -> Date?
+    def resolve_amount_cents: () -> [ Integer, String? ]
+    def identical_replacement?: (Receipt rep, Tenancy t_tenancy, Party t_payer, Integer t_cents, Date t_date, (String | Symbol)? t_method, String? t_ref, String? t_memo) -> bool
+  end
+end

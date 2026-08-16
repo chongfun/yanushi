@@ -3,7 +3,7 @@ class PaymentIngestion
 
   def confirmable?: () -> bool
 
-  def confirm!: (?create_alias: bool) -> TenantPayment
+  def confirm!: (?create_alias: bool) -> Receipt
 
   def duplicate_exists?: () -> bool
 
@@ -19,4 +19,6 @@ class PaymentIngestion
   def validate_parse_status: () -> untyped
 
   def ensure_not_duplicate_payment: () -> untyped
+  def prevent_mutation_after_confirmed: () -> untyped
+  def prevent_destroy_if_confirmed: () -> untyped
 end

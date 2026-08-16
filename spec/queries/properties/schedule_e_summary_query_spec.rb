@@ -7,7 +7,7 @@ RSpec.describe Properties::ScheduleESummaryQuery do
   let(:tenancy) { create(:tenancy, rentable_unit: unit) }
 
   it "computes Schedule E summary values for a year" do
-    create(:tenant_payment, tenancy: tenancy, payment_date: Date.new(2026, 1, 1), amount: 1200)
+    create(:receipt, tenancy: tenancy, received_on: Date.new(2026, 1, 1), amount_cents: 120_000)
     create(:expense, property: property, expense_date: Date.new(2026, 1, 2), category: "repairs", amount: 200)
     create(:expense, property: property, expense_date: Date.new(2026, 1, 3), category: "utilities", amount: 100)
     create(:expense, property: property, expense_date: Date.new(2025, 1, 3), category: "utilities", amount: 999)

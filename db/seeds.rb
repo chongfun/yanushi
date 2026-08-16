@@ -34,7 +34,7 @@ if Rails.env.development?
   (1..11).each do |months_ago|
     due_date = (Date.current - months_ago.months).beginning_of_month
     payment_date = due_date + rand(tenancy.late_period_days || 3)
-    TenantPayments::CreateService.call(tenancy: tenancy, amount: 1200.0, payment_date: payment_date, payment_method: "ach")
+    Receipts::CreateService.call(tenancy: tenancy, payer_party: party, amount: 1200.0, received_on: payment_date, payment_method: "ach")
 
     expense_amount = rand(100...200)
     expense = Expense.new(
@@ -47,7 +47,7 @@ if Rails.env.development?
       reimburse_amount: expense_amount
     )
     Expenses::SaveService.call(expense: expense)
-    TenantPayments::CreateService.call(tenancy: tenancy, amount: expense_amount, payment_date: payment_date, payment_method: "ach")
+    Receipts::CreateService.call(tenancy: tenancy, payer_party: party, amount: expense_amount, received_on: payment_date, payment_method: "ach")
   end
 
   Expense.create!(property: property, amount: rand(200...300), category: "repairs", expense_date: Date.current - 1.year, description: "A/C tune-up")

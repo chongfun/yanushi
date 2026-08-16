@@ -43,20 +43,21 @@ RSpec.describe "PropertyLifecycle", type: :request do
     tenancy = Tenancy.last
     expect(response).to redirect_to(tenancy_url(tenancy))
 
-    # 3. Record a Tenant Payment for the tenancy
+    # 3. Record a Payment for the tenancy
     expect {
-      post tenant_payments_url, params: {
-        tenant_payment: {
+      post receipts_url, params: {
+        receipt: {
           tenancy_id: tenancy.id,
+          payer_party_id: party.id,
           amount: 2000,
-          payment_date: Date.new(2025, 1, 1),
+          received_on: Date.new(2025, 1, 1),
           payment_method: "check"
         }
       }
-    }.to change(TenantPayment, :count).by(1)
+    }.to change(Receipt, :count).by(1)
 
-    payment = TenantPayment.last
-    expect(response).to redirect_to(tenant_payment_url(payment))
-    expect(payment.tenancy).to eq(tenancy)
+    receipt = Receipt.last
+    expect(response).to redirect_to(receipt_url(receipt))
+    expect(receipt.tenancy).to eq(tenancy)
   end
 end

@@ -425,6 +425,10 @@ class ::Party < ::ApplicationRecord
   def accounting_postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
   def accounting_posting_ids: () -> ::Array[::Integer]
   def accounting_posting_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def receipts_as_payer: () -> ::Receipt::ActiveRecord_Associations_CollectionProxy
+  def receipts_as_payer=: (::Receipt::ActiveRecord_Associations_CollectionProxy | ::Array[::Receipt]) -> (::Receipt::ActiveRecord_Associations_CollectionProxy | ::Array[::Receipt])
+  def receipts_as_payer_ids: () -> ::Array[::Integer]
+  def receipts_as_payer_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def payment_ingestions: () -> ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy
   def payment_ingestions=: (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion]) -> (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion])
   def payment_ingestion_ids: () -> ::Array[::Integer]
@@ -508,6 +512,10 @@ end
 class ::Posting < ::ApplicationRecord
 end
 class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::Receipt < ::ApplicationRecord
+end
+class ::Receipt::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::PaymentIngestion < ::ApplicationRecord
 end

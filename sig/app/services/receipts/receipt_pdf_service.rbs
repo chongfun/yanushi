@@ -1,0 +1,14 @@
+module Receipts
+  class ReceiptPdfService
+    def self.call: (receipt: Receipt, view_context: untyped) -> String
+
+    def initialize: (receipt: Receipt, view_context: untyped) -> void
+
+    def call: () -> String
+
+    private
+
+    attr_reader receipt: Receipt
+    attr_reader view_context: untyped
+  end
+end

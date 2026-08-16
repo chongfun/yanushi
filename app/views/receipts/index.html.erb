@@ -1,0 +1,39 @@
+<% content_for :title, "Payments & Receipts" %>
+
+<div class="flex justify-between items-center mb-6">
+  <div>
+    <h1 class="text-3xl font-bold">Payments & Receipts</h1>
+    <p class="text-xs text-base-content/60">Historical record of all payments and ledger credits</p>
+  </div>
+  <%= link_to "＋ Record Payment", new_receipt_path, class: "btn btn-primary" %>
+</div>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Tenancy / Property</th>
+        <th>Payer</th>
+        <th>Payment Date</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Reference</th>
+        <th>Status</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="receipts">
+      <% if @receipts.any? %>
+        <% @receipts.each do |receipt| %>
+          <%= render receipt %>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="8" class="text-center py-8 text-base-content/60">
+            No payment receipts recorded yet.
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,15 @@
+module PaymentDocuments
+  class DestroyService
+    def self.call: (user: User, document: PaymentDocument) -> Dry::Monads::Result
+    def initialize: (user: User, document: PaymentDocument) -> void
+    def call: () -> Dry::Monads::Result
+
+    private
+
+    attr_reader user: User
+    attr_reader document: PaymentDocument
+
+    def success: (PaymentDocument data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

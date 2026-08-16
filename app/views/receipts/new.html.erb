@@ -1,0 +1,12 @@
+<div class="max-w-xl mx-auto py-8">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold">Record Payment</h1>
+    <p class="text-xs text-base-content/60">Posts payment directly to ledger (Dr Cash / Cr Tenant Receivable)</p>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy %>
+    </div>
+  </div>
+</div>

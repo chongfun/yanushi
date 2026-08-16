@@ -6,7 +6,7 @@ class User < ApplicationRecord
   has_many :tenancies, through: :rentable_units
   has_many :expenses, through: :properties
   has_many :charges, through: :tenancies
-  has_many :tenant_payments, through: :tenancies
+  has_many :receipts, dependent: :restrict_with_error
   has_many :parties, dependent: :destroy
   has_many :payment_ingestions, dependent: :destroy
   has_many :payment_documents, dependent: :destroy

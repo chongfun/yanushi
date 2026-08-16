@@ -8,7 +8,7 @@
       <% active_tenancy = active_tenancy_for(property) %>
       <% if active_tenancy %>
         <%= link_to "＋ Record Payment",
-              new_tenancy_tenant_payment_path(active_tenancy),
+              new_tenancy_receipt_path(active_tenancy),
               class: "btn btn-sm btn-outline btn-primary",
               data: { turbo_frame: "modal-frame" } %>
       <% end %>
@@ -52,7 +52,7 @@
                 <% case item[:type] %>
                 <% when 'Charge' %>
                   <div class="badge badge-info gap-2 text-xs"><%= item[:type] %></div>
-                <% when 'Tenant Payment' %>
+                <% when 'Payment', 'Receipt' %>
                   <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
                 <% when 'Expense' %>
                   <div class="badge badge-error gap-2 text-xs text-error-content"><%= item[:type] %></div>
@@ -68,8 +68,17 @@
                   <% if charge.voided? %>
                     <span class="badge badge-ghost text-xs ml-2">Voided</span>
                   <% end %>
-                <% elsif item[:type] == 'Tenant Payment' %>
-                  Tenancy #<%= item[:object].tenancy_id %> (Method: <%= item[:object].payment_method %>)
+                <% elsif item[:type] == 'Payment' || item[:type] == 'Receipt' %>
+                  <% receipt = item[:object] %>
+                  Tenancy #<%= receipt.tenancy_id %>
+                  <% if receipt.respond_to?(:payer_party) && receipt.payer_party %>
+                    (<%= receipt.payer_party.display_name %>, <%= receipt.payment_method&.titleize %>)
+                  <% else %>
+                    (Method: <%= receipt.payment_method %>)
+                  <% end %>
+                  <% if receipt.respond_to?(:voided?) && receipt.voided? %>
+                    <span class="badge badge-ghost text-xs ml-2">Voided</span>
+                  <% end %>
                 <% elsif item[:type] == 'Expense' %>
                   <%= item[:object].category.titleize %> - <%= item[:object].description %>
                   <% if item[:object].reimbursed? %>
@@ -82,7 +91,7 @@
                   <span class="text-error">-<%= number_to_currency(item[:amount]) %></span>
                 <% elsif item[:type] == 'Charge' %>
                   <span class="text-base-content/75"><%= number_to_currency(item[:amount]) %></span>
-                <% elsif item[:type] == 'Tenant Payment' %>
+                <% elsif item[:type] == 'Payment' || item[:type] == 'Receipt' %>
                   <span class="text-success">+<%= number_to_currency(item[:amount]) %></span>
                 <% else %>
                   <%= number_to_currency(item[:amount]) %>

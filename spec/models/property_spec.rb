@@ -7,7 +7,7 @@ RSpec.describe Property, type: :model do
     it { is_expected.to have_many(:tenancies).through(:rentable_units) }
     it { is_expected.to have_many(:expenses).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:charges).through(:tenancies) }
-    it { is_expected.to have_many(:tenant_payments).through(:tenancies) }
+    it { is_expected.to have_many(:receipts).through(:tenancies) }
     it { is_expected.to have_many(:accounting_postings).class_name("Posting").dependent(:restrict_with_error) }
   end
 

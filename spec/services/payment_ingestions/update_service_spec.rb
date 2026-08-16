@@ -47,4 +47,14 @@ RSpec.describe PaymentIngestions::UpdateService do
     expect(result).to be_failure
     expect(result.failure.code).to eq(:validation_error)
   end
+
+  it "rejects updating a confirmed payment ingestion" do
+    ingestion = create(:payment_ingestion, user: user, status: :confirmed, party: party, tenancy: tenancy, amount: 500.0, payment_date: Date.current, payment_method: "zelle")
+
+    result = described_class.call(user: user, ingestion: ingestion, params: { amount: 600.0 })
+    expect(result).to be_failure
+    expect(result.failure.code).to eq(:immutable)
+    expect(result.failure.error).to eq("Cannot update a confirmed payment ingestion")
+    expect(ingestion.reload.amount).to eq(500.0)
+  end
 end

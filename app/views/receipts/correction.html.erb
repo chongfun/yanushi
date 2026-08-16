@@ -1,0 +1,76 @@
+<div class="max-w-xl mx-auto py-8">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold">Correct Payment</h1>
+    <p class="text-xs text-base-content/60">Restates accounting record and preserves audit history</p>
+  </div>
+
+  <div class="alert alert-info mb-6 text-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <div>
+      <div class="font-bold">Correction Semantics</div>
+      <div>
+        Correcting this payment will retain original Receipt #<%= @receipt.id %> as a voided record, reverse its ledger postings as of <%= @receipt.received_on.strftime("%b %d, %Y") %>, and create an active replacement receipt.
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <%= form_with(model: @replacement_receipt, url: correct_receipt_path(@receipt), method: :post, local: true, class: "space-y-4") do |f| %>
+        <% if @replacement_receipt.errors.any? %>
+          <div class="alert alert-error mb-4">
+            <ul>
+              <% @replacement_receipt.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="form-control w-full">
+          <%= f.label :tenancy_id, "Tenancy / Unit", class: "label font-semibold" %>
+          <%= f.collection_select :tenancy_id, @tenancies, :id, ->(t) { "##{t.id} - #{t.property&.address} (#{t.rentable_unit&.display_name})" }, { selected: @replacement_receipt.tenancy_id }, { class: "select select-bordered w-full", required: true } %>
+        </div>
+
+        <div class="form-control w-full">
+          <%= f.label :payer_party_id, "Payer (Party)", class: "label font-semibold" %>
+          <%= f.collection_select :payer_party_id, @parties, :id, :display_name, { selected: @replacement_receipt.payer_party_id }, { class: "select select-bordered w-full", required: true } %>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="form-control w-full">
+            <%= f.label :amount, "Amount ($)", class: "label font-semibold" %>
+            <%= f.number_field :amount, value: @replacement_receipt.amount, step: "0.01", min: "0.01", class: "input input-bordered w-full", required: true %>
+          </div>
+
+          <div class="form-control w-full">
+            <%= f.label :received_on, "Received Date", class: "label font-semibold" %>
+            <%= f.date_field :received_on, class: "input input-bordered w-full", required: true %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="form-control w-full">
+            <%= f.label :payment_method, "Payment Method", class: "label font-semibold" %>
+            <%= f.text_field :payment_method, class: "input input-bordered w-full", required: true %>
+          </div>
+
+          <div class="form-control w-full">
+            <%= f.label :external_reference, "External Reference / Txn #", class: "label font-semibold" %>
+            <%= f.text_field :external_reference, class: "input input-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="form-control w-full">
+          <%= f.label :memo, "Memo", class: "label font-semibold" %>
+          <%= f.text_area :memo, class: "textarea textarea-bordered w-full", rows: 2 %>
+        </div>
+
+        <div class="flex gap-2 pt-4">
+          <%= f.submit "Save Replacement Payment", class: "btn btn-primary flex-1" %>
+          <%= link_to "Cancel", receipt_path(@receipt), class: "btn btn-ghost" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

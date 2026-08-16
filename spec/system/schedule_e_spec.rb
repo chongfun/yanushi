@@ -22,17 +22,17 @@ RSpec.describe "ScheduleE", type: :system do
       agreement_type: "fixed_term"
     )
 
-    create(:tenant_payment,
+    create(:receipt,
       tenancy: tenancy,
-      amount: 5000.00,
-      payment_date: Date.new(year, 1, 5),
+      amount_cents: 500_000,
+      received_on: Date.new(year, 1, 5),
       payment_method: "Zelle"
     )
 
-    create(:tenant_payment,
+    create(:receipt,
       tenancy: tenancy,
-      amount: 150.00,
-      payment_date: Date.new(year, 2, 10),
+      amount_cents: 15_000,
+      received_on: Date.new(year, 2, 10),
       payment_method: "Check"
     )
 

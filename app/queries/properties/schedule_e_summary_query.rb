@@ -9,7 +9,7 @@ module Properties
     def call(year:)
       start_date = Date.new(year.to_i, 1, 1)
       end_date = start_date.end_of_year
-      rents_received = property.tenant_payments.where(payment_date: start_date..end_date).sum(:amount)
+      rents_received = BigDecimal(property.receipts.active.where(received_on: start_date..end_date).sum(:amount_cents).to_s) / 100
       utility_reimbursements = BigDecimal("0")
       total_income = rents_received + utility_reimbursements
       expenses_by_category = property.expenses.where(expense_date: start_date..end_date).group(:category).sum(:amount)

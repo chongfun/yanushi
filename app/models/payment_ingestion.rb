@@ -2,7 +2,7 @@ class PaymentIngestion < ApplicationRecord
   belongs_to :user
   belongs_to :party, optional: true
   belongs_to :tenancy, optional: true
-  belongs_to :tenant_payment, optional: true
+  belongs_to :receipt, optional: true
   belongs_to :payment_document, optional: true
 
   validates :source, presence: true
@@ -11,6 +11,9 @@ class PaymentIngestion < ApplicationRecord
 
   validate :ensure_not_duplicate_payment
   validate :validate_parse_status
+  validate :prevent_mutation_after_confirmed, on: :update
+
+  before_destroy :prevent_destroy_if_confirmed
 
   enum :status, {
     pending: "pending",
@@ -43,10 +46,8 @@ class PaymentIngestion < ApplicationRecord
   def duplicate_exists?
     return false if transaction_number.blank? || payment_method.blank?
 
-    scope = TenantPayment.joins(tenancy: { rentable_unit: :property })
-                         .where(properties: { user_id: user_id })
-                         .where(payment_method: payment_method, transaction_number: transaction_number)
-    scope = scope.where.not(id: tenant_payment_id) if tenant_payment_id.present?
+    scope = Receipt.active.where(user_id: user_id, payment_method: payment_method, external_reference: transaction_number)
+    scope = scope.where.not(id: receipt_id) if receipt_id.present?
     scope.exists?
   end
 
@@ -80,9 +81,27 @@ class PaymentIngestion < ApplicationRecord
 
     def ensure_not_duplicate_payment
       if duplicate_exists?
-        errors.add(:base, "This payment receipt has already been confirmed and recorded in a tenant payment.")
+        errors.add(:base, "This payment receipt has already been confirmed and recorded in a receipt.")
       elsif ingestion_duplicate_exists?
         errors.add(:base, "This payment receipt has already been uploaded and is pending review.")
+      end
+    end
+
+    def prevent_mutation_after_confirmed
+      persisted_confirmed = persisted? && self.class.where(id: id, status: :confirmed).exists?
+      return unless status_was == "confirmed" || persisted_confirmed
+
+      changed = changes_to_save.keys - %w[updated_at]
+      if changed.any?
+        errors.add(:base, "Cannot modify a confirmed payment ingestion")
+      end
+    end
+
+    def prevent_destroy_if_confirmed
+      persisted_confirmed = persisted? && self.class.where(id: id, status: :confirmed).exists?
+      if confirmed? || persisted_confirmed
+        errors.add(:base, "Cannot delete a confirmed payment ingestion")
+        throw(:abort)
       end
     end
 end
