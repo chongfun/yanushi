@@ -22,6 +22,41 @@
     </div>
   </div>
 
+  <% if @charge.superseded? %>
+    <div class="alert alert-warning mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <div>
+        <div class="font-bold">Charge Corrected</div>
+        <div class="text-xs">
+          This charge was corrected on <%= @charge.voided_at&.strftime("%B %d, %Y") %>.
+          <% if @charge.superseded_by %>
+            Replaced by <%= link_to "Charge ##{@charge.superseded_by_id}", charge_path(@charge.superseded_by), class: "underline font-semibold" %>.
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% elsif @charge.voided? %>
+    <div class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <div class="font-bold">Charge Voided</div>
+        <div class="text-xs">This charge was voided on <%= @charge.voided_at&.strftime("%B %d, %Y at %I:%M %p") %> and its accounting entries have been reversed.</div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @charge.superseded_charge.present? %>
+    <div class="alert alert-info mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <div class="font-bold">Replacement Charge</div>
+        <div class="text-xs">
+          This charge is a correction replacement for <%= link_to "Charge ##{@charge.superseded_charge.id}", charge_path(@charge.superseded_charge), class: "underline font-semibold" %>.
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <div class="card bg-base-100 shadow-xl border border-base-200">
     <div class="card-body">
       <div class="flex flex-col md:flex-row justify-between gap-8">
@@ -41,8 +76,10 @@
             <div>
               <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Status</div>
               <div>
-                <% if @charge.voided? %>
-                  <span class="badge badge-error">Voided</span>
+                <% if @charge.superseded? %>
+                  <span class="badge badge-warning">Corrected (Superseded)</span>
+                <% elsif @charge.voided? %>
+                  <span class="badge badge-error">Voided & Reversed</span>
                 <% elsif @charge.posted? %>
                   <span class="badge badge-success">Posted</span>
                 <% else %>
@@ -105,8 +142,17 @@
             </div>
           <% end %>
 
-          <% if @charge.voided_at %>
+          <% if @charge.superseded? %>
             <div class="alert alert-warning py-3">
+              <div>
+                <div class="font-bold text-sm">Corrected on <%= @charge.voided_at&.strftime("%B %d, %Y") %></div>
+                <div class="text-xs">
+                  Replaced by <%= link_to "Charge ##{@charge.superseded_by_id}", charge_path(@charge.superseded_by), class: "underline font-semibold" %>.
+                </div>
+              </div>
+            </div>
+          <% elsif @charge.voided_at %>
+            <div class="alert alert-error py-3">
               <div>
                 <div class="font-bold text-sm">Voided on <%= @charge.voided_at.strftime("%B %d, %Y") %></div>
                 <div class="text-xs">Reversed via journal entry in double-entry ledger.</div>

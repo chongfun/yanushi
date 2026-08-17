@@ -65,7 +65,9 @@
                   <% if charge.description.present? %>
                     - <%= charge.description %>
                   <% end %>
-                  <% if charge.voided? %>
+                  <% if charge.superseded? %>
+                    <span class="badge badge-warning text-xs ml-2">Corrected</span>
+                  <% elsif charge.voided? %>
                     <span class="badge badge-ghost text-xs ml-2">Voided</span>
                   <% end %>
                 <% elsif item[:type] == 'Payment' || item[:type] == 'Receipt' %>
@@ -76,12 +78,19 @@
                   <% else %>
                     (Method: <%= receipt.payment_method %>)
                   <% end %>
-                  <% if receipt.respond_to?(:voided?) && receipt.voided? %>
+                  <% if receipt.respond_to?(:superseded?) && receipt.superseded? %>
+                    <span class="badge badge-warning text-xs ml-2">Corrected</span>
+                  <% elsif receipt.respond_to?(:voided?) && receipt.voided? %>
                     <span class="badge badge-ghost text-xs ml-2">Voided</span>
                   <% end %>
                 <% elsif item[:type] == 'Expense' %>
-                  <%= item[:object].category.titleize %> - <%= item[:object].description %>
-                  <% if item[:object].reimbursed? %>
+                  <% exp = item[:object] %>
+                  <%= exp.expense_kind&.titleize %> - <%= exp.description %>
+                  <% if exp.superseded? %>
+                    <span class="badge badge-warning text-xs ml-2">Corrected</span>
+                  <% elsif exp.voided? %>
+                    <span class="badge badge-ghost text-xs ml-2">Voided</span>
+                  <% elsif exp.reimbursed? %>
                     <span class="badge badge-warning text-xs text-warning-content ml-2">Reimbursable</span>
                   <% end %>
                 <% end %>

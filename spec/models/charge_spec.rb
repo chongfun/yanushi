@@ -252,6 +252,28 @@ RSpec.describe Charge, type: :model do
         expect(charge).not_to be_valid
         expect(charge.errors[:source_expense]).to include("must belong to the same property as the tenancy")
       end
+
+      it "rejects source_expense scoped to a different unit in the same property" do
+        unit_b = create(:rentable_unit, property: property, name: "Unit B")
+        unit_b_expense = create(:expense, property: property, rentable_unit: unit_b)
+        charge = build(:charge,
+          charge_kind: "reimbursement",
+          tenancy: tenancy,
+          source_expense: unit_b_expense
+        )
+        expect(charge).not_to be_valid
+        expect(charge.errors[:source_expense]).to include("must be scoped to the same unit as the tenancy")
+      end
+
+      it "allows property-wide source_expense (no unit) for any tenancy on the property" do
+        property_wide_expense = create(:expense, property: property, rentable_unit: nil)
+        charge = build(:charge,
+          charge_kind: "reimbursement",
+          tenancy: tenancy,
+          source_expense: property_wide_expense
+        )
+        expect(charge).to be_valid
+      end
     end
 
     context "late_fee and other charges" do
@@ -324,6 +346,21 @@ RSpec.describe Charge, type: :model do
     it "allows destroying an unposted charge" do
       unposted = create(:charge, :other_charge, tenancy: tenancy, posted_at: nil)
       expect { unposted.destroy }.to change(described_class, :count).by(-1)
+    end
+
+    it "determines lifecycle_status correctly with superseded taking precedence over voided" do
+      rep = create(:charge, :other_charge, tenancy: tenancy)
+      superseded_c = create(:charge, :other_charge, tenancy: tenancy, posted_at: Time.current, voided_at: Time.current, superseded_by: rep)
+      voided_c = create(:charge, :other_charge, tenancy: tenancy, posted_at: Time.current, voided_at: Time.current)
+      active_c = create(:charge, :other_charge, tenancy: tenancy, posted_at: Time.current, voided_at: nil)
+      draft_c = create(:charge, :other_charge, tenancy: tenancy, posted_at: nil, voided_at: nil)
+
+      expect(superseded_c.lifecycle_status).to eq(:superseded)
+      expect(superseded_c.superseded?).to be true
+      expect(voided_c.lifecycle_status).to eq(:voided)
+      expect(voided_c.superseded?).to be false
+      expect(active_c.lifecycle_status).to eq(:posted)
+      expect(draft_c.lifecycle_status).to eq(:draft)
     end
   end
 

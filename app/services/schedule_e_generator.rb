@@ -143,17 +143,17 @@ class ScheduleEGenerator
     "cleaning_and_maintenance"          => :cleaning_and_maintenance,
     "commissions"                       => :commissions,
     "insurance"                         => :insurance,
-    "legal_and_other_professional_fees" => :legal_and_other_professional_fees,
-    "management_fees"                   => :management_fees,
+    "legal_and_professional"            => :legal_and_other_professional_fees,
+    "management"                        => :management_fees,
     "mortgage_interest"                 => :mortgage_interest,
     "other_interest"                    => :other_interest,
     "repairs"                           => :repairs,
     "supplies"                          => :supplies,
     "taxes"                             => :taxes,
     "utilities"                         => :utilities,
-    "depreciation_expense"              => :depreciation_expense,
     "other"                             => :other
   }.freeze
+  CATEGORY_FIELD_MAP = CATEGORY_TO_FIELD
 
   def initialize(rental_property, year)
     @property = rental_property
@@ -305,10 +305,13 @@ class ScheduleEGenerator
   end
 
   def expenses_by_category
-    @expenses_by_category ||= @property.expenses
-                                .where(expense_date: date_range)
-                                .group(:category)
-                                .sum(:amount)
+    @expenses_by_category ||= begin
+      cents_by_kind = @property.expenses.posted.active
+                               .where(paid_on: date_range)
+                               .group(:expense_kind)
+                               .sum(:amount_cents)
+      cents_by_kind.transform_values { |cents| BigDecimal(cents.to_s) / 100 }
+    end
   end
 
   def total_expenses

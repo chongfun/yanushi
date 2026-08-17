@@ -13,7 +13,7 @@ module Receipts
       pdf = Prawn::Document.new
       pdf.text "Payment Receipt", size: 30, style: :bold
 
-      if receipt.voided? && receipt.superseded?
+      if receipt.superseded?
         pdf.move_down 5
         pdf.text "[CORRECTED - REPLACED BY RECEIPT ##{receipt.superseded_by_id}]", size: 12, style: :bold, color: "CC0000"
       elsif receipt.voided?

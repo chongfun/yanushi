@@ -1,6 +1,6 @@
 class ExpenseReimbursementsController < ApplicationController
   @expense: Expense
-  @tenancies: ActiveRecord::Relation
+  @tenancies: untyped
   @charge: Charge
 
   def new: () -> void
@@ -9,5 +9,6 @@ class ExpenseReimbursementsController < ApplicationController
   private
 
   def set_expense: () -> void
+  def set_eligible_tenancies: () -> void
   def reimbursement_params: () -> ActionController::Parameters
 end

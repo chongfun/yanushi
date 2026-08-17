@@ -1,6 +1,7 @@
 class RentableUnit < ApplicationRecord
   belongs_to :property
   has_many :tenancies, dependent: :restrict_with_error
+  has_many :expenses, dependent: :restrict_with_error
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
 
   validates :name, presence: true, uniqueness: { scope: :property_id, case_sensitive: false }

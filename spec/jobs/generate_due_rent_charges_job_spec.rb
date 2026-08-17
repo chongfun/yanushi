@@ -29,6 +29,12 @@ RSpec.describe GenerateDueRentChargesJob, type: :job do
       }.to change(Charge, :count).by(2) # Jan and Feb charges
     end
 
+    it "defaults through_date to Date.current when as_of is nil" do
+      expect {
+        described_class.new.perform
+      }.to change(Charge, :count)
+    end
+
     it "raises GenerationError when generation fails for any tenancy" do
       allow(RentCharges::GenerateThroughService).to receive(:call).and_return(
         ServiceResult.failure(error: "Account not found", code: :missing_account)

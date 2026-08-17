@@ -1,25 +1,28 @@
 class Expense < ApplicationRecord
+  EXPENSE_KINDS: Array[String]
+  IMMUTABLE_POSTED_ATTRIBUTES: Array[String]
+
+  def amount: () -> BigDecimal
+  def amount=: (untyped val) -> void
+
   def reimbursed?: () -> bool
-  def reimbursement_charge: () -> Charge?
   def total_active_reimbursement_cents: () -> Integer
   def remaining_reimbursable_cents: () -> Integer
   def remaining_reimbursable_amount: () -> BigDecimal
   def fully_reimbursed?: () -> bool
 
-  def raw_reimburse_amount: () -> (String | BigDecimal | nil)
+  def posted?: () -> bool
+  def active?: () -> bool
+  def voided?: () -> bool
+  def superseded?: () -> bool
+  def lifecycle_status: () -> Symbol
 
-  def tenant_reimbursable: () -> bool?
-
-  def reimburse_tenancy_id: () -> (Integer | String)?
-  def reimburse_tenancy_id=: (untyped val) -> void
-  def reimburse_lease_id: () -> (Integer | String)?
-  def reimburse_lease_id=: (untyped val) -> void
-
-  def reimburse_amount: () -> (BigDecimal | String)
   def accounting_user: () -> User?
 
   private
 
-  def prevent_property_change_with_charges: () -> void
-  def prevent_amount_reduction_below_reimbursements: () -> void
+  def validate_rentable_unit_property_consistency: () -> void
+  def validate_superseded_by_same_user: () -> void
+  def prevent_mutation_after_posting: () -> void
+  def prevent_destroy_if_posted: () -> void
 end

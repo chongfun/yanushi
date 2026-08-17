@@ -199,6 +199,65 @@ RSpec.describe "Receipts", type: :request do
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
     end
 
+    it "rejects top-level creation with blank tenancy_id" do
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: "",
+          payer_party_id: party.id,
+          amount: "1200.00",
+          received_on: "2026-02-01",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Tenancy is required")
+    end
+
+    it "rejects top-level creation with invalid or foreign tenancy_id" do
+      other_prop = create(:property, user: other_user)
+      other_t = create(:tenancy, rentable_unit: create(:rentable_unit, property: other_prop))
+
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: other_t.id,
+          payer_party_id: party.id,
+          amount: "1200.00",
+          received_on: "2026-02-01",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash[:alert]).to eq("Tenancy was not found")
+    end
+
+    it "rejects creation with invalid or foreign payer_party_id" do
+      other_p = create(:party, user: other_user)
+
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: tenancy.id,
+          payer_party_id: other_p.id,
+          amount: "1200.00",
+          received_on: "2026-02-01",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash[:alert]).to eq("Payer party was not found")
+    end
+
+    it "handles new receipt form when tenancy has no active tenants or multiple active tenants" do
+      unit2 = create(:rentable_unit, property: property, name: "Unit 2")
+      tenancy_no_tenants = create(:tenancy, rentable_unit: unit2)
+      get new_tenancy_receipt_url(tenancy_no_tenants)
+      expect(response).to be_successful
+
+      party2 = create(:party, user: user, display_name: "Bob Builder")
+      create(:tenancy_party, tenancy: tenancy, party: party2, role: "tenant")
+      get new_tenancy_receipt_url(tenancy)
+      expect(response).to be_successful
+    end
+
     it "renders turbo_stream form on error" do
       post tenancy_receipts_url(tenancy, format: :turbo_stream), params: {
         receipt: {

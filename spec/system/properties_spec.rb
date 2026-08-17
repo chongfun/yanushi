@@ -32,11 +32,11 @@ RSpec.describe "Properties", type: :system do
 
     past_year = Date.current.year - 1
 
-    create(:expense,
+    create(:expense, :posted,
       property: property,
-      category: "repairs",
-      amount: 50.00,
-      expense_date: Date.new(past_year, 5, 15),
+      expense_kind: "repairs",
+      amount_cents: 5000,
+      paid_on: Date.new(past_year, 5, 15),
       description: "Past year plumbing"
     )
 

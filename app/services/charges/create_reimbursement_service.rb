@@ -41,27 +41,34 @@ module Charges
         )
       end
 
-      resolved_cents = if amount_cents.present?
-        amount_cents.to_i
-      elsif amount.present?
-        begin
-          (BigDecimal(amount.to_s) * 100).round
-        rescue StandardError
-          0
-        end
-      else
-        0
+      resolved_cents = parse_cents
+      if resolved_cents.nil? || resolved_cents <= 0
+        return ServiceResult.failure(
+          error: "Reimbursement amount must be greater than zero",
+          code: :invalid_amount
+        )
       end
 
-      Expense.transaction do
-        expense.lock!
+      expense.with_lock do
+        unless expense.posted? && expense.active?
+          return ServiceResult.failure(
+            error: "Cannot create reimbursement for an unposted, voided, or superseded expense",
+            code: :invalid_expense_state
+          )
+        end
 
-        expense_cents = expense.amount ? (BigDecimal(expense.amount.to_s) * 100).round : 0
+        if expense.rentable_unit_id.present? && expense.rentable_unit_id != tenancy.rentable_unit_id
+          return ServiceResult.failure(
+            error: "Unit-scoped expense can only be reimbursed by tenancies in the same unit",
+            code: :unit_mismatch
+          )
+        end
+
         already_reimbursed_cents = expense.reimbursement_charges.active.sum(:amount_cents)
-        remaining_cents = expense_cents - already_reimbursed_cents
+        remaining_cents = expense.amount_cents.to_i - already_reimbursed_cents
 
         if resolved_cents > remaining_cents
-          remaining_dollars = sprintf("%.2f", remaining_cents / 100.0)
+          remaining_dollars = sprintf("%.2f", [ remaining_cents, 0 ].max / 100.0)
           return ServiceResult.failure(
             error: "Reimbursement amount exceeds remaining reimbursable amount for this expense ($#{remaining_dollars})",
             code: :exceeds_expense_amount
@@ -83,5 +90,27 @@ module Charges
     private
 
       attr_reader :expense, :tenancy, :amount_cents, :amount, :charge_date, :due_on, :description
+
+      def parse_cents
+        if amount_cents.present?
+          return nil unless amount_cents.is_a?(Integer)
+          return nil if amount_cents <= 0
+
+          amount_cents
+        elsif amount.present?
+          amt_str = amount.is_a?(Numeric) ? amount.to_s : amount.to_s.strip
+          return nil unless amt_str.match?(/\A\d+(\.\d{1,2})?\z/)
+          begin
+            dec = BigDecimal(amt_str)
+            return nil if dec <= 0
+
+            (dec * 100).round
+          rescue ArgumentError
+            nil
+          end
+        else
+          nil
+        end
+      end
   end
 end

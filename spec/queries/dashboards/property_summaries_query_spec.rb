@@ -24,7 +24,7 @@ RSpec.describe Dashboards::PropertySummariesQuery do
       received_on: Date.current,
       payment_method: "other"
     )
-    create(:expense, property: property, amount: 200, expense_date: Date.current)
+    create(:expense, :posted, property: property, amount_cents: 20_000, paid_on: Date.current)
     Charges::CreateService.call(
       tenancy: tenancy,
       charge_kind: "rent",

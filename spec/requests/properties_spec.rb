@@ -93,7 +93,7 @@ RSpec.describe "Properties", type: :request do
     end
 
     it "prevents deleting a property with expense history (HTML & JSON)" do
-      create(:expense, property: property, amount: 250.0, expense_date: Date.current)
+      create(:expense, :posted, property: property, amount_cents: 25_000, paid_on: Date.current)
 
       expect {
         delete property_url(property)
