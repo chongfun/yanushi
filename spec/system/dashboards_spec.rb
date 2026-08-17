@@ -4,7 +4,7 @@ RSpec.describe "Dashboards", type: :system do
   let!(:user) { create(:user) }
   let!(:property) { create(:property, user: user, address: "999 Dashboard Ave") }
   let!(:unit) { create(:rentable_unit, property: property) }
-  let!(:expense) { create(:expense, property: property, category: "repairs", amount: 250.00, expense_date: Date.today, description: "Fix door") }
+  let!(:expense) { create(:expense, :posted, property: property, expense_kind: "repairs", amount_cents: 25_000, paid_on: Date.today, description: "Fix door") }
   let!(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.today, late_period_days: 5) }
   let!(:payment) { create(:receipt, tenancy: tenancy, amount_cents: 100_000, received_on: Date.today, payment_method: "cash") }
 

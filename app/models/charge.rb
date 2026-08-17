@@ -72,6 +72,22 @@ class Charge < ApplicationRecord
     voided_at.nil?
   end
 
+  def superseded?
+    superseded_by_id.present?
+  end
+
+  def lifecycle_status
+    if superseded?
+      :superseded
+    elsif voided?
+      :voided
+    elsif posted?
+      :posted
+    else
+      :draft
+    end
+  end
+
   def accounting_user
     tenancy&.accounting_user
   end
@@ -156,6 +172,10 @@ class Charge < ApplicationRecord
 
       if exp.property_id != t.property&.id
         errors.add(:source_expense, "must belong to the same property as the tenancy")
+      end
+
+      if exp.rentable_unit_id.present? && exp.rentable_unit_id != t.rentable_unit_id
+        errors.add(:source_expense, "must be scoped to the same unit as the tenancy")
       end
     end
 

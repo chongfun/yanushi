@@ -1,0 +1,46 @@
+module Expenses
+  class CreateService
+    def self.call: (
+      property: Property,
+      expense_kind: String | Symbol,
+      paid_on: untyped,
+      ?amount_cents: Integer?,
+      ?amount: (Numeric | String)?,
+      ?rentable_unit: RentableUnit?,
+      ?vendor_name: String?,
+      ?external_reference: String?,
+      ?description: String?
+    ) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    def initialize: (
+      property: Property,
+      expense_kind: String | Symbol,
+      paid_on: untyped,
+      ?amount_cents: Integer?,
+      ?amount: (Numeric | String)?,
+      ?rentable_unit: RentableUnit?,
+      ?vendor_name: String?,
+      ?external_reference: String?,
+      ?description: String?
+    ) -> void
+
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader property: Property
+    attr_reader rentable_unit: RentableUnit?
+    attr_reader expense_kind: String | Symbol
+    attr_reader raw_amount_cents: Integer?
+    attr_reader raw_amount: (Numeric | String)?
+    attr_reader raw_paid_on: untyped
+    attr_reader raw_vendor_name: String?
+    attr_reader raw_external_reference: String?
+    attr_reader raw_description: String?
+
+    def parse_cents: () -> Integer?
+    def parse_date: (untyped val) -> Date?
+    def success: (untyped data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code, ?Hash[Symbol, untyped] data) -> Dry::Monads::Result::Failure
+  end
+end

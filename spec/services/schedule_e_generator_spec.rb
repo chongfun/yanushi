@@ -13,15 +13,14 @@ RSpec.describe ScheduleEGenerator do
     "cleaning_and_maintenance"          => 300,
     "commissions"                       => 400,
     "insurance"                         => 500,
-    "legal_and_other_professional_fees" => 600,
-    "management_fees"                   => 700,
+    "legal_and_professional"            => 600,
+    "management"                        => 700,
     "mortgage_interest"                 => 800,
     "other_interest"                    => 900,
     "repairs"                           => 1000,
     "supplies"                          => 1100,
     "taxes"                             => 1200,
     "utilities"                         => 1300,
-    "depreciation_expense"              => 1400,
     "other"                             => 1500
   }.freeze
 
@@ -39,13 +38,13 @@ RSpec.describe ScheduleEGenerator do
   def create_data_for_year(year)
     date_in_year = Date.new(year, 6, 1)
 
-    EXPENSE_AMOUNTS.each do |category, amount|
-      create(:expense,
+    EXPENSE_AMOUNTS.each do |kind, amount|
+      create(:expense, :posted,
         property: property,
-        category: category,
-        amount: amount,
-        expense_date: date_in_year,
-        description: "Test #{category} #{year}"
+        expense_kind: kind,
+        amount_cents: amount * 100,
+        paid_on: date_in_year,
+        description: "Test #{kind} #{year}"
       )
     end
 
@@ -141,7 +140,7 @@ RSpec.describe ScheduleEGenerator do
     end
 
     it "handles net loss and covers net loss branches" do
-      create(:expense, property: property, category: "repairs", amount: 1500, expense_date: Date.new(2025, 6, 1))
+      create(:expense, :posted, property: property, expense_kind: "repairs", amount_cents: 150_000, paid_on: Date.new(2025, 6, 1))
       create(:receipt, tenancy: tenancy, received_on: Date.new(2025, 6, 1), amount_cents: 100_000, payment_method: "check")
 
       generator = described_class.new(property, 2025)

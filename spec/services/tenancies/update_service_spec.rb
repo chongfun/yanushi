@@ -188,5 +188,16 @@ RSpec.describe Tenancies::UpdateService do
         expect(result.failure.error).to include("Cannot set termination date before existing rent charges end date")
       end
     end
+
+    it "fails when continuous tenant coverage is broken during update" do
+      allow(tenancy).to receive(:continuous_tenant_coverage?).and_return(false)
+      result = described_class.call(
+        tenancy: tenancy,
+        params: { late_period_days: 15 }
+      )
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:validation_error)
+      expect(result.failure.error).to include("continuous tenant coverage")
+    end
   end
 end

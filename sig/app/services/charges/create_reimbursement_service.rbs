@@ -31,5 +31,7 @@ module Charges
     attr_reader charge_date: Date
     attr_reader due_on: Date
     attr_reader description: String?
+
+    def parse_cents: () -> Integer?
   end
 end

@@ -5,6 +5,7 @@ class ScheduleEGenerator
   MAP_2016_2018: Hash[Symbol, String]
   MAP_2011_2015: Hash[Symbol, String]
   CATEGORY_TO_FIELD: Hash[String, Symbol]
+  CATEGORY_FIELD_MAP: Hash[String, Symbol]
 
   class TemplateMissingError < StandardError
   end

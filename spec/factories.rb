@@ -96,10 +96,35 @@ FactoryBot.define do
 
   factory :expense do
     association :property
-    category { "repairs" }
-    amount { 100.0 }
-    expense_date { Date.current }
+    expense_kind { "repairs" }
+    amount_cents { 10_000 }
+    paid_on { Date.current }
     description { "Fixing faucet" }
+    vendor_name { "Plumbing Pros" }
+    external_reference { "INV-1001" }
+
+    trait :property_wide do
+      rentable_unit { nil }
+    end
+
+    trait :unit_scoped do
+      rentable_unit { association :rentable_unit, property: property }
+    end
+
+    trait :posted do
+      posted_at { Time.current }
+    end
+
+    trait :voided do
+      posted_at { 1.day.ago }
+      voided_at { Time.current }
+    end
+
+    trait :superseded do
+      posted_at { 1.day.ago }
+      voided_at { Time.current }
+      superseded_by { association :expense, property: property }
+    end
   end
 
   factory :payment_document do

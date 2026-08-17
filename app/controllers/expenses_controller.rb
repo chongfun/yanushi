@@ -1,103 +1,155 @@
 class ExpensesController < ApplicationController
-  before_action :set_expense, only: %i[show edit update destroy]
-  before_action :set_property, only: %i[new create]
-  before_action :set_form_data, only: %i[new edit create update]
+  before_action :set_expense, only: %i[show correction correct void]
+  before_action :set_nested_property, only: %i[new create]
+  before_action :set_form_data, only: %i[new create correction correct]
 
   def index
     @expenses = authenticated_user.expenses
+      .includes(:property, :rentable_unit, :superseded_by, :reimbursement_charges)
+      .order(paid_on: :desc, created_at: :desc)
   end
 
   def show
   end
 
   def new
-    @expense = Expense.new
-    @expense.property = @property if @property
-    @expense.expense_date = Date.current
-  end
-
-  def edit
+    @expense = Expense.new(
+      property: @nested_property,
+      paid_on: Date.current
+    )
   end
 
   def create
-    permitted_params = expense_params
-    property_id = permitted_params[:property_id]
-    authenticated_user.properties.find(property_id) if property_id.present?
+    property = if (nested = @nested_property)
+      if expense_params[:property_id].present? && expense_params[:property_id].to_s != nested.id.to_s
+        @expense = Expense.new(expense_params)
+        @expense.errors.add(:property, "must match route property")
+        return render :new, status: :unprocessable_content
+      end
+      nested
+    else
+      authenticated_user.properties.find_by(id: expense_params[:property_id])
+    end
 
-    tenancy_id = permitted_params[:reimburse_tenancy_id]
-    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
+    unless property
+      @expense = Expense.new(expense_params)
+      @expense.errors.add(:property, "must belong to your properties")
+      return render :new, status: :unprocessable_content
+    end
 
-    @expense = Expense.new(permitted_params)
-    @expense.property = @property if @property
+    rentable_unit = if expense_params[:rentable_unit_id].present?
+      property.rentable_units.find_by(id: expense_params[:rentable_unit_id])
+    end
 
-    respond_to do |format|
-      result = Expenses::SaveService.call(expense: @expense)
-      if result.success?
-        if property = @property
-          # Submitted from modal
-          year = @expense.expense_date&.year || Date.current.year
-          @financial_items = property.financial_items(year)
+    if expense_params[:rentable_unit_id].present? && rentable_unit.nil?
+      @expense = Expense.new(expense_params)
+      @expense.errors.add(:rentable_unit, "must belong to the selected property")
+      return render :new, status: :unprocessable_content
+    end
+
+    result = Expenses::CreateService.call(
+      property: property,
+      rentable_unit: rentable_unit,
+      expense_kind: expense_params[:expense_kind],
+      amount: expense_params[:amount],
+      paid_on: expense_params[:paid_on],
+      vendor_name: expense_params[:vendor_name],
+      external_reference: expense_params[:external_reference],
+      description: expense_params[:description]
+    )
+
+    if result.success?
+      @expense = result.value!.data[:expense]
+      respond_to do |format|
+        if (nested = @nested_property)
+          year = @expense.paid_on&.year || Date.current.year
+          @financial_items = nested.financial_items(year)
           @year = year
 
           format.turbo_stream {
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
               turbo_stream.update("property_financials", partial: "properties/financials",
-                                  locals: { property: property, financial_items: @financial_items, year: @year }),
-              turbo_stream.update("active_lease_balances", partial: "properties/lease_balances",
-                                  locals: { property: property }),
+                                  locals: { property: nested, financial_items: @financial_items, year: @year }),
               turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
             ]
           }
-          format.html { redirect_to property, notice: "Expense was successfully created." }
+          format.html { redirect_to nested, notice: "Expense was successfully created." }
         else
           format.html { redirect_to @expense, notice: "Expense was successfully created." }
         end
         format.json { render :show, status: :created, location: @expense }
-      else
+      end
+    else
+      @expense = result.failure.data&.dig(:expense) || Expense.new(expense_params)
+      @expense.errors.add(:base, result.failure.error) if @expense.errors.empty?
+
+      respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
         format.json { render json: @expense.errors, status: :unprocessable_content }
         format.turbo_stream {
           render turbo_stream: turbo_stream.update("modal-frame",
                                                    partial: "expenses/modal_form",
-                                                   locals: { expense: @expense, property: @property })
+                                                   locals: { expense: @expense, property: @nested_property })
         }
       end
     end
   end
 
-  def update
-    permitted_params = expense_params
-    property_id = permitted_params[:property_id]
-    authenticated_user.properties.find(property_id) if property_id.present?
-
-    tenancy_id = permitted_params[:reimburse_tenancy_id]
-    authenticated_user.tenancies.find(tenancy_id) if tenancy_id.present?
-
-    @expense.assign_attributes(permitted_params)
-
-    respond_to do |format|
-      result = Expenses::SaveService.call(expense: @expense)
-      if result.success?
-        format.html { redirect_to @expense, notice: "Expense was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @expense }
-      else
-        format.html { render :edit, status: :unprocessable_content }
-        format.json { render json: @expense.errors, status: :unprocessable_content }
-      end
+  def correction
+    if @expense.voided? || @expense.superseded?
+      redirect_to @expense, alert: "This expense has already been corrected or voided."
     end
   end
 
-  def destroy
-    respond_to do |format|
-      if @expense.destroy
-        format.html { redirect_to expenses_path, notice: "Expense was successfully destroyed.", status: :see_other }
-        format.json { head :no_content }
-      else
-        error_msg = @expense.errors.full_messages.to_sentence.presence || "dependent charges exist."
-        format.html { redirect_to @expense, alert: "Cannot delete expense: #{error_msg}", status: :see_other }
-        format.json { render json: { error: error_msg }, status: :unprocessable_content }
-      end
+  def correct
+    if @expense.voided? || @expense.superseded?
+      return redirect_to @expense, alert: "This expense has already been corrected or voided."
+    end
+
+    property = authenticated_user.properties.find_by(id: expense_params[:property_id])
+    unless property
+      @expense.errors.add(:property, "must belong to your properties")
+      return render :correction, status: :unprocessable_content
+    end
+
+    rentable_unit = if expense_params[:rentable_unit_id].present?
+      property.rentable_units.find_by(id: expense_params[:rentable_unit_id])
+    end
+
+    if expense_params[:rentable_unit_id].present? && rentable_unit.nil?
+      @expense.errors.add(:rentable_unit, "must belong to the selected property")
+      return render :correction, status: :unprocessable_content
+    end
+
+    result = Expenses::CorrectService.call(
+      expense: @expense,
+      property: property,
+      rentable_unit: rentable_unit,
+      expense_kind: expense_params[:expense_kind],
+      amount: expense_params[:amount],
+      paid_on: expense_params[:paid_on],
+      vendor_name: expense_params[:vendor_name],
+      external_reference: expense_params[:external_reference],
+      description: expense_params[:description],
+      user: authenticated_user
+    )
+
+    if result.success?
+      replacement = result.value!.data[:replacement]
+      redirect_to replacement, notice: "Expense was successfully corrected.", status: :see_other
+    else
+      @expense.errors.add(:base, result.failure.error) if @expense.errors.empty?
+      render :correction, status: :unprocessable_content
+    end
+  end
+
+  def void
+    result = Expenses::VoidService.call(expense: @expense, user: authenticated_user)
+    if result.success?
+      redirect_to @expense, notice: "Expense was successfully voided and reversed.", status: :see_other
+    else
+      redirect_to @expense, alert: result.failure.error, status: :see_other
     end
   end
 
@@ -107,21 +159,20 @@ class ExpensesController < ApplicationController
       @expense = authenticated_user.expenses.find(params.expect(:id))
     end
 
-    def set_property
+    def set_nested_property
       prop_id = params[:property_id] || params[:rental_property_id]
-      @property = authenticated_user.properties.find(prop_id) if prop_id.present?
+      @nested_property = authenticated_user.properties.find(prop_id) if prop_id.present?
     end
 
     def set_form_data
       user = authenticated_user
-      @properties = user.properties.order(:address)
-      @tenancies = user.tenancies.includes({ rentable_unit: :property }, :parties)
+      @properties = user.properties.includes(:rentable_units).order(:address)
     end
 
     def expense_params
       params.require(:expense).permit(
-        :property_id, :category, :amount, :expense_date, :description,
-        :tenant_reimbursable, :reimburse_tenancy_id, :reimburse_amount
+        :property_id, :rentable_unit_id, :expense_kind, :amount,
+        :paid_on, :vendor_name, :external_reference, :description
       )
     end
 end

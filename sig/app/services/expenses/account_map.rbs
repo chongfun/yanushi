@@ -1,0 +1,11 @@
+module Expenses
+  class AccountMap
+    class UnknownExpenseKindError < StandardError
+    end
+
+    MAPPING: Hash[String, String]
+
+    def self.account_key_for: (String | Symbol expense_kind) -> String
+    def self.supported_kinds: () -> Array[String]
+  end
+end

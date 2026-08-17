@@ -40,9 +40,11 @@ interface ::_RbsRailsPathHelpers
   def tenancy_path: (*untyped) -> ::String
   def expense_reimbursements_path: (*untyped) -> ::String
   def new_expense_reimbursement_path: (*untyped) -> ::String
+  def correction_expense_path: (*untyped) -> ::String
+  def correct_expense_path: (*untyped) -> ::String
+  def void_expense_path: (*untyped) -> ::String
   def expenses_path: (*untyped) -> ::String
   def new_expense_path: (*untyped) -> ::String
-  def edit_expense_path: (*untyped) -> ::String
   def expense_path: (*untyped) -> ::String
   def correction_receipt_path: (*untyped) -> ::String
   def correct_receipt_path: (*untyped) -> ::String
@@ -133,9 +135,11 @@ interface ::_RbsRailsPathHelpers
   def tenancy_url: (*untyped) -> ::String
   def expense_reimbursements_url: (*untyped) -> ::String
   def new_expense_reimbursement_url: (*untyped) -> ::String
+  def correction_expense_url: (*untyped) -> ::String
+  def correct_expense_url: (*untyped) -> ::String
+  def void_expense_url: (*untyped) -> ::String
   def expenses_url: (*untyped) -> ::String
   def new_expense_url: (*untyped) -> ::String
-  def edit_expense_url: (*untyped) -> ::String
   def expense_url: (*untyped) -> ::String
   def correction_receipt_url: (*untyped) -> ::String
   def correct_receipt_url: (*untyped) -> ::String

@@ -27,7 +27,6 @@ class ChargesController < ApplicationController
       tenancy: @tenancy,
       charge_kind: kind,
       amount: charge_params[:amount],
-      amount_cents: charge_params[:amount_cents],
       charge_date: charge_params[:charge_date],
       due_on: charge_params[:due_on],
       description: charge_params[:description]
@@ -74,7 +73,7 @@ class ChargesController < ApplicationController
 
     def charge_params
       params.require(:charge).permit(
-        :charge_kind, :amount, :amount_cents, :charge_date, :due_on, :description,
+        :charge_kind, :amount, :charge_date, :due_on, :description,
         :service_period_start, :service_period_end
       )
     end

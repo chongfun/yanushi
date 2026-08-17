@@ -1,0 +1,54 @@
+module Expenses
+  class CorrectService
+    def self.call: (
+      expense: Expense,
+      ?property: Property?,
+      ?rentable_unit: untyped,
+      ?expense_kind: (String | Symbol)?,
+      ?amount_cents: Integer?,
+      ?amount: (Numeric | String)?,
+      ?paid_on: untyped,
+      ?vendor_name: untyped,
+      ?external_reference: untyped,
+      ?description: untyped,
+      ?user: User?
+    ) -> untyped
+
+    def initialize: (
+      expense: Expense,
+      ?property: Property?,
+      ?rentable_unit: untyped,
+      ?expense_kind: (String | Symbol)?,
+      ?amount_cents: Integer?,
+      ?amount: (Numeric | String)?,
+      ?paid_on: untyped,
+      ?vendor_name: untyped,
+      ?external_reference: untyped,
+      ?description: untyped,
+      ?user: User?
+    ) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader expense: Expense
+    attr_reader target_property: Property?
+    attr_reader raw_rentable_unit: untyped
+    attr_reader target_expense_kind: (String | Symbol)?
+    attr_reader raw_amount_cents: Integer?
+    attr_reader raw_amount: (Numeric | String)?
+    attr_reader raw_paid_on: untyped
+    attr_reader raw_vendor_name: untyped
+    attr_reader raw_external_reference: untyped
+    attr_reader raw_description: untyped
+    attr_reader user: User?
+
+    def parse_date: (untyped val) -> Date?
+    def parse_cents: () -> Integer?
+    def matches_replacement?: (Expense? replacement, Property target_prop, untyped target_kind, Integer cents, Date date, RentableUnit? unit, String? vendor, String? ref, String? desc) -> bool
+    def format_money: (Integer cents) -> String
+    def success: (untyped data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

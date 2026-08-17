@@ -48,6 +48,35 @@ RSpec.describe "Charges", type: :request do
       expect(charge).to be_posted
     end
 
+    it "creates charge and returns JSON" do
+      post tenancy_charges_path(tenancy, format: :json), params: {
+        charge: {
+          charge_kind: "late_fee",
+          amount: "75.00",
+          amount_cents: 1, # Should be ignored
+          charge_date: Date.current,
+          due_on: Date.current,
+          description: "Late fee"
+        }
+      }
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["amount_cents"]).to eq(7500)
+    end
+
+    it "defaults to other when charge_kind is blank" do
+      post tenancy_charges_path(tenancy), params: {
+        charge: {
+          charge_kind: "",
+          amount: "25.00",
+          charge_date: Date.current,
+          due_on: Date.current,
+          description: "Key replacement"
+        }
+      }
+      expect(response).to redirect_to(tenancy_path(tenancy))
+      expect(Charge.last.charge_kind).to eq("other")
+    end
+
     it "renders new on validation error" do
       post tenancy_charges_path(tenancy), params: {
         charge: {
@@ -58,6 +87,16 @@ RSpec.describe "Charges", type: :request do
         }
       }
 
+      expect(response).to have_http_status(:unprocessable_content)
+
+      post tenancy_charges_path(tenancy, format: :json), params: {
+        charge: {
+          charge_kind: "late_fee",
+          amount: "-10.00",
+          charge_date: Date.current,
+          due_on: Date.current
+        }
+      }
       expect(response).to have_http_status(:unprocessable_content)
     end
 
@@ -136,6 +175,33 @@ RSpec.describe "Charges", type: :request do
       expect(response.body).to include("$50.00")
     end
 
+    it "displays corrected status and replacement link when superseded" do
+      correct_res = Charges::CorrectService.call(
+        charge: charge,
+        amount_cents: 6000
+      )
+      expect(correct_res).to be_success
+      replacement = correct_res.value!.data[:charge]
+
+      # Original charge page shows corrected banner and link to replacement
+      get charge_path(charge)
+      expect(response).to be_successful
+      expect(response.body).to include("Charge Corrected")
+      expect(response.body).to include("Corrected (Superseded)")
+      expect(response.body).to include("Charge ##{replacement.id}")
+
+      # Replacement charge page shows replacement banner and link to original
+      get charge_path(replacement)
+      expect(response).to be_successful
+      expect(response.body).to include("Replacement Charge")
+      expect(response.body).to include("Charge ##{charge.id}")
+
+      # Tenancy show page displays Corrected badge
+      get tenancy_path(tenancy)
+      expect(response).to be_successful
+      expect(response.body).to include("Corrected")
+    end
+
     it "rejects viewing another user's charge" do
       other_charge = Charges::CreateFeeService.call(
         tenancy: other_tenancy,
@@ -165,6 +231,12 @@ RSpec.describe "Charges", type: :request do
 
     it "voids the charge and redirects to tenancy" do
       post void_charge_path(charge), params: { reason: "Customer dispute" }
+      expect(response).to redirect_to(tenancy_path(tenancy))
+      expect(charge.reload).to be_voided
+    end
+
+    it "voids the charge without explicit reason using default reason" do
+      post void_charge_path(charge)
       expect(response).to redirect_to(tenancy_path(tenancy))
       expect(charge.reload).to be_voided
     end

@@ -255,5 +255,51 @@ RSpec.describe PaymentIngestions::ConfirmService do
         expect(Receipt.where(external_reference: "TXNCONCUR3")).to be_empty
       end
     end
+
+    it "handles confirmed status without receipt record gracefully" do
+      ingestion = build_ingestion(transaction_number: "TXNNORCPT")
+      ingestion.update_columns(status: :confirmed, receipt_id: nil)
+
+      res = described_class.call(user: user, ingestion: ingestion)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:confirmation_error)
+    end
+
+    it "handles missing tenancy or party during receipt creation" do
+      ingestion = build_ingestion
+      allow(ingestion).to receive(:confirmable?).and_return(true)
+      allow(ingestion).to receive(:tenancy).and_return(nil)
+
+      res = described_class.call(user: user, ingestion: ingestion)
+      expect(res).to be_failure
+      expect(res.failure.error).to include("Missing tenancy")
+
+      allow(ingestion).to receive(:tenancy).and_return(tenancy)
+      allow(ingestion).to receive(:party).and_return(nil)
+
+      res2 = described_class.call(user: user, ingestion: ingestion)
+      expect(res2).to be_failure
+      expect(res2.failure.error).to include("Missing payer party")
+    end
+
+    it "handles Receipts::CreateService failure during confirmation" do
+      ingestion = build_ingestion
+      allow(Receipts::CreateService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Posting error", code: :posting_failed)
+      )
+
+      res = described_class.call(user: user, ingestion: ingestion)
+      expect(res).to be_failure
+      expect(res.failure.error).to eq("Posting error")
+    end
+
+    it "handles ActiveRecord::RecordNotFound gracefully" do
+      ingestion = build_ingestion
+      allow(Receipts::CreateService).to receive(:call).and_raise(ActiveRecord::RecordNotFound)
+
+      res = described_class.call(user: user, ingestion: ingestion)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:not_found)
+    end
   end
 end

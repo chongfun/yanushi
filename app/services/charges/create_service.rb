@@ -64,12 +64,21 @@ module Charges
 
     def call
       resolved_cents = if amount_cents.present?
-        amount_cents.to_i
+        return failure("Amount cents must be an integer", :invalid_amount) unless amount_cents.is_a?(Integer)
+        return failure("Amount cents must be greater than zero", :invalid_amount) if amount_cents <= 0
+
+        amount_cents
       elsif amount.present?
+        amt_str = amount.is_a?(Numeric) ? amount.to_s : amount.to_s.strip
+        return failure("Invalid amount format", :invalid_amount) unless amt_str.match?(/\A\d+(\.\d{1,2})?\z/)
+
         begin
-          (BigDecimal(amount.to_s) * 100).round
-        rescue StandardError
-          0
+          dec = BigDecimal(amt_str)
+          return failure("Amount must be greater than zero", :invalid_amount) if dec <= 0
+
+          (dec * 100).round
+        rescue ArgumentError
+          return failure("Invalid amount", :invalid_amount)
         end
       else
         0
@@ -133,6 +142,14 @@ module Charges
       attr_reader :tenancy, :charge_kind, :amount_cents, :amount, :charge_date,
                   :due_on, :description, :rent_term, :source_expense,
                   :service_period_start, :service_period_end
+
+      def failure(error, code, data = {})
+        ServiceResult.failure(error: error, code: code, data: data)
+      end
+
+      def success(data)
+        ServiceResult.success(data)
+      end
 
       def default_rent_term
         return nil unless tenancy

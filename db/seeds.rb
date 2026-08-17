@@ -37,20 +37,26 @@ if Rails.env.development?
     Receipts::CreateService.call(tenancy: tenancy, payer_party: party, amount: 1200.0, received_on: payment_date, payment_method: "ach")
 
     expense_amount = rand(100...200)
-    expense = Expense.new(
+    exp_res = Expenses::CreateService.call(
       property: property,
       amount: expense_amount,
-      category: "utilities",
-      expense_date: due_date,
-      tenant_reimbursable: true,
-      reimburse_tenancy_id: tenancy.id,
-      reimburse_amount: expense_amount
+      expense_kind: "utilities",
+      paid_on: due_date,
+      description: "Monthly utility bill"
     )
-    Expenses::SaveService.call(expense: expense)
+    if exp_res.success?
+      Charges::CreateReimbursementService.call(
+        expense: exp_res.value!.data[:expense],
+        tenancy: tenancy,
+        amount: expense_amount,
+        charge_date: due_date,
+        description: "Utility reimbursement"
+      )
+    end
     Receipts::CreateService.call(tenancy: tenancy, payer_party: party, amount: expense_amount, received_on: payment_date, payment_method: "ach")
   end
 
-  Expense.create!(property: property, amount: rand(200...300), category: "repairs", expense_date: Date.current - 1.year, description: "A/C tune-up")
-  Expense.create!(property: property, amount: rand(150...250), category: "repairs", expense_date: Date.current - 1.month, description: "Unclug toilet")
-  Expense.create!(property: property, amount: rand(250...350), category: "repairs", expense_date: Date.current, description: "A/C tune-up")
+  Expenses::CreateService.call(property: property, amount: rand(200...300), expense_kind: "repairs", paid_on: Date.current - 1.year, description: "A/C tune-up")
+  Expenses::CreateService.call(property: property, amount: rand(150...250), expense_kind: "repairs", paid_on: Date.current - 1.month, description: "Unclog toilet")
+  Expenses::CreateService.call(property: property, amount: rand(250...350), expense_kind: "repairs", paid_on: Date.current, description: "A/C tune-up")
 end

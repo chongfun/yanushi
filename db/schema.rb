@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_000007) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_000009) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,7 +24,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000007) do
     t.bigint "user_id", null: false
     t.index ["user_id", "key"], name: "index_accounts_on_user_id_and_key", unique: true
     t.index ["user_id"], name: "index_accounts_on_user_id"
-    t.check_constraint "account_type::text = ANY (ARRAY['asset'::character varying::text, 'liability'::character varying::text, 'equity'::character varying::text, 'income'::character varying::text, 'expense'::character varying::text])", name: "check_accounts_account_type"
+    t.check_constraint "account_type::text = ANY (ARRAY['asset'::character varying, 'liability'::character varying, 'equity'::character varying, 'income'::character varying, 'expense'::character varying]::text[])", name: "check_accounts_account_type"
   end
 
   create_table "charges", force: :cascade do |t|
@@ -54,19 +54,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000007) do
     t.index ["tenancy_id"], name: "index_charges_on_tenancy_id"
     t.index ["voided_at"], name: "index_charges_on_voided_at"
     t.check_constraint "amount_cents > 0", name: "charges_amount_cents_positive"
-    t.check_constraint "charge_kind::text = ANY (ARRAY['rent'::character varying::text, 'late_fee'::character varying::text, 'reimbursement'::character varying::text, 'other'::character varying::text])", name: "charges_charge_kind_valid"
+    t.check_constraint "charge_kind::text = ANY (ARRAY['rent'::character varying, 'late_fee'::character varying, 'reimbursement'::character varying, 'other'::character varying]::text[])", name: "charges_charge_kind_valid"
     t.check_constraint "service_period_end IS NULL OR service_period_start IS NULL OR service_period_end >= service_period_start", name: "charges_service_period_valid"
   end
 
   create_table "expenses", force: :cascade do |t|
-    t.decimal "amount", precision: 12, scale: 2
-    t.string "category"
+    t.bigint "amount_cents", null: false
     t.datetime "created_at", null: false
     t.string "description"
-    t.date "expense_date"
+    t.string "expense_kind", null: false
+    t.string "external_reference"
+    t.date "paid_on", null: false
+    t.datetime "posted_at"
     t.integer "property_id", null: false
+    t.bigint "rentable_unit_id"
+    t.bigint "superseded_by_id"
     t.datetime "updated_at", null: false
+    t.string "vendor_name"
+    t.datetime "voided_at"
+    t.index ["expense_kind"], name: "index_expenses_on_expense_kind"
+    t.index ["paid_on"], name: "index_expenses_on_paid_on"
+    t.index ["property_id", "paid_on"], name: "index_expenses_on_property_id_and_paid_on"
     t.index ["property_id"], name: "index_expenses_on_property_id"
+    t.index ["rentable_unit_id"], name: "index_expenses_on_rentable_unit_id"
+    t.index ["superseded_by_id"], name: "index_expenses_on_superseded_by_id"
+    t.index ["superseded_by_id"], name: "index_expenses_on_superseded_by_id_unique", unique: true, where: "(superseded_by_id IS NOT NULL)"
+    t.index ["voided_at"], name: "index_expenses_on_voided_at"
+    t.check_constraint "amount_cents > 0", name: "expenses_amount_cents_positive"
+    t.check_constraint "expense_kind::text = ANY (ARRAY['advertising'::character varying, 'auto_and_travel'::character varying, 'cleaning_and_maintenance'::character varying, 'commissions'::character varying, 'insurance'::character varying, 'legal_and_professional'::character varying, 'management'::character varying, 'mortgage_interest'::character varying, 'other_interest'::character varying, 'repairs'::character varying, 'supplies'::character varying, 'taxes'::character varying, 'utilities'::character varying, 'other'::character varying]::text[])", name: "expenses_expense_kind_valid"
   end
 
   create_table "journal_entries", force: :cascade do |t|
@@ -274,7 +289,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000007) do
   add_foreign_key "charges", "expenses", column: "source_expense_id"
   add_foreign_key "charges", "rent_terms"
   add_foreign_key "charges", "tenancies"
+  add_foreign_key "expenses", "expenses", column: "superseded_by_id"
   add_foreign_key "expenses", "properties"
+  add_foreign_key "expenses", "rentable_units"
   add_foreign_key "journal_entries", "journal_entries", column: "reversal_of_id"
   add_foreign_key "journal_entries", "users"
   add_foreign_key "parties", "users"

@@ -1,42 +1,99 @@
 class Expense < ApplicationRecord
+  EXPENSE_KINDS = %w[
+    advertising
+    auto_and_travel
+    cleaning_and_maintenance
+    commissions
+    insurance
+    legal_and_professional
+    management
+    mortgage_interest
+    other_interest
+    repairs
+    supplies
+    taxes
+    utilities
+    other
+  ].freeze
+
+  IMMUTABLE_POSTED_ATTRIBUTES = %w[
+    property_id
+    rentable_unit_id
+    expense_kind
+    amount_cents
+    paid_on
+    vendor_name
+    external_reference
+    description
+  ].freeze
+
   belongs_to :property
+  belongs_to :rentable_unit, optional: true
+  belongs_to :superseded_by, class_name: "Expense", optional: true
+
+  has_one :superseded_expense, class_name: "Expense", foreign_key: :superseded_by_id
+  has_many :journal_entries, as: :source, dependent: :restrict_with_error
   has_many :charges, foreign_key: :source_expense_id, dependent: :restrict_with_error
   has_many :reimbursement_charges, -> { where(charge_kind: "reimbursement") }, class_name: "Charge", foreign_key: :source_expense_id, dependent: :restrict_with_error
 
-  validates :amount, presence: true, numericality: { greater_than: 0 }
-  validates :category, presence: true
-  validates :expense_date, presence: true
-  validates :reimburse_amount, numericality: { greater_than: 0 }, allow_blank: true, if: :tenant_reimbursable
+  enum :expense_kind, EXPENSE_KINDS.index_by(&:itself), prefix: false, validate: true
 
-  enum :category, {
-    advertising: "advertising",
-    auto_and_travel: "auto_and_travel",
-    cleaning_and_maintenance: "cleaning_and_maintenance",
-    commissions: "commissions",
-    insurance: "insurance",
-    legal_and_other_professional_fees: "legal_and_other_professional_fees",
-    management_fees: "management_fees",
-    mortgage_interest: "mortgage_interest",
-    other_interest: "other_interest",
-    repairs: "repairs",
-    supplies: "supplies",
-    taxes: "taxes",
-    utilities: "utilities",
-    depreciation_expense: "depreciation_expense",
-    other: "other"
-  }
+  validates :property, presence: true
+  validates :expense_kind, presence: true
+  validates :amount_cents, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :paid_on, presence: true
 
-  attr_accessor :tenant_reimbursable, :reimburse_tenancy_id, :reimburse_amount
+  validate :validate_rentable_unit_property_consistency
+  validate :validate_superseded_by_same_user
+  validate :prevent_mutation_after_posting, on: :update
+  before_destroy :prevent_destroy_if_posted
 
-  validate :prevent_property_change_with_charges, on: :update
-  validate :prevent_amount_reduction_below_reimbursements, on: :update
+  scope :active, -> { where(voided_at: nil) }
+  scope :voided, -> { where.not(voided_at: nil) }
+  scope :posted, -> { where.not(posted_at: nil) }
 
-  def reimbursed?
-    reimbursement_charges.exists?
+  def amount
+    amount_cents ? (BigDecimal(amount_cents.to_s) / 100) : BigDecimal("0")
   end
 
-  def reimbursement_charge
-    reimbursement_charges.first
+  def amount=(val)
+    if val.present? && val.to_s.strip.present?
+      begin
+        self.amount_cents = (BigDecimal(val.to_s) * 100).round
+      rescue StandardError
+        self.amount_cents = 0
+      end
+    else
+      self.amount_cents = 0
+    end
+  end
+
+  def posted?
+    posted_at.present?
+  end
+
+  def voided?
+    voided_at.present?
+  end
+
+  def active?
+    voided_at.nil?
+  end
+
+  def superseded?
+    superseded_by_id.present?
+  end
+
+  def lifecycle_status
+    if superseded?
+      :superseded
+    elsif voided?
+      :voided
+    elsif posted?
+      :posted
+    else
+      :draft
+    end
   end
 
   def total_active_reimbursement_cents
@@ -44,40 +101,19 @@ class Expense < ApplicationRecord
   end
 
   def remaining_reimbursable_cents
-    expense_cents = amount ? (BigDecimal(amount.to_s) * 100).round : 0
-    [ expense_cents - total_active_reimbursement_cents, 0 ].max
+    [ amount_cents.to_i - total_active_reimbursement_cents, 0 ].max
   end
 
   def remaining_reimbursable_amount
-    BigDecimal(remaining_reimbursable_cents) / 100
+    BigDecimal(remaining_reimbursable_cents.to_s) / 100
+  end
+
+  def reimbursed?
+    reimbursement_charges.exists?
   end
 
   def fully_reimbursed?
     reimbursed? && remaining_reimbursable_cents <= 0
-  end
-
-  def raw_reimburse_amount
-    @reimburse_amount
-  end
-
-  def tenant_reimbursable
-    @tenant_reimbursable.nil? ? reimbursed? : ActiveModel::Type::Boolean.new.cast(@tenant_reimbursable)
-  end
-
-  def reimburse_tenancy_id
-    @reimburse_tenancy_id.presence || reimbursement_charges.first&.tenancy_id
-  end
-
-  def reimburse_lease_id
-    reimburse_tenancy_id
-  end
-
-  def reimburse_lease_id=(val)
-    self.reimburse_tenancy_id = val
-  end
-
-  def reimburse_amount
-    @reimburse_amount.presence || reimbursement_charges.first&.amount || amount
   end
 
   def accounting_user
@@ -86,20 +122,49 @@ class Expense < ApplicationRecord
 
   private
 
-    def prevent_property_change_with_charges
-      if will_save_change_to_property_id? && charges.exists?
-        errors.add(:property, "cannot change after reimbursement charges have been posted")
+    def validate_rentable_unit_property_consistency
+      return unless property_id.present?
+      return unless (unit = rentable_unit)
+
+      if unit.property_id != property_id
+        errors.add(:rentable_unit, "must belong to the selected property")
       end
     end
 
-    def prevent_amount_reduction_below_reimbursements
-      if will_save_change_to_amount? && amount.present?
-        new_cents = (BigDecimal(amount.to_s) * 100).round
-        active_cents = total_active_reimbursement_cents
-        if new_cents < active_cents
-          active_dollars = sprintf("%.2f", active_cents / 100.0)
-          errors.add(:amount, "cannot be reduced below total active reimbursement charges ($#{active_dollars})")
+    def validate_superseded_by_same_user
+      return unless (superseded = superseded_by)
+
+      if superseded.accounting_user != accounting_user
+        errors.add(:superseded_by, "must belong to the same user")
+      end
+    end
+
+    def prevent_mutation_after_posting
+      if will_save_change_to_attribute?(:voided_at)
+        errors.add(:voided_at, "cannot be modified directly; use Expenses::VoidService")
+      end
+
+      return unless posted_at_was.present?
+
+      if will_save_change_to_attribute?(:posted_at)
+        errors.add(:posted_at, "cannot be modified once posted")
+      end
+
+      if will_save_change_to_attribute?(:superseded_by_id)
+        errors.add(:superseded_by_id, "cannot be modified directly")
+      end
+
+      IMMUTABLE_POSTED_ATTRIBUTES.each do |attr|
+        if will_save_change_to_attribute?(attr)
+          errors.add(attr.to_sym, "cannot be modified after expense is posted")
         end
+      end
+    end
+
+    def prevent_destroy_if_posted
+      if posted? || journal_entries.exists?
+        errors.add(:base, "Cannot delete a posted expense. Void the expense instead.")
+        throw(:abort)
       end
     end
 end
