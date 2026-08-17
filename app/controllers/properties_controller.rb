@@ -15,6 +15,7 @@ class PropertiesController < ApplicationController
       tenancies: %i[parties receipts charges]
     ).find(params.expect(:id))
     @financial_items = @property.financial_items(@year)
+    @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: @property)
   end
 
   def schedule_e

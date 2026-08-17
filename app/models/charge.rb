@@ -26,6 +26,10 @@ class Charge < ApplicationRecord
 
   has_one :superseded_charge, class_name: "Charge", foreign_key: :superseded_by_id
   has_many :journal_entries, as: :source, dependent: :restrict_with_error
+  has_many :security_deposit_applications,
+    -> { where(transaction_kind: "applied") },
+    class_name: "SecurityDepositTransaction",
+    dependent: :restrict_with_error
 
   enum :charge_kind, CHARGE_KINDS.index_by(&:itself), prefix: false, validate: true
 
@@ -90,6 +94,14 @@ class Charge < ApplicationRecord
 
   def accounting_user
     tenancy&.accounting_user
+  end
+
+  def deposit_applied_cents
+    security_deposit_applications.active.sum(&:amount_cents)
+  end
+
+  def remaining_deposit_application_cents
+    [ amount_cents - deposit_applied_cents, 0 ].max
   end
 
   private

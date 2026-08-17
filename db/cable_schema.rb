@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_000009) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -242,6 +242,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000009) do
     t.index ["property_id"], name: "index_rentable_units_on_property_id"
   end
 
+  create_table "security_deposit_transactions", force: :cascade do |t|
+    t.bigint "amount_cents", null: false
+    t.bigint "charge_id"
+    t.datetime "created_at", null: false
+    t.string "external_reference"
+    t.text "memo"
+    t.date "occurred_on", null: false
+    t.bigint "party_id"
+    t.datetime "posted_at"
+    t.bigint "security_deposit_id", null: false
+    t.bigint "superseded_by_id"
+    t.string "transaction_kind", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "voided_at"
+    t.index ["charge_id"], name: "index_security_deposit_transactions_on_charge_id"
+    t.index ["occurred_on"], name: "index_security_deposit_transactions_on_occurred_on"
+    t.index ["party_id"], name: "index_security_deposit_transactions_on_party_id"
+    t.index ["security_deposit_id", "transaction_kind"], name: "index_sdt_on_deposit_and_kind"
+    t.index ["security_deposit_id"], name: "index_security_deposit_transactions_on_security_deposit_id"
+    t.index ["superseded_by_id"], name: "index_sdt_on_unique_superseded_by_id", unique: true, where: "(superseded_by_id IS NOT NULL)"
+    t.index ["superseded_by_id"], name: "index_security_deposit_transactions_on_superseded_by_id"
+    t.index ["voided_at"], name: "index_security_deposit_transactions_on_voided_at"
+    t.check_constraint "amount_cents > 0", name: "security_deposit_transactions_amount_cents_positive"
+    t.check_constraint "transaction_kind::text = ANY (ARRAY['received'::character varying, 'refunded'::character varying, 'applied'::character varying]::text[])", name: "security_deposit_transactions_kind_check"
+  end
+
+  create_table "security_deposits", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "due_on", null: false
+    t.bigint "required_amount_cents", null: false
+    t.bigint "tenancy_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenancy_id"], name: "index_security_deposits_on_tenancy_id", unique: true
+    t.check_constraint "required_amount_cents > 0", name: "security_deposits_required_amount_cents_positive"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -325,6 +361,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000009) do
   add_foreign_key "receipts", "users"
   add_foreign_key "rent_terms", "tenancies"
   add_foreign_key "rentable_units", "properties"
+  add_foreign_key "security_deposit_transactions", "charges"
+  add_foreign_key "security_deposit_transactions", "parties"
+  add_foreign_key "security_deposit_transactions", "security_deposit_transactions", column: "superseded_by_id"
+  add_foreign_key "security_deposit_transactions", "security_deposits"
+  add_foreign_key "security_deposits", "tenancies"
   add_foreign_key "sessions", "users"
   add_foreign_key "tenancies", "rentable_units"
   add_foreign_key "tenancy_parties", "parties"

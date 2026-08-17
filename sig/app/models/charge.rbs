@@ -10,6 +10,8 @@ class Charge < ApplicationRecord
   def superseded?: () -> bool
   def lifecycle_status: () -> Symbol
   def accounting_user: () -> User?
+  def deposit_applied_cents: () -> Integer
+  def remaining_deposit_application_cents: () -> Integer
 
   private
 

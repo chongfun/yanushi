@@ -162,6 +162,11 @@ module Charges
           end
         end
 
+        if charge.security_deposit_applications.active.exists?
+          failure_result = failure("Cannot correct a charge with active security deposit applications. Void or correct the deposit applications first.", :active_deposit_applications)
+          raise ActiveRecord::Rollback
+        end
+
         if charge.voided?
           failure_result = failure("Cannot correct a voided charge", :already_voided)
           raise ActiveRecord::Rollback

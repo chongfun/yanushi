@@ -79,7 +79,7 @@
   </div>
 
   <!-- Quick Stats -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
     <div class="stats shadow bg-base-100 border border-base-200">
       <div class="stat">
         <div class="stat-title text-base-content/60">Active Tenancies</div>
@@ -103,6 +103,16 @@
           <%= @property.rentable_units.count %>
         </div>
         <div class="stat-desc text-base-content/40">Rentable units</div>
+      </div>
+    </div>
+
+    <div class="stats shadow bg-base-100 border border-base-200" id="property_security_deposits_held">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Security Deposits Held</div>
+        <div class="stat-value text-info font-mono text-2xl">
+          <%= number_to_currency((@security_deposits_held_cents || 0) / 100.0) %>
+        </div>
+        <div class="stat-desc text-base-content/40">Current refundable liability</div>
       </div>
     </div>
   </div>

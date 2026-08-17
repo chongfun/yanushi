@@ -1,0 +1,41 @@
+module SecurityDepositTransactions
+  class ReceiveService
+    def self.call: (
+      security_deposit: SecurityDeposit,
+      ?party: Party?,
+      ?party_id: Integer?,
+      ?amount: untyped,
+      ?amount_cents: Integer?,
+      ?occurred_on: untyped,
+      ?external_reference: String?,
+      ?memo: String?
+    ) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    def initialize: (
+      security_deposit: SecurityDeposit,
+      ?party: Party?,
+      ?party_id: Integer?,
+      ?amount: untyped,
+      ?amount_cents: Integer?,
+      ?occurred_on: untyped,
+      ?external_reference: String?,
+      ?memo: String?
+    ) -> void
+
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    attr_reader security_deposit: SecurityDeposit
+    attr_reader party: Party?
+    attr_reader party_id: Integer?
+    attr_reader raw_amount: untyped
+    attr_reader raw_cents: Integer?
+    attr_reader raw_occurred_on: untyped
+    attr_reader external_reference: String?
+    attr_reader memo: String?
+    def post_transaction: (SecurityDepositTransaction) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def resolve_party: () -> Party?
+    def resolve_cents: () -> Integer?
+    def resolve_occurred_on: () -> Date?
+  end
+end

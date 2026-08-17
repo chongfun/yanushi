@@ -20,7 +20,11 @@ class ChargesController < ApplicationController
     unless Charges::CreateFeeService::ALLOWED_KINDS.include?(kind)
       @charge = @tenancy.charges.new(charge_params)
       @charge.errors.add(:charge_kind, "must be late_fee or other")
-      return render :new, status: :unprocessable_content
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @charge.errors, status: :unprocessable_content }
+      end
+      return
     end
 
     result = Charges::CreateFeeService.call(

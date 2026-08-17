@@ -1,0 +1,47 @@
+<% content_for :title, "Set Up Security Deposit — Tenancy ##{@tenancy.id}" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li><%= link_to "Tenancy ##{@tenancy.id}", tenancy_path(@tenancy) %></li>
+  <li class="font-bold">Security Deposit</li>
+<% end %>
+
+<div class="max-w-xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h1 class="card-title text-2xl mb-2">Set Up Security Deposit</h1>
+      <p class="text-sm text-base-content/60 mb-6">Record the contractual security deposit requirement for this tenancy.</p>
+
+      <%= form_with model: @security_deposit, url: tenancy_security_deposit_path(@tenancy), method: :post do |f| %>
+        <% if @security_deposit.errors.any? %>
+          <div class="alert alert-error mb-6">
+            <ul class="list-disc list-inside text-sm">
+              <% @security_deposit.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="form-control w-full mb-4">
+          <label class="label font-semibold" for="security_deposit_required_amount">
+            <span>Required Deposit Amount ($)</span>
+          </label>
+          <%= f.number_field :required_amount, step: "0.01", min: "0.01", placeholder: "2000.00", class: "input input-bordered w-full font-mono", id: "security_deposit_required_amount", required: true %>
+        </div>
+
+        <div class="form-control w-full mb-6">
+          <label class="label font-semibold" for="security_deposit_due_on">
+            <span>Due Date</span>
+          </label>
+          <%= f.date_field :due_on, class: "input input-bordered w-full", id: "security_deposit_due_on", required: true %>
+        </div>
+
+        <div class="card-actions justify-end">
+          <%= link_to "Cancel", tenancy_path(@tenancy), class: "btn btn-ghost" %>
+          <%= f.submit "Save Deposit Requirement", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

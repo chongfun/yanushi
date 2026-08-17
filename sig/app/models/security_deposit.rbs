@@ -1,0 +1,17 @@
+class SecurityDeposit < ApplicationRecord
+  def required_amount: () -> Float
+  def required_amount=: (untyped) -> void
+  def accounting_user: () -> User?
+  def property: () -> Property?
+  def rentable_unit: () -> RentableUnit?
+  def held_cents: (?as_of: Date) -> Integer
+  def held_amount: (?as_of: Date) -> Float
+  def remaining_required_cents: (?as_of: Date) -> Integer
+  def remaining_required_amount: (?as_of: Date) -> Float
+  def fully_funded?: (?as_of: Date) -> bool
+  def overfunded?: (?as_of: Date) -> bool
+  def funding_status: (?as_of: Date) -> String
+
+  private
+  def validate_requirement_immutability: () -> void
+end

@@ -139,6 +139,16 @@ RSpec.describe "Charges", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("must be late_fee or other")
+
+      post tenancy_charges_path(tenancy, format: :json), params: {
+        charge: {
+          charge_kind: "reimbursement",
+          amount: "100.00",
+          charge_date: Date.current,
+          due_on: Date.current
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects creating charge on another user's tenancy" do

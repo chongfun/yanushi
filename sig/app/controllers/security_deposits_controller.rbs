@@ -1,0 +1,21 @@
+class SecurityDepositsController < ApplicationController
+  @tenancy: Tenancy
+  @security_deposit: SecurityDeposit
+  @transactions: untyped
+  @parties: untyped
+  @active_charges: untyped
+
+  def show: () -> void
+  def new: () -> void
+  def create: () -> void
+  def edit: () -> void
+  def update: () -> void
+  def receive: () -> void
+  def refund: () -> void
+  def apply: () -> void
+
+  private
+  def set_tenancy: () -> void
+  def set_security_deposit: () -> void
+  def security_deposit_params: () -> ActionController::Parameters
+end

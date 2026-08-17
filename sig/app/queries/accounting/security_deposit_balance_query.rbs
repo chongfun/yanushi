@@ -1,0 +1,13 @@
+module Accounting
+  class SecurityDepositBalanceQuery
+    def self.call: (?tenancy: Tenancy?, ?property: Property?, ?user: User?, ?as_of: Date?) -> Integer
+    def initialize: (?tenancy: Tenancy?, ?property: Property?, ?user: User?) -> void
+    def balance_cents_as_of: (?Date as_of) -> Integer
+    def balance_as_of: (?Date as_of) -> BigDecimal
+
+    private
+    attr_reader tenancy: Tenancy?
+    attr_reader property: Property?
+    attr_reader user: User?
+  end
+end

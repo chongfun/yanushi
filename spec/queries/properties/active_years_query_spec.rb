@@ -23,4 +23,19 @@ RSpec.describe Properties::ActiveYearsQuery do
     expect(result).to include(Date.current.year, 2026, 2025, 2024, 2023, 2020)
     expect(result).not_to include(0)
   end
+
+  it "includes historical years that only have security deposit transactions" do
+    sd = create(:security_deposit, tenancy: tenancy, required_amount_cents: 100_000)
+    create(
+      :security_deposit_transaction,
+      :received,
+      :posted,
+      security_deposit: sd,
+      party: create(:party, user: user),
+      occurred_on: Date.new(2021, 6, 15)
+    )
+
+    result = described_class.new(property: property).call
+    expect(result).to include(2021)
+  end
 end

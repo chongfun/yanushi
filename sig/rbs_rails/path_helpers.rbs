@@ -34,10 +34,20 @@ interface ::_RbsRailsPathHelpers
   def tenancy_tenancy_party_path: (*untyped) -> ::String
   def tenancy_rent_terms_path: (*untyped) -> ::String
   def new_tenancy_rent_term_path: (*untyped) -> ::String
+  def receive_tenancy_security_deposit_path: (*untyped) -> ::String
+  def refund_tenancy_security_deposit_path: (*untyped) -> ::String
+  def apply_tenancy_security_deposit_path: (*untyped) -> ::String
+  def new_tenancy_security_deposit_path: (*untyped) -> ::String
+  def edit_tenancy_security_deposit_path: (*untyped) -> ::String
+  def tenancy_security_deposit_path: (*untyped) -> ::String
   def tenancies_path: (*untyped) -> ::String
   def new_tenancy_path: (*untyped) -> ::String
   def edit_tenancy_path: (*untyped) -> ::String
   def tenancy_path: (*untyped) -> ::String
+  def correction_security_deposit_transaction_path: (*untyped) -> ::String
+  def correct_security_deposit_transaction_path: (*untyped) -> ::String
+  def void_security_deposit_transaction_path: (*untyped) -> ::String
+  def security_deposit_transaction_path: (*untyped) -> ::String
   def expense_reimbursements_path: (*untyped) -> ::String
   def new_expense_reimbursement_path: (*untyped) -> ::String
   def correction_expense_path: (*untyped) -> ::String
@@ -129,10 +139,20 @@ interface ::_RbsRailsPathHelpers
   def tenancy_tenancy_party_url: (*untyped) -> ::String
   def tenancy_rent_terms_url: (*untyped) -> ::String
   def new_tenancy_rent_term_url: (*untyped) -> ::String
+  def receive_tenancy_security_deposit_url: (*untyped) -> ::String
+  def refund_tenancy_security_deposit_url: (*untyped) -> ::String
+  def apply_tenancy_security_deposit_url: (*untyped) -> ::String
+  def new_tenancy_security_deposit_url: (*untyped) -> ::String
+  def edit_tenancy_security_deposit_url: (*untyped) -> ::String
+  def tenancy_security_deposit_url: (*untyped) -> ::String
   def tenancies_url: (*untyped) -> ::String
   def new_tenancy_url: (*untyped) -> ::String
   def edit_tenancy_url: (*untyped) -> ::String
   def tenancy_url: (*untyped) -> ::String
+  def correction_security_deposit_transaction_url: (*untyped) -> ::String
+  def correct_security_deposit_transaction_url: (*untyped) -> ::String
+  def void_security_deposit_transaction_url: (*untyped) -> ::String
+  def security_deposit_transaction_url: (*untyped) -> ::String
   def expense_reimbursements_url: (*untyped) -> ::String
   def new_expense_reimbursement_url: (*untyped) -> ::String
   def correction_expense_url: (*untyped) -> ::String

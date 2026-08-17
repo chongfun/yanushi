@@ -279,6 +279,34 @@ RSpec.describe Charges::CorrectService do
       expect(described_class.call(charge: original, amount_cents: 6000)).to be_failure
     end
 
+    it "rejects correcting when active deposit applications exist" do
+      party = create(:party, user: user)
+      deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
+      charge = Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 5000,
+        charge_date: Date.new(2026, 2, 1)
+      ).value!.data[:charge]
+
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+      SecurityDepositTransactions::ApplyService.call(
+        security_deposit: deposit,
+        charge: charge,
+        amount_cents: 5000,
+        occurred_on: Date.new(2026, 2, 5)
+      )
+
+      result = described_class.call(charge: charge, amount_cents: 6000)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:active_deposit_applications)
+    end
+
     it "corrects a rent charge with rent_term and service periods" do
       term = create(:rent_term, tenancy: tenancy, amount_cents: 120_000, effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
       create_res = Charges::CreateService.call(
