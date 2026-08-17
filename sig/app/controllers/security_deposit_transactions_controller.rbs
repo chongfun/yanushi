@@ -1,0 +1,16 @@
+class SecurityDepositTransactionsController < ApplicationController
+  @transaction: SecurityDepositTransaction
+  @journal_entries: JournalEntry::ActiveRecord_Relation
+  @parties: Party::ActiveRecord_Relation
+  @active_charges: Charge::ActiveRecord_Relation
+
+  def show: () -> void
+  def correction: () -> void
+  def correct: () -> void
+  def void: () -> void
+
+  private
+  def load_active_charges: () -> Charge::ActiveRecord_Relation
+  def set_transaction: () -> SecurityDepositTransaction
+  def transaction_params: () -> ActionController::Parameters
+end

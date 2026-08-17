@@ -51,6 +51,26 @@ RSpec.describe "Properties", type: :request do
       get property_url(property)
       expect(response).to be_successful
     end
+
+    it "displays property security deposits held balance" do
+      Accounting::ChartOfAccounts.ensure_for(user)
+      unit = create(:rentable_unit, property: property)
+      tenancy = create(:tenancy, rentable_unit: unit)
+      party = create(:party, user: user)
+      deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: deposit,
+        party: party,
+        amount_cents: 150_000,
+        occurred_on: Date.current
+      )
+
+      get property_url(property)
+      expect(response).to be_successful
+      expect(response.body).to include("Security Deposits Held")
+      expect(response.body).to include("$1,500.00")
+      expect(response.body).to include("Current refundable liability")
+    end
   end
 
   describe "GET /properties/:id/edit" do

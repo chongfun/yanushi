@@ -143,6 +143,13 @@ module Expenses
         end
 
         active_reimbursements.each do |reimb|
+          if reimb.security_deposit_applications.active.exists?
+            return failure(
+              "Active reimbursement charge ##{reimb.id} has active security deposit applications. Void or correct the deposit applications first.",
+              :active_deposit_applications
+            )
+          end
+
           reimb_tenancy = reimb.tenancy
           if reimb_tenancy&.property&.id != target_prop.id
             return failure(

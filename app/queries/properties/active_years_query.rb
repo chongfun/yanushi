@@ -10,6 +10,7 @@ module Properties
       years.merge(years_for(:charges, :charge_date))
       years.merge(years_for(:receipts, :received_on))
       years.merge(years_for(:expenses, :paid_on))
+      years.merge(years_for(:security_deposit_transactions, :occurred_on))
       additional_years.each do |year|
         next unless year.respond_to?(:to_i)
 

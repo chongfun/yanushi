@@ -48,6 +48,14 @@ module Charges
           raise ActiveRecord::Rollback
         end
 
+        if charge.security_deposit_applications.active.exists?
+          failure_result = ServiceResult.failure(
+            error: "Cannot void a charge with active security deposit applications. Void or correct the deposit applications first.",
+            code: :active_deposit_applications
+          )
+          raise ActiveRecord::Rollback
+        end
+
         description = reason.presence || "Void charge ##{charge.id}: #{charge.description || charge.charge_kind}"
         effective_occurred_on = [ resolved_occurred_on, journal_entry.occurred_on ].max
 

@@ -393,6 +393,10 @@ class ::Tenancy < ::ApplicationRecord
   def accounting_postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
   def accounting_posting_ids: () -> ::Array[::Integer]
   def accounting_posting_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def security_deposit_transactions: () -> ::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy
+  def security_deposit_transactions=: (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction]) -> (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction])
+  def security_deposit_transaction_ids: () -> ::Array[::Integer]
+  def security_deposit_transaction_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def payment_ingestions: () -> ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy
   def payment_ingestions=: (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion]) -> (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion])
   def payment_ingestion_ids: () -> ::Array[::Integer]
@@ -404,6 +408,12 @@ class ::Tenancy < ::ApplicationRecord
   def create_property: (?untyped) -> ::Property
   def create_property!: (?untyped) -> ::Property
   def reload_property: () -> ::Property?
+  def security_deposit: () -> ::SecurityDeposit?
+  def security_deposit=: (::SecurityDeposit?) -> ::SecurityDeposit?
+  def build_security_deposit: (?untyped) -> ::SecurityDeposit
+  def create_security_deposit: (?untyped) -> ::SecurityDeposit
+  def create_security_deposit!: (?untyped) -> ::SecurityDeposit
+  def reload_security_deposit: () -> ::SecurityDeposit?
   def rentable_unit: () -> ::RentableUnit
   def rentable_unit=: (::RentableUnit?) -> ::RentableUnit?
   def reload_rentable_unit: () -> ::RentableUnit?
@@ -501,11 +511,17 @@ class ::Posting < ::ApplicationRecord
 end
 class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
+class ::SecurityDepositTransaction < ::ApplicationRecord
+end
+class ::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
 class ::PaymentIngestion < ::ApplicationRecord
 end
 class ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Property < ::ApplicationRecord
+end
+class ::SecurityDeposit < ::ApplicationRecord
 end
 class ::RentableUnit < ::ApplicationRecord
 end

@@ -8,6 +8,8 @@ class Tenancy < ApplicationRecord
   has_many :charges, dependent: :restrict_with_error
   has_many :receipts, dependent: :restrict_with_error
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
+  has_one :security_deposit, dependent: :restrict_with_error
+  has_many :security_deposit_transactions, through: :security_deposit, source: :transactions
   has_many :payment_ingestions, dependent: :nullify
 
   AGREEMENT_TYPES = %w[
@@ -91,7 +93,7 @@ class Tenancy < ApplicationRecord
   end
 
   def financial_history?
-    charges.exists? || receipts.exists? || accounting_postings.exists?
+    charges.exists? || receipts.exists? || accounting_postings.exists? || security_deposit_transactions.exists?
   end
 
   def balance_cents(as_of: Date.current)

@@ -19,6 +19,19 @@ Rails.application.routes.draw do
     resources :charges, only: %i[new create]
     resources :tenancy_parties, only: %i[new create edit update destroy]
     resources :rent_terms, only: %i[new create]
+    resource :security_deposit, only: %i[new create show edit update] do
+      post :receive
+      post :refund
+      post :apply
+    end
+  end
+
+  resources :security_deposit_transactions, only: %i[show] do
+    member do
+      get :correction
+      post :correct
+      post :void
+    end
   end
 
   resources :expenses, only: %i[index show new create] do

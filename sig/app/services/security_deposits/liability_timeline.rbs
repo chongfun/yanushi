@@ -1,0 +1,13 @@
+module SecurityDeposits
+  class LiabilityTimeline
+    def self.validate: (security_deposit: SecurityDeposit, ?additions: Array[Hash[Symbol, untyped]], ?removing_ids: Array[Integer] | Integer) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (security_deposit: SecurityDeposit, ?additions: Array[Hash[Symbol, untyped]], ?removing_ids: Array[Integer] | Integer) -> void
+    def validate: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    attr_reader security_deposit: SecurityDeposit
+    attr_reader additions: Array[Hash[Symbol, untyped]]
+    attr_reader removing_ids: Array[Integer]
+    def format_money: (untyped cents) -> String
+  end
+end

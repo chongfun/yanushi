@@ -693,6 +693,10 @@ class ::Charge < ::ApplicationRecord
   def journal_entries=: (::JournalEntry::ActiveRecord_Associations_CollectionProxy | ::Array[::JournalEntry]) -> (::JournalEntry::ActiveRecord_Associations_CollectionProxy | ::Array[::JournalEntry])
   def journal_entry_ids: () -> ::Array[::Integer]
   def journal_entry_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def security_deposit_applications: () -> ::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy
+  def security_deposit_applications=: (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction]) -> (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction])
+  def security_deposit_application_ids: () -> ::Array[::Integer]
+  def security_deposit_application_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def superseded_charge: () -> ::Charge?
   def superseded_charge=: (::Charge?) -> ::Charge?
@@ -808,6 +812,10 @@ end
 class ::JournalEntry < ::ApplicationRecord
 end
 class ::JournalEntry::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::SecurityDepositTransaction < ::ApplicationRecord
+end
+class ::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Charge < ::ApplicationRecord
 end

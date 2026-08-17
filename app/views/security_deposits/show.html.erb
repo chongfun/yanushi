@@ -1,0 +1,281 @@
+<% content_for :title, "Security Deposit — Tenancy ##{@tenancy.id}" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li><%= link_to "Tenancy ##{@tenancy.id}", tenancy_path(@tenancy) %></li>
+  <li class="font-bold">Security Deposit</li>
+<% end %>
+
+<div class="max-w-5xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Security Deposit</h1>
+      <p class="text-base-content/60"><%= @tenancy.property.address %> — <%= @tenancy.rentable_unit.display_name %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to Tenancy", tenancy_path(@tenancy), class: "btn btn-ghost" %>
+      <% if @transactions.none? %>
+        <%= link_to "Edit Requirement", edit_tenancy_security_deposit_path(@tenancy), class: "btn btn-outline" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="card bg-base-100 shadow border border-base-200">
+      <div class="card-body p-4">
+        <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Required</div>
+        <div class="text-2xl font-black font-mono"><%= number_to_currency(@security_deposit.required_amount) %></div>
+        <div class="text-xs text-base-content/60">Due: <%= @security_deposit.due_on.strftime("%b %d, %Y") %></div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow border border-base-200">
+      <div class="card-body p-4">
+        <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Currently Held</div>
+        <div class="text-2xl font-black font-mono text-primary"><%= number_to_currency(@security_deposit.held_amount) %></div>
+        <div class="text-xs text-base-content/60">Ledger liability</div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow border border-base-200">
+      <div class="card-body p-4">
+        <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Remaining Due</div>
+        <div class="text-2xl font-black font-mono <%= @security_deposit.remaining_required_amount > 0 ? 'text-warning' : 'text-success' %>">
+          <%= number_to_currency(@security_deposit.remaining_required_amount) %>
+        </div>
+        <div class="text-xs text-base-content/60">To fulfill requirement</div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow border border-base-200">
+      <div class="card-body p-4">
+        <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Funding Status</div>
+        <div>
+          <% case @security_deposit.funding_status %>
+          <% when "funded" %>
+            <span class="badge badge-success font-bold mt-1">Funded</span>
+          <% when "partially_funded" %>
+            <span class="badge badge-warning font-bold mt-1">Partially Funded</span>
+          <% when "overfunded" %>
+            <span class="badge badge-info font-bold mt-1">Overfunded</span>
+          <% else %>
+            <span class="badge badge-error font-bold mt-1">Not Funded</span>
+          <% end %>
+        </div>
+        <div class="text-xs text-base-content/60 mt-1">Contractual state</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Tabs / Modals -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Receive Deposit Card -->
+    <div class="card bg-base-100 shadow-xl border border-base-200">
+      <div class="card-body">
+        <h2 class="card-title text-lg font-bold">Record Deposit Payment</h2>
+        <p class="text-xs text-base-content/60 mb-4">Record money received toward this security deposit liability.</p>
+
+        <%= form_with url: receive_tenancy_security_deposit_path(@tenancy), method: :post, local: true do |f| %>
+          <div class="form-control mb-3">
+            <label class="label text-xs font-semibold py-1" for="receive_party_id">Contributor (Payer)</label>
+            <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name), class: "select select-bordered select-sm w-full", id: "receive_party_id", required: true %>
+          </div>
+
+          <div class="form-control mb-3">
+            <label class="label text-xs font-semibold py-1" for="receive_amount">Amount ($)</label>
+            <%= number_field_tag :amount, sprintf("%.2f", @security_deposit.remaining_required_amount > 0 ? @security_deposit.remaining_required_amount : 100.0), step: "0.01", min: "0.01", class: "input input-bordered input-sm font-mono w-full", id: "receive_amount", required: true %>
+          </div>
+
+          <div class="form-control mb-3">
+            <label class="label text-xs font-semibold py-1" for="receive_occurred_on">Received On</label>
+            <%= date_field_tag :occurred_on, Date.current, class: "input input-bordered input-sm w-full", id: "receive_occurred_on", required: true %>
+          </div>
+
+          <div class="form-control mb-3">
+            <label class="label text-xs font-semibold py-1" for="receive_external_reference">Reference (Optional)</label>
+            <%= text_field_tag :external_reference, nil, placeholder: "Check #, wire ref", class: "input input-bordered input-sm w-full", id: "receive_external_reference" %>
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label text-xs font-semibold py-1" for="receive_memo">Memo (Optional)</label>
+            <%= text_field_tag :memo, nil, placeholder: "Security deposit receipt", class: "input input-bordered input-sm w-full", id: "receive_memo" %>
+          </div>
+
+          <div class="card-actions">
+            <%= f.submit "Record Deposit", class: "btn btn-primary btn-sm w-full" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Refund Deposit Card -->
+    <div class="card bg-base-100 shadow-xl border border-base-200">
+      <div class="card-body">
+        <h2 class="card-title text-lg font-bold">Refund Deposit</h2>
+        <p class="text-xs text-base-content/60 mb-4">Return held deposit funds to a tenant or contributor.</p>
+
+        <% if @security_deposit.held_cents > 0 %>
+          <%= form_with url: refund_tenancy_security_deposit_path(@tenancy), method: :post, local: true do |f| %>
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="refund_party_id">Recipient</label>
+              <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name), class: "select select-bordered select-sm w-full", id: "refund_party_id", required: true %>
+            </div>
+
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="refund_amount">Amount ($) — Max: <%= number_to_currency(@security_deposit.held_amount) %></label>
+              <%= number_field_tag :amount, sprintf("%.2f", @security_deposit.held_amount), step: "0.01", min: "0.01", max: sprintf("%.2f", @security_deposit.held_amount), class: "input input-bordered input-sm font-mono w-full", id: "refund_amount", required: true %>
+            </div>
+
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="refund_occurred_on">Refunded On</label>
+              <%= date_field_tag :occurred_on, Date.current, class: "input input-bordered input-sm w-full", id: "refund_occurred_on", required: true %>
+            </div>
+
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="refund_external_reference">Reference (Optional)</label>
+              <%= text_field_tag :external_reference, nil, placeholder: "Check #, wire ref", class: "input input-bordered input-sm w-full", id: "refund_external_reference" %>
+            </div>
+
+            <div class="form-control mb-4">
+              <label class="label text-xs font-semibold py-1" for="refund_memo">Memo (Optional)</label>
+              <%= text_field_tag :memo, nil, placeholder: "Deposit refund at move-out", class: "input input-bordered input-sm w-full", id: "refund_memo" %>
+            </div>
+
+            <div class="card-actions">
+              <%= f.submit "Record Refund", class: "btn btn-secondary btn-sm w-full" %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="alert alert-info text-xs">
+            No deposit funds are currently held to refund.
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Apply Deposit Card -->
+    <div class="card bg-base-100 shadow-xl border border-base-200">
+      <div class="card-body">
+        <h2 class="card-title text-lg font-bold">Apply Deposit to Charge</h2>
+        <p class="text-xs text-base-content/60 mb-4">Apply held deposit toward an active charge (damages, rent, late fee).</p>
+
+        <% if @security_deposit.held_cents > 0 && @tenancy.current_balance > 0 && @active_charges.any? %>
+          <%= form_with url: apply_tenancy_security_deposit_path(@tenancy), method: :post, local: true do |f| %>
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="apply_charge_id">Select Active Charge</label>
+              <select name="charge_id" id="apply_charge_id" class="select select-bordered select-sm w-full" required>
+                <% @active_charges.each do |c| %>
+                  <% cap = [c.remaining_deposit_application_cents, @security_deposit.held_cents, @tenancy.current_balance_cents].min / 100.0 %>
+                  <option value="<%= c.id %>">
+                    <%= c.charge_date.strftime("%b %d, %Y") %> — <%= c.description || c.charge_kind.titleize %> (<%= number_to_currency(c.amount) %>, Max: <%= number_to_currency(cap) %>)
+                  </option>
+                <% end %>
+              </select>
+            </div>
+
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="apply_amount">Amount to Apply ($)</label>
+              <%= number_field_tag :amount, sprintf("%.2f", [@security_deposit.held_amount, @tenancy.current_balance].min), step: "0.01", min: "0.01", class: "input input-bordered input-sm font-mono w-full", id: "apply_amount", required: true %>
+            </div>
+
+            <div class="form-control mb-3">
+              <label class="label text-xs font-semibold py-1" for="apply_occurred_on">Application Date</label>
+              <%= date_field_tag :occurred_on, Date.current, class: "input input-bordered input-sm w-full", id: "apply_occurred_on", required: true %>
+            </div>
+
+            <div class="form-control mb-4">
+              <label class="label text-xs font-semibold py-1" for="apply_memo">Memo (Optional)</label>
+              <%= text_field_tag :memo, nil, placeholder: "Deposit deduction for repairs", class: "input input-bordered input-sm w-full", id: "apply_memo" %>
+            </div>
+
+            <div class="card-actions">
+              <%= f.submit "Apply Deposit", class: "btn btn-accent btn-sm w-full" %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="alert alert-info text-xs">
+            <% if @security_deposit.held_cents <= 0 %>
+              No deposit funds are currently held.
+            <% elsif @tenancy.current_balance <= 0 %>
+              Tenancy has no outstanding balance ($0.00).
+            <% else %>
+              No active posted charges to apply against.
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction History Table -->
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-xl font-bold mb-4">Deposit Transaction History</h2>
+
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Kind</th>
+              <th>Party / Charge</th>
+              <th>Reference / Memo</th>
+              <th class="text-right">Amount</th>
+              <th>Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @transactions.any? %>
+              <% @transactions.each do |txn| %>
+                <tr class="<%= 'opacity-60 bg-base-200/50' if txn.voided? %>">
+                  <td class="text-sm font-medium"><%= txn.occurred_on.strftime("%b %d, %Y") %></td>
+                  <td>
+                    <span class="badge <%= txn.received? ? 'badge-primary' : (txn.refunded? ? 'badge-secondary' : 'badge-accent') %> badge-sm">
+                      <%= txn.transaction_kind.titleize %>
+                    </span>
+                  </td>
+                  <td class="text-sm">
+                    <% if txn.received? || txn.refunded? %>
+                      <%= txn.party&.display_name %>
+                    <% elsif txn.applied? %>
+                      <%= link_to "Charge ##{txn.charge_id}: #{txn.charge&.description || txn.charge&.charge_kind&.titleize}", charge_path(txn.charge_id), class: "link link-hover" if txn.charge_id %>
+                    <% end %>
+                  </td>
+                  <td class="text-xs text-base-content/70">
+                    <%= txn.external_reference.present? ? "[#{txn.external_reference}] " : "" %>
+                    <%= txn.memo || "—" %>
+                  </td>
+                  <td class="font-mono font-bold text-right <%= txn.voided? ? 'line-through text-base-content/50' : (txn.received? ? 'text-primary' : 'text-base-content') %>">
+                    <%= txn.received? ? '+' : '-' %><%= number_to_currency(txn.amount) %>
+                  </td>
+                  <td>
+                    <% if txn.superseded? %>
+                      <span class="badge badge-warning badge-sm">Corrected</span>
+                    <% elsif txn.voided? %>
+                      <span class="badge badge-error badge-sm">Voided</span>
+                    <% elsif txn.superseded_transaction.present? %>
+                      <span class="badge badge-info badge-sm">Replacement</span>
+                    <% else %>
+                      <span class="badge badge-success badge-sm">Active</span>
+                    <% end %>
+                  </td>
+                  <td class="text-right space-x-1">
+                    <%= link_to "View", security_deposit_transaction_path(txn), class: "btn btn-xs btn-ghost" %>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="7" class="text-center py-6 text-base-content/60">
+                  No deposit transactions recorded yet.
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

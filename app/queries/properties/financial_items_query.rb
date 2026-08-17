@@ -11,7 +11,8 @@ module Properties
       [
         items_for(:charges, :charge_date, "Charge", start_date, end_date),
         items_for(:receipts, :received_on, "Payment", start_date, end_date),
-        items_for(:expenses, :paid_on, "Expense", start_date, end_date)
+        items_for(:expenses, :paid_on, "Expense", start_date, end_date),
+        items_for(:security_deposit_transactions, :occurred_on, "Security Deposit", start_date, end_date)
       ].flatten.sort_by { |item| item[:date] }
     end
 

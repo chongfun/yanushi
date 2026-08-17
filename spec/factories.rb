@@ -213,4 +213,55 @@ FactoryBot.define do
       posted_at { Time.current }
     end
   end
+
+  factory :security_deposit do
+    association :tenancy
+    required_amount_cents { 200_000 }
+    due_on { tenancy&.commencement_date || Date.current }
+  end
+
+  factory :security_deposit_transaction do
+    association :security_deposit
+    transaction_kind { "received" }
+    amount_cents { 200_000 }
+    occurred_on { Date.current }
+    party { association :party, user: security_deposit.accounting_user }
+
+    trait :received do
+      transaction_kind { "received" }
+      party { association :party, user: security_deposit.accounting_user }
+      charge { nil }
+    end
+
+    trait :refunded do
+      transaction_kind { "refunded" }
+      party { association :party, user: security_deposit.accounting_user }
+      charge { nil }
+    end
+
+    trait :applied do
+      transaction_kind { "applied" }
+      party { nil }
+      charge { association :charge, tenancy: security_deposit.tenancy }
+    end
+
+    trait :posted do
+      after(:create) do |txn|
+        txn.update_columns(posted_at: Time.current)
+      end
+    end
+
+    trait :voided do
+      after(:create) do |txn|
+        txn.update_columns(posted_at: 1.day.ago, voided_at: Time.current)
+      end
+    end
+
+    trait :superseded do
+      after(:create) do |txn|
+        rep = create(:security_deposit_transaction, :received, security_deposit: txn.security_deposit)
+        txn.update_columns(posted_at: 1.day.ago, voided_at: Time.current, superseded_by_id: rep.id)
+      end
+    end
+  end
 end

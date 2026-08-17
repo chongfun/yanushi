@@ -5,6 +5,7 @@ class Property < ApplicationRecord
   has_many :expenses, dependent: :restrict_with_error
   has_many :charges, through: :tenancies
   has_many :receipts, through: :tenancies
+  has_many :security_deposit_transactions, through: :tenancies
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
 
   ASSET_TYPES = %w[
