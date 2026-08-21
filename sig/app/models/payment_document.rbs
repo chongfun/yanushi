@@ -1,7 +1,0 @@
-class PaymentDocument < ApplicationRecord
-  def accounting_user: () -> User?
-
-  private
-
-  def prevent_destroy_if_confirmed_ingestions_exist: () -> untyped
-end

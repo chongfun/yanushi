@@ -624,6 +624,12 @@ class ::SecurityDepositTransaction < ::ApplicationRecord
   def create_superseded_transaction: (?untyped) -> ::SecurityDepositTransaction
   def create_superseded_transaction!: (?untyped) -> ::SecurityDepositTransaction
   def reload_superseded_transaction: () -> ::SecurityDepositTransaction?
+  def imported_transaction: () -> ::ImportedTransaction?
+  def imported_transaction=: (::ImportedTransaction?) -> ::ImportedTransaction?
+  def build_imported_transaction: (?untyped) -> ::ImportedTransaction
+  def create_imported_transaction: (?untyped) -> ::ImportedTransaction
+  def create_imported_transaction!: (?untyped) -> ::ImportedTransaction
+  def reload_imported_transaction: () -> ::ImportedTransaction?
   def security_deposit: () -> ::SecurityDeposit
   def security_deposit=: (::SecurityDeposit?) -> ::SecurityDeposit?
   def reload_security_deposit: () -> ::SecurityDeposit?
@@ -733,6 +739,8 @@ end
 class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::SecurityDepositTransaction < ::ApplicationRecord
+end
+class ::ImportedTransaction < ::ApplicationRecord
 end
 class ::SecurityDeposit < ::ApplicationRecord
 end

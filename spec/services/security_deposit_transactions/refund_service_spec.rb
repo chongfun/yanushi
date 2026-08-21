@@ -104,4 +104,25 @@ RSpec.describe SecurityDepositTransactions::RefundService do
     expect(res).to be_failure
     expect(res.failure.code).to eq(:post_failed)
   end
+
+  it "accepts memo and rejects non-existent party_id" do
+    res1 = described_class.call(
+      security_deposit: security_deposit,
+      party: party,
+      amount_cents: 10_000,
+      occurred_on: Date.current,
+      memo: "check refund"
+    )
+    expect(res1).to be_success
+    expect(res1.value!.data[:transaction].memo).to eq("check refund")
+
+    res2 = described_class.call(
+      security_deposit: security_deposit,
+      party_id: 999_999,
+      amount_cents: 10_000,
+      occurred_on: Date.current
+    )
+    expect(res2).to be_failure
+    expect(res2.failure.code).to eq(:invalid_party)
+  end
 end

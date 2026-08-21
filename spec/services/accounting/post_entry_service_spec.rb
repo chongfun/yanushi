@@ -351,6 +351,38 @@ RSpec.describe Accounting::PostEntryService do
       }.not_to change(JournalEntry, :count)
     end
 
+    it "accepts date string, Date object, and rejects invalid date or blank event type" do
+      res1 = described_class.call(
+        user: user,
+        source: dummy_source,
+        event_type: "rent_assessed_string_date",
+        occurred_on: "2026-01-15",
+        postings: postings
+      )
+      expect(res1).to be_success
+      expect(res1.value!.data[:journal_entry].occurred_on).to eq(Date.new(2026, 1, 15))
+
+      res_bad_date = described_class.call(
+        user: user,
+        source: dummy_source,
+        event_type: "rent_assessed_bad_date",
+        occurred_on: "not-a-date",
+        postings: postings
+      )
+      expect(res_bad_date).to be_failure
+      expect(res_bad_date.failure.code).to eq(:invalid_input)
+
+      res_blank_event = described_class.call(
+        user: user,
+        source: dummy_source,
+        event_type: "",
+        occurred_on: Date.current,
+        postings: postings
+      )
+      expect(res_blank_event).to be_failure
+      expect(res_blank_event.failure.code).to eq(:invalid_input)
+    end
+
     describe "concurrency race recovery" do
       it "recovers from RecordNotUnique race when parallel process commits first" do
         # Another process committed the entry in parallel

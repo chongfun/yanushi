@@ -72,14 +72,10 @@ module Charges
         amt_str = amount.is_a?(Numeric) ? amount.to_s : amount.to_s.strip
         return failure("Invalid amount format", :invalid_amount) unless amt_str.match?(/\A\d+(\.\d{1,2})?\z/)
 
-        begin
-          dec = BigDecimal(amt_str)
-          return failure("Amount must be greater than zero", :invalid_amount) if dec <= 0
+        dec = BigDecimal(amt_str)
+        return failure("Amount must be greater than zero", :invalid_amount) if dec <= 0
 
-          (dec * 100).round
-        rescue ArgumentError
-          return failure("Invalid amount", :invalid_amount)
-        end
+        (dec * 100).round
       else
         0
       end
@@ -128,13 +124,9 @@ module Charges
         created_entry = journal_entry
       end
 
-      if (f = failure_result)
-        f
-      elsif created_charge && created_entry
-        ServiceResult.success(charge: created_charge, journal_entry: created_entry)
-      else
-        ServiceResult.failure(error: "Failed to create and post charge", code: :creation_failed)
-      end
+      return failure_result if failure_result
+
+      ServiceResult.success(charge: created_charge, journal_entry: created_entry)
     end
 
     private

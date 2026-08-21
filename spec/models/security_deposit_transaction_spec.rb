@@ -79,6 +79,30 @@ RSpec.describe SecurityDepositTransaction, type: :model do
       expect(txn.errors[:charge]).to include("must belong to the same tenancy as the security deposit")
     end
 
+    it "rejects applied transaction when charge belongs to another user" do
+      other_user = create(:user)
+      other_prop = create(:property, user: other_user)
+      other_unit = create(:rentable_unit, property: other_prop)
+      other_tenancy = create(:tenancy, rentable_unit: other_unit)
+      other_charge = create(:charge, tenancy: other_tenancy, amount_cents: 50_000)
+
+      txn = build(:security_deposit_transaction, :applied, security_deposit: security_deposit, charge: other_charge)
+      expect(txn).not_to be_valid
+      expect(txn.errors[:charge]).to include("must belong to your account")
+    end
+
+    it "rejects applied transaction when occurred_on precedes charge_date" do
+      txn = build(
+        :security_deposit_transaction,
+        :applied,
+        security_deposit: security_deposit,
+        charge: charge,
+        occurred_on: charge.charge_date - 5.days
+      )
+      expect(txn).not_to be_valid
+      expect(txn.errors[:occurred_on]).to include("cannot precede the charge being settled (#{charge.charge_date})")
+    end
+
     it "rejects occurred_on in the future" do
       txn = build(:security_deposit_transaction, :received, security_deposit: security_deposit, party: party, occurred_on: Date.tomorrow)
       expect(txn).not_to be_valid

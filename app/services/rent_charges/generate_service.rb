@@ -88,14 +88,10 @@ module RentCharges
 
       def parse_month(val)
         return nil if val.blank?
-        date = if val.is_a?(Date)
-          val
-        elsif val.respond_to?(:to_date)
-          val.to_date
-        else
-          Date.parse(val.to_s)
-        end
-        date.beginning_of_month
+        return val.to_date.beginning_of_month if val.is_a?(Date) || val.is_a?(Time) || val.is_a?(DateTime)
+        return nil unless val.to_s =~ /\d/
+
+        Date.parse(val.to_s).beginning_of_month
       rescue ArgumentError, Date::Error
         nil
       end

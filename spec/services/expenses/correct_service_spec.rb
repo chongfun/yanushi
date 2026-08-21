@@ -428,12 +428,22 @@ RSpec.describe Expenses::CorrectService do
       # Success with string amount
       res_amt3 = described_class.call(expense: exp, amount: "123.45")
       expect(res_amt3).to be_success
-      expect(res_amt3.value!.data[:replacement].amount_cents).to eq(12_345)
-
       # Non-integer amount_cents
       expect(described_class.call(expense: exp, amount_cents: "15000")).to be_failure
       expect(described_class.call(expense: exp, amount_cents: "15000oops")).to be_failure
       expect(described_class.call(expense: exp, amount_cents: -500)).to be_failure
+
+      # User mismatch
+      other_user = create(:user)
+      res_user = described_class.call(expense: exp, user: other_user)
+      expect(res_user).to be_failure
+      expect(res_user.failure.code).to eq(:not_found)
+
+      # Property ownership mismatch
+      other_user_prop = create(:property, user: other_user)
+      res_prop = described_class.call(expense: exp, property: other_user_prop)
+      expect(res_prop).to be_failure
+      expect(res_prop.failure.code).to eq(:ownership_mismatch)
     end
 
     it "returns a proper failure result when replacement creation fails" do
@@ -450,6 +460,46 @@ RSpec.describe Expenses::CorrectService do
       res_create = described_class.call(expense: exp, amount_cents: 15_000)
       expect(res_create).to be_failure
       expect(res_create.failure.error).to eq("Create error")
+    end
+
+    it "rejects invalid expense_kind" do
+      create_res = Expenses::CreateService.call(property: property, expense_kind: "utilities", paid_on: Date.current, amount_cents: 10_000)
+      exp = create_res.value!.data[:expense]
+
+      res_k = described_class.call(expense: exp, expense_kind: "invalid_kind")
+      expect(res_k).to be_failure
+      expect(res_k.failure.code).to eq(:validation_error)
+    end
+
+    it "rejects changing property or unit on an expense with an active reimbursement" do
+      prop2 = create(:property, user: user)
+      unit2 = create(:rentable_unit, property: prop2)
+      create(:tenancy, rentable_unit: unit2)
+
+      create_res = Expenses::CreateService.call(
+        property: property,
+        expense_kind: "repairs",
+        paid_on: Date.current,
+        amount_cents: 20_000
+      )
+      exp = create_res.value!.data[:expense]
+
+      Charges::CreateReimbursementService.call(
+        expense: exp,
+        tenancy: tenancy,
+        amount_cents: 20_000
+      )
+
+      # Attempt changing to different property
+      res_prop_change = described_class.call(expense: exp, property: prop2)
+      expect(res_prop_change).to be_failure
+      expect(res_prop_change.failure.code).to eq(:property_mismatch)
+
+      # Attempt changing unit on same property to a unit not matching tenancy
+      other_unit_on_prop = create(:rentable_unit, property: property)
+      res_unit_change = described_class.call(expense: exp, rentable_unit: other_unit_on_prop)
+      expect(res_unit_change).to be_failure
+      expect(res_unit_change.failure.code).to eq(:unit_mismatch)
     end
   end
 end

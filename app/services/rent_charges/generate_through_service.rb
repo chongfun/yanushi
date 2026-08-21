@@ -39,8 +39,7 @@ module RentCharges
             )
 
             if result.success?
-              data = result.value!
-              generated_charges << data.data[:charge] if data && data.data && data.data[:charge]
+              generated_charges << result.value!.data[:charge]
             else
               return result
             end
@@ -59,7 +58,6 @@ module RentCharges
 
       def parse_date(val)
         return nil if val.blank?
-        return val if val.is_a?(Date)
         return val.to_date if val.respond_to?(:to_date)
 
         Date.parse(val.to_s)

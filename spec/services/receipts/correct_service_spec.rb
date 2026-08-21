@@ -238,5 +238,26 @@ RSpec.describe Receipts::CorrectService, type: :service do
       expect(result).to be_failure
       expect(result.failure.code).to eq(:reverse_failed)
     end
+
+    it "handles replacement post failure" do
+      allow(Receipts::PostService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Post failed", code: :post_failed)
+      )
+      result = described_class.call(receipt: receipt, amount_cents: 210_000)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:post_failed)
+    end
+
+    it "allows updating payment_method and external_reference" do
+      res = described_class.call(
+        receipt: receipt,
+        payment_method: "venmo",
+        external_reference: "VEN123"
+      )
+      expect(res).to be_success
+      rep = res.value!.data[:receipt]
+      expect(rep.payment_method).to eq("venmo")
+      expect(rep.external_reference).to eq("VEN123")
+    end
   end
 end

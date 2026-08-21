@@ -1,0 +1,38 @@
+module ImportedTransactions
+  class IndexQuery
+    class Result < Data
+      attr_reader reviewable_transactions: untyped
+      attr_reader confirmed_transactions: untyped
+      attr_reader processing_documents: untyped
+      attr_reader failed_documents: untyped
+      attr_reader page: Integer
+      attr_reader per_page: Integer
+      attr_reader total_pages: Integer
+      attr_reader total_confirmed_count: Integer
+
+      def self.new: (
+        reviewable_transactions: untyped,
+        confirmed_transactions: untyped,
+        processing_documents: untyped,
+        failed_documents: untyped,
+        page: Integer,
+        per_page: Integer,
+        total_pages: Integer,
+        total_confirmed_count: Integer
+      ) -> instance
+    end
+
+    @user: User
+
+    def initialize: (user: User) -> void
+    def call: (?page: untyped, ?per_page: Integer) -> Result
+
+    private
+    attr_reader user: User
+    def reviewable_transactions: () -> untyped
+    def confirmed_transactions_scope: () -> untyped
+    def processing_documents: () -> untyped
+    def failed_documents: () -> untyped
+    def document_columns: () -> Array[Symbol]
+  end
+end

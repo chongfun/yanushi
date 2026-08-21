@@ -54,13 +54,17 @@ Rails.application.routes.draw do
       post :void
     end
   end
-  resources :payment_ingestions do
+  resources :source_documents, only: %i[new create destroy] do
     member do
-      post :confirm
       get :download
+      post :retry
     end
   end
-  resources :payment_documents, only: %i[destroy]
+  resources :imported_transactions, only: %i[index show update destroy] do
+    member do
+      post :confirm
+    end
+  end
 
   resource :session
   resources :passwords, param: :token

@@ -35,8 +35,8 @@
             class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/expenses')}" %>
       </li>
       <li>
-        <%= link_to "Ingestions", payment_ingestions_path,
-            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/payment_ingestions')}" %>
+        <%= link_to "Imported Transactions", imported_transactions_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/imported_transactions') || request.path.start_with?('/source_documents')}" %>
       </li>
     </ul>
   </div>
@@ -55,7 +55,7 @@
         <li><%= link_to "Tenants & Payers", parties_path %></li>
         <li><%= link_to "Tenancies", tenancies_path %></li>
         <li><%= link_to "Payments", receipts_path %></li>
-        <li><%= link_to "Ingestions", payment_ingestions_path %></li>
+        <li><%= link_to "Imported Transactions", imported_transactions_path %></li>
         <li><%= link_to "Expenses", expenses_path %></li>
       </ul>
     </div>

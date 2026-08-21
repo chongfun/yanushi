@@ -64,13 +64,13 @@ interface ::_RbsRailsPathHelpers
   def receipt_path: (*untyped) -> ::String
   def void_charge_path: (*untyped) -> ::String
   def charge_path: (*untyped) -> ::String
-  def confirm_payment_ingestion_path: (*untyped) -> ::String
-  def download_payment_ingestion_path: (*untyped) -> ::String
-  def payment_ingestions_path: (*untyped) -> ::String
-  def new_payment_ingestion_path: (*untyped) -> ::String
-  def edit_payment_ingestion_path: (*untyped) -> ::String
-  def payment_ingestion_path: (*untyped) -> ::String
-  def payment_document_path: (*untyped) -> ::String
+  def download_source_document_path: (*untyped) -> ::String
+  def source_documents_path: (*untyped) -> ::String
+  def new_source_document_path: (*untyped) -> ::String
+  def source_document_path: (*untyped) -> ::String
+  def confirm_imported_transaction_path: (*untyped) -> ::String
+  def imported_transactions_path: (*untyped) -> ::String
+  def imported_transaction_path: (*untyped) -> ::String
   def new_session_path: (*untyped) -> ::String
   def edit_session_path: (*untyped) -> ::String
   def session_path: (*untyped) -> ::String
@@ -169,13 +169,13 @@ interface ::_RbsRailsPathHelpers
   def receipt_url: (*untyped) -> ::String
   def void_charge_url: (*untyped) -> ::String
   def charge_url: (*untyped) -> ::String
-  def confirm_payment_ingestion_url: (*untyped) -> ::String
-  def download_payment_ingestion_url: (*untyped) -> ::String
-  def payment_ingestions_url: (*untyped) -> ::String
-  def new_payment_ingestion_url: (*untyped) -> ::String
-  def edit_payment_ingestion_url: (*untyped) -> ::String
-  def payment_ingestion_url: (*untyped) -> ::String
-  def payment_document_url: (*untyped) -> ::String
+  def download_source_document_url: (*untyped) -> ::String
+  def source_documents_url: (*untyped) -> ::String
+  def new_source_document_url: (*untyped) -> ::String
+  def source_document_url: (*untyped) -> ::String
+  def confirm_imported_transaction_url: (*untyped) -> ::String
+  def imported_transactions_url: (*untyped) -> ::String
+  def imported_transaction_url: (*untyped) -> ::String
   def new_session_url: (*untyped) -> ::String
   def edit_session_url: (*untyped) -> ::String
   def session_url: (*untyped) -> ::String

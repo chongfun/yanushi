@@ -48,8 +48,7 @@ module Receipts
       attr_reader :receipt
 
       def default_description
-        method_str = receipt.payment_method.present? ? receipt.payment_method.titleize : "Payment"
-        "Payment received - #{method_str}"
+        "Payment received - #{receipt.payment_method.titleize}"
       end
   end
 end

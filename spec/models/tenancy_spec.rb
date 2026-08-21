@@ -10,7 +10,7 @@ RSpec.describe Tenancy, type: :model do
     it { is_expected.to have_many(:charges).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:receipts).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:accounting_postings).class_name("Posting").dependent(:restrict_with_error) }
-    it { is_expected.to have_many(:payment_ingestions).dependent(:nullify) }
+    it { is_expected.to have_many(:imported_transactions).with_foreign_key(:matched_tenancy_id).dependent(:nullify) }
   end
 
   describe "enums" do
