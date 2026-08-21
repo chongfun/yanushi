@@ -1,0 +1,12 @@
+module ImportedTransactions
+  module Parsers
+    class Base
+      def parse: (String pdf_text) -> untyped
+
+      private
+      def clean_name: (String? name) -> String?
+      def parse_amount_cents: (String text) -> Integer?
+      def parse_date: (String text) -> Date?
+    end
+  end
+end

@@ -1,0 +1,16 @@
+module SourceDocuments
+  class DestroyService
+    @user: User
+    @document: SourceDocument
+
+    def self.call: (user: User, document: SourceDocument) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, document: SourceDocument) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    attr_reader user: User
+    attr_reader document: SourceDocument
+    def success: (untyped data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

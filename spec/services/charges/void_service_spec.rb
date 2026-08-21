@@ -148,5 +148,22 @@ RSpec.describe Charges::VoidService do
       expect(result).to be_failure
       expect(result.failure.code).to eq(:active_deposit_applications)
     end
+
+    it "rejects voiding an already superseded charge" do
+      replacement = create(:charge, :posted, tenancy: tenancy, amount_cents: 5000, charge_date: Date.current, due_on: Date.current)
+      charge.update_columns(superseded_by_id: replacement.id)
+      res = described_class.call(charge: charge)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:already_superseded)
+    end
+
+    it "handles ReverseEntryService failure" do
+      allow(Accounting::ReverseEntryService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Reverse failed", code: :reverse_error)
+      )
+      res = described_class.call(charge: charge)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:reverse_error)
+    end
   end
 end

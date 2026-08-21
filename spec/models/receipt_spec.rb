@@ -185,8 +185,17 @@ RSpec.describe Receipt, type: :model do
       receipt.amount = "250.75"
       expect(receipt.amount_cents).to eq(25_075)
 
+      receipt.amount = "500"
+      expect(receipt.amount_cents).to eq(50_000)
+
       receipt.amount = 300
       expect(receipt.amount_cents).to eq(30_000)
+
+      receipt.amount = ""
+      expect(receipt.amount_cents).to be_nil
+
+      receipt.amount_cents = nil
+      expect(receipt.amount).to be_nil
     end
 
     it "rejects fractional cent assignments without silent rounding" do

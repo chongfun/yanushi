@@ -124,6 +124,17 @@ RSpec.describe "Charges", type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_content)
+
+      post tenancy_charges_path(tenancy, format: :json), params: {
+        charge: {
+          charge_kind: "rent",
+          amount: "1000.00",
+          charge_date: Date.current,
+          due_on: Date.current
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("must be late_fee or other")
     end
 
@@ -224,6 +235,20 @@ RSpec.describe "Charges", type: :request do
 
       get charge_path(other_charge)
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "renders charge via json" do
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 5000,
+        charge_date: Date.current,
+        due_on: Date.current,
+        description: "Late fee"
+      ).value!.data[:charge]
+
+      get charge_path(charge, format: :json)
+      expect(response).to be_successful
     end
   end
 

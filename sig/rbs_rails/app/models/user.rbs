@@ -321,14 +321,14 @@ class ::User < ::ApplicationRecord
   def parties=: (::Party::ActiveRecord_Associations_CollectionProxy | ::Array[::Party]) -> (::Party::ActiveRecord_Associations_CollectionProxy | ::Array[::Party])
   def party_ids: () -> ::Array[::Integer]
   def party_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def payment_ingestions: () -> ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy
-  def payment_ingestions=: (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion]) -> (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion])
-  def payment_ingestion_ids: () -> ::Array[::Integer]
-  def payment_ingestion_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def payment_documents: () -> ::PaymentDocument::ActiveRecord_Associations_CollectionProxy
-  def payment_documents=: (::PaymentDocument::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentDocument]) -> (::PaymentDocument::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentDocument])
-  def payment_document_ids: () -> ::Array[::Integer]
-  def payment_document_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def imported_transactions: () -> ::ImportedTransaction::ActiveRecord_Associations_CollectionProxy
+  def imported_transactions=: (::ImportedTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::ImportedTransaction]) -> (::ImportedTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::ImportedTransaction])
+  def imported_transaction_ids: () -> ::Array[::Integer]
+  def imported_transaction_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def source_documents: () -> ::SourceDocument::ActiveRecord_Associations_CollectionProxy
+  def source_documents=: (::SourceDocument::ActiveRecord_Associations_CollectionProxy | ::Array[::SourceDocument]) -> (::SourceDocument::ActiveRecord_Associations_CollectionProxy | ::Array[::SourceDocument])
+  def source_document_ids: () -> ::Array[::Integer]
+  def source_document_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def accounts: () -> ::Account::ActiveRecord_Associations_CollectionProxy
   def accounts=: (::Account::ActiveRecord_Associations_CollectionProxy | ::Array[::Account]) -> (::Account::ActiveRecord_Associations_CollectionProxy | ::Array[::Account])
   def account_ids: () -> ::Array[::Integer]
@@ -418,13 +418,13 @@ class ::Party < ::ApplicationRecord
 end
 class ::Party::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::PaymentIngestion < ::ApplicationRecord
+class ::ImportedTransaction < ::ApplicationRecord
 end
-class ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::ImportedTransaction::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::PaymentDocument < ::ApplicationRecord
+class ::SourceDocument < ::ApplicationRecord
 end
-class ::PaymentDocument::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::SourceDocument::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Account < ::ApplicationRecord
 end

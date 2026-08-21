@@ -1,3 +1,0 @@
-class PaymentDocumentsController < ApplicationController
-  def destroy: () -> untyped
-end

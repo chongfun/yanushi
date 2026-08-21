@@ -212,4 +212,25 @@ RSpec.describe SecurityDepositTransactions::ApplyService do
     expect(res).to be_failure
     expect(res.failure.code).to eq(:post_failed)
   end
+
+  it "accepts memo and rejects non-existent charge_id" do
+    res1 = described_class.call(
+      security_deposit: security_deposit,
+      charge: charge,
+      amount_cents: 10_000,
+      occurred_on: Date.current,
+      memo: "DEP-APP-1"
+    )
+    expect(res1).to be_success
+    expect(res1.value!.data[:transaction].memo).to eq("DEP-APP-1")
+
+    res2 = described_class.call(
+      security_deposit: security_deposit,
+      charge_id: 999_999,
+      amount_cents: 10_000,
+      occurred_on: Date.current
+    )
+    expect(res2).to be_failure
+    expect(res2.failure.code).to eq(:invalid_charge)
+  end
 end

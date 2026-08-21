@@ -1,0 +1,15 @@
+module ImportedTransactions
+  class IngestionService
+    PARSERS: Hash[String, Class]
+
+    def self.call: (user: User, pdf_path_or_io: untyped, ?source: String) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def call: (user: User, pdf_path_or_io: untyped, ?source: String) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    def extract_pdf_data: (untyped pdf_path_or_io, User user) -> [String, String, Integer, String, SourceDocument]
+    def read_pdf_bytes: (untyped pdf_path_or_io) -> String
+    def detect_type: (String text) -> String
+    def process_document: (user: User, source: String, raw_text: String, page_count: Integer, source_document: SourceDocument) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def build_transactions: (user: User, source: String, document_type: String, parser_results: Array[untyped], raw_text: String, source_document: SourceDocument) -> Array[ImportedTransaction]
+  end
+end

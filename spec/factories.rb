@@ -127,17 +127,105 @@ FactoryBot.define do
     end
   end
 
-  factory :payment_document do
+  factory :source_document do
     association :user
-    attachment_file { "pdf bytes" }
+    document_type { "unknown" }
+    sequence(:attachment_file) { |n| "%PDF-1.4\nattachment_file_#{n}" }
     attachment_filename { "receipt.pdf" }
     attachment_content_type { "application/pdf" }
+    status { "processing" }
   end
 
-  factory :payment_ingestion do
+  factory :imported_transaction do
     association :user
+    source_document { association :source_document, user: user }
     source { "pdf_upload" }
+    transaction_kind { "unknown" }
     status { "pending" }
+
+    trait :tenant_receipt do
+      transaction_kind { "tenant_receipt" }
+      payment_method { "zelle" }
+    end
+
+    trait :security_deposit do
+      transaction_kind { "security_deposit" }
+      payment_method { "zelle" }
+    end
+
+    trait :matched do
+      status { "matched" }
+      matched_party { association :party, user: user }
+      matched_tenancy do
+        property = association(:property, user: user)
+        unit = association(:rentable_unit, property: property)
+        association(:tenancy, rentable_unit: unit)
+      end
+      amount_cents { 100_000 }
+      occurred_on { Date.current }
+    end
+
+    trait :unmatched do
+      status { "unmatched" }
+      amount_cents { 100_000 }
+      occurred_on { Date.current }
+    end
+
+    trait :ambiguous do
+      status { "ambiguous" }
+      amount_cents { 100_000 }
+      occurred_on { Date.current }
+    end
+
+    trait :confirmed_receipt do
+      status { "confirmed" }
+      transaction_kind { "tenant_receipt" }
+      payment_method { "zelle" }
+      amount_cents { 100_000 }
+      occurred_on { Date.current }
+      external_reference { "ZEL-12345" }
+      matched_party { association :party, user: user }
+      matched_tenancy do
+        property = association(:property, user: user)
+        unit = association(:rentable_unit, property: property)
+        association(:tenancy, rentable_unit: unit)
+      end
+      confirmed_source do
+        association :receipt,
+                    user: user,
+                    tenancy: matched_tenancy,
+                    payer_party: matched_party,
+                    amount_cents: amount_cents,
+                    received_on: occurred_on,
+                    payment_method: payment_method,
+                    external_reference: external_reference
+      end
+    end
+
+    trait :confirmed_security_deposit do
+      status { "confirmed" }
+      transaction_kind { "security_deposit" }
+      payment_method { "zelle" }
+      amount_cents { 100_000 }
+      occurred_on { Date.current }
+      external_reference { "DEP-12345" }
+      matched_party { association :party, user: user }
+      matched_tenancy do
+        property = association(:property, user: user)
+        unit = association(:rentable_unit, property: property)
+        association(:tenancy, rentable_unit: unit)
+      end
+      confirmed_source do
+        deposit = association(:security_deposit, tenancy: matched_tenancy, required_amount_cents: amount_cents)
+        association :security_deposit_transaction,
+                    security_deposit: deposit,
+                    party: matched_party,
+                    amount_cents: amount_cents,
+                    transaction_kind: "received",
+                    occurred_on: occurred_on,
+                    external_reference: external_reference
+      end
+    end
   end
 
   factory :account do

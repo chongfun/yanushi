@@ -1,0 +1,12 @@
+class SourceDocumentsController < ApplicationController
+  @source_document: SourceDocument
+
+  def new: () -> void
+  def create: () -> void
+  def retry: () -> void
+  def download: () -> void
+  def destroy: () -> void
+
+  private
+  def set_source_document: () -> void
+end

@@ -8,8 +8,8 @@ class User < ApplicationRecord
   has_many :charges, through: :tenancies
   has_many :receipts, dependent: :restrict_with_error
   has_many :parties, dependent: :destroy
-  has_many :payment_ingestions, dependent: :destroy
-  has_many :payment_documents, dependent: :destroy
+  has_many :imported_transactions, dependent: :destroy
+  has_many :source_documents, dependent: :destroy
   has_many :accounts, dependent: :restrict_with_error
   has_many :journal_entries, dependent: :restrict_with_error
 

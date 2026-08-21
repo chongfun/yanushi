@@ -6,7 +6,7 @@ RSpec.describe Party, type: :model do
     it { is_expected.to have_many(:party_aliases).dependent(:destroy) }
     it { is_expected.to have_many(:tenancy_parties).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:tenancies).through(:tenancy_parties) }
-    it { is_expected.to have_many(:payment_ingestions).dependent(:nullify) }
+    it { is_expected.to have_many(:imported_transactions).with_foreign_key(:matched_party_id).dependent(:nullify) }
   end
 
   describe "enums" do

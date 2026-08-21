@@ -10,7 +10,7 @@ class Tenancy < ApplicationRecord
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
   has_one :security_deposit, dependent: :restrict_with_error
   has_many :security_deposit_transactions, through: :security_deposit, source: :transactions
-  has_many :payment_ingestions, dependent: :nullify
+  has_many :imported_transactions, foreign_key: :matched_tenancy_id, dependent: :nullify
 
   AGREEMENT_TYPES = %w[
     fixed_term

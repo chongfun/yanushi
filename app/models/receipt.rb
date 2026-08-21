@@ -5,6 +5,7 @@ class Receipt < ApplicationRecord
   belongs_to :superseded_by, class_name: "Receipt", optional: true
 
   has_one :superseded_receipt, class_name: "Receipt", foreign_key: :superseded_by_id, dependent: :nullify
+  has_one :imported_transaction, as: :confirmed_source
   has_many :journal_entries, as: :source, dependent: :restrict_with_error
 
   normalizes :payment_method, with: ->(m) { m&.strip&.downcase }

@@ -480,5 +480,60 @@ RSpec.describe Charges::CorrectService do
       expect(active_charges.sum(:amount_cents)).to be <= 30_000
       expect([ res_corr1.success?, res_corr2.success? ].count(true)).to eq(1)
     end
+
+    it "rejects user mismatch and cross-user target tenancy" do
+      create_res = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 5_000,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+      chg = create_res.value!.data[:charge]
+
+      other_user = create(:user)
+      other_prop = create(:property, user: other_user)
+      other_unit = create(:rentable_unit, property: other_prop)
+      other_tenancy = create(:tenancy, rentable_unit: other_unit)
+
+      res1 = described_class.call(charge: chg, user: other_user)
+      expect(res1).to be_failure
+      expect(res1.failure.code).to eq(:not_found)
+
+      res3 = described_class.call(charge: chg, tenancy: other_tenancy)
+      expect(res3).to be_failure
+      expect(res3.failure.code).to eq(:ownership_mismatch)
+    end
+
+    it "accepts service period start and end as Date objects and strings, or clearing them" do
+      create_res = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 5_000,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+      chg = create_res.value!.data[:charge]
+
+      res1 = described_class.call(
+        charge: chg,
+        service_period_start: "2026-01-01",
+        service_period_end: Date.new(2026, 1, 31)
+      )
+      expect(res1).to be_success
+      rep1 = res1.value!.data[:charge]
+      expect(rep1.service_period_start).to eq(Date.new(2026, 1, 1))
+      expect(rep1.service_period_end).to eq(Date.new(2026, 1, 31))
+
+      res2 = described_class.call(
+        charge: rep1,
+        service_period_start: "",
+        service_period_end: ""
+      )
+      expect(res2).to be_success
+      rep2 = res2.value!.data[:charge]
+      expect(rep2.service_period_start).to be_nil
+      expect(rep2.service_period_end).to be_nil
+    end
   end
 end

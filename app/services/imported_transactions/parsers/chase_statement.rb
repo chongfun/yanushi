@@ -1,0 +1,95 @@
+module ImportedTransactions
+  module Parsers
+    class ChaseStatement < Base
+      def parse(pdf_text)
+        # Parse statement period to determine the year context
+        period_match = pdf_text.match(/([a-zA-Z]+\s+\d{1,2},\s+\d{4})\s+through\s+([a-zA-Z]+\s+\d{1,2},\s+\d{4})/i)
+
+        start_date = nil
+        end_date = nil
+
+        if period_match
+          start_date = parse_date(period_match[1].to_s)
+          end_date = parse_date(period_match[2].to_s)
+        end
+
+        results = [] # : Array[untyped]
+
+        pdf_text.each_line do |line|
+          line = line.strip
+          next if line.empty?
+
+          # 1. Zelle Match
+          # Example: "03/24     Zelle Payment From Sam Lopez Pncaa0Yqh12Q                            1,300.00        2,850.00"
+          if (zelle_match = line.match(/^\s*(\d{2}\/\d{2})\s+Zelle Payment From\s+(.+?)\s+(\w+)\s+([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s*$/i))
+            date_str, raw_payer, txn_number, amount_str = zelle_match[1].to_s, zelle_match[2].to_s, zelle_match[3].to_s, zelle_match[4].to_s
+            occurred_on = resolve_date(date_str, start_date, end_date)
+            cents = (BigDecimal(amount_str.delete(",")) * 100).to_i
+
+            results << IngestionResult.success(
+              document_type: "chase_statement",
+              payment_method: "zelle",
+              raw_text: line,
+              payer_name: clean_name(raw_payer),
+              payer_username: nil,
+              amount_cents: cents,
+              occurred_on: occurred_on,
+              external_reference: txn_number
+            )
+
+          # 2. P2P ACH Match
+          # Example: "04/01     Oak Vly Com Bnk  P2P        John Doe     Web ID: 1770262278                   1,000.00        3,700.00"
+          elsif (p2p_match = line.match(/^\s*(\d{2}\/\d{2})\s+(.+?\bP2P)\s+(.+?)\s+Web ID:\s*(\w+)\s+([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s*$/i))
+            date_str, raw_payer, web_id, amount_str = p2p_match[1].to_s, p2p_match[3].to_s, p2p_match[4].to_s, p2p_match[5].to_s
+            occurred_on = resolve_date(date_str, start_date, end_date)
+            cents = (BigDecimal(amount_str.delete(",")) * 100).to_i
+
+            results << IngestionResult.success(
+              document_type: "chase_statement",
+              payment_method: "p2p",
+              raw_text: line,
+              payer_name: clean_name(raw_payer),
+              payer_username: nil,
+              amount_cents: cents,
+              occurred_on: occurred_on,
+              external_reference: nil
+            )
+          end
+        end
+
+        results
+      rescue => e
+        Rails.logger.error("ChaseStatement parser error: #{e.message}\n#{e.backtrace.join("\n")}")
+        [
+          IngestionResult.failure(
+            document_type: "chase_statement",
+            raw_text: nil,
+            error_message: e.message
+          )
+        ]
+      end
+
+      private
+
+        def resolve_date(date_str, start_date, end_date)
+          return nil unless start_date && end_date
+
+          parts = date_str.split("/", 2).map(&:to_i)
+          month = parts.fetch(0)
+          day = parts.fetch(1)
+
+          year = end_date.year
+          d = Date.new(year, month, day)
+
+          if d < start_date || d > end_date
+            year = start_date.year
+            d = Date.new(year, month, day)
+          end
+
+          d
+        rescue Date::Error
+          nil
+        end
+    end
+  end
+end

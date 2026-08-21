@@ -1,0 +1,17 @@
+module ImportedTransactions
+  class PartyResolver
+    class ResolveResult < Dry::Struct
+      def self.matched: (party: Party, ?parties: Array[Party]) -> untyped
+      def self.ambiguous: (?parties: Array[Party]) -> untyped
+      def self.unmatched: () -> untyped
+      def party: () -> Party?
+      def parties: () -> Array[Party]?
+      def status: () -> Symbol
+    end
+
+    def resolve: (User user, String? display_name, String? username) -> untyped
+
+    private
+    def find_candidates: (User user, String? display_name, String? username) -> Array[Party]
+  end
+end

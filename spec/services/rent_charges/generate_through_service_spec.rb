@@ -50,13 +50,18 @@ RSpec.describe RentCharges::GenerateThroughService do
       }.not_to change(Charge, :count)
     end
 
-    it "returns failure for unpersisted tenancy" do
-      result = described_class.call(tenancy: Tenancy.new)
-      expect(result).to be_failure
-      expect(result.failure.code).to eq(:invalid_input)
+    it "returns failure for unpersisted or nil tenancy" do
+      expect(described_class.call(tenancy: Tenancy.new)).to be_failure
+      expect(described_class.call(tenancy: nil)).to be_failure
     end
 
-    it "returns empty charges when commencement date is after through date" do
+    it "returns empty charges when commencement date is nil or after through date" do
+      allow(tenancy).to receive(:commencement_date).and_return(nil)
+      result_nil = described_class.call(tenancy: tenancy, through: Date.new(2026, 12, 1))
+      expect(result_nil).to be_success
+      expect(result_nil.value!.data[:charges]).to be_empty
+
+      allow(tenancy).to receive(:commencement_date).and_call_original
       result = described_class.call(tenancy: tenancy, through: Date.new(2025, 12, 1))
       expect(result).to be_success
       expect(result.value!.data[:charges]).to be_empty

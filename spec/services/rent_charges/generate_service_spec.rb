@@ -132,5 +132,18 @@ RSpec.describe RentCharges::GenerateService do
       existing.update_columns(due_on: Date.new(2026, 3, 1), rent_term_id: other_term.id)
       expect(described_class.call(tenancy: tenancy, service_month: Date.new(2026, 3, 1))).to be_failure
     end
+
+    it "returns success nil when service_period_end is before service_period_start" do
+      tenancy.update_columns(termination_date: Date.new(2026, 3, 5))
+      rent_term.update_columns(effective_from: Date.new(2026, 3, 10))
+      res = described_class.call(tenancy: tenancy, service_month: Date.new(2026, 3, 1))
+      expect(res).to be_success
+      expect(res.value!.data).to be_nil
+    end
+
+    it "returns failure for nil tenancy or invalid service month string" do
+      expect(described_class.call(tenancy: nil, service_month: Date.current)).to be_failure
+      expect(described_class.call(tenancy: tenancy, service_month: "invalid-month-string")).to be_failure
+    end
   end
 end

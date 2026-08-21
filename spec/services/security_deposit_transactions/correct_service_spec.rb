@@ -538,4 +538,236 @@ RSpec.describe SecurityDepositTransactions::CorrectService do
       end
     end
   end
+
+  describe "parameter validation and guards" do
+    let(:receive_txn) do
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      ).value!.data[:transaction]
+    end
+
+    it "rejects invalid source transaction" do
+      res = described_class.call(transaction: nil)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_source)
+    end
+
+    it "rejects non-positive cents" do
+      res = described_class.call(transaction: receive_txn, amount_cents: 0)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_input)
+    end
+
+    it "rejects invalid string amount" do
+      res = described_class.call(transaction: receive_txn, amount: "invalid")
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_input)
+    end
+
+    it "rejects future date" do
+      res = described_class.call(transaction: receive_txn, occurred_on: Date.tomorrow)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_date)
+    end
+
+    it "rejects unparseable date string" do
+      res = described_class.call(transaction: receive_txn, occurred_on: "invalid-date")
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_date)
+    end
+
+    it "rejects non-existent party_id" do
+      res = described_class.call(transaction: receive_txn, party_id: 999_999)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_party)
+    end
+
+    it "accepts valid party_id integer" do
+      res = described_class.call(transaction: receive_txn, party_id: party2.id)
+      expect(res).to be_success
+      expect(res.value!.data[:replacement].party).to eq(party2)
+    end
+
+    it "rejects non-existent charge_id when correcting application" do
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 50_000,
+        charge_date: Date.new(2026, 1, 1),
+        due_on: Date.new(2026, 1, 1)
+      ).value!.data[:charge]
+
+      app_txn = SecurityDepositTransactions::ApplyService.call(
+        security_deposit: security_deposit,
+        charge: charge,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 1, 5)
+      ).value!.data[:transaction]
+
+      res = described_class.call(transaction: app_txn, charge_id: 999_999)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_charge)
+    end
+
+    it "rejects party belonging to another user" do
+      other_user = create(:user)
+      other_party = create(:party, user: other_user)
+
+      res = described_class.call(transaction: receive_txn, party: other_party)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:party_user_mismatch)
+    end
+
+    it "rejects when party is explicitly passed as nil or blank" do
+      res = described_class.call(transaction: receive_txn, party: nil, party_id: nil)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_party)
+    end
+
+    it "rejects when charge is explicitly passed as nil or blank on applied correction" do
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 50_000,
+        charge_date: Date.new(2026, 1, 1),
+        due_on: Date.new(2026, 1, 1)
+      ).value!.data[:charge]
+
+      app_txn = SecurityDepositTransactions::ApplyService.call(
+        security_deposit: security_deposit,
+        charge: charge,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 1, 5)
+      ).value!.data[:transaction]
+
+      res = described_class.call(transaction: app_txn, charge: nil, charge_id: nil)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:invalid_charge)
+    end
+
+    it "rejects application correction exceeding charge effective AR balance" do
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 200_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 50_000,
+        charge_date: Date.new(2026, 1, 1),
+        due_on: Date.new(2026, 1, 1)
+      ).value!.data[:charge]
+
+      app_txn = SecurityDepositTransactions::ApplyService.call(
+        security_deposit: security_deposit,
+        charge: charge,
+        amount_cents: 30_000,
+        occurred_on: Date.new(2026, 1, 5)
+      ).value!.data[:transaction]
+
+      # Charge effective AR is 50,000. Reversing 30,000 restores 50,000. Trying to apply 60,000 exceeds 50,000.
+      res = described_class.call(transaction: app_txn, amount_cents: 60_000)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:exceeds_charge_capacity)
+    end
+
+    it "accepts numeric and string amounts and string dates" do
+      res1 = described_class.call(transaction: receive_txn, amount: 120.50, occurred_on: "2026-01-02")
+      expect(res1).to be_success
+      rep1 = res1.value!.data[:replacement]
+      expect(rep1.amount_cents).to eq(12050)
+      expect(rep1.occurred_on).to eq(Date.new(2026, 1, 2))
+
+      res2 = described_class.call(transaction: rep1, amount: "150.00")
+      expect(res2).to be_success
+      expect(res2.value!.data[:replacement].amount_cents).to eq(15000)
+    end
+
+    it "rejects invalid dates or negative amounts" do
+      res1 = described_class.call(transaction: receive_txn, occurred_on: "not-a-date")
+      expect(res1).to be_failure
+      expect(res1.failure.code).to eq(:invalid_date)
+
+      res2 = described_class.call(transaction: receive_txn, amount: "-50.00")
+      expect(res2).to be_failure
+      expect(res2.failure.code).to eq(:invalid_input)
+    end
+
+    it "returns not_found if original journal entry is missing" do
+      allow(receive_txn).to receive_message_chain(:journal_entries, :find_by).and_return(nil)
+      res = described_class.call(transaction: receive_txn, amount_cents: 120_000)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:not_found)
+    end
+
+    it "returns failure when reversal fails" do
+      txn = receive_txn
+      allow(Accounting::ReverseEntryService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Reversal error", code: :reversal_failed)
+      )
+      res = described_class.call(transaction: txn, amount_cents: 120_000)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:reversal_failed)
+    end
+
+    it "returns failure when posting replacement fails" do
+      txn = receive_txn # eagerly create
+      allow(Accounting::PostEntryService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Posting error", code: :post_failed)
+      )
+      res = described_class.call(transaction: txn, amount_cents: 120_000)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:post_failed)
+    end
+
+    it "uses charge_kind titleized when correcting an application where charge description is nil" do
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 50_000,
+        charge_date: Date.new(2026, 1, 1),
+        due_on: Date.new(2026, 1, 1),
+        description: nil
+      ).value!.data[:charge]
+
+      app_txn = SecurityDepositTransactions::ApplyService.call(
+        security_deposit: security_deposit,
+        charge: charge,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 1, 5)
+      ).value!.data[:transaction]
+
+      res = described_class.call(transaction: app_txn, amount_cents: 40_000)
+      expect(res).to be_success
+      replacement = res.value!.data[:replacement]
+      expect(replacement.amount_cents).to eq(40_000)
+    end
+  end
 end

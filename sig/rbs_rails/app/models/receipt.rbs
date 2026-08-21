@@ -620,6 +620,12 @@ class ::Receipt < ::ApplicationRecord
   def create_superseded_receipt: (?untyped) -> ::Receipt
   def create_superseded_receipt!: (?untyped) -> ::Receipt
   def reload_superseded_receipt: () -> ::Receipt?
+  def imported_transaction: () -> ::ImportedTransaction?
+  def imported_transaction=: (::ImportedTransaction?) -> ::ImportedTransaction?
+  def build_imported_transaction: (?untyped) -> ::ImportedTransaction
+  def create_imported_transaction: (?untyped) -> ::ImportedTransaction
+  def create_imported_transaction!: (?untyped) -> ::ImportedTransaction
+  def reload_imported_transaction: () -> ::ImportedTransaction?
   def user: () -> ::User
   def user=: (::User?) -> ::User?
   def reload_user: () -> ::User?
@@ -692,6 +698,8 @@ end
 class ::JournalEntry::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Receipt < ::ApplicationRecord
+end
+class ::ImportedTransaction < ::ApplicationRecord
 end
 class ::User < ::ApplicationRecord
 end

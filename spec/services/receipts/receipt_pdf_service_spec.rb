@@ -87,6 +87,23 @@ RSpec.describe Receipts::ReceiptPdfService, type: :service do
       expect(result).to eq("pdf-data")
     end
 
+    it "handles receipt without tenancy" do
+      allow(receipt).to receive(:tenancy).and_return(nil)
+      allow(Prawn::Document).to receive(:new).and_return(pdf)
+
+      result = described_class.call(receipt: receipt, view_context: view_context)
+      expect(result).to eq("pdf-data")
+    end
+
+    it "handles receipt with only external_reference or only memo" do
+      receipt.update_columns(external_reference: "ZEL123", memo: nil)
+      allow(Prawn::Document).to receive(:new).and_return(pdf)
+      expect(described_class.call(receipt: receipt, view_context: view_context)).to eq("pdf-data")
+
+      receipt.update_columns(external_reference: nil, memo: "Some memo")
+      expect(described_class.call(receipt: receipt, view_context: view_context)).to eq("pdf-data")
+    end
+
     it "generates genuine PDF binary bytes" do
       real_view_context = ActionController::Base.new.view_context
       real_pdf = described_class.call(receipt: receipt, view_context: real_view_context)

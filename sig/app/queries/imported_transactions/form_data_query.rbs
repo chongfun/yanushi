@@ -1,0 +1,27 @@
+module ImportedTransactions
+  class FormDataQuery
+    class Result
+      attr_accessor parties: untyped
+      attr_accessor tenancies: untyped
+      attr_accessor party_tenancies_map: Hash[Integer, Array[Integer]]
+      attr_accessor tenancy_parties_map: Hash[Integer, Array[Integer]]
+
+      def self.new: (
+        parties: untyped,
+        tenancies: untyped,
+        party_tenancies_map: Hash[Integer, Array[Integer]],
+        tenancy_parties_map: Hash[Integer, Array[Integer]]
+      ) -> instance
+    end
+
+    @user: User
+
+    def initialize: (user: User) -> void
+    def call: () -> Result
+
+    private
+    attr_reader user: User
+    def party_tenancies_map: () -> Hash[Integer, Array[Integer]]
+    def tenancy_parties_map: () -> Hash[Integer, Array[Integer]]
+  end
+end

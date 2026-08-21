@@ -6,7 +6,7 @@ class Party < ApplicationRecord
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
   has_many :receipts_as_payer, class_name: "Receipt", foreign_key: :payer_party_id, dependent: :restrict_with_error
   has_many :security_deposit_transactions, dependent: :restrict_with_error
-  has_many :payment_ingestions, dependent: :nullify
+  has_many :imported_transactions, foreign_key: :matched_party_id, dependent: :nullify
 
   PARTY_TYPES = %w[
     individual

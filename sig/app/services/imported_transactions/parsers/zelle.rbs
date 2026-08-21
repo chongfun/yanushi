@@ -1,0 +1,13 @@
+module ImportedTransactions
+  module Parsers
+    class Zelle < Base
+      def parse: (String pdf_text) -> untyped
+
+      private
+      def extract_payer: (String text) -> String?
+      def extract_amount_cents: (String text) -> Integer?
+      def extract_date: (String text) -> Date?
+      def extract_transaction_id: (String text) -> String?
+    end
+  end
+end

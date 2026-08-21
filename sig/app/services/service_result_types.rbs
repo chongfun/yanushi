@@ -3,4 +3,6 @@ module ServiceResultTypes
   Array: untyped
   String: untyped
   Symbol: untyped
+  Integer: untyped
+  Date: untyped
 end

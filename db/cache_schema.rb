@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,6 +84,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
     t.check_constraint "expense_kind::text = ANY (ARRAY['advertising'::character varying, 'auto_and_travel'::character varying, 'cleaning_and_maintenance'::character varying, 'commissions'::character varying, 'insurance'::character varying, 'legal_and_professional'::character varying, 'management'::character varying, 'mortgage_interest'::character varying, 'other_interest'::character varying, 'repairs'::character varying, 'supplies'::character varying, 'taxes'::character varying, 'utilities'::character varying, 'other'::character varying]::text[])", name: "expenses_expense_kind_valid"
   end
 
+  create_table "imported_transactions", force: :cascade do |t|
+    t.bigint "amount_cents"
+    t.bigint "confirmed_source_id"
+    t.string "confirmed_source_type"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "external_reference"
+    t.bigint "matched_party_id"
+    t.bigint "matched_tenancy_id"
+    t.date "occurred_on"
+    t.string "payer_name"
+    t.string "payer_username"
+    t.string "payment_method"
+    t.text "raw_text"
+    t.string "source", null: false
+    t.bigint "source_document_id", null: false
+    t.string "status", default: "pending", null: false
+    t.string "transaction_kind", default: "unknown", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["confirmed_source_type", "confirmed_source_id"], name: "idx_imported_txns_confirmed_source", unique: true, where: "(confirmed_source_id IS NOT NULL)"
+    t.index ["matched_party_id"], name: "index_imported_transactions_on_matched_party_id"
+    t.index ["matched_tenancy_id"], name: "index_imported_transactions_on_matched_tenancy_id"
+    t.index ["source_document_id"], name: "index_imported_transactions_on_source_document_id"
+    t.index ["user_id", "source", "payment_method", "external_reference"], name: "idx_imported_txns_user_src_method_ext_ref", unique: true, where: "((payment_method IS NOT NULL) AND (external_reference IS NOT NULL))"
+    t.index ["user_id"], name: "index_imported_transactions_on_user_id"
+    t.check_constraint "amount_cents IS NULL OR amount_cents > 0", name: "imported_transactions_amount_cents_check"
+    t.check_constraint "status::text = 'confirmed'::text AND confirmed_source_type IS NOT NULL AND confirmed_source_id IS NOT NULL OR status::text <> 'confirmed'::text AND confirmed_source_type IS NULL AND confirmed_source_id IS NULL", name: "imported_transactions_confirmed_source_check"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'matched'::character varying, 'unmatched'::character varying, 'ambiguous'::character varying, 'confirmed'::character varying, 'failed'::character varying]::text[])", name: "imported_transactions_status_check"
+    t.check_constraint "transaction_kind::text = ANY (ARRAY['unknown'::character varying, 'tenant_receipt'::character varying, 'security_deposit'::character varying]::text[])", name: "imported_transactions_kind_check"
+  end
+
   create_table "journal_entries", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
@@ -120,45 +152,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
     t.datetime "updated_at", null: false
     t.index "party_id, lower((alias_name)::text)", name: "index_tenant_aliases_on_tenant_id_and_lower_alias_name", unique: true
     t.index ["party_id"], name: "index_party_aliases_on_party_id"
-  end
-
-  create_table "payment_documents", force: :cascade do |t|
-    t.string "attachment_content_type"
-    t.binary "attachment_file"
-    t.string "attachment_filename"
-    t.datetime "created_at", null: false
-    t.text "error_message"
-    t.string "status", default: "processing", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["user_id"], name: "index_payment_documents_on_user_id"
-  end
-
-  create_table "payment_ingestions", force: :cascade do |t|
-    t.decimal "amount", precision: 12, scale: 2
-    t.datetime "created_at", null: false
-    t.text "error_message"
-    t.bigint "party_id"
-    t.string "payer_name"
-    t.string "payer_username"
-    t.date "payment_date"
-    t.bigint "payment_document_id"
-    t.string "payment_method"
-    t.text "raw_text"
-    t.bigint "receipt_id"
-    t.string "receipt_type"
-    t.string "source", null: false
-    t.string "status", default: "pending", null: false
-    t.bigint "tenancy_id"
-    t.string "transaction_number"
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["party_id"], name: "index_payment_ingestions_on_party_id"
-    t.index ["payment_document_id"], name: "index_payment_ingestions_on_payment_document_id"
-    t.index ["receipt_id"], name: "index_payment_ingestions_on_receipt_id"
-    t.index ["tenancy_id"], name: "index_payment_ingestions_on_tenancy_id"
-    t.index ["user_id", "payment_method", "transaction_number"], name: "idx_payment_ingestions_dup_check"
-    t.index ["user_id"], name: "index_payment_ingestions_on_user_id"
   end
 
   create_table "postings", force: :cascade do |t|
@@ -298,6 +291,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
     t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
   end
 
+  create_table "source_documents", force: :cascade do |t|
+    t.string "attachment_content_type"
+    t.binary "attachment_file"
+    t.string "attachment_filename"
+    t.string "attachment_sha256", null: false
+    t.datetime "created_at", null: false
+    t.string "document_type", default: "unknown", null: false
+    t.text "error_message"
+    t.string "status", default: "processing", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "attachment_sha256"], name: "idx_source_documents_user_id_sha256", unique: true
+    t.index ["user_id"], name: "index_source_documents_on_user_id"
+  end
+
   create_table "tenancies", force: :cascade do |t|
     t.string "agreement_type", null: false
     t.date "commencement_date", null: false
@@ -339,16 +347,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
   add_foreign_key "expenses", "expenses", column: "superseded_by_id"
   add_foreign_key "expenses", "properties"
   add_foreign_key "expenses", "rentable_units"
+  add_foreign_key "imported_transactions", "parties", column: "matched_party_id"
+  add_foreign_key "imported_transactions", "source_documents"
+  add_foreign_key "imported_transactions", "tenancies", column: "matched_tenancy_id"
+  add_foreign_key "imported_transactions", "users"
   add_foreign_key "journal_entries", "journal_entries", column: "reversal_of_id"
   add_foreign_key "journal_entries", "users"
   add_foreign_key "parties", "users"
   add_foreign_key "party_aliases", "parties"
-  add_foreign_key "payment_documents", "users"
-  add_foreign_key "payment_ingestions", "parties"
-  add_foreign_key "payment_ingestions", "payment_documents"
-  add_foreign_key "payment_ingestions", "receipts"
-  add_foreign_key "payment_ingestions", "tenancies"
-  add_foreign_key "payment_ingestions", "users"
   add_foreign_key "postings", "accounts"
   add_foreign_key "postings", "journal_entries"
   add_foreign_key "postings", "parties"
@@ -368,6 +374,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000010) do
   add_foreign_key "security_deposit_transactions", "security_deposits"
   add_foreign_key "security_deposits", "tenancies"
   add_foreign_key "sessions", "users"
+  add_foreign_key "source_documents", "users"
   add_foreign_key "tenancies", "rentable_units"
   add_foreign_key "tenancy_parties", "parties"
   add_foreign_key "tenancy_parties", "tenancies"

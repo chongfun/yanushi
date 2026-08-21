@@ -303,6 +303,20 @@ RSpec.describe "Receipts", type: :request do
       expect(response.body).to include("Payer party was not found")
     end
 
+    it "rejects create with missing tenancy_id" do
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: "",
+          payer_party_id: party.id,
+          amount: "100.00",
+          received_on: "2026-02-01",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Tenancy is required")
+    end
+
     it "rejects create with unresolvable tenancy_id" do
       post receipts_url, params: {
         receipt: {

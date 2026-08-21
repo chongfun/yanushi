@@ -433,10 +433,10 @@ class ::Party < ::ApplicationRecord
   def security_deposit_transactions=: (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction]) -> (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction])
   def security_deposit_transaction_ids: () -> ::Array[::Integer]
   def security_deposit_transaction_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def payment_ingestions: () -> ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy
-  def payment_ingestions=: (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion]) -> (::PaymentIngestion::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentIngestion])
-  def payment_ingestion_ids: () -> ::Array[::Integer]
-  def payment_ingestion_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def imported_transactions: () -> ::ImportedTransaction::ActiveRecord_Associations_CollectionProxy
+  def imported_transactions=: (::ImportedTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::ImportedTransaction]) -> (::ImportedTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::ImportedTransaction])
+  def imported_transaction_ids: () -> ::Array[::Integer]
+  def imported_transaction_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def user: () -> ::User
   def user=: (::User?) -> ::User?
@@ -525,9 +525,9 @@ class ::SecurityDepositTransaction < ::ApplicationRecord
 end
 class ::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::PaymentIngestion < ::ApplicationRecord
+class ::ImportedTransaction < ::ApplicationRecord
 end
-class ::PaymentIngestion::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::ImportedTransaction::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::User < ::ApplicationRecord
 end

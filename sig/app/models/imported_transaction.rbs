@@ -1,0 +1,17 @@
+class ImportedTransaction < ApplicationRecord
+  KINDS: Array[String]
+  STATUSES: Array[String]
+
+  def amount: () -> BigDecimal?
+  def amount=: (untyped) -> void
+  def confirmable?: () -> bool
+  def reviewable?: () -> bool
+  def accounting_user: () -> User?
+
+  private
+  def validate_parse_status: () -> void
+  def validate_confirmed_source_consistency: () -> void
+  def source_document_owned_by_user: () -> void
+  def prevent_mutation_after_confirmed: () -> void
+  def prevent_destroy_if_confirmed: () -> void
+end

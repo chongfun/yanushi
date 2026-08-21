@@ -1,0 +1,4 @@
+class IngestSourceDocumentJob < ApplicationJob
+  def self.perform_later: (Integer source_document_id) -> untyped
+  def perform: (Integer source_document_id) -> void
+end
