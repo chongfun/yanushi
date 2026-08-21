@@ -56,6 +56,8 @@
                   <div class="badge badge-success gap-2 text-xs text-success-content"><%= item[:type] %></div>
                 <% when 'Expense' %>
                   <div class="badge badge-error gap-2 text-xs text-error-content"><%= item[:type] %></div>
+                <% when 'Security Deposit' %>
+                  <div class="badge badge-secondary gap-2 text-xs"><%= item[:type] %></div>
                 <% end %>
               </td>
               <td class="text-sm">
@@ -93,6 +95,19 @@
                   <% elsif exp.reimbursed? %>
                     <span class="badge badge-warning text-xs text-warning-content ml-2">Reimbursable</span>
                   <% end %>
+                <% elsif item[:type] == 'Security Deposit' %>
+                  <% sdt = item[:object] %>
+                  <%= sdt.transaction_kind.titleize %>
+                  <% if sdt.party %>
+                    - <%= sdt.party.display_name %>
+                  <% elsif sdt.charge %>
+                    - Charge #<%= sdt.charge_id %>
+                  <% end %>
+                  <% if sdt.superseded? %>
+                    <span class="badge badge-warning text-xs ml-2">Corrected</span>
+                  <% elsif sdt.voided? %>
+                    <span class="badge badge-ghost text-xs ml-2">Voided</span>
+                  <% end %>
                 <% end %>
               </td>
               <td class="text-right font-medium">
@@ -102,6 +117,9 @@
                   <span class="text-base-content/75"><%= number_to_currency(item[:amount]) %></span>
                 <% elsif item[:type] == 'Payment' || item[:type] == 'Receipt' %>
                   <span class="text-success">+<%= number_to_currency(item[:amount]) %></span>
+                <% elsif item[:type] == 'Security Deposit' %>
+                  <% sdt = item[:object] %>
+                  <span class="<%= sdt.received? ? 'text-primary' : 'text-base-content/75' %>"><%= sdt.received? ? '+' : '-' %><%= number_to_currency(item[:amount]) %></span>
                 <% else %>
                   <%= number_to_currency(item[:amount]) %>
                 <% end %>

@@ -315,6 +315,45 @@
           </div>
         </div>
       </div>
+
+      <!-- Security Deposit Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-1">
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider">Security Deposit</div>
+            <% if @tenancy.security_deposit %>
+              <% case @tenancy.security_deposit.funding_status %>
+              <% when "funded" %>
+                <span class="badge badge-success badge-xs">Funded</span>
+              <% when "partially_funded" %>
+                <span class="badge badge-warning badge-xs">Partial</span>
+              <% when "overfunded" %>
+                <span class="badge badge-info badge-xs">Overfunded</span>
+              <% else %>
+                <span class="badge badge-error badge-xs">Not Funded</span>
+              <% end %>
+            <% end %>
+          </div>
+
+          <% if @tenancy.security_deposit %>
+            <% dep = @tenancy.security_deposit %>
+            <div class="text-3xl font-black font-mono text-primary">
+              <%= number_to_currency(dep.held_amount) %>
+            </div>
+            <div class="text-xs text-base-content/60 mt-1 space-y-1">
+              <div>Required: <span class="font-medium text-base-content"><%= number_to_currency(dep.required_amount) %></span></div>
+              <% if dep.remaining_required_amount > 0 %>
+                <div>Remaining: <span class="font-medium text-warning"><%= number_to_currency(dep.remaining_required_amount) %></span></div>
+              <% end %>
+            </div>
+            <div class="divider my-3"></div>
+            <%= link_to "Manage Security Deposit", tenancy_security_deposit_path(@tenancy), class: "btn btn-outline btn-secondary btn-sm w-full" %>
+          <% else %>
+            <p class="text-xs text-base-content/60 my-2">No security deposit requirement recorded for this tenancy.</p>
+            <%= link_to "＋ Set Up Security Deposit", new_tenancy_security_deposit_path(@tenancy), class: "btn btn-outline btn-sm w-full" %>
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
 </div>

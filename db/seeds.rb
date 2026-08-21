@@ -59,4 +59,19 @@ if Rails.env.development?
   Expenses::CreateService.call(property: property, amount: rand(200...300), expense_kind: "repairs", paid_on: Date.current - 1.year, description: "A/C tune-up")
   Expenses::CreateService.call(property: property, amount: rand(150...250), expense_kind: "repairs", paid_on: Date.current - 1.month, description: "Unclog toilet")
   Expenses::CreateService.call(property: property, amount: rand(250...350), expense_kind: "repairs", paid_on: Date.current, description: "A/C tune-up")
+
+  dep_res = SecurityDeposits::CreateService.call(
+    tenancy: tenancy,
+    required_amount: "2400.00",
+    due_on: Date.current - 1.year
+  )
+  if dep_res.success?
+    SecurityDepositTransactions::ReceiveService.call(
+      security_deposit: dep_res.value!.data[:security_deposit],
+      party: party,
+      amount: "2400.00",
+      occurred_on: Date.current - 1.year,
+      memo: "Initial deposit receipt"
+    )
+  end
 end

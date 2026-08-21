@@ -183,6 +183,26 @@ RSpec.describe Expenses::CorrectService do
     res_unit = described_class.call(expense: original, rentable_unit: other_unit)
     expect(res_unit).to be_failure
     expect(res_unit.failure.code).to eq(:unit_mismatch)
+
+    # Active deposit application on reimbursement charge blocks expense correction
+    party = create(:party, user: user)
+    deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
+    SecurityDepositTransactions::ReceiveService.call(
+      security_deposit: deposit,
+      party: party,
+      amount_cents: 100_000,
+      occurred_on: Date.new(2026, 1, 1)
+    )
+    reimb_charge = charge_res.value!.data[:charge]
+    SecurityDepositTransactions::ApplyService.call(
+      security_deposit: deposit,
+      charge: reimb_charge,
+      amount_cents: 5000,
+      occurred_on: Date.new(2026, 1, 5)
+    )
+    res_dep = described_class.call(expense: original, amount_cents: 35_000)
+    expect(res_dep).to be_failure
+    expect(res_dep.failure.code).to eq(:active_deposit_applications)
   end
 
   it "is idempotent on identical retries" do

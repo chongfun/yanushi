@@ -1,0 +1,22 @@
+class SecurityDepositTransaction < ApplicationRecord
+  KINDS: Array[String]
+
+  def amount: () -> Float
+  def amount=: (untyped) -> void
+  def posted?: () -> bool
+  def voided?: () -> bool
+  def superseded?: () -> bool
+  def active?: () -> bool
+  def tenancy: () -> Tenancy?
+  def property: () -> Property?
+  def rentable_unit: () -> RentableUnit?
+  def accounting_user: () -> User?
+
+  private
+  def validate_occurred_on_not_in_future: () -> void
+  def validate_kind_requirements: () -> void
+  def validate_ownership_and_tenancy: () -> void
+  def prevent_direct_lifecycle_assignment: () -> void
+  def validate_immutability_when_posted: () -> void
+  def prevent_destroy_if_posted: () -> void
+end

@@ -1,0 +1,61 @@
+<% content_for :title, "Correct Deposit Transaction ##{@transaction.id}" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li><%= link_to "Tenancy ##{@transaction.tenancy.id}", tenancy_path(@transaction.tenancy) %></li>
+  <li><%= link_to "Security Deposit", tenancy_security_deposit_path(@transaction.tenancy) %></li>
+  <li><%= link_to "Transaction ##{@transaction.id}", security_deposit_transaction_path(@transaction) %></li>
+  <li class="font-bold">Correct</li>
+<% end %>
+
+<div class="max-w-xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h1 class="card-title text-2xl mb-2">Correct Deposit <%= @transaction.transaction_kind.titleize %></h1>
+      <p class="text-sm text-base-content/60 mb-6">
+        This will reverse the original journal entry on its original date (<%= @transaction.occurred_on.strftime("%b %d, %Y") %>) and post a replacement transaction.
+      </p>
+
+      <%= form_with model: @transaction, url: correct_security_deposit_transaction_path(@transaction), method: :post do |f| %>
+        <div class="form-control w-full mb-4">
+          <label class="label font-semibold" for="security_deposit_transaction_amount">Amount ($)</label>
+          <%= f.number_field :amount, value: sprintf("%.2f", @transaction.amount), step: "0.01", min: "0.01", class: "input input-bordered w-full font-mono", id: "security_deposit_transaction_amount", required: true %>
+        </div>
+
+        <div class="form-control w-full mb-4">
+          <label class="label font-semibold" for="security_deposit_transaction_occurred_on">Date</label>
+          <%= f.date_field :occurred_on, value: @transaction.occurred_on, class: "input input-bordered w-full", id: "security_deposit_transaction_occurred_on", required: true %>
+        </div>
+
+        <% if @transaction.received? || @transaction.refunded? %>
+          <div class="form-control w-full mb-4">
+            <label class="label font-semibold" for="security_deposit_transaction_party_id">
+              <%= @transaction.received? ? "Contributor (Payer)" : "Recipient" %>
+            </label>
+            <%= f.collection_select :party_id, @parties, :id, :display_name, { selected: @transaction.party_id }, class: "select select-bordered w-full", id: "security_deposit_transaction_party_id", required: true %>
+          </div>
+        <% elsif @transaction.applied? %>
+          <div class="form-control w-full mb-4">
+            <label class="label font-semibold" for="security_deposit_transaction_charge_id">Target Charge</label>
+            <%= f.collection_select :charge_id, @active_charges, :id, :description, { selected: @transaction.charge_id }, class: "select select-bordered w-full", id: "security_deposit_transaction_charge_id", required: true %>
+          </div>
+        <% end %>
+
+        <div class="form-control w-full mb-4">
+          <label class="label font-semibold" for="security_deposit_transaction_external_reference">Reference (Optional)</label>
+          <%= f.text_field :external_reference, value: @transaction.external_reference, class: "input input-bordered w-full", id: "security_deposit_transaction_external_reference" %>
+        </div>
+
+        <div class="form-control w-full mb-6">
+          <label class="label font-semibold" for="security_deposit_transaction_memo">Memo (Optional)</label>
+          <%= f.text_field :memo, value: @transaction.memo, class: "input input-bordered w-full", id: "security_deposit_transaction_memo" %>
+        </div>
+
+        <div class="card-actions justify-end">
+          <%= link_to "Cancel", security_deposit_transaction_path(@transaction), class: "btn btn-ghost" %>
+          <%= f.submit "Save Correction", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

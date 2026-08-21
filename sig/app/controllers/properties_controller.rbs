@@ -3,6 +3,7 @@ class PropertiesController < ApplicationController
   @property: Property
   @year: Integer
   @financial_items: Array[untyped]
+  @security_deposits_held_cents: Integer
   @rents_received: Float
   @utility_reimbursements: Float
   @total_income: Float

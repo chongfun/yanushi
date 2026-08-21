@@ -1,0 +1,47 @@
+module SecurityDepositTransactions
+  class CorrectService
+    def self.call: (
+      transaction: SecurityDepositTransaction,
+      ?amount: untyped,
+      ?amount_cents: (Integer | :not_set)?,
+      ?occurred_on: untyped,
+      ?party: untyped,
+      ?party_id: untyped,
+      ?charge: untyped,
+      ?charge_id: untyped,
+      ?external_reference: untyped,
+      ?memo: untyped
+    ) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    def initialize: (
+      transaction: SecurityDepositTransaction,
+      ?amount: untyped,
+      ?amount_cents: (Integer | :not_set)?,
+      ?occurred_on: untyped,
+      ?party: untyped,
+      ?party_id: untyped,
+      ?charge: untyped,
+      ?charge_id: untyped,
+      ?external_reference: untyped,
+      ?memo: untyped
+    ) -> void
+
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    attr_reader transaction: SecurityDepositTransaction
+    attr_reader raw_amount: untyped
+    attr_reader raw_cents: (Integer | :not_set)?
+    attr_reader raw_occurred_on: untyped
+    attr_reader party: untyped
+    attr_reader party_id: untyped
+    attr_reader charge: untyped
+    attr_reader charge_id: untyped
+    attr_reader external_reference: untyped
+    attr_reader memo: untyped
+    def post_replacement: (SecurityDepositTransaction) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def resolve_cents: () -> Integer?
+    def resolve_occurred_on: () -> Date?
+    def format_money: (untyped cents) -> String
+  end
+end

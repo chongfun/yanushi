@@ -128,13 +128,25 @@ RSpec.describe Charges::VoidService do
       expect(result.failure.code).to eq(:not_found)
     end
 
-    it "handles reverse service failure" do
-      allow(Accounting::ReverseEntryService).to receive(:call).and_return(
-        ServiceResult.failure(error: "Cannot reverse", code: :reverse_failed)
+    it "rejects voiding when active deposit applications exist" do
+      party = create(:party, user: user)
+      deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 5, 1)
       )
+      SecurityDepositTransactions::ApplyService.call(
+        security_deposit: deposit,
+        charge: charge,
+        amount_cents: 5000,
+        occurred_on: Date.new(2026, 5, 11)
+      )
+
       result = described_class.call(charge: charge)
       expect(result).to be_failure
-      expect(result.failure.code).to eq(:reverse_failed)
+      expect(result.failure.code).to eq(:active_deposit_applications)
     end
   end
 end
