@@ -6,7 +6,7 @@ RSpec.describe "Dashboards", type: :system do
   let!(:unit) { create(:rentable_unit, property: property) }
   let!(:expense) { create(:expense, property: property, category: "repairs", amount: 250.00, expense_date: Date.today, description: "Fix door") }
   let!(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.today, late_period_days: 5) }
-  let!(:payment) { create(:tenant_payment, tenancy: tenancy, amount: 1000.0, payment_date: Date.today, payment_method: "cash") }
+  let!(:payment) { create(:receipt, tenancy: tenancy, amount_cents: 100_000, received_on: Date.today, payment_method: "cash") }
 
   before do
     visit new_session_path

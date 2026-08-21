@@ -34,7 +34,7 @@ RSpec.describe RentCharges::GenerateThroughService do
       expect(charges.size).to eq(3) # Jan, Feb, Mar
 
       expect(tenancy.charges.rent.count).to eq(3)
-      expect(tenancy.charges.rent.pluck(:service_period_start)).to eq([
+      expect(tenancy.charges.rent.order(:service_period_start).pluck(:service_period_start)).to eq([
         Date.new(2026, 1, 1),
         Date.new(2026, 2, 1),
         Date.new(2026, 3, 1)
@@ -48,6 +48,36 @@ RSpec.describe RentCharges::GenerateThroughService do
         result = described_class.call(tenancy: tenancy, through: Date.new(2026, 3, 15))
         expect(result).to be_success
       }.not_to change(Charge, :count)
+    end
+
+    it "returns failure for unpersisted tenancy" do
+      result = described_class.call(tenancy: Tenancy.new)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:invalid_input)
+    end
+
+    it "returns empty charges when commencement date is after through date" do
+      result = described_class.call(tenancy: tenancy, through: Date.new(2025, 12, 1))
+      expect(result).to be_success
+      expect(result.value!.data[:charges]).to be_empty
+    end
+
+    it "handles string and invalid through dates" do
+      result = described_class.call(tenancy: tenancy, through: "2026-02-15")
+      expect(result).to be_success
+      expect(result.value!.data[:charges].size).to eq(2)
+
+      invalid_res = described_class.call(tenancy: tenancy, through: "not-a-date")
+      expect(invalid_res).to be_success
+    end
+
+    it "propagates failure when generate service fails" do
+      allow(RentCharges::GenerateService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Generation error", code: :generation_error)
+      )
+      result = described_class.call(tenancy: tenancy, through: Date.new(2026, 2, 1))
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:generation_error)
     end
   end
 end

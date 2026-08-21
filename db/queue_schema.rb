@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -130,18 +130,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
     t.bigint "payment_document_id"
     t.string "payment_method"
     t.text "raw_text"
+    t.bigint "receipt_id"
     t.string "receipt_type"
     t.string "source", null: false
     t.string "status", default: "pending", null: false
     t.bigint "tenancy_id"
-    t.bigint "tenant_payment_id"
     t.string "transaction_number"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["party_id"], name: "index_payment_ingestions_on_party_id"
     t.index ["payment_document_id"], name: "index_payment_ingestions_on_payment_document_id"
+    t.index ["receipt_id"], name: "index_payment_ingestions_on_receipt_id"
     t.index ["tenancy_id"], name: "index_payment_ingestions_on_tenancy_id"
-    t.index ["tenant_payment_id"], name: "index_payment_ingestions_on_tenant_payment_id"
     t.index ["user_id", "payment_method", "transaction_number"], name: "idx_payment_ingestions_dup_check"
     t.index ["user_id"], name: "index_payment_ingestions_on_user_id"
   end
@@ -175,6 +175,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_properties_on_user_id"
+  end
+
+  create_table "receipts", force: :cascade do |t|
+    t.bigint "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "external_reference"
+    t.text "memo"
+    t.bigint "payer_party_id", null: false
+    t.string "payment_method", null: false
+    t.timestamptz "posted_at"
+    t.date "received_on", null: false
+    t.bigint "superseded_by_id"
+    t.bigint "tenancy_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.timestamptz "voided_at"
+    t.index ["payer_party_id"], name: "index_receipts_on_payer_party_id"
+    t.index ["received_on"], name: "index_receipts_on_received_on"
+    t.index ["superseded_by_id"], name: "index_receipts_on_superseded_by_id"
+    t.index ["superseded_by_id"], name: "index_receipts_on_superseded_by_id_unique", unique: true, where: "(superseded_by_id IS NOT NULL)"
+    t.index ["tenancy_id"], name: "index_receipts_on_tenancy_id"
+    t.index ["user_id", "payment_method", "external_reference"], name: "index_receipts_on_user_method_external_ref_active", unique: true, where: "((external_reference IS NOT NULL) AND (voided_at IS NULL))"
+    t.index ["user_id"], name: "index_receipts_on_user_id"
+    t.index ["voided_at"], name: "index_receipts_on_voided_at"
+    t.check_constraint "amount_cents > 0", name: "receipts_amount_cents_positive"
   end
 
   create_table "rent_terms", force: :cascade do |t|
@@ -356,20 +381,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
     t.index ["tenancy_id"], name: "index_tenancy_parties_on_tenancy_id"
   end
 
-  create_table "tenant_payments", force: :cascade do |t|
-    t.decimal "amount", precision: 12, scale: 2, null: false
-    t.datetime "created_at", null: false
-    t.date "payment_date", null: false
-    t.string "payment_method", null: false
-    t.bigint "tenancy_id", null: false
-    t.string "transaction_number"
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["tenancy_id"], name: "index_tenant_payments_on_tenancy_id"
-    t.index ["user_id", "payment_method", "transaction_number"], name: "index_tenant_payments_on_user_payment_method_transaction_number", unique: true, where: "(transaction_number IS NOT NULL)"
-    t.index ["user_id"], name: "index_tenant_payments_on_user_id"
-  end
-
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -392,8 +403,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
   add_foreign_key "payment_documents", "users"
   add_foreign_key "payment_ingestions", "parties"
   add_foreign_key "payment_ingestions", "payment_documents"
+  add_foreign_key "payment_ingestions", "receipts"
   add_foreign_key "payment_ingestions", "tenancies"
-  add_foreign_key "payment_ingestions", "tenant_payments"
   add_foreign_key "payment_ingestions", "users"
   add_foreign_key "postings", "accounts"
   add_foreign_key "postings", "journal_entries"
@@ -402,6 +413,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
   add_foreign_key "postings", "rentable_units"
   add_foreign_key "postings", "tenancies"
   add_foreign_key "properties", "users"
+  add_foreign_key "receipts", "parties", column: "payer_party_id"
+  add_foreign_key "receipts", "receipts", column: "superseded_by_id"
+  add_foreign_key "receipts", "tenancies"
+  add_foreign_key "receipts", "users"
   add_foreign_key "rent_terms", "tenancies"
   add_foreign_key "rentable_units", "properties"
   add_foreign_key "sessions", "users"
@@ -414,6 +429,4 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000004) do
   add_foreign_key "tenancies", "rentable_units"
   add_foreign_key "tenancy_parties", "parties"
   add_foreign_key "tenancy_parties", "tenancies"
-  add_foreign_key "tenant_payments", "tenancies"
-  add_foreign_key "tenant_payments", "users"
 end

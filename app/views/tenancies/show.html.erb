@@ -193,6 +193,71 @@
         </div>
       </div>
 
+      <!-- Payments & Receipts Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="card-title text-xl font-bold">Payments & Receipts</h2>
+              <p class="text-xs text-base-content/60">Payments received and applied to tenancy receivable</p>
+            </div>
+            <%= link_to "＋ Record Payment", new_tenancy_receipt_path(@tenancy), class: "btn btn-sm btn-primary" %>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Payer</th>
+                  <th>Method</th>
+                  <th>Reference</th>
+                  <th class="text-right">Amount</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% receipts = @tenancy.receipts.order(received_on: :desc, created_at: :desc) %>
+                <% if receipts.any? %>
+                  <% receipts.each do |receipt| %>
+                    <tr class="<%= 'opacity-60 bg-base-200/50' if receipt.voided? %>">
+                      <td class="text-sm"><%= receipt.received_on.strftime("%b %d, %Y") %></td>
+                      <td class="font-medium text-sm"><%= receipt.payer_party&.display_name %></td>
+                      <td><span class="badge badge-ghost badge-sm"><%= receipt.payment_method.titleize %></span></td>
+                      <td class="text-xs font-mono"><%= receipt.external_reference || "—" %></td>
+                      <td class="font-mono font-bold text-right <%= receipt.voided? ? 'line-through text-base-content/50' : 'text-success' %>">
+                        <%= number_to_currency(receipt.amount) %>
+                      </td>
+                      <td>
+                        <% if receipt.voided? && receipt.superseded? %>
+                          <span class="badge badge-warning badge-sm">Corrected</span>
+                        <% elsif receipt.voided? %>
+                          <span class="badge badge-error badge-sm">Voided</span>
+                        <% elsif receipt.superseded_receipt.present? %>
+                          <span class="badge badge-info badge-sm">Replacement</span>
+                        <% else %>
+                          <span class="badge badge-success badge-sm">Active</span>
+                        <% end %>
+                      </td>
+                      <td class="text-right space-x-1">
+                        <%= link_to "View", receipt_path(receipt), class: "btn btn-xs btn-ghost" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% else %>
+                  <tr>
+                    <td colspan="7" class="text-center py-6 text-base-content/60">
+                      No payments recorded yet.
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
         <div class="card-body p-0">
           <div class="bg-error/10 p-6 flex justify-between items-center">
@@ -245,7 +310,7 @@
           </div>
           <div class="divider my-3"></div>
           <div class="space-y-2">
-            <%= link_to "＋ Record Payment", new_tenancy_tenant_payment_path(@tenancy), class: "btn btn-primary btn-sm w-full" %>
+            <%= link_to "＋ Record Payment", new_tenancy_receipt_path(@tenancy), class: "btn btn-primary btn-sm w-full" %>
             <%= link_to "＋ Add Charge", new_tenancy_charge_path(@tenancy), class: "btn btn-outline btn-sm w-full" %>
           </div>
         </div>

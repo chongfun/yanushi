@@ -8,7 +8,7 @@ RSpec.describe Tenancy, type: :model do
     it { is_expected.to have_many(:parties).through(:tenancy_parties) }
     it { is_expected.to have_many(:rent_terms).dependent(:destroy) }
     it { is_expected.to have_many(:charges).dependent(:restrict_with_error) }
-    it { is_expected.to have_many(:tenant_payments).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:receipts).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:accounting_postings).class_name("Posting").dependent(:restrict_with_error) }
     it { is_expected.to have_many(:payment_ingestions).dependent(:nullify) }
   end
@@ -222,7 +222,9 @@ RSpec.describe Tenancy, type: :model do
     end
 
     describe "#financial_history? and current_balance" do
+      let(:party) { create(:party, user: unit.property.user) }
       let(:tenancy) { create(:tenancy, rentable_unit: unit, commencement_date: Date.current.beginning_of_month) }
+      let!(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant") }
       let!(:rent_term) do
         create(:rent_term,
           tenancy: tenancy,
@@ -234,7 +236,13 @@ RSpec.describe Tenancy, type: :model do
 
       it "identifies presence of financial history" do
         expect(tenancy.financial_history?).to be false
-        TenantPayments::CreateService.call(tenancy: tenancy, amount: 1500.0, payment_date: Date.current)
+        Receipts::CreateService.call(
+          tenancy: tenancy,
+          payer_party: party,
+          amount: 1500.0,
+          received_on: Date.current,
+          payment_method: "other"
+        )
         expect(tenancy.financial_history?).to be true
       end
 
@@ -248,7 +256,13 @@ RSpec.describe Tenancy, type: :model do
           service_period_start: Date.current.beginning_of_month,
           service_period_end: Date.current.end_of_month
         )
-        TenantPayments::CreateService.call(tenancy: tenancy, amount: 1000.0, payment_date: Date.current)
+        Receipts::CreateService.call(
+          tenancy: tenancy,
+          payer_party: party,
+          amount: 1000.0,
+          received_on: Date.current,
+          payment_method: "other"
+        )
 
         # 1200 - 1000 = 200 owed
         expect(tenancy.current_balance).to eq(200.0)

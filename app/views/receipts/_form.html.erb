@@ -1,0 +1,73 @@
+<%= form_with(model: receipt, url: (tenancy ? [tenancy, receipt] : receipts_path), local: true, class: "space-y-4") do |f| %>
+  <% if receipt.errors.any? %>
+    <div class="alert alert-error mb-4">
+      <ul>
+        <% receipt.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if tenancy.present? %>
+    <%= f.hidden_field :tenancy_id, value: tenancy.id %>
+    <div class="p-3 bg-base-200 rounded-box text-sm mb-4">
+      <div class="flex justify-between">
+        <span class="text-base-content/70">Tenancy</span>
+        <span class="font-semibold">#<%= tenancy.id %> — <%= tenancy.property&.address %> (<%= tenancy.rentable_unit&.display_name %>)</span>
+      </div>
+      <div class="flex justify-between mt-1">
+        <span class="text-base-content/70">Current Balance</span>
+        <% bal = tenancy.current_balance %>
+        <% text_class = if bal > 0 then 'text-error' elsif bal < 0 then 'text-success' else 'text-base-content/70' end %>
+        <span class="font-semibold <%= text_class %>">
+          <%= bal < 0 ? '-' : '' %><%= number_to_currency(bal.abs) %>
+        </span>
+      </div>
+    </div>
+  <% else %>
+    <div class="form-control w-full">
+      <%= f.label :tenancy_id, "Tenancy / Unit", class: "label font-semibold" %>
+      <%= f.collection_select :tenancy_id, @tenancies, :id, ->(t) { "##{t.id} - #{t.property&.address} (#{t.rentable_unit&.display_name})" }, { prompt: "Select Tenancy" }, { class: "select select-bordered w-full", required: true } %>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full">
+    <%= f.label :payer_party_id, "Payer (Party)", class: "label font-semibold" %>
+    <%= f.collection_select :payer_party_id, @parties, :id, :display_name, { prompt: "Select Payer" }, { class: "select select-bordered w-full", required: true } %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="form-control w-full">
+      <%= f.label :amount, "Amount ($)", class: "label font-semibold" %>
+      <%= f.number_field :amount, step: "0.01", min: "0.01", class: "input input-bordered w-full", required: true %>
+    </div>
+
+    <div class="form-control w-full">
+      <%= f.label :received_on, "Received Date", class: "label font-semibold" %>
+      <%= f.date_field :received_on, class: "input input-bordered w-full", required: true %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="form-control w-full">
+      <%= f.label :payment_method, "Payment Method", class: "label font-semibold" %>
+      <%= f.text_field :payment_method, class: "input input-bordered w-full", placeholder: "e.g. Zelle, Venmo, Check, Cash, Wire", required: true %>
+    </div>
+
+    <div class="form-control w-full">
+      <%= f.label :external_reference, "External Reference / Txn #", class: "label font-semibold" %>
+      <%= f.text_field :external_reference, class: "input input-bordered w-full", placeholder: "e.g. Check #1042, Zelle confirmation" %>
+    </div>
+  </div>
+
+  <div class="form-control w-full">
+    <%= f.label :memo, "Memo (Optional)", class: "label font-semibold" %>
+    <%= f.text_area :memo, class: "textarea textarea-bordered w-full", rows: 2, placeholder: "Notes or memo regarding this payment" %>
+  </div>
+
+  <div class="flex gap-2 pt-4">
+    <%= f.submit "Record Payment", class: "btn btn-primary flex-1" %>
+    <%= link_to "Cancel", (tenancy ? tenancy_path(tenancy) : receipts_path), class: "btn btn-ghost" %>
+  </div>
+<% end %>

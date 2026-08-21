@@ -1,0 +1,23 @@
+class ReceiptsController < ApplicationController
+  @receipts: ActiveRecord::Relation
+  @receipt: Receipt
+  @replacement_receipt: Receipt
+  @tenancy: Tenancy?
+  @tenancies: ActiveRecord::Relation
+  @parties: ActiveRecord::Relation
+
+  def index: () -> void
+  def show: () -> void
+  def new: () -> void
+  def create: () -> void
+  def correction: () -> void
+  def correct: () -> void
+  def void: () -> void
+
+  private
+
+  def set_tenancy: () -> void
+  def set_receipt: () -> void
+  def receipt_params: () -> ActionController::Parameters
+  def load_form_collections: () -> void
+end

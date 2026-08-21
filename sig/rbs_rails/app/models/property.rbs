@@ -345,10 +345,10 @@ class ::Property < ::ApplicationRecord
   def charges=: (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge]) -> (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge])
   def charge_ids: () -> ::Array[::Integer]
   def charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
-  def tenant_payments: () -> ::TenantPayment::ActiveRecord_Associations_CollectionProxy
-  def tenant_payments=: (::TenantPayment::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantPayment]) -> (::TenantPayment::ActiveRecord_Associations_CollectionProxy | ::Array[::TenantPayment])
-  def tenant_payment_ids: () -> ::Array[::Integer]
-  def tenant_payment_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def receipts: () -> ::Receipt::ActiveRecord_Associations_CollectionProxy
+  def receipts=: (::Receipt::ActiveRecord_Associations_CollectionProxy | ::Array[::Receipt]) -> (::Receipt::ActiveRecord_Associations_CollectionProxy | ::Array[::Receipt])
+  def receipt_ids: () -> ::Array[::Integer]
+  def receipt_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def accounting_postings: () -> ::Posting::ActiveRecord_Associations_CollectionProxy
   def accounting_postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
   def accounting_posting_ids: () -> ::Array[::Integer]
@@ -464,9 +464,9 @@ class ::Charge < ::ApplicationRecord
 end
 class ::Charge::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
-class ::TenantPayment < ::ApplicationRecord
+class ::Receipt < ::ApplicationRecord
 end
-class ::TenantPayment::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+class ::Receipt::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Posting < ::ApplicationRecord
 end

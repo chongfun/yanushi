@@ -73,5 +73,27 @@ RSpec.describe Charges::VoidService do
       reversal = result.value!.data[:journal_entry]
       expect(reversal.occurred_on).to eq(Date.new(2026, 5, 10))
     end
+
+    it "returns failure for unpersisted charge" do
+      result = described_class.call(charge: Charge.new)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:invalid_source)
+    end
+
+    it "returns failure if journal entry is missing" do
+      allow(charge).to receive_message_chain(:journal_entries, :find_by).and_return(nil)
+      result = described_class.call(charge: charge)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:not_found)
+    end
+
+    it "handles reverse service failure" do
+      allow(Accounting::ReverseEntryService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Cannot reverse", code: :reverse_failed)
+      )
+      result = described_class.call(charge: charge)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:reverse_failed)
+    end
   end
 end

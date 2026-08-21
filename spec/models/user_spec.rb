@@ -8,7 +8,7 @@ RSpec.describe User, type: :model do
     it { is_expected.to have_many(:tenancies).through(:rentable_units) }
     it { is_expected.to have_many(:expenses).through(:properties) }
     it { is_expected.to have_many(:charges).through(:tenancies) }
-    it { is_expected.to have_many(:tenant_payments).through(:tenancies) }
+    it { is_expected.to have_many(:receipts).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:parties).dependent(:destroy) }
     it { is_expected.to have_many(:payment_ingestions).dependent(:destroy) }
     it { is_expected.to have_many(:payment_documents).dependent(:destroy) }

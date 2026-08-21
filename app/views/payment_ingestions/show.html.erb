@@ -30,7 +30,9 @@
   </div>
   <div class="flex items-center gap-2">
     <%= link_to "Back to Queue", payment_ingestions_path, class: "btn btn-outline btn-sm" %>
-    <%= link_to "Delete Ingestion", payment_ingestion_path(@ingestion), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this ingestion record?" }, class: "btn btn-error btn-outline btn-sm" %>
+    <% unless @ingestion.confirmed? %>
+      <%= link_to "Delete Ingestion", payment_ingestion_path(@ingestion), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this ingestion record?" }, class: "btn btn-error btn-outline btn-sm" %>
+    <% end %>
   </div>
 </div>
 
@@ -40,10 +42,10 @@
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
     <div>
       <h3 class="font-bold text-lg">Transaction Confirmed!</h3>
-      <p class="text-sm">This receipt was matched and verified. A tenant payment of <%= number_to_currency(@ingestion.amount) %> was created on <%= @ingestion.payment_date.strftime("%b %d, %Y") %>.</p>
+      <p class="text-sm">This receipt was matched and verified. A payment receipt of <%= number_to_currency(@ingestion.amount) %> was created on <%= @ingestion.payment_date.strftime("%b %d, %Y") %>.</p>
     </div>
     <div class="flex-none">
-      <%= link_to "View Tenant Payment", tenant_payment_path(@ingestion.tenant_payment), class: "btn btn-sm btn-outline text-success-content border-success-content/30 hover:bg-success-content/10" if @ingestion.tenant_payment %>
+      <%= link_to "View Payment Receipt", receipt_path(@ingestion.receipt), class: "btn btn-sm btn-outline text-success-content border-success-content/30 hover:bg-success-content/10" if @ingestion.receipt %>
     </div>
   </div>
 <% elsif @ingestion.failed? && @ingestion.error_message.present? %>
@@ -63,7 +65,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
     <div>
       <h3 class="font-bold">Duplicate Payment Detected</h3>
-      <p>A tenant payment with payment method "<%= @ingestion.payment_method %>" and transaction number "<%= @ingestion.transaction_number %>" already exists in the system. Confirmation is locked to prevent double entry.</p>
+      <p>A payment receipt with payment method "<%= @ingestion.payment_method %>" and transaction number "<%= @ingestion.transaction_number %>" already exists in the system. Confirmation is locked to prevent double entry.</p>
     </div>
   </div>
 <% end %>
@@ -124,7 +126,7 @@
           <%= form_with(model: @ingestion, local: true, class: "space-y-4", data: { controller: "payment-ingestion-form", payment_ingestion_form_party_tenancies_value: @party_tenancies_map.to_json, payment_ingestion_form_tenancy_parties_value: @tenancy_parties_map.to_json }) do |f| %>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">Party / Tenant</span></label>
+                <label class="label"><span class="label-text font-semibold">Payer / Party</span></label>
                 <%= f.select :party_id, @parties.map { |p| [p.display_name, p.id] }, { include_blank: "Select Party" }, class: "select select-bordered w-full", data: { payment_ingestion_form_target: "partySelect", action: "change->payment-ingestion-form#partyChanged" } %>
               </div>
 
@@ -191,8 +193,8 @@
                     <label class="flex items-start gap-3 cursor-pointer select-none">
                       <%= check_box_tag :create_alias, "1", true, class: "checkbox checkbox-primary checkbox-sm mt-0.5" %>
                       <div class="flex-1 min-w-0">
-                        <span class="label-text font-bold text-primary block mb-0.5">Add tenant alias</span>
-                        <p class="text-xs text-base-content/60 leading-normal break-words">Automatically associate payer identifier "<%= alias_name_proposal %>" with this tenant for future uploads.</p>
+                        <span class="label-text font-bold text-primary block mb-0.5">Add payer alias</span>
+                        <p class="text-xs text-base-content/60 leading-normal break-words">Automatically associate payer identifier "<%= alias_name_proposal %>" with this payer for future uploads.</p>
                       </div>
                     </label>
                   </div>
@@ -200,20 +202,20 @@
 
                 <button type="submit" class="btn btn-success btn-block gap-2 shadow-md">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                  Confirm & Record Tenant Payment
+                  Confirm & Record Payment Receipt
                 </button>
               <% end %>
             <% else %>
               <div class="bg-base-200 border border-base-300 rounded-lg p-4 text-center">
                 <p class="text-sm text-base-content/60 mb-2">To confirm this payment, please correct the form above to ensure all fields are complete.</p>
                 <div class="flex flex-wrap justify-center gap-2 text-xs">
-                  <span class="badge <%= @ingestion.party_id ? 'badge-success' : 'badge-neutral/30' %>">Tenant</span>
+                  <span class="badge <%= @ingestion.party_id ? 'badge-success' : 'badge-neutral/30' %>">Payer</span>
                   <span class="badge <%= @ingestion.tenancy_id ? 'badge-success' : 'badge-neutral/30' %>">Tenancy</span>
                   <span class="badge <%= @ingestion.amount ? 'badge-success' : 'badge-neutral/30' %>">Amount</span>
                   <span class="badge <%= @ingestion.payment_date ? 'badge-success' : 'badge-neutral/30' %>">Date</span>
                   <span class="badge <%= !@ingestion.duplicate_exists? ? 'badge-success' : 'badge-error' %>">Not Duplicate</span>
                 </div>
-                <button class="btn btn-block btn-disabled mt-4">Confirm & Record Tenant Payment</button>
+                <button class="btn btn-block btn-disabled mt-4">Confirm & Record Payment Receipt</button>
               </div>
             <% end %>
           </div>
@@ -223,7 +225,7 @@
           <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4 text-sm border-t border-base-200 pt-4">
               <div>
-                <span class="text-base-content/50 block">Tenant / Party</span>
+                <span class="text-base-content/50 block">Payer / Party</span>
                 <span class="font-bold text-base-content"><%= @ingestion.party&.display_name %></span>
               </div>
               <div>

@@ -604,46 +604,6 @@ class ::PaymentIngestion < ::ApplicationRecord
 
     def party_id_for_database: () -> ::Integer?
 
-    def tenant_payment_id: () -> ::Integer?
-
-    def tenant_payment_id=: (::Integer?) -> ::Integer?
-
-    def tenant_payment_id?: () -> bool
-
-    def tenant_payment_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def tenant_payment_id_change: () -> [ ::Integer?, ::Integer? ]
-
-    def tenant_payment_id_will_change!: () -> void
-
-    def tenant_payment_id_was: () -> ::Integer?
-
-    def tenant_payment_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def tenant_payment_id_previous_change: () -> ::Array[::Integer?]?
-
-    def tenant_payment_id_previously_was: () -> ::Integer?
-
-    def tenant_payment_id_before_last_save: () -> ::Integer?
-
-    def tenant_payment_id_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def tenant_payment_id_in_database: () -> ::Integer?
-
-    def saved_change_to_tenant_payment_id: () -> ::Array[::Integer?]?
-
-    def saved_change_to_tenant_payment_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_tenant_payment_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_tenant_payment_id!: () -> void
-
-    def clear_tenant_payment_id_change: () -> void
-
-    def tenant_payment_id_before_type_cast: () -> ::Integer?
-
-    def tenant_payment_id_for_database: () -> ::Integer?
-
     def transaction_number: () -> ::String?
 
     def transaction_number=: (::String?) -> ::String?
@@ -763,6 +723,46 @@ class ::PaymentIngestion < ::ApplicationRecord
     def user_id_before_type_cast: () -> ::Integer
 
     def user_id_for_database: () -> ::Integer
+
+    def receipt_id: () -> ::Integer?
+
+    def receipt_id=: (::Integer?) -> ::Integer?
+
+    def receipt_id?: () -> bool
+
+    def receipt_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def receipt_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def receipt_id_will_change!: () -> void
+
+    def receipt_id_was: () -> ::Integer?
+
+    def receipt_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def receipt_id_previous_change: () -> ::Array[::Integer?]?
+
+    def receipt_id_previously_was: () -> ::Integer?
+
+    def receipt_id_before_last_save: () -> ::Integer?
+
+    def receipt_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def receipt_id_in_database: () -> ::Integer?
+
+    def saved_change_to_receipt_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_receipt_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_receipt_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_receipt_id!: () -> void
+
+    def clear_receipt_id_change: () -> void
+
+    def receipt_id_before_type_cast: () -> ::Integer?
+
+    def receipt_id_for_database: () -> ::Integer?
   end
   include ::PaymentIngestion::GeneratedAttributeMethods
   module ::PaymentIngestion::GeneratedAliasAttributeMethods
@@ -828,12 +828,12 @@ class ::PaymentIngestion < ::ApplicationRecord
   def build_tenancy: (?untyped) -> ::Tenancy
   def create_tenancy: (?untyped) -> ::Tenancy
   def create_tenancy!: (?untyped) -> ::Tenancy
-  def tenant_payment: () -> ::TenantPayment?
-  def tenant_payment=: (::TenantPayment?) -> ::TenantPayment?
-  def reload_tenant_payment: () -> ::TenantPayment?
-  def build_tenant_payment: (?untyped) -> ::TenantPayment
-  def create_tenant_payment: (?untyped) -> ::TenantPayment
-  def create_tenant_payment!: (?untyped) -> ::TenantPayment
+  def receipt: () -> ::Receipt?
+  def receipt=: (::Receipt?) -> ::Receipt?
+  def reload_receipt: () -> ::Receipt?
+  def build_receipt: (?untyped) -> ::Receipt
+  def create_receipt: (?untyped) -> ::Receipt
+  def create_receipt!: (?untyped) -> ::Receipt
   def payment_document: () -> ::PaymentDocument?
   def payment_document=: (::PaymentDocument?) -> ::PaymentDocument?
   def reload_payment_document: () -> ::PaymentDocument?
@@ -937,7 +937,7 @@ class ::Party < ::ApplicationRecord
 end
 class ::Tenancy < ::ApplicationRecord
 end
-class ::TenantPayment < ::ApplicationRecord
+class ::Receipt < ::ApplicationRecord
 end
 class ::PaymentDocument < ::ApplicationRecord
 end

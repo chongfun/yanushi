@@ -13,7 +13,7 @@ module Dashboards
       attr_reader :properties
 
       def summary_for(property)
-        income = property.tenant_payments.sum(BigDecimal("0"), &:amount) || BigDecimal("0")
+        income = property.receipts.active.sum(BigDecimal("0"), &:amount) || BigDecimal("0")
         expenses = property.expenses.sum(BigDecimal("0"), &:amount) || BigDecimal("0")
         active_tenancies = property.tenancies.select(&:active?)
 

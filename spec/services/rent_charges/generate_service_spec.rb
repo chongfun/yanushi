@@ -60,5 +60,27 @@ RSpec.describe RentCharges::GenerateService do
       expect(result).to be_success
       expect(result.value!.data).to be_nil
     end
+
+    it "returns failure for unpersisted tenancy" do
+      result = described_class.call(tenancy: Tenancy.new, service_month: Date.new(2026, 3, 1))
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:invalid_input)
+    end
+
+    it "returns failure for invalid service month" do
+      result = described_class.call(tenancy: tenancy, service_month: "invalid-date")
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:invalid_input)
+    end
+
+    it "returns conflict failure when existing charge has different amount" do
+      described_class.call(tenancy: tenancy, service_month: Date.new(2026, 3, 1))
+      existing = tenancy.charges.rent.first
+      existing.update_columns(amount_cents: 999_000)
+
+      result = described_class.call(tenancy: tenancy, service_month: Date.new(2026, 3, 1))
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:conflict)
+    end
   end
 end

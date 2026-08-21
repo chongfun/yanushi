@@ -48,7 +48,7 @@ class PaymentIngestionsController < ApplicationController
     begin
       result = PaymentIngestions::ConfirmService.call(user: authenticated_user, ingestion: @ingestion, create_alias: create_alias)
       if result.success?
-        redirect_to payment_ingestions_path, notice: "Payment confirmed and tenant payment created successfully."
+        redirect_to payment_ingestions_path, notice: "Payment confirmed and payment receipt created successfully."
       else
         redirect_to payment_ingestion_path(@ingestion), alert: result.failure.error
       end
@@ -70,8 +70,12 @@ class PaymentIngestionsController < ApplicationController
   end
 
   def destroy
-    @ingestion.destroy!
-    redirect_to payment_ingestions_path, notice: "Ingestion record was deleted.", status: :see_other
+    result = PaymentIngestions::DestroyService.call(user: authenticated_user, ingestion: @ingestion)
+    if result.success?
+      redirect_to payment_ingestions_path, notice: "Ingestion record was deleted.", status: :see_other
+    else
+      redirect_to payment_ingestion_path(@ingestion), alert: result.failure.error
+    end
   end
 
   private

@@ -4,7 +4,9 @@ RSpec.describe Dashboards::PropertySummariesQuery do
   let(:user) { create(:user) }
   let(:property) { create(:property, user: user) }
   let(:unit) { create(:rentable_unit, property: property) }
+  let(:party) { create(:party, user: user) }
   let(:tenancy) { create(:tenancy, rentable_unit: unit, commencement_date: Date.current.beginning_of_month, termination_date: Date.current.end_of_month) }
+  let!(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant") }
   let!(:rent_term) do
     create(:rent_term,
       tenancy: tenancy,
@@ -15,7 +17,13 @@ RSpec.describe Dashboards::PropertySummariesQuery do
   end
 
   it "returns property financial summaries and active tenancy balances" do
-    TenantPayments::CreateService.call(tenancy: tenancy, amount: 1200, payment_date: Date.current)
+    Receipts::CreateService.call(
+      tenancy: tenancy,
+      payer_party: party,
+      amount: 1200,
+      received_on: Date.current,
+      payment_method: "other"
+    )
     create(:expense, property: property, amount: 200, expense_date: Date.current)
     Charges::CreateService.call(
       tenancy: tenancy,
