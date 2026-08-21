@@ -2,6 +2,7 @@ class TenancyParty < ApplicationRecord
   ROLES: Array[String]
 
   def active?: (?Date date, ?as_of: untyped) -> bool
+  def accounting_user: () -> User?
 
   private
 

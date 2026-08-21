@@ -57,5 +57,9 @@ RSpec.describe Property, type: :model do
       summary = property.schedule_e_summary(year: Date.current.year)
       expect(summary.total_income).to eq(0)
     end
+
+    it "returns the owning user via #accounting_user" do
+      expect(property.accounting_user).to eq(user)
+    end
   end
 end

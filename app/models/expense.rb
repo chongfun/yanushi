@@ -54,4 +54,8 @@ class Expense < ApplicationRecord
   def reimburse_amount
     @reimburse_amount.presence || tenant_charge&.amount || amount
   end
+
+  def accounting_user
+    property&.user
+  end
 end

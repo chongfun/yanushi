@@ -29,4 +29,11 @@ RSpec.describe User, type: :model do
       expect(user.email).to eq("downcased@example.com")
     end
   end
+
+  describe "#accounting_user" do
+    it "returns self" do
+      user = create(:user)
+      expect(user.accounting_user).to eq(user)
+    end
+  end
 end

@@ -20,6 +20,11 @@ class ScheduledRent < ApplicationRecord
   end
 
   def display_name
-    "#{tenancy.property&.address} - #{due_date}"
+    prop_addr = tenancy&.property&.address || "Property"
+    "#{prop_addr} - #{due_date}"
+  end
+
+  def accounting_user
+    tenancy&.property&.user
   end
 end

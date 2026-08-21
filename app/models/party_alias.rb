@@ -5,4 +5,8 @@ class PartyAlias < ApplicationRecord
   validates :alias_name, uniqueness: { scope: :party_id, case_sensitive: false }
 
   normalizes :alias_name, with: ->(name) { name.strip }
+
+  def accounting_user
+    party&.user
+  end
 end

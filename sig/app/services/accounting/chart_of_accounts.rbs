@@ -1,0 +1,17 @@
+module Accounting
+  class ChartOfAccounts
+    class AccountTypeMismatchError < StandardError
+    end
+
+    SYSTEM_ACCOUNTS: Array[Hash[Symbol, String]]
+    SYSTEM_KEYS: Array[String]
+
+    def self.ensure_for: (User user) -> untyped
+    def initialize: (User user) -> void
+    def ensure_accounts: () -> untyped
+
+    private
+
+    attr_reader user: User
+  end
+end

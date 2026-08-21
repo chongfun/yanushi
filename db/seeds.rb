@@ -6,6 +6,8 @@ if Rails.env.development?
   user = User.find_by(email: "me@kylechong.com")
   if user.nil?
     user = User.create!(email: "me@kylechong.com", password: "password123")
+  else
+    Accounting::ChartOfAccounts.ensure_for(user)
   end
 
   property = Property.create!(user: user, address: "1#{rand(1000)} Main St", asset_type: "single_family", square_footage: 1500)

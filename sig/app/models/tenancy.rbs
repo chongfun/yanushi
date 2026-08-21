@@ -10,6 +10,7 @@ class Tenancy < ApplicationRecord
   def total_debits: (?as_of: Date) -> BigDecimal
   def balance_as_of: (?Date date) -> BigDecimal
   def current_balance: () -> BigDecimal
+  def accounting_user: () -> User?
 
   private
 

@@ -11,16 +11,22 @@ class TenantPayment < ApplicationRecord
   validates :transaction_number, uniqueness: { scope: %i[user_id payment_method] }, allow_blank: true
   validate :user_matches_tenancy_owner
 
+  def accounting_user
+    user || tenancy&.property&.user
+  end
+
   private
 
     def assign_user_from_tenancy
-      self.user ||= tenancy.property&.user if tenancy&.property
+      if (prop = tenancy&.property) && (prop_user = prop.user)
+        self.user ||= prop_user
+      end
     end
 
     def user_matches_tenancy_owner
-      return unless user_id && tenancy&.property&.user_id
+      return unless user_id && (prop = tenancy&.property)
 
-      if user_id != tenancy&.property&.user_id
+      if user_id != prop.user_id
         errors.add(:user, "must match the tenancy owner")
       end
     end

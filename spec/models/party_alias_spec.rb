@@ -28,4 +28,19 @@ RSpec.describe PartyAlias, type: :model do
       expect(other).to be_valid
     end
   end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:party) { create(:party, user: user) }
+    let(:party_alias) { create(:party_alias, party: party, alias_name: "Johnny") }
+
+    it "returns the user who owns the party" do
+      expect(party_alias.accounting_user).to eq(user)
+    end
+
+    it "returns nil when party is absent" do
+      orphan = build(:party_alias, party: nil)
+      expect(orphan.accounting_user).to be_nil
+    end
+  end
 end

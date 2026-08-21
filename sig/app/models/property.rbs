@@ -4,4 +4,5 @@ class Property < ApplicationRecord
   def financial_items: (*untyped, ?year: Integer?) -> Array[untyped]
   def active_years: (?Array[untyped]) -> Array[Integer]
   def schedule_e_summary: (*untyped, ?year: Integer?) -> Properties::ScheduleESummaryQuery::Result
+  def accounting_user: () -> User?
 end

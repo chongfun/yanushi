@@ -238,5 +238,18 @@ RSpec.describe Tenancy, type: :model do
         expect(tenancy.current_balance).to eq(300.0)
       end
     end
+
+    describe "#accounting_user" do
+      let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+
+      it "returns the user owning the property" do
+        expect(tenancy.accounting_user).to eq(unit.property.user)
+      end
+
+      it "returns nil when rentable_unit is absent" do
+        orphan = build(:tenancy, rentable_unit: nil)
+        expect(orphan.accounting_user).to be_nil
+      end
+    end
   end
 end

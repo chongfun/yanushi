@@ -79,4 +79,26 @@ RSpec.describe TenantPayment, type: :model do
       end
     end
   end
+
+  describe "#accounting_user" do
+    let(:user) { create(:user) }
+    let(:property) { create(:property, user: user) }
+    let(:unit) { create(:rentable_unit, property: property) }
+    let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+
+    it "returns the user attribute when present" do
+      payment = build(:tenant_payment, tenancy: tenancy, user: user)
+      expect(payment.accounting_user).to eq(user)
+    end
+
+    it "returns tenancy owner when user is nil" do
+      payment = build(:tenant_payment, tenancy: tenancy, user: nil)
+      expect(payment.accounting_user).to eq(user)
+    end
+
+    it "returns nil when user and tenancy are nil" do
+      payment = build(:tenant_payment, tenancy: nil, user: nil)
+      expect(payment.accounting_user).to be_nil
+    end
+  end
 end

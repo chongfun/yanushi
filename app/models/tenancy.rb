@@ -8,6 +8,7 @@ class Tenancy < ApplicationRecord
   has_many :scheduled_rents, dependent: :restrict_with_error
   has_many :tenant_payments, dependent: :restrict_with_error
   has_many :tenant_charges, dependent: :restrict_with_error
+  has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
   has_many :payment_ingestions, dependent: :nullify
 
   AGREEMENT_TYPES = %w[
@@ -91,7 +92,7 @@ class Tenancy < ApplicationRecord
   end
 
   def financial_history?
-    tenant_payments.exists? || tenant_charges.exists? || scheduled_rents.exists?
+    tenant_payments.exists? || tenant_charges.exists? || scheduled_rents.exists? || accounting_postings.exists?
   end
 
   def total_credits(as_of: Date.current)
@@ -108,6 +109,10 @@ class Tenancy < ApplicationRecord
 
   def current_balance
     balance_as_of(Date.current)
+  end
+
+  def accounting_user
+    rentable_unit&.property&.user
   end
 
   private

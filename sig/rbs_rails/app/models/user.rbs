@@ -333,6 +333,14 @@ class ::User < ::ApplicationRecord
   def payment_documents=: (::PaymentDocument::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentDocument]) -> (::PaymentDocument::ActiveRecord_Associations_CollectionProxy | ::Array[::PaymentDocument])
   def payment_document_ids: () -> ::Array[::Integer]
   def payment_document_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def accounts: () -> ::Account::ActiveRecord_Associations_CollectionProxy
+  def accounts=: (::Account::ActiveRecord_Associations_CollectionProxy | ::Array[::Account]) -> (::Account::ActiveRecord_Associations_CollectionProxy | ::Array[::Account])
+  def account_ids: () -> ::Array[::Integer]
+  def account_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def journal_entries: () -> ::JournalEntry::ActiveRecord_Associations_CollectionProxy
+  def journal_entries=: (::JournalEntry::ActiveRecord_Associations_CollectionProxy | ::Array[::JournalEntry]) -> (::JournalEntry::ActiveRecord_Associations_CollectionProxy | ::Array[::JournalEntry])
+  def journal_entry_ids: () -> ::Array[::Integer]
+  def journal_entry_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   module ::User::GeneratedAssociationMethods
   end
@@ -425,4 +433,12 @@ end
 class ::PaymentDocument < ::ApplicationRecord
 end
 class ::PaymentDocument::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::Account < ::ApplicationRecord
+end
+class ::Account::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::JournalEntry < ::ApplicationRecord
+end
+class ::JournalEntry::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
