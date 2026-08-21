@@ -67,7 +67,6 @@ RSpec.describe "Expenses", type: :request do
     end
 
     it "handles modal-submit success with turbo_stream and empty expense_date" do
-      allow(Expenses::TenantChargeService).to receive(:call).and_return(true)
       allow_any_instance_of(Property).to receive(:financial_items).and_return([])
       allow_any_instance_of(Expense).to receive(:save!).and_return(true)
       allow_any_instance_of(Expense).to receive(:expense_date).and_return(nil)
@@ -165,6 +164,35 @@ RSpec.describe "Expenses", type: :request do
       patch expense_url(expense), params: { expense: { amount: -50.0 } }
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "rejects changing property when reimbursement charges exist" do
+      Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 50.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+
+      another_property = create(:property, user: user)
+      patch expense_url(expense), params: { expense: { property_id: another_property.id } }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(expense.reload.property_id).to eq(property.id)
+    end
+
+    it "rejects reducing expense amount below active reimbursement charges" do
+      Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 80.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+
+      patch expense_url(expense), params: { expense: { amount: 60.0 } }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(expense.reload.amount).to eq(100.0)
+    end
   end
 
   describe "DELETE /destroy" do
@@ -174,6 +202,23 @@ RSpec.describe "Expenses", type: :request do
       }.to change(Expense, :count).by(-1)
 
       expect(response).to redirect_to(expenses_url)
+    end
+
+    it "rejects destroying an expense with linked reimbursement charges" do
+      Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount: 100.0,
+        charge_date: Date.current,
+        due_on: Date.current
+      )
+
+      expect {
+        delete expense_url(expense)
+      }.not_to change(Expense, :count)
+
+      expect(response).to redirect_to(expense_url(expense))
+      expect(flash[:alert]).to include("Cannot delete expense")
     end
   end
 end

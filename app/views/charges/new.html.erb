@@ -1,0 +1,63 @@
+<% content_for :title, "Add Charge" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li><%= link_to "Tenancy ##{@tenancy.id}", @tenancy %></li>
+  <li class="font-bold">Add Charge</li>
+<% end %>
+
+<div class="max-w-xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold mb-2">Add Charge for Tenancy #<%= @tenancy.id %></h2>
+      <p class="text-xs text-base-content/60 mb-6">Posting a charge creates a debit obligation on the tenant receivable ledger.</p>
+
+      <%= form_with(model: [@tenancy, @charge]) do |form| %>
+        <% if @charge.errors.any? %>
+          <div class="alert alert-error shadow-lg mb-6 text-error-content">
+            <div>
+              <h3 class="font-bold"><%= pluralize(@charge.errors.count, "error") %> prohibited this charge from being saved:</h3>
+              <ul class="list-disc pl-5 mt-1 text-sm">
+                <% @charge.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="form-control w-full mb-4">
+          <%= form.label :charge_kind, "Charge Type", class: "label font-semibold" %>
+          <%= form.select :charge_kind, [["Late Fee", "late_fee"], ["Other Fee / Charge", "other"]], {}, { class: "select select-bordered w-full" } %>
+        </div>
+
+        <div class="form-control w-full mb-4">
+          <%= form.label :amount, "Amount ($)", class: "label font-semibold" %>
+          <%= form.number_field :amount, value: (@charge.amount_cents ? @charge.amount_cents / 100.0 : nil), step: 0.01, min: 0.01, class: "input input-bordered w-full font-mono", placeholder: "50.00", required: true %>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="form-control w-full">
+            <%= form.label :charge_date, "Charge Date", class: "label font-semibold" %>
+            <%= form.date_field :charge_date, value: (@charge.charge_date || Date.current), class: "input input-bordered w-full", required: true %>
+          </div>
+
+          <div class="form-control w-full">
+            <%= form.label :due_on, "Due Date", class: "label font-semibold" %>
+            <%= form.date_field :due_on, value: (@charge.due_on || Date.current), class: "input input-bordered w-full", required: true %>
+          </div>
+        </div>
+
+        <div class="form-control w-full mb-6">
+          <%= form.label :description, "Description / Memo", class: "label font-semibold" %>
+          <%= form.text_field :description, class: "input input-bordered w-full", placeholder: "e.g. Late fee for August rent" %>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4">
+          <%= link_to "Cancel", @tenancy, class: "btn btn-ghost" %>
+          <%= form.submit "Post Charge", class: "btn btn-primary px-8" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

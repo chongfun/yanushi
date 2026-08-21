@@ -1,2 +1,0 @@
-module ScheduledRentsHelper
-end

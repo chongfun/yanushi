@@ -1,0 +1,120 @@
+<% content_for :title, "Charge ##{@charge.id}" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenancies", tenancies_path %></li>
+  <li><%= link_to "Tenancy ##{@tenancy.id}", @tenancy %></li>
+  <li class="font-bold">Charge ##{@charge.id}</li>
+<% end %>
+
+<div class="max-w-3xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Charge Details</h1>
+      <p class="text-base-content/60">Charge ID: #<%= @charge.id %> • Tenancy #<%= @tenancy.id %></p>
+    </div>
+    <div class="flex gap-2 items-center">
+      <%= link_to "Back to Tenancy", @tenancy, class: "btn btn-ghost" %>
+      <% if @charge.active? %>
+        <%= button_to "Void Charge", void_charge_path(@charge), method: :post,
+            class: "btn btn-error btn-outline",
+            form: { data: { turbo_confirm: "Are you sure you want to void this charge? This will post a reversing journal entry to the ledger." } } %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row justify-between gap-8">
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Amount</div>
+            <div class="text-4xl font-bold font-mono <%= @charge.voided? ? 'line-through text-base-content/40' : 'text-error' %>">
+              <%= number_to_currency(@charge.amount) %>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Charge Type</div>
+              <div><span class="badge badge-outline font-medium uppercase"><%= @charge.charge_kind.titleize %></span></div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Status</div>
+              <div>
+                <% if @charge.voided? %>
+                  <span class="badge badge-error">Voided</span>
+                <% elsif @charge.posted? %>
+                  <span class="badge badge-success">Posted</span>
+                <% else %>
+                  <span class="badge badge-ghost">Draft</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Charge Date</div>
+              <div class="text-lg font-medium"><%= @charge.charge_date.strftime("%B %d, %Y") %></div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Due Date</div>
+              <div class="text-lg font-medium"><%= @charge.due_on.strftime("%B %d, %Y") %></div>
+            </div>
+          </div>
+
+          <% if @charge.service_period_start && @charge.service_period_end %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Service Period</div>
+              <div class="text-base font-medium">
+                <%= @charge.service_period_start.strftime("%B %d, %Y") %> – <%= @charge.service_period_end.strftime("%B %d, %Y") %>
+              </div>
+            </div>
+          <% end %>
+
+          <% if @charge.description.present? %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Description</div>
+              <div class="text-base"><%= @charge.description %></div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="divider md:divider-horizontal"></div>
+
+        <div class="space-y-6 flex-1">
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Property</div>
+            <div class="text-lg font-bold"><%= @tenancy.property&.address %></div>
+            <div class="text-sm text-base-content/60"><%= @tenancy.rentable_unit&.display_name %></div>
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Tenants</div>
+            <div class="flex flex-wrap gap-1">
+              <% @tenancy.parties.each do |party| %>
+                <span class="badge badge-neutral badge-sm"><%= party.display_name %></span>
+              <% end %>
+            </div>
+          </div>
+
+          <% if @charge.posted_at %>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Posted At</div>
+              <div class="text-sm font-mono text-base-content/70"><%= @charge.posted_at.strftime("%Y-%m-%d %H:%M:%S UTC") %></div>
+            </div>
+          <% end %>
+
+          <% if @charge.voided_at %>
+            <div class="alert alert-warning py-3">
+              <div>
+                <div class="font-bold text-sm">Voided on <%= @charge.voided_at.strftime("%B %d, %Y") %></div>
+                <div class="text-xs">Reversed via journal entry in double-entry ledger.</div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

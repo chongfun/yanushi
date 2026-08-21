@@ -10,10 +10,9 @@ class PropertiesController < ApplicationController
     @property = authenticated_user.properties.includes(
       :rentable_units,
       :expenses,
-      :scheduled_rents,
+      :charges,
       :tenant_payments,
-      :tenant_charges,
-      tenancies: %i[parties tenant_payments scheduled_rents tenant_charges]
+      tenancies: %i[parties tenant_payments charges]
     ).find(params.expect(:id))
     @financial_items = @property.financial_items(@year)
   end

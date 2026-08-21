@@ -100,6 +100,14 @@ module Tenancies
           effective_from: effective_from,
           effective_until: effective_until
         )
+
+        if tenancy.commencement_date && tenancy.commencement_date <= Date.current
+          gen_result = RentCharges::GenerateThroughService.call(tenancy: tenancy, through: Date.current)
+          unless gen_result.success?
+            tenancy.errors.add(:base, gen_result.failure.error)
+            raise ActiveRecord::RecordInvalid, tenancy
+          end
+        end
       end
 
       ServiceResult.success({ tenancy: tenancy, rent_term: created_rent_term })

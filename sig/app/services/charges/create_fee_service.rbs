@@ -1,0 +1,38 @@
+module Charges
+  class CreateFeeService
+    ALLOWED_KINDS: Array[String]
+
+    def self.call: (
+      tenancy: Tenancy,
+      ?amount_cents: Integer?,
+      ?amount: (BigDecimal | Numeric | String)?,
+      ?charge_kind: String | Symbol,
+      ?kind: (String | Symbol)?,
+      ?charge_date: Date?,
+      ?due_on: Date?,
+      ?description: String?
+    ) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    def initialize: (
+      tenancy: Tenancy,
+      ?amount_cents: Integer?,
+      ?amount: (BigDecimal | Numeric | String)?,
+      ?charge_kind: String | Symbol,
+      ?charge_date: Date?,
+      ?due_on: Date?,
+      ?description: String?
+    ) -> void
+
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader amount_cents: Integer?
+    attr_reader amount: (BigDecimal | Numeric | String)?
+    attr_reader charge_kind: String
+    attr_reader charge_date: Date
+    attr_reader due_on: Date
+    attr_reader description: String?
+  end
+end

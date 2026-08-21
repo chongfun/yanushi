@@ -5,9 +5,8 @@ class Tenancy < ApplicationRecord
   has_many :parties, through: :tenancy_parties
   has_many :rent_terms, dependent: :destroy
 
-  has_many :scheduled_rents, dependent: :restrict_with_error
+  has_many :charges, dependent: :restrict_with_error
   has_many :tenant_payments, dependent: :restrict_with_error
-  has_many :tenant_charges, dependent: :restrict_with_error
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
   has_many :payment_ingestions, dependent: :nullify
 
@@ -92,15 +91,15 @@ class Tenancy < ApplicationRecord
   end
 
   def financial_history?
-    tenant_payments.exists? || tenant_charges.exists? || scheduled_rents.exists? || accounting_postings.exists?
+    charges.exists? || tenant_payments.exists? || accounting_postings.exists?
   end
 
-  def total_credits(as_of: Date.current)
-    balance_query.total_credits(as_of: as_of)
+  def balance_cents(as_of: Date.current)
+    balance_query.balance_cents_as_of(as_of)
   end
 
-  def total_debits(as_of: Date.current)
-    balance_query.total_debits(as_of: as_of)
+  def current_balance_cents
+    balance_cents(as_of: Date.current)
   end
 
   def balance_as_of(date = Date.current)

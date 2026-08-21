@@ -33,15 +33,15 @@ RSpec.describe "TenantPayments", type: :request do
       expect(response.body).not_to include("Other Tenant")
     end
 
-    it "defaults payment amount to absolute balance when balance is negative (tenant owes money)" do
-      allow_any_instance_of(Tenancy).to receive(:current_balance).and_return(-600)
+    it "defaults payment amount to balance when balance is positive (tenant owes money)" do
+      allow_any_instance_of(Tenancy).to receive(:current_balance).and_return(600)
       get new_tenant_payment_url, params: { tenancy_id: tenancy.id }
       expect(response).to be_successful
       expect(response.body).to include('value="600"')
     end
 
-    it "defaults payment amount to 0 when balance is positive or zero" do
-      allow_any_instance_of(Tenancy).to receive(:current_balance).and_return(200)
+    it "defaults payment amount to 0 when balance is negative (credit) or zero" do
+      allow_any_instance_of(Tenancy).to receive(:current_balance).and_return(-200)
       get new_tenant_payment_url, params: { tenancy_id: tenancy.id }
       expect(response).to be_successful
       expect(response.body).to include('value="0.0"')
@@ -131,38 +131,16 @@ RSpec.describe "TenantPayments", type: :request do
     end
   end
 
-  describe "GET /tenant_payments/:id/edit" do
-    it "renders a successful response" do
-      get edit_tenant_payment_url(tenant_payment)
-      expect(response).to be_successful
-    end
-  end
-
-  describe "PATCH /tenant_payments/:id" do
-    it "updates the tenant payment and redirects" do
-      patch tenant_payment_url(tenant_payment), params: { tenant_payment: { amount: 600 } }
-      expect(response).to redirect_to(tenant_payment_url(tenant_payment))
-      expect(tenant_payment.reload.amount).to eq(600)
-    end
-
-    it "should not update tenant payment to other user's tenancy" do
-      patch tenant_payment_url(tenant_payment), params: { tenant_payment: { tenancy_id: other_tenancy.id } }
+  describe "disallowed routes" do
+    it "does not route edit, update, or destroy" do
+      get "/tenant_payments/#{tenant_payment.id}/edit"
       expect(response).to have_http_status(:not_found)
-    end
 
-    it "renders edit on validation failure" do
-      patch tenant_payment_url(tenant_payment), params: { tenant_payment: { amount: -50.0 } }
-      expect(response).to have_http_status(:unprocessable_content)
-    end
-  end
+      patch "/tenant_payments/#{tenant_payment.id}", params: { tenant_payment: { amount: 600 } }
+      expect(response).to have_http_status(:not_found)
 
-  describe "DELETE /tenant_payments/:id" do
-    it "destroys the tenant payment and redirects" do
-      expect {
-        delete tenant_payment_url(tenant_payment)
-      }.to change(TenantPayment, :count).by(-1)
-
-      expect(response).to redirect_to(tenant_payments_url)
+      delete "/tenant_payments/#{tenant_payment.id}"
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

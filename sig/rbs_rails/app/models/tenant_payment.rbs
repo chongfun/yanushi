@@ -409,6 +409,10 @@ class ::TenantPayment < ::ApplicationRecord
     alias id_value_for_database id_for_database
   end
   include ::TenantPayment::GeneratedAliasAttributeMethods
+  def journal_entries: () -> ::JournalEntry::ActiveRecord_Associations_CollectionProxy
+  def journal_entries=: (::JournalEntry::ActiveRecord_Associations_CollectionProxy | ::Array[::JournalEntry]) -> (::JournalEntry::ActiveRecord_Associations_CollectionProxy | ::Array[::JournalEntry])
+  def journal_entry_ids: () -> ::Array[::Integer]
+  def journal_entry_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def tenancy: () -> ::Tenancy
   def tenancy=: (::Tenancy?) -> ::Tenancy?
@@ -458,6 +462,10 @@ class ::TenantPayment < ::ApplicationRecord
 end
 
 class ::ApplicationRecord < ::ActiveRecord::Base
+end
+class ::JournalEntry < ::ApplicationRecord
+end
+class ::JournalEntry::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Tenancy < ::ApplicationRecord
 end

@@ -409,6 +409,14 @@ class ::RentTerm < ::ApplicationRecord
     alias id_value_for_database id_for_database
   end
   include ::RentTerm::GeneratedAliasAttributeMethods
+  def charges: () -> ::Charge::ActiveRecord_Associations_CollectionProxy
+  def charges=: (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge]) -> (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge])
+  def charge_ids: () -> ::Array[::Integer]
+  def charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def rent_charges: () -> ::Charge::ActiveRecord_Associations_CollectionProxy
+  def rent_charges=: (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge]) -> (::Charge::ActiveRecord_Associations_CollectionProxy | ::Array[::Charge])
+  def rent_charge_ids: () -> ::Array[::Integer]
+  def rent_charge_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def tenancy: () -> ::Tenancy
   def tenancy=: (::Tenancy?) -> ::Tenancy?
@@ -466,6 +474,10 @@ class ::RentTerm < ::ApplicationRecord
 end
 
 class ::ApplicationRecord < ::ActiveRecord::Base
+end
+class ::Charge < ::ApplicationRecord
+end
+class ::Charge::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::Tenancy < ::ApplicationRecord
 end

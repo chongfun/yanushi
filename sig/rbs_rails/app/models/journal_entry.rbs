@@ -466,6 +466,9 @@ class ::JournalEntry < ::ApplicationRecord
   def build_user: (?untyped) -> ::User
   def create_user: (?untyped) -> ::User
   def create_user!: (?untyped) -> ::User
+  def source: () -> untyped?
+  def source=: (untyped?) -> untyped?
+  def reload_source: () -> untyped?
   def reversal_of: () -> ::JournalEntry?
   def reversal_of=: (::JournalEntry?) -> ::JournalEntry?
   def reload_reversal_of: () -> ::JournalEntry?

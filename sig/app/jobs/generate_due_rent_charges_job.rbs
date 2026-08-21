@@ -1,0 +1,6 @@
+class GenerateDueRentChargesJob < ApplicationJob
+  class GenerationError < StandardError
+  end
+
+  def perform: (?(Date | String | nil) as_of) -> void
+end

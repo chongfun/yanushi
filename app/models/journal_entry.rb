@@ -1,5 +1,6 @@
 class JournalEntry < ApplicationRecord
   belongs_to :user
+  belongs_to :source, polymorphic: true, optional: true
   belongs_to :reversal_of, class_name: "JournalEntry", optional: true
   has_one :reversal, class_name: "JournalEntry", foreign_key: :reversal_of_id, dependent: :restrict_with_error
   has_many :postings, dependent: :restrict_with_error

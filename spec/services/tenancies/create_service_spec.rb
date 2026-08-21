@@ -45,6 +45,8 @@ RSpec.describe Tenancies::CreateService do
         expect(rent_term.frequency).to eq("monthly")
         expect(rent_term.effective_from).to eq(Date.new(2025, 1, 1))
         expect(rent_term.effective_until).to eq(Date.new(2025, 12, 31))
+
+        expect(tenancy.charges.rent.count).to be >= 1
       end
     end
 

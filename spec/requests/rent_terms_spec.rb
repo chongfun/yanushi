@@ -41,26 +41,30 @@ RSpec.describe "RentTerms", type: :request do
 
   describe "POST /tenancies/:tenancy_id/rent_terms" do
     it "creates a new rent term and updates prior term (HTML & JSON)" do
+      future_date_1 = (Date.current + 2.months).beginning_of_month
+      future_date_2 = (Date.current + 4.months).beginning_of_month
+      future_date_3 = (Date.current + 6.months).beginning_of_month
+
       expect {
         post tenancy_rent_terms_url(tenancy), params: {
           rent_term: {
             amount: "1950.00",
             due_day: 1,
             frequency: "monthly",
-            effective_from: Date.new(2025, 7, 1)
+            effective_from: future_date_1
           }
         }
       }.to change(RentTerm, :count).by(1)
 
       expect(response).to redirect_to(tenancy_url(tenancy))
-      expect(initial_term.reload.effective_until).to eq(Date.new(2025, 6, 30))
+      expect(initial_term.reload.effective_until).to eq(future_date_1 - 1.day)
 
       post tenancy_rent_terms_url(tenancy), params: {
         rent_term: {
           amount_cents: 210_000,
           due_day: 1,
           frequency: "monthly",
-          effective_from: Date.new(2025, 9, 1)
+          effective_from: future_date_2
         }
       }
       expect(response).to redirect_to(tenancy_url(tenancy))
@@ -70,7 +74,7 @@ RSpec.describe "RentTerms", type: :request do
           amount_cents: 220_000,
           due_day: 1,
           frequency: "monthly",
-          effective_from: Date.new(2025, 11, 1)
+          effective_from: future_date_3
         }
       }
       expect(response).to have_http_status(:created)

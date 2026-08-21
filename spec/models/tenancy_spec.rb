@@ -7,9 +7,9 @@ RSpec.describe Tenancy, type: :model do
     it { is_expected.to have_many(:tenancy_parties).dependent(:destroy) }
     it { is_expected.to have_many(:parties).through(:tenancy_parties) }
     it { is_expected.to have_many(:rent_terms).dependent(:destroy) }
-    it { is_expected.to have_many(:scheduled_rents).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:charges).dependent(:restrict_with_error) }
     it { is_expected.to have_many(:tenant_payments).dependent(:restrict_with_error) }
-    it { is_expected.to have_many(:tenant_charges).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:accounting_postings).class_name("Posting").dependent(:restrict_with_error) }
     it { is_expected.to have_many(:payment_ingestions).dependent(:nullify) }
   end
 
@@ -222,20 +222,37 @@ RSpec.describe Tenancy, type: :model do
     end
 
     describe "#financial_history? and current_balance" do
-      let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+      let(:tenancy) { create(:tenancy, rentable_unit: unit, commencement_date: Date.current.beginning_of_month) }
+      let!(:rent_term) do
+        create(:rent_term,
+          tenancy: tenancy,
+          amount_cents: 120_000,
+          effective_from: tenancy.commencement_date,
+          effective_until: tenancy.termination_date
+        )
+      end
 
       it "identifies presence of financial history" do
         expect(tenancy.financial_history?).to be false
-        create(:tenant_payment, tenancy: tenancy, amount: 1500.0, payment_date: Date.current)
+        TenantPayments::CreateService.call(tenancy: tenancy, amount: 1500.0, payment_date: Date.current)
         expect(tenancy.financial_history?).to be true
       end
 
-      it "computes balance via Tenancies::BalanceQuery" do
-        create(:tenant_payment, tenancy: tenancy, amount: 1500.0, payment_date: Date.current)
-        create(:scheduled_rent, tenancy: tenancy, amount: 1000.0, due_date: Date.current)
-        create(:tenant_charge, tenancy: tenancy, amount: 200.0, charge_date: Date.current)
+      it "computes balance via ledger postings" do
+        Charges::CreateService.call(
+          tenancy: tenancy,
+          charge_kind: "rent",
+          amount_cents: 120_000,
+          charge_date: Date.current,
+          due_on: Date.current,
+          service_period_start: Date.current.beginning_of_month,
+          service_period_end: Date.current.end_of_month
+        )
+        TenantPayments::CreateService.call(tenancy: tenancy, amount: 1000.0, payment_date: Date.current)
 
-        expect(tenancy.current_balance).to eq(300.0)
+        # 1200 - 1000 = 200 owed
+        expect(tenancy.current_balance).to eq(200.0)
+        expect(tenancy.current_balance_cents).to eq(20_000)
       end
     end
 

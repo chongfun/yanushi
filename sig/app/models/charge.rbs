@@ -1,0 +1,25 @@
+class Charge < ApplicationRecord
+  CHARGE_KINDS: Array[String]
+  IMMUTABLE_POSTED_ATTRIBUTES: Array[String]
+
+  def amount: () -> BigDecimal?
+  def amount=: (BigDecimal | Numeric | String val) -> void
+  def voided?: () -> bool
+  def posted?: () -> bool
+  def active?: () -> bool
+  def accounting_user: () -> User?
+
+  private
+
+  def validate_service_period_presence_and_order: () -> void
+  def validate_service_period_range: () -> void
+  def validate_kind_specific_invariants: () -> void
+  def validate_rent_invariants: () -> void
+  def validate_rent_service_period_bounds: (RentTerm term, Tenancy t) -> void
+  def validate_reimbursement_invariants: () -> void
+  def validate_late_fee_invariants: () -> void
+  def validate_other_invariants: () -> void
+  def validate_ownership_consistency: () -> void
+  def prevent_mutation_after_posting: () -> void
+  def prevent_destroy_if_posted: () -> void
+end

@@ -162,5 +162,31 @@ RSpec.describe Tenancies::UpdateService do
         expect(result.failure.error).to include("Termination date is invalid")
       end
     end
+
+    context "when new termination date is before live rent charges end date" do
+      before do
+        create(:charge, :rent_charge,
+          tenancy: tenancy,
+          rent_term: term,
+          amount_cents: 150_000,
+          charge_date: Date.new(2025, 8, 1),
+          due_on: Date.new(2025, 8, 1),
+          service_period_start: Date.new(2025, 8, 1),
+          service_period_end: Date.new(2025, 8, 31),
+          posted_at: Time.current
+        )
+      end
+
+      it "rejects shortening termination date if live rent charge exceeds new date" do
+        result = described_class.call(
+          tenancy: tenancy,
+          params: { termination_date: Date.new(2025, 7, 31) }
+        )
+
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:conflict)
+        expect(result.failure.error).to include("Cannot set termination date before existing rent charges end date")
+      end
+    end
   end
 end
