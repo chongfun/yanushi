@@ -1,0 +1,15 @@
+module Accounting
+  class RecentTenantReceivableActivityQuery
+    DEFAULT_LIMIT: Integer
+
+    def self.call: (tenancy: Tenancy?, ?limit: Integer, ?as_of: Date?) -> Array[TenantReceivableActivityQuery::StatementRow]
+    def initialize: (tenancy: Tenancy?, ?limit: Integer, ?as_of: Date?) -> void
+    def call: () -> Array[TenantReceivableActivityQuery::StatementRow]
+
+    private
+
+    attr_reader tenancy: Tenancy?
+    attr_reader limit: Integer
+    attr_reader as_of: Date?
+  end
+end

@@ -144,4 +144,24 @@ RSpec.describe IngestSourceDocumentJob, type: :job do
     expect(source_doc.status).to eq("success")
     expect(source_doc.imported_transactions.count).to eq(2)
   end
+
+  it "handles concurrent deletion of source document during error handling" do
+    doc = create(
+      :source_document,
+      user: user,
+      attachment_file: "bad",
+      attachment_filename: "bad.pdf",
+      attachment_content_type: "application/pdf",
+      status: "processing"
+    )
+
+    allow(ImportedTransactions::IngestionService).to receive(:call) do
+      doc.delete
+      raise StandardError, "Crash after delete"
+    end
+
+    expect {
+      described_class.perform_now(doc.id)
+    }.not_to raise_error
+  end
 end

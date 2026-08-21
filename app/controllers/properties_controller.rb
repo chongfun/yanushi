@@ -6,16 +6,19 @@ class PropertiesController < ApplicationController
   end
 
   def show
-    @year = params[:year].present? ? params[:year].to_i : Date.current.year
+    @date_range = Accounting::DateRange.parse(params)
+    unless @date_range.valid?
+      flash.now[:alert] = @date_range.errors.to_sentence
+    end
+    @year = @date_range.year || Date.current.year
     @property = authenticated_user.properties.includes(
       :rentable_units,
-      :expenses,
-      :charges,
-      :receipts,
-      tenancies: %i[parties receipts charges]
+      tenancies: :parties
     ).find(params.expect(:id))
-    @financial_items = @property.financial_items(@year)
+    @financial_activity = Accounting::PropertyLedgerQuery.call(property: @property, date_range: @date_range)
+    @financial_summary = Accounting::PropertySummaryQuery.call(property: @property, date_range: @date_range)
     @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: @property)
+    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
   end
 
   def schedule_e

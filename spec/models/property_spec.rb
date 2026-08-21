@@ -54,6 +54,8 @@ RSpec.describe Property, type: :model do
     it "delegates financial queries correctly" do
       expect(property.active_years).to include(Date.current.year)
       expect(property.financial_items(year: Date.current.year)).to eq([])
+      expect(property.accounting_activity(year: Date.current.year)).to eq([])
+      expect(property.accounting_summary(year: Date.current.year).net_cash_movement_cents).to eq(0)
       summary = property.schedule_e_summary(year: Date.current.year)
       expect(summary.total_income).to eq(0)
     end

@@ -1,0 +1,5 @@
+class JournalEntriesController < ApplicationController
+  @journal_entry: JournalEntry
+
+  def show: () -> void
+end

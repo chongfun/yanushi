@@ -129,6 +129,12 @@
       <h2 class="text-2xl font-black tracking-tight">Financial Ledger</h2>
     </div>
 
-    <%= render "properties/financials", property: @property, financial_items: @financial_items, year: @year %>
+    <%= render "properties/financials",
+               property: @property,
+               financial_activity: @financial_activity,
+               financial_summary: @financial_summary,
+               date_range: @date_range,
+               year: @year,
+               active_years: @active_years %>
   </div>
 </div>

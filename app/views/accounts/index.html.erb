@@ -1,0 +1,63 @@
+<% content_for :title, "Chart of Accounts" %>
+
+<% content_for :breadcrumbs do %>
+  <li class="font-bold">Chart of Accounts</li>
+<% end %>
+
+<div class="max-w-5xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Chart of Accounts</h1>
+      <p class="text-base-content/60">System-defined double-entry ledger accounts</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Account Name</th>
+              <th>Key</th>
+              <th>Type</th>
+              <th class="text-right">Natural Balance</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @accounts.each do |account| %>
+              <% balance_cents = @balances[account.id] || 0 %>
+              <tr>
+                <td class="font-bold">
+                  <%= link_to account.name, account_path(account), class: "link link-hover" %>
+                </td>
+                <td class="font-mono text-xs text-base-content/60"><%= account.key %></td>
+                <td>
+                  <% case account.account_type %>
+                  <% when "asset" %>
+                    <span class="badge badge-primary badge-sm">Asset</span>
+                  <% when "liability" %>
+                    <span class="badge badge-secondary badge-sm">Liability</span>
+                  <% when "equity" %>
+                    <span class="badge badge-accent badge-sm">Equity</span>
+                  <% when "income" %>
+                    <span class="badge badge-success badge-sm text-success-content">Income</span>
+                  <% when "expense" %>
+                    <span class="badge badge-error badge-sm text-error-content">Expense</span>
+                  <% end %>
+                </td>
+                <td class="text-right font-mono font-bold">
+                  <%= number_to_currency(balance_cents / 100.0) %>
+                </td>
+                <td class="text-right">
+                  <%= link_to "View Ledger", account_path(account), class: "btn btn-xs btn-outline" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

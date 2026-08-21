@@ -1,0 +1,41 @@
+module Accounting
+  class ActivityRow
+    attr_reader id: Integer
+    attr_reader journal_entry: JournalEntry
+    attr_reader occurred_on: Date
+    attr_reader kind: String
+    attr_reader label: String
+    attr_reader description: String?
+    attr_reader amount_cents: Integer
+    attr_reader property: Property?
+    attr_reader rentable_unit: RentableUnit?
+    attr_reader tenancy: Tenancy?
+    attr_reader party: Party?
+    attr_reader source: untyped
+    attr_reader reversal: bool
+    attr_reader corrected: bool
+    attr_reader lifecycle_status: Symbol?
+
+    def initialize: (
+      id: Integer,
+      journal_entry: JournalEntry,
+      occurred_on: Date,
+      kind: String,
+      label: String,
+      description: String?,
+      amount_cents: Integer,
+      property: Property?,
+      rentable_unit: RentableUnit?,
+      tenancy: Tenancy?,
+      party: Party?,
+      source: untyped,
+      reversal: bool,
+      corrected: bool,
+      ?lifecycle_status: Symbol?
+    ) -> void
+
+    def corrected?: () -> bool
+    def voided?: () -> bool
+    def active?: () -> bool
+  end
+end

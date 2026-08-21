@@ -501,5 +501,39 @@ RSpec.describe Expenses::CorrectService do
       expect(res_unit_change).to be_failure
       expect(res_unit_change.failure.code).to eq(:unit_mismatch)
     end
+
+    it "handles numeric amounts and rejects invalid property or kind" do
+      create_res = Expenses::CreateService.call(
+        property: property,
+        expense_kind: "repairs",
+        paid_on: Date.current,
+        amount_cents: 20_000
+      )
+      exp = create_res.value!.data[:expense]
+
+      # Numeric amount
+      num_res = described_class.call(expense: exp, amount: 250.50)
+      expect(num_res).to be_success
+      expect(num_res.value!.data[:replacement].amount_cents).to eq(25_050)
+
+      rep_exp = num_res.value!.data[:replacement]
+
+      # Ownership mismatch property
+      other_user = create(:user)
+      other_prop = create(:property, user: other_user)
+      bad_prop = described_class.call(expense: rep_exp, property: other_prop)
+      expect(bad_prop).to be_failure
+      expect(bad_prop.failure.code).to eq(:ownership_mismatch)
+
+      # Invalid expense kind
+      bad_kind = described_class.call(expense: rep_exp, expense_kind: "unknown_kind")
+      expect(bad_kind).to be_failure
+      expect(bad_kind.failure.code).to eq(:validation_error)
+
+      # Negative amount string
+      neg_amt = described_class.call(expense: rep_exp, amount: "-50.00")
+      expect(neg_amt).to be_failure
+      expect(neg_amt.failure.code).to eq(:invalid_amount)
+    end
   end
 end

@@ -769,5 +769,74 @@ RSpec.describe SecurityDepositTransactions::CorrectService do
       replacement = res.value!.data[:replacement]
       expect(replacement.amount_cents).to eq(40_000)
     end
+
+    it "updates external_reference from nil to present" do
+      res = SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1),
+        external_reference: nil
+      )
+      orig_txn = res.value!.data[:transaction]
+
+      correct_res = described_class.call(
+        transaction: orig_txn,
+        external_reference: "NEW-REF-123"
+      )
+
+      expect(correct_res).to be_success
+      rep = correct_res.value!.data[:replacement]
+      expect(rep.external_reference).to eq("NEW-REF-123")
+    end
+
+    it "rejects party belonging to another user" do
+      other_user = create(:user)
+      other_party = create(:party, user: other_user)
+      res = SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+      orig_txn = res.value!.data[:transaction]
+
+      correct_res = described_class.call(
+        transaction: orig_txn,
+        party: other_party
+      )
+
+      expect(correct_res).to be_failure
+      expect(correct_res.failure.code).to eq(:party_user_mismatch)
+    end
+
+    it "rejects when corrected application amount exceeds available AR" do
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: security_deposit,
+        party: party,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 1, 1)
+      )
+
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 30_000,
+        charge_date: Date.new(2026, 1, 1),
+        due_on: Date.new(2026, 1, 1)
+      ).value!.data[:charge]
+
+      app_txn = SecurityDepositTransactions::ApplyService.call(
+        security_deposit: security_deposit,
+        charge: charge,
+        amount_cents: 20_000,
+        occurred_on: Date.new(2026, 1, 5)
+      ).value!.data[:transaction]
+
+      # Trying to increase application to $500 when charge was only $300
+      res = described_class.call(transaction: app_txn, amount_cents: 50_000)
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:exceeds_charge_capacity)
+    end
   end
 end

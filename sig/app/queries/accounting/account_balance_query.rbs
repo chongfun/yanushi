@@ -1,0 +1,24 @@
+module Accounting
+  class AccountBalanceQuery
+    def self.call: (account: Account?, ?as_of: untyped, ?property: Property?, ?rentable_unit: RentableUnit?, ?tenancy: Tenancy?, ?party: Party?, ?user: User?) -> Integer
+    def initialize: (account: Account?, ?as_of: untyped, ?property: Property?, ?rentable_unit: RentableUnit?, ?tenancy: Tenancy?, ?party: Party?, ?user: User?) -> void
+    def raw_balance_cents: () -> Integer
+    def natural_balance_cents: () -> Integer
+    def raw_balance: () -> BigDecimal
+    def natural_balance: () -> BigDecimal
+    def balance_cents: () -> Integer
+    def balance: () -> BigDecimal
+
+    private
+
+    attr_reader account: Account?
+    attr_reader as_of: Date?
+    attr_reader property: Property?
+    attr_reader rentable_unit: RentableUnit?
+    attr_reader tenancy: Tenancy?
+    attr_reader party: Party?
+    attr_reader user: User?
+
+    def parse_as_of: (untyped) -> Date?
+  end
+end
