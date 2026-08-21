@@ -1,0 +1,12 @@
+class TenancyParty < ApplicationRecord
+  ROLES: Array[String]
+
+  def active?: (?Date date, ?as_of: untyped) -> bool
+
+  private
+
+  def effective_until_after_effective_from: () -> void
+  def party_belongs_to_tenancy_owner: () -> void
+  def effective_dates_within_tenancy_bounds: () -> void
+  def no_overlapping_participation_for_same_role: () -> void
+end

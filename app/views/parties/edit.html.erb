@@ -1,0 +1,17 @@
+<% content_for :title, "Editing #{@party.display_name}" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Tenants & Payers", parties_path %></li>
+  <li><%= link_to @party.display_name, @party %></li>
+  <li class="font-bold">Edit Profile</li>
+<% end %>
+
+<div class="max-w-2xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold mb-6">Editing <%= @party.display_name %></h2>
+
+      <%= render "form", party: @party %>
+    </div>
+  </div>
+</div>

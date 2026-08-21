@@ -6,7 +6,36 @@ interface ::_RbsRailsPathHelpers
   def rails_info_routes_path: (*untyped) -> ::String
   def rails_info_notes_path: (*untyped) -> ::String
   def rails_info_path: (*untyped) -> ::String
+  def root_path: (*untyped) -> ::String
   def dashboards_index_path: (*untyped) -> ::String
+  def property_rentable_units_path: (*untyped) -> ::String
+  def new_property_rentable_unit_path: (*untyped) -> ::String
+  def edit_property_rentable_unit_path: (*untyped) -> ::String
+  def property_rentable_unit_path: (*untyped) -> ::String
+  def property_expenses_path: (*untyped) -> ::String
+  def new_property_expense_path: (*untyped) -> ::String
+  def schedule_e_property_path: (*untyped) -> ::String
+  def schedule_e_pdf_property_path: (*untyped) -> ::String
+  def properties_path: (*untyped) -> ::String
+  def new_property_path: (*untyped) -> ::String
+  def edit_property_path: (*untyped) -> ::String
+  def property_path: (*untyped) -> ::String
+  def parties_path: (*untyped) -> ::String
+  def new_party_path: (*untyped) -> ::String
+  def edit_party_path: (*untyped) -> ::String
+  def party_path: (*untyped) -> ::String
+  def tenancy_tenant_payments_path: (*untyped) -> ::String
+  def new_tenancy_tenant_payment_path: (*untyped) -> ::String
+  def tenancy_tenancy_parties_path: (*untyped) -> ::String
+  def new_tenancy_tenancy_party_path: (*untyped) -> ::String
+  def edit_tenancy_tenancy_party_path: (*untyped) -> ::String
+  def tenancy_tenancy_party_path: (*untyped) -> ::String
+  def tenancy_rent_terms_path: (*untyped) -> ::String
+  def new_tenancy_rent_term_path: (*untyped) -> ::String
+  def tenancies_path: (*untyped) -> ::String
+  def new_tenancy_path: (*untyped) -> ::String
+  def edit_tenancy_path: (*untyped) -> ::String
+  def tenancy_path: (*untyped) -> ::String
   def expenses_path: (*untyped) -> ::String
   def new_expense_path: (*untyped) -> ::String
   def edit_expense_path: (*untyped) -> ::String
@@ -17,20 +46,7 @@ interface ::_RbsRailsPathHelpers
   def tenant_payment_path: (*untyped) -> ::String
   def tenant_charge_path: (*untyped) -> ::String
   def scheduled_rents_path: (*untyped) -> ::String
-  def new_scheduled_rent_path: (*untyped) -> ::String
-  def edit_scheduled_rent_path: (*untyped) -> ::String
   def scheduled_rent_path: (*untyped) -> ::String
-  def lease_tenant_payments_path: (*untyped) -> ::String
-  def new_lease_tenant_payment_path: (*untyped) -> ::String
-  def generate_scheduled_rents_lease_path: (*untyped) -> ::String
-  def leases_path: (*untyped) -> ::String
-  def new_lease_path: (*untyped) -> ::String
-  def edit_lease_path: (*untyped) -> ::String
-  def lease_path: (*untyped) -> ::String
-  def tenants_path: (*untyped) -> ::String
-  def new_tenant_path: (*untyped) -> ::String
-  def edit_tenant_path: (*untyped) -> ::String
-  def tenant_path: (*untyped) -> ::String
   def confirm_payment_ingestion_path: (*untyped) -> ::String
   def download_payment_ingestion_path: (*untyped) -> ::String
   def payment_ingestions_path: (*untyped) -> ::String
@@ -38,14 +54,6 @@ interface ::_RbsRailsPathHelpers
   def edit_payment_ingestion_path: (*untyped) -> ::String
   def payment_ingestion_path: (*untyped) -> ::String
   def payment_document_path: (*untyped) -> ::String
-  def rental_property_expenses_path: (*untyped) -> ::String
-  def new_rental_property_expense_path: (*untyped) -> ::String
-  def schedule_e_rental_property_path: (*untyped) -> ::String
-  def schedule_e_pdf_rental_property_path: (*untyped) -> ::String
-  def rental_properties_path: (*untyped) -> ::String
-  def new_rental_property_path: (*untyped) -> ::String
-  def edit_rental_property_path: (*untyped) -> ::String
-  def rental_property_path: (*untyped) -> ::String
   def new_session_path: (*untyped) -> ::String
   def edit_session_path: (*untyped) -> ::String
   def session_path: (*untyped) -> ::String
@@ -54,7 +62,6 @@ interface ::_RbsRailsPathHelpers
   def edit_password_path: (*untyped) -> ::String
   def password_path: (*untyped) -> ::String
   def rails_health_check_path: (*untyped) -> ::String
-  def root_path: (*untyped) -> ::String
   def turbo_recede_historical_location_path: (*untyped) -> ::String
   def turbo_resume_historical_location_path: (*untyped) -> ::String
   def turbo_refresh_historical_location_path: (*untyped) -> ::String
@@ -87,7 +94,36 @@ interface ::_RbsRailsPathHelpers
   def rails_info_routes_url: (*untyped) -> ::String
   def rails_info_notes_url: (*untyped) -> ::String
   def rails_info_url: (*untyped) -> ::String
+  def root_url: (*untyped) -> ::String
   def dashboards_index_url: (*untyped) -> ::String
+  def property_rentable_units_url: (*untyped) -> ::String
+  def new_property_rentable_unit_url: (*untyped) -> ::String
+  def edit_property_rentable_unit_url: (*untyped) -> ::String
+  def property_rentable_unit_url: (*untyped) -> ::String
+  def property_expenses_url: (*untyped) -> ::String
+  def new_property_expense_url: (*untyped) -> ::String
+  def schedule_e_property_url: (*untyped) -> ::String
+  def schedule_e_pdf_property_url: (*untyped) -> ::String
+  def properties_url: (*untyped) -> ::String
+  def new_property_url: (*untyped) -> ::String
+  def edit_property_url: (*untyped) -> ::String
+  def property_url: (*untyped) -> ::String
+  def parties_url: (*untyped) -> ::String
+  def new_party_url: (*untyped) -> ::String
+  def edit_party_url: (*untyped) -> ::String
+  def party_url: (*untyped) -> ::String
+  def tenancy_tenant_payments_url: (*untyped) -> ::String
+  def new_tenancy_tenant_payment_url: (*untyped) -> ::String
+  def tenancy_tenancy_parties_url: (*untyped) -> ::String
+  def new_tenancy_tenancy_party_url: (*untyped) -> ::String
+  def edit_tenancy_tenancy_party_url: (*untyped) -> ::String
+  def tenancy_tenancy_party_url: (*untyped) -> ::String
+  def tenancy_rent_terms_url: (*untyped) -> ::String
+  def new_tenancy_rent_term_url: (*untyped) -> ::String
+  def tenancies_url: (*untyped) -> ::String
+  def new_tenancy_url: (*untyped) -> ::String
+  def edit_tenancy_url: (*untyped) -> ::String
+  def tenancy_url: (*untyped) -> ::String
   def expenses_url: (*untyped) -> ::String
   def new_expense_url: (*untyped) -> ::String
   def edit_expense_url: (*untyped) -> ::String
@@ -98,20 +134,7 @@ interface ::_RbsRailsPathHelpers
   def tenant_payment_url: (*untyped) -> ::String
   def tenant_charge_url: (*untyped) -> ::String
   def scheduled_rents_url: (*untyped) -> ::String
-  def new_scheduled_rent_url: (*untyped) -> ::String
-  def edit_scheduled_rent_url: (*untyped) -> ::String
   def scheduled_rent_url: (*untyped) -> ::String
-  def lease_tenant_payments_url: (*untyped) -> ::String
-  def new_lease_tenant_payment_url: (*untyped) -> ::String
-  def generate_scheduled_rents_lease_url: (*untyped) -> ::String
-  def leases_url: (*untyped) -> ::String
-  def new_lease_url: (*untyped) -> ::String
-  def edit_lease_url: (*untyped) -> ::String
-  def lease_url: (*untyped) -> ::String
-  def tenants_url: (*untyped) -> ::String
-  def new_tenant_url: (*untyped) -> ::String
-  def edit_tenant_url: (*untyped) -> ::String
-  def tenant_url: (*untyped) -> ::String
   def confirm_payment_ingestion_url: (*untyped) -> ::String
   def download_payment_ingestion_url: (*untyped) -> ::String
   def payment_ingestions_url: (*untyped) -> ::String
@@ -119,14 +142,6 @@ interface ::_RbsRailsPathHelpers
   def edit_payment_ingestion_url: (*untyped) -> ::String
   def payment_ingestion_url: (*untyped) -> ::String
   def payment_document_url: (*untyped) -> ::String
-  def rental_property_expenses_url: (*untyped) -> ::String
-  def new_rental_property_expense_url: (*untyped) -> ::String
-  def schedule_e_rental_property_url: (*untyped) -> ::String
-  def schedule_e_pdf_rental_property_url: (*untyped) -> ::String
-  def rental_properties_url: (*untyped) -> ::String
-  def new_rental_property_url: (*untyped) -> ::String
-  def edit_rental_property_url: (*untyped) -> ::String
-  def rental_property_url: (*untyped) -> ::String
   def new_session_url: (*untyped) -> ::String
   def edit_session_url: (*untyped) -> ::String
   def session_url: (*untyped) -> ::String
@@ -135,7 +150,6 @@ interface ::_RbsRailsPathHelpers
   def edit_password_url: (*untyped) -> ::String
   def password_url: (*untyped) -> ::String
   def rails_health_check_url: (*untyped) -> ::String
-  def root_url: (*untyped) -> ::String
   def turbo_recede_historical_location_url: (*untyped) -> ::String
   def turbo_resume_historical_location_url: (*untyped) -> ::String
   def turbo_refresh_historical_location_url: (*untyped) -> ::String

@@ -1,4 +1,3 @@
-# app/services/payment_ingestions/ingestion.rb
 module PaymentIngestions
   class Ingestion
     PARSERS = {
@@ -71,157 +70,156 @@ module PaymentIngestions
 
     private
 
-    def extract_pdf_data(pdf_path_or_io, user)
-      if pdf_path_or_io.is_a?(PaymentDocument)
-        payment_document = pdf_path_or_io
-        pdf_bytes = payment_document.has_attribute?(:attachment_file) ? payment_document.attachment_file : PaymentDocument.where(id: payment_document.id).pluck(:attachment_file).first
-        raise PaymentIngestions::ParsingError, "Payment document is missing attachment data" unless pdf_bytes
+      def extract_pdf_data(pdf_path_or_io, user)
+        if pdf_path_or_io.is_a?(PaymentDocument)
+          payment_document = pdf_path_or_io
+          pdf_bytes = payment_document.has_attribute?(:attachment_file) ? payment_document.attachment_file : PaymentDocument.where(id: payment_document.id).pluck(:attachment_file).first
+          raise PaymentIngestions::ParsingError, "Payment document is missing attachment data" unless pdf_bytes
 
-        filename = payment_document.attachment_filename
-        io = StringIO.new(pdf_bytes)
-        doc = HexaPDF::Document.new(io: io)
-      else
-        pdf_bytes = read_pdf_bytes(pdf_path_or_io)
-
-        doc = if pdf_path_or_io.respond_to?(:read) && pdf_path_or_io.respond_to?(:seek)
-          HexaPDF::Document.new(io: pdf_path_or_io)
-        elsif pdf_path_or_io.respond_to?(:path)
-          HexaPDF::Document.open(pdf_path_or_io.path.to_s)
+          filename = payment_document.attachment_filename
+          io = StringIO.new(pdf_bytes)
+          doc = HexaPDF::Document.new(io: io)
         else
-          HexaPDF::Document.open(pdf_path_or_io.to_s)
-        end
+          pdf_bytes = read_pdf_bytes(pdf_path_or_io)
 
-        filename = if pdf_path_or_io.respond_to?(:original_filename)
-          pdf_path_or_io.original_filename
-        elsif pdf_path_or_io.respond_to?(:path)
-          File.basename(pdf_path_or_io.path)
-        else
-          File.basename(pdf_path_or_io.to_s)
-        end
-        # Fallback for string-converted IO descriptors
-        filename = "receipt.pdf" if filename.blank? || filename.include?("#<")
-
-        payment_document = PaymentDocument.new(
-          user: user,
-          attachment_file: pdf_bytes,
-          attachment_filename: filename,
-          attachment_content_type: "application/pdf"
-        )
-      end
-
-      page_count = doc.pages.count
-
-      raw_text = doc.pages.map do |page|
-        extractor = doc.task(:smart_text_extractor) rescue nil
-        if extractor
-          extractor.text(page)
-        else
-          page.extract_text rescue ""
-        end
-      end.join("\n")
-
-      [ pdf_bytes, filename || "receipt.pdf", page_count, raw_text, payment_document ]
-    end
-
-    def read_pdf_bytes(pdf_path_or_io)
-      if pdf_path_or_io.respond_to?(:read) && pdf_path_or_io.respond_to?(:rewind)
-        pdf_path_or_io.rewind
-        bytes = pdf_path_or_io.read
-        pdf_path_or_io.rewind
-        bytes
-      elsif pdf_path_or_io.respond_to?(:path)
-        File.binread(pdf_path_or_io.path)
-      else
-        File.binread(pdf_path_or_io.to_s)
-      end
-    end
-
-    def detect_type(text)
-      if text.match?(/CHASE TOTAL CHECKING/i) && text.match?(/TRANSACTION DETAIL/i)
-        "chase_statement"
-      elsif text.match?(/Transaction ID\s+\d+/i) || text.match?(/venmo/i)
-        "venmo"
-      elsif text.match?(/zelle/i) || text.match?(/Transaction number/i) || text.match?(/sent you money/i)
-        "zelle"
-      else
-        "unknown"
-      end
-    end
-
-    def build_ingestions(user:, source:, receipt_type:, parser_results:, raw_text:, payment_document:)
-      # @type var ingestions: Array[PaymentIngestion]
-      ingestions = []
-
-      parser_results.each do |parser_result|
-        if successful_result?(parser_result)
-          result = result_payload(parser_result)
-          resolve_result = unwrap_result(TenantResolver.new.resolve(user, result.payer_name, result.payer_username))
-
-          # For bank statements, discard unmatched items to avoid cluttering the UI with other personal expenses/deposits
-          if receipt_type == "chase_statement" && resolve_result.status.to_s == "unmatched"
-            next
+          doc = if pdf_path_or_io.respond_to?(:read) && pdf_path_or_io.respond_to?(:seek)
+            HexaPDF::Document.new(io: pdf_path_or_io)
+          elsif pdf_path_or_io.respond_to?(:path)
+            HexaPDF::Document.open(pdf_path_or_io.path.to_s)
+          else
+            HexaPDF::Document.open(pdf_path_or_io.to_s)
           end
 
-          tenant = resolve_result.tenant
-          lease = tenant&.leases&.find { |l| active_lease?(l, result.payment_date) }
+          filename = if pdf_path_or_io.respond_to?(:original_filename)
+            pdf_path_or_io.original_filename
+          elsif pdf_path_or_io.respond_to?(:path)
+            File.basename(pdf_path_or_io.path)
+          else
+            File.basename(pdf_path_or_io.to_s)
+          end
+          filename = "receipt.pdf" if filename.blank? || filename.include?("#<")
 
-          ingestions << PaymentIngestion.new(
+          payment_document = PaymentDocument.new(
             user: user,
-            source: source,
-            receipt_type: result.receipt_type,
-            status: resolve_result.status,
-            payer_name: result.payer_name,
-            payer_username: result.payer_username,
-            amount: result.amount,
-            payment_date: result.payment_date,
-            payment_method: result.payment_method,
-            transaction_number: result.transaction_number,
-            raw_text: result.raw_text,
-            tenant: tenant,
-            lease: lease,
-            payment_document: payment_document
+            attachment_file: pdf_bytes,
+            attachment_filename: filename,
+            attachment_content_type: "application/pdf"
           )
-        else
-          result = result_payload(parser_result)
+        end
 
-          # For receipts, if parsing failed, we still keep it. For statements, we don't save failed results
-          unless receipt_type == "chase_statement"
+        page_count = doc.pages.count
+
+        raw_text = doc.pages.map do |page|
+          extractor = doc.task(:smart_text_extractor) rescue nil
+          if extractor
+            extractor.text(page)
+          else
+            page.extract_text rescue ""
+          end
+        end.join("\n")
+
+        [ pdf_bytes, filename || "receipt.pdf", page_count, raw_text, payment_document ]
+      end
+
+      def read_pdf_bytes(pdf_path_or_io)
+        if pdf_path_or_io.respond_to?(:read) && pdf_path_or_io.respond_to?(:rewind)
+          pdf_path_or_io.rewind
+          bytes = pdf_path_or_io.read
+          pdf_path_or_io.rewind
+          bytes
+        elsif pdf_path_or_io.respond_to?(:path)
+          File.binread(pdf_path_or_io.path)
+        else
+          File.binread(pdf_path_or_io.to_s)
+        end
+      end
+
+      def detect_type(text)
+        if text.match?(/CHASE TOTAL CHECKING/i) && text.match?(/TRANSACTION DETAIL/i)
+          "chase_statement"
+        elsif text.match?(/Transaction ID\s+\d+/i) || text.match?(/venmo/i)
+          "venmo"
+        elsif text.match?(/zelle/i) || text.match?(/Transaction number/i) || text.match?(/sent you money/i)
+          "zelle"
+        else
+          "unknown"
+        end
+      end
+
+      def build_ingestions(user:, source:, receipt_type:, parser_results:, raw_text:, payment_document:)
+        ingestions = [] # : Array[PaymentIngestion]
+
+        parser_results.each do |parser_result|
+          if successful_result?(parser_result)
+            result = result_payload(parser_result)
+            resolve_result = unwrap_result(TenantResolver.new.resolve(user, result.payer_name, result.payer_username))
+
+            if receipt_type == "chase_statement" && resolve_result.status.to_s == "unmatched"
+              next
+            end
+
+            party = resolve_result.party
+            status = resolve_result.status
+            tenancy = nil
+
+            if party
+              active_tenancies = party.tenancies.select { |t| t.active?(result.payment_date || Date.current) }
+              if active_tenancies.size == 1
+                tenancy = active_tenancies.first
+              elsif active_tenancies.size > 1
+                status = :ambiguous if status.to_s == "matched"
+              end
+            end
+
             ingestions << PaymentIngestion.new(
               user: user,
               source: source,
-              receipt_type: receipt_type,
-              status: :failed,
-              raw_text: raw_text,
-              error_message: result.error_message,
+              receipt_type: result.receipt_type,
+              status: status,
+              payer_name: result.payer_name,
+              payer_username: result.payer_username,
+              amount: result.amount,
+              payment_date: result.payment_date,
+              payment_method: result.payment_method,
+              transaction_number: result.transaction_number,
+              raw_text: result.raw_text,
+              party: party,
+              tenancy: tenancy,
               payment_document: payment_document
             )
+          else
+            result = result_payload(parser_result)
+
+            unless receipt_type == "chase_statement"
+              ingestions << PaymentIngestion.new(
+                user: user,
+                source: source,
+                receipt_type: receipt_type,
+                status: :failed,
+                raw_text: raw_text,
+                error_message: result.error_message,
+                payment_document: payment_document
+              )
+            end
           end
         end
+
+        ingestions
       end
 
-      ingestions
-    end
+      def unwrap_result(result)
+        result_payload(result)
+      end
 
-    def active_lease?(lease, payment_date)
-      return true if lease.month_to_month?
-      return true unless lease.termination_date
-      date = payment_date || Date.current
-      date >= lease.commencement_date && date <= lease.termination_date
-    end
+      def successful_result?(result)
+        result.respond_to?(:success?) && result.success?
+      end
 
-    def unwrap_result(result)
-      result_payload(result)
-    end
+      def result_payload(result)
+        return result.value! if successful_result?(result) && result.respond_to?(:value!)
+        return result.failure if result.respond_to?(:failure?) && result.failure? && result.respond_to?(:failure)
 
-    def successful_result?(result)
-      result.respond_to?(:success?) && result.success?
-    end
-
-    def result_payload(result)
-      return result.value! if successful_result?(result) && result.respond_to?(:value!)
-      return result.failure if result.respond_to?(:failure?) && result.failure? && result.respond_to?(:failure)
-
-      result
-    end
+        result
+      end
   end
 end

@@ -1,0 +1,14 @@
+module Tenancies
+  class UpdateService
+    ALLOWED_ATTRIBUTES: Array[Symbol]
+
+    def self.call: (tenancy: Tenancy, ?user: User?, ?attributes: untyped, ?params: untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (tenancy: Tenancy, attributes: Hash[Symbol, untyped]) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader attributes: Hash[Symbol, untyped]
+  end
+end

@@ -1,4 +1,3 @@
-# app/services/payment_ingestions/tenant_resolver.rb
 require "dry/monads"
 require "dry/struct"
 
@@ -7,20 +6,20 @@ module PaymentIngestions
     class ResolveResult < Dry::Struct
       extend Dry::Monads[:result]
 
-      attribute? :tenant, ServiceResultTypes::Any.optional
-      attribute? :tenants, ServiceResultTypes::Array.of(ServiceResultTypes::Any).optional
+      attribute? :party, ServiceResultTypes::Any.optional
+      attribute? :parties, ServiceResultTypes::Array.of(ServiceResultTypes::Any).optional
       attribute :status, ServiceResultTypes::Symbol
 
-      def self.matched(tenant:, tenants:)
-        Success(new(tenant: tenant, tenants: tenants, status: :matched))
+      def self.matched(party:, parties: [ party ])
+        Success(new(party: party, parties: parties, status: :matched))
       end
 
-      def self.ambiguous(tenants:)
-        Failure(new(tenant: nil, tenants: tenants, status: :ambiguous))
+      def self.ambiguous(parties: [])
+        Failure(new(party: nil, parties: parties, status: :ambiguous))
       end
 
       def self.unmatched
-        Failure(new(tenant: nil, tenants: [], status: :unmatched))
+        Failure(new(party: nil, parties: [], status: :unmatched))
       end
     end
 
@@ -33,31 +32,30 @@ module PaymentIngestions
       when 0
         ResolveResult.unmatched
       when 1
-        ResolveResult.matched(tenant: candidates.first, tenants: candidates)
+        ResolveResult.matched(party: candidates.first, parties: candidates)
       else
-        ResolveResult.ambiguous(tenants: candidates)
+        ResolveResult.ambiguous(parties: candidates)
       end
     end
 
     private
 
-    def find_candidates(user, display_name, username)
-      # @type var search_values: Array[String]
-      search_values = []
-      search_values << username.strip.downcase if username.present?
-      search_values << display_name.strip.downcase if display_name.present?
+      def find_candidates(user, display_name, username)
+        search_values = [] # : Array[String]
+        search_values << username.strip.downcase if username.present?
+        search_values << display_name.strip.downcase if display_name.present?
 
-      return [] if search_values.empty?
+        return [] if search_values.empty?
 
-      user.tenants
-          .left_outer_joins(:tenant_aliases)
-          .where(
-            "LOWER(tenants.name) IN (?) OR LOWER(tenant_aliases.alias_name) IN (?)",
-            search_values,
-            search_values
-          )
-          .distinct
-          .to_a
-    end
+        user.parties
+            .left_outer_joins(:party_aliases)
+            .where(
+              "LOWER(parties.display_name) IN (?) OR LOWER(party_aliases.alias_name) IN (?)",
+              search_values,
+              search_values
+            )
+            .distinct
+            .to_a
+      end
   end
 end

@@ -17,13 +17,14 @@ module Expenses
     end
 
     private
+
       def upsert_tenant_charge
-        target_lease_id = @expense.reimburse_lease_id.presence || @expense.rental_property.leases.first&.id
-        return unless target_lease_id
+        target_tenancy_id = @expense.reimburse_tenancy_id.presence || @expense.property.tenancies.first&.id
+        return unless target_tenancy_id
 
         charge = @expense.tenant_charge || @expense.build_tenant_charge
         charge.update!(
-          lease_id: target_lease_id,
+          tenancy_id: target_tenancy_id,
           amount: charge_amount(charge),
           charge_date: @expense.expense_date,
           description: "Reimbursement for #{@expense.category}: #{@expense.description}"

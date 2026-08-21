@@ -1,0 +1,36 @@
+<tr id="<%= dom_id party %>">
+  <td>
+    <div class="flex items-center gap-3">
+      <div class="avatar placeholder">
+        <div class="bg-neutral text-neutral-content rounded-full w-9">
+          <span class="text-xs font-bold"><%= party.display_name.split.map(&:first).join.upcase[0..1] %></span>
+        </div>
+      </div>
+      <div class="font-bold"><%= party.display_name %></div>
+    </div>
+  </td>
+  <td>
+    <span class="badge <%= party.organization? ? 'badge-secondary' : 'badge-ghost' %> badge-sm">
+      <%= party.party_type.titleize %>
+    </span>
+  </td>
+  <td><%= party.email_address.presence || "—" %></td>
+  <td><%= party.phone_number.presence || "—" %></td>
+  <td>
+    <% if party.party_aliases.any? %>
+      <div class="flex flex-wrap gap-1">
+        <% party.party_aliases.each do |pa| %>
+          <span class="badge badge-outline badge-xs"><%= pa.alias_name %></span>
+        <% end %>
+      </div>
+    <% else %>
+      <span class="text-base-content/40 text-xs">—</span>
+    <% end %>
+  </td>
+  <td>
+    <div class="badge badge-neutral badge-sm"><%= party.tenancies.count %> <%= "Tenancy".pluralize(party.tenancies.count) %></div>
+  </td>
+  <th class="text-right">
+    <%= link_to "View Profile", party, class: "btn btn-ghost btn-xs" %>
+  </th>
+</tr>

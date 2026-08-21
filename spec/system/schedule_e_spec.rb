@@ -1,11 +1,11 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "ScheduleE", type: :system do
   let!(:user) { create(:user) }
-  let!(:property) { create(:rental_property, user: user, address: "Test Isolation St") }
+  let!(:property) { create(:property, user: user, address: "Test Isolation St") }
+  let!(:unit) { create(:rentable_unit, property: property) }
 
   before do
-    # Log in
     visit new_session_path
     fill_in "email", with: user.email
     fill_in "password", with: "password"
@@ -15,24 +15,22 @@ RSpec.describe "ScheduleE", type: :system do
   it "verifies schedule e summary accuracy with all expense categories" do
     year = Date.current.year
 
-    lease = create(:lease,
-      rental_property: property,
+    tenancy = create(:tenancy,
+      rentable_unit: unit,
       commencement_date: Date.new(year, 1, 1),
       termination_date: Date.new(year, 12, 31),
-      annual_rental_amount: 12000,
-      lease_type: :term
+      agreement_type: "fixed_term"
     )
 
-    # Create tenant payments
     create(:tenant_payment,
-      lease: lease,
+      tenancy: tenancy,
       amount: 5000.00,
       payment_date: Date.new(year, 1, 5),
       payment_method: "Zelle"
     )
 
     create(:tenant_payment,
-      lease: lease,
+      tenancy: tenancy,
       amount: 150.00,
       payment_date: Date.new(year, 2, 10),
       payment_method: "Check"
@@ -50,7 +48,7 @@ RSpec.describe "ScheduleE", type: :system do
       amount = 100.00 + (index * 10)
       total_expenses += amount
       create(:expense,
-        rental_property: property,
+        property: property,
         category: category,
         amount: amount,
         expense_date: Date.new(year, 3, 1),
@@ -58,7 +56,7 @@ RSpec.describe "ScheduleE", type: :system do
       )
     end
 
-    visit rental_property_path(property, year: year)
+    visit property_path(property, year: year)
     click_on "📋 Schedule E"
 
     expect(page).to have_text("Rents Received")
@@ -79,11 +77,7 @@ RSpec.describe "ScheduleE", type: :system do
     net_income = 5150.00 - total_expenses
     formatted_net = ActionController::Base.helpers.number_to_currency(net_income.abs)
 
-    if net_income < 0
-      expect(page).to have_text("Net Loss")
-    else
-      expect(page).to have_text("Net Income")
-    end
+    expect(page).to have_text("Net Rental Income (Loss)")
     expect(page).to have_text(formatted_net)
   end
 end

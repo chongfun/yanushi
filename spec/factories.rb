@@ -10,68 +10,92 @@ FactoryBot.define do
     user_agent { "TestAgent" }
   end
 
-  factory :rental_property do
+  factory :property do
     association :user
     sequence(:address) { |n| "#{n} Main St" }
-    property_type { :single_family_residence }
+    asset_type { "single_family" }
     square_footage { 1500 }
   end
 
-  factory :lease do
-    association :rental_property
-    lease_type { :term }
-    commencement_date { Date.today }
-    termination_date { Date.today + 1.year }
-    annual_rental_amount { 12000.0 }
-    late_period_days { 5 }
-    security_deposit { 500.0 }
+  factory :rentable_unit do
+    association :property
+    sequence(:name) { |n| "Unit #{n}" }
+    sequence(:unit_identifier) { |n| "#{100 + n}" }
+    square_footage { 1200 }
+    active { true }
   end
 
-  factory :tenant do
+  factory :party do
     association :user
-    sequence(:name) { |n| "Tenant #{n}" }
+    sequence(:display_name) { |n| "Party #{n}" }
+    party_type { "individual" }
     mailing_address { "123 Street" }
     phone_number { "555-5555" }
-    email_address { "tenant@example.com" }
+    email_address { "party@example.com" }
   end
 
-  factory :lease_tenant do
-    association :lease
-    association :tenant
-  end
-
-  factory :tenant_alias do
-    association :tenant
+  factory :party_alias do
+    association :party
     sequence(:alias_name) { |n| "Alias #{n}" }
   end
 
+  factory :tenancy do
+    association :rentable_unit
+    agreement_type { "fixed_term" }
+    commencement_date { Date.current }
+    termination_date { Date.current + 1.year }
+    late_period_days { 5 }
+
+    trait :month_to_month do
+      agreement_type { "month_to_month" }
+      termination_date { nil }
+    end
+  end
+
+  factory :tenancy_party do
+    association :tenancy
+    party { association :party, user: tenancy.rentable_unit.property.user }
+    role { "tenant" }
+    effective_from { tenancy&.commencement_date || Date.current }
+    effective_until { tenancy&.termination_date }
+  end
+
+  factory :rent_term do
+    association :tenancy
+    amount_cents { 120_000 }
+    due_day { 1 }
+    frequency { "monthly" }
+    effective_from { tenancy&.commencement_date || Date.current }
+    effective_until { tenancy&.termination_date }
+  end
+
   factory :scheduled_rent do
-    association :lease
-    amount { 1000.0 }
-    due_date { Date.today }
+    association :tenancy
+    amount { 1200.0 }
+    due_date { Date.current }
   end
 
   factory :tenant_payment do
-    association :lease
-    amount { 1000.0 }
-    payment_date { Date.today }
+    association :tenancy
+    amount { 1200.0 }
+    payment_date { Date.current }
     payment_method { "check" }
     sequence(:transaction_number) { |n| "TXN#{n}" }
   end
 
   factory :expense do
-    association :rental_property
+    association :property
     category { "repairs" }
     amount { 100.0 }
-    expense_date { Date.today }
+    expense_date { Date.current }
     description { "Fixing faucet" }
   end
 
   factory :tenant_charge do
-    association :lease
+    association :tenancy
     association :expense
     amount { 100.0 }
-    charge_date { Date.today }
+    charge_date { Date.current }
     description { "Reimbursable repair" }
   end
 

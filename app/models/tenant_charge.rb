@@ -1,5 +1,5 @@
 class TenantCharge < ApplicationRecord
-  belongs_to :lease
+  belongs_to :tenancy
   belongs_to :expense
 
   validates :amount, presence: true, numericality: { greater_than: 0 }

@@ -1,0 +1,124 @@
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Properties", properties_path %></li>
+  <li class="font-bold"><%= @property.address %></li>
+<% end %>
+
+<div class="max-w-6xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-base-content"><%= @property.address %></h1>
+      <div class="flex gap-2 mt-2">
+        <span class="badge badge-primary"><%= @property.asset_type.titleize %></span>
+        <% if @property.square_footage.present? %>
+          <span class="badge badge-outline"><%= @property.square_footage %> sqft</span>
+        <% end %>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Back to List", properties_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit Property", edit_property_path(@property), class: "btn btn-outline" %>
+      <%= button_to "Delete", @property, method: :delete, 
+          class: "btn btn-error btn-ghost", 
+          form: { data: { turbo_confirm: "Are you sure? This will delete this property and its units." } } %>
+    </div>
+  </div>
+
+  <!-- Units Section -->
+  <div class="card bg-base-100 shadow border border-base-200 mb-8">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="card-title text-xl font-bold">Rentable Units</h2>
+          <p class="text-sm text-base-content/60">Manage units and tenancies for this property</p>
+        </div>
+        <%= link_to "＋ Add Unit", new_property_rentable_unit_path(@property), class: "btn btn-sm btn-primary" %>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Unit Name</th>
+              <th>Identifier</th>
+              <th>Size</th>
+              <th>Status</th>
+              <th>Active Tenancy</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @property.rentable_units.each do |unit| %>
+              <% active_tenancy = unit.tenancies.find(&:active?) %>
+              <tr>
+                <td class="font-bold"><%= unit.name %></td>
+                <td><%= unit.unit_identifier.presence || "—" %></td>
+                <td><%= unit.square_footage.present? ? "#{unit.square_footage} sqft" : "—" %></td>
+                <td>
+                  <% if unit.active? %>
+                    <span class="badge badge-success badge-sm">Active</span>
+                  <% else %>
+                    <span class="badge badge-ghost badge-sm">Inactive</span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if active_tenancy %>
+                    <%= link_to "Tenancy ##{active_tenancy.id} (#{active_tenancy.parties.map(&:display_name).join(', ')})", active_tenancy, class: "link link-primary font-medium" %>
+                  <% else %>
+                    <span class="text-base-content/40 text-sm">Vacant</span>
+                  <% end %>
+                </td>
+                <td class="text-right space-x-1">
+                  <%= link_to "Edit", edit_property_rentable_unit_path(@property, unit), class: "btn btn-ghost btn-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="stats shadow bg-base-100 border border-base-200">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Active Tenancies</div>
+        <div class="stat-value text-primary"><%= @property.tenancies.select(&:active?).count %></div>
+        <div class="stat-desc text-base-content/40">Current active agreements</div>
+      </div>
+    </div>
+    
+    <div class="stats shadow bg-base-100 border border-base-200">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Active Residents</div>
+        <div class="stat-value text-secondary"><%= @property.tenancies.select(&:active?).flat_map(&:parties).uniq.count %></div>
+        <div class="stat-desc text-base-content/40">Total active parties</div>
+      </div>
+    </div>
+
+    <div class="stats shadow bg-base-100 border border-base-200">
+      <div class="stat">
+        <div class="stat-title text-base-content/60">Total Units</div>
+        <div class="stat-value text-accent font-mono text-2xl">
+          <%= @property.rentable_units.count %>
+        </div>
+        <div class="stat-desc text-base-content/40">Rentable units</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lease / Tenancy Balances -->
+  <div id="active_lease_balances">
+    <%= render "properties/lease_balances", property: @property %>
+  </div>
+
+  <div class="divider mb-8"></div>
+
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-black tracking-tight">Financial Ledger</h2>
+    </div>
+
+    <%= render "properties/financials", property: @property, financial_items: @financial_items, year: @year %>
+  </div>
+</div>

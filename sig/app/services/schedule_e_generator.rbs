@@ -9,13 +9,15 @@ class ScheduleEGenerator
   class TemplateMissingError < StandardError
   end
 
-  def initialize: (RentalProperty rental_property, Integer | String year) -> void
+  def initialize: (Property property, Integer | String year) -> void
 
   def call: () -> String
 
   private
 
   def fill_property_info: (untyped form) -> void
+
+  def schedule_e_type_code: (String | Symbol | untyped asset_type) -> Integer
 
   def fill_income: (untyped form) -> void
 

@@ -1,0 +1,34 @@
+<% content_for :title, "Tenants & Payers" %>
+
+<% content_for :breadcrumbs do %>
+  <li>Tenants & Payers</li>
+<% end %>
+
+<div class="flex justify-between items-center mb-6">
+  <div>
+    <h1 class="text-3xl font-bold">Tenants & Payers</h1>
+    <p class="text-sm text-base-content/60">People and organizations who participate in tenancies or make payments</p>
+  </div>
+  <%= link_to "New Tenant / Payer", new_party_path, class: "btn btn-primary" %>
+</div>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Aliases</th>
+        <th>Tenancies</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="parties">
+      <% @parties.each do |party| %>
+        <%= render party %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

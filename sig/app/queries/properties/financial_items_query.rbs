@@ -1,0 +1,13 @@
+module Properties
+  class FinancialItemsQuery
+    def initialize: (property: Property) -> void
+    def call: (year: Integer | String) -> Array[untyped]
+
+    private
+
+    attr_reader property: Property
+
+    def items_for: (Symbol association_name, Symbol date_attribute, String type, Date start_date, Date end_date) -> Array[untyped]
+    def records_for: (Symbol association_name, Symbol date_attribute, Date start_date, Date end_date) -> untyped
+  end
+end

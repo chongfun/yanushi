@@ -1,5 +1,5 @@
 class Expense < ApplicationRecord
-  belongs_to :rental_property
+  belongs_to :property
   has_one :tenant_charge, dependent: :destroy
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
@@ -25,7 +25,7 @@ class Expense < ApplicationRecord
     other: "other"
   }
 
-  attr_accessor :tenant_reimbursable, :reimburse_lease_id, :reimburse_amount
+  attr_accessor :tenant_reimbursable, :reimburse_tenancy_id, :reimburse_amount
 
   def reimbursed?
     tenant_charge.present?
@@ -39,8 +39,16 @@ class Expense < ApplicationRecord
     @tenant_reimbursable.nil? ? reimbursed? : ActiveModel::Type::Boolean.new.cast(@tenant_reimbursable)
   end
 
+  def reimburse_tenancy_id
+    @reimburse_tenancy_id.presence || tenant_charge&.tenancy_id
+  end
+
   def reimburse_lease_id
-    @reimburse_lease_id.presence || tenant_charge&.lease_id
+    reimburse_tenancy_id
+  end
+
+  def reimburse_lease_id=(val)
+    self.reimburse_tenancy_id = val
   end
 
   def reimburse_amount

@@ -1,5 +1,5 @@
 class PaymentIngestionsController < ApplicationController
-  before_action :set_ingestion, only: %i[ show update destroy confirm download ]
+  before_action :set_ingestion, only: %i[show update destroy confirm download]
 
   def index
     user = authenticated_user
@@ -52,8 +52,8 @@ class PaymentIngestionsController < ApplicationController
       else
         redirect_to payment_ingestion_path(@ingestion), alert: result.failure.error
       end
-    rescue => e
-      Rails.logger.error("Confirm payment ingestion failed: #{e.message}\n#{e.backtrace.join("\n")}")
+    rescue StandardError => e
+      Rails.logger.error("Confirm payment ingestion failed: #{e.message}\n#{e.backtrace&.join("\n")}")
       redirect_to payment_ingestion_path(@ingestion), alert: "Failed to confirm payment: An unexpected error occurred."
     end
   end
@@ -76,30 +76,30 @@ class PaymentIngestionsController < ApplicationController
 
   private
 
-  def set_ingestion
-    @ingestion = authenticated_user.payment_ingestions.find(params[:id])
-  end
-
-  def payment_ingestion_params
-    permitted_params = params.require(:payment_ingestion).permit(
-      :tenant_id, :lease_id, :amount, :payment_date, :payment_method, :transaction_number
-    )
-
-    user = authenticated_user
-    if permitted_params[:tenant_id].present?
-      raise ActiveRecord::RecordNotFound unless user.tenants.where(id: permitted_params[:tenant_id]).exists?
+    def set_ingestion
+      @ingestion = authenticated_user.payment_ingestions.find(params[:id])
     end
-    if permitted_params[:lease_id].present?
-      raise ActiveRecord::RecordNotFound unless user.leases.where(id: permitted_params[:lease_id]).exists?
-    end
-    permitted_params
-  end
 
-  def set_form_data
-    result = PaymentIngestions::FormDataQuery.new(user: authenticated_user).call
-    @tenants = result.tenants
-    @leases = result.leases
-    @tenant_leases_map = result.tenant_leases_map
-    @lease_tenants_map = result.lease_tenants_map
-  end
+    def payment_ingestion_params
+      permitted_params = params.require(:payment_ingestion).permit(
+        :party_id, :tenancy_id, :amount, :payment_date, :payment_method, :transaction_number
+      )
+
+      user = authenticated_user
+      if permitted_params[:party_id].present?
+        raise ActiveRecord::RecordNotFound unless user.parties.where(id: permitted_params[:party_id]).exists?
+      end
+      if permitted_params[:tenancy_id].present?
+        raise ActiveRecord::RecordNotFound unless user.tenancies.where(id: permitted_params[:tenancy_id]).exists?
+      end
+      permitted_params
+    end
+
+    def set_form_data
+      result = PaymentIngestions::FormDataQuery.new(user: authenticated_user).call
+      @parties = result.parties
+      @tenancies = result.tenancies
+      @party_tenancies_map = result.party_tenancies_map
+      @tenancy_parties_map = result.tenancy_parties_map
+    end
 end

@@ -1,7 +1,7 @@
 class PaymentIngestion < ApplicationRecord
   belongs_to :user
-  belongs_to :tenant, optional: true
-  belongs_to :lease, optional: true
+  belongs_to :party, optional: true
+  belongs_to :tenancy, optional: true
   belongs_to :tenant_payment, optional: true
   belongs_to :payment_document, optional: true
 
@@ -27,10 +27,10 @@ class PaymentIngestion < ApplicationRecord
     [ "P2P", "p2p" ]
   ].freeze
 
-  scope :reviewable, -> { where(status: [ :matched, :unmatched, :ambiguous, :failed ]) }
+  scope :reviewable, -> { where(status: %i[matched unmatched ambiguous failed]) }
 
   def confirmable?
-    tenant.present? && lease.present? && amount.present? && payment_date.present? && !duplicate_exists?
+    party.present? && tenancy.present? && amount.present? && payment_date.present? && !duplicate_exists?
   end
 
   def confirm!(create_alias: false)
@@ -42,8 +42,9 @@ class PaymentIngestion < ApplicationRecord
 
   def duplicate_exists?
     return false if transaction_number.blank? || payment_method.blank?
-    scope = TenantPayment.joins(lease: :rental_property)
-                         .where(rental_properties: { user_id: user_id })
+
+    scope = TenantPayment.joins(tenancy: { rentable_unit: :property })
+                         .where(properties: { user_id: user_id })
                          .where(payment_method: payment_method, transaction_number: transaction_number)
     scope = scope.where.not(id: tenant_payment_id) if tenant_payment_id.present?
     scope.exists?
@@ -51,6 +52,7 @@ class PaymentIngestion < ApplicationRecord
 
   def ingestion_duplicate_exists?
     return false if transaction_number.blank? || payment_method.blank?
+
     scope = self.class.where(user_id: user_id, payment_method: payment_method, transaction_number: transaction_number)
     scope = scope.where.not(id: id) if persisted?
     scope.exists?
@@ -66,17 +68,17 @@ class PaymentIngestion < ApplicationRecord
 
   private
 
-  def validate_parse_status
-    if failed? && error_message.present? && amount.blank? && tenant.blank?
-      errors.add(:base, "Parsing failed: #{error_message}")
+    def validate_parse_status
+      if failed? && error_message.present? && amount.blank? && party.blank?
+        errors.add(:base, "Parsing failed: #{error_message}")
+      end
     end
-  end
 
-  def ensure_not_duplicate_payment
-    if duplicate_exists?
-      errors.add(:base, "This payment receipt has already been confirmed and recorded in a tenant payment.")
-    elsif ingestion_duplicate_exists?
-      errors.add(:base, "This payment receipt has already been uploaded and is pending review.")
+    def ensure_not_duplicate_payment
+      if duplicate_exists?
+        errors.add(:base, "This payment receipt has already been confirmed and recorded in a tenant payment.")
+      elsif ingestion_duplicate_exists?
+        errors.add(:base, "This payment receipt has already been uploaded and is pending review.")
+      end
     end
-  end
 end

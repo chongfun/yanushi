@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Sessions", type: :request do
   let!(:user) { create(:user) }
@@ -16,6 +16,14 @@ RSpec.describe "Sessions", type: :request do
         post session_path, params: { email: user.email, password: "password" }
         expect(response).to redirect_to(root_path)
         expect(cookies[:session_id]).to be_present
+      end
+
+      it "redirects to stored return_to URL after authentication" do
+        get properties_url
+        expect(response).to redirect_to(new_session_path)
+
+        post session_path, params: { email: user.email, password: "password" }
+        expect(response).to redirect_to(properties_url)
       end
     end
 
@@ -41,6 +49,11 @@ RSpec.describe "Sessions", type: :request do
       delete session_path
       expect(response).to redirect_to(new_session_path)
       expect(cookies[:session_id]).to be_blank
+    end
+
+    it "handles sign out when unauthenticated" do
+      delete session_path
+      expect(response).to redirect_to(new_session_path)
     end
   end
 end

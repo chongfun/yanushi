@@ -1,11 +1,11 @@
 module PaymentIngestionsHelper
   def payment_ingestion_alias_proposal(ingestion)
-    tenant = ingestion.tenant
-    return unless tenant
+    party = ingestion.party
+    return unless party
 
-    if tenant.alias_candidate?(ingestion.payer_name)
+    if party.alias_candidate?(ingestion.payer_name)
       ingestion.payer_name
-    elsif tenant.alias_candidate?(ingestion.payer_username)
+    elsif party.alias_candidate?(ingestion.payer_username)
       ingestion.payer_username
     end
   end

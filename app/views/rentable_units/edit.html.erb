@@ -1,0 +1,24 @@
+<% content_for :title, "Editing Rentable Unit" %>
+
+<% content_for :breadcrumbs do %>
+  <li><%= link_to "Properties", properties_path %></li>
+  <li><%= link_to @property.address, @property %></li>
+  <li class="font-bold">Edit <%= @rentable_unit.name %></li>
+<% end %>
+
+<div class="max-w-xl mx-auto py-8">
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold mb-6">Editing <%= @rentable_unit.name %></h2>
+
+      <%= render "form", rentable_unit: @rentable_unit %>
+
+      <div class="mt-6 flex justify-between">
+        <%= button_to "Deactivate / Delete Unit", [@property, @rentable_unit], method: :delete,
+            class: "btn btn-error btn-ghost btn-sm",
+            form: { data: { turbo_confirm: "Are you sure you want to deactivate or delete this unit?" } } %>
+        <%= link_to "Back to Property", @property, class: "btn btn-ghost" %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 <tr id="<%= dom_id tenant_payment %>">
   <td>
-    <div class="font-medium text-sm"><%= tenant_payment.lease.rental_property.address %></div>
-    <div class="text-xs text-base-content/60">Lease ID: <%= tenant_payment.lease_id %></div>
+    <div class="font-medium text-sm"><%= tenant_payment.tenancy.property.address %></div>
+    <div class="text-xs text-base-content/60">Tenancy ID: <%= tenant_payment.tenancy_id %> (<%= tenant_payment.tenancy.parties.map(&:display_name).join(', ') %>)</div>
   </td>
   <td><%= tenant_payment.payment_date %></td>
   <td class="font-mono text-success"><%= number_to_currency(tenant_payment.amount) %></td>

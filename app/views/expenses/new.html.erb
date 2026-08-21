@@ -1,9 +1,9 @@
 <% content_for :title, "New expense" %>
 
-<% if @rental_property %>
+<% if @property %>
   <%# Turbo Frame response for modal %>
   <turbo-frame id="modal-frame" data-modal-title="Record Expense">
-    <%= render "expenses/modal_form", expense: @expense, rental_property: @rental_property %>
+    <%= render "expenses/modal_form", expense: @expense, property: @property %>
   </turbo-frame>
 <% else %>
   <%# Standalone full-page form %>

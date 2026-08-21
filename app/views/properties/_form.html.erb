@@ -1,0 +1,51 @@
+<%= form_with(model: property) do |form| %>
+  <% if property.errors.any? %>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+      <div>
+        <h3 class="font-bold"><%= pluralize(property.errors.count, "error") %> prohibited this property from being saved:</h3>
+        <ul>
+          <% property.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :address, class: "label font-semibold" %>
+    <%= form.text_field :address, class: "input input-bordered w-full", required: true %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :asset_type, class: "label font-semibold" %>
+    <%= form.select :asset_type, Property::ASSET_TYPES.map { |k| [k.titleize, k] }, {}, { class: "select select-bordered w-full", required: true } %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :square_footage, class: "label font-semibold" %>
+    <%= form.number_field :square_footage, class: "input input-bordered w-full" %>
+  </div>
+
+  <% if property.new_record? %>
+    <div class="divider text-xs text-base-content/50 uppercase tracking-wider">Initial Unit (Optional)</div>
+    <p class="text-xs text-base-content/60 mb-4">Leave blank to automatically create "Main Unit" for single-family/single-space properties.</p>
+
+    <%= form.fields_for :unit do |uf| %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control w-full mb-4">
+          <%= uf.label :name, "Unit Name (e.g. Unit A, Apt 1)", class: "label font-semibold" %>
+          <%= uf.text_field :name, class: "input input-bordered w-full", placeholder: "Main Unit" %>
+        </div>
+        <div class="form-control w-full mb-4">
+          <%= uf.label :unit_identifier, "Identifier (Optional)", class: "label font-semibold" %>
+          <%= uf.text_field :unit_identifier, class: "input input-bordered w-full", placeholder: "101" %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <div>
+    <%= form.submit class: "btn btn-primary w-full mt-4" %>
+  </div>
+<% end %>
