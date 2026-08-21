@@ -1,0 +1,51 @@
+module Accounting
+  class PropertySummaryQuery
+    class SummaryResult
+      attr_reader property: Property?
+      attr_reader date_range: DateRange
+      attr_reader net_cash_movement_cents: Integer
+      attr_reader income_recognized_cents: Integer
+      attr_reader operating_expenses_cents: Integer
+      attr_reader net_operating_income_cents: Integer
+      attr_reader tenant_receivable_change_cents: Integer
+      attr_reader security_deposit_liability_change_cents: Integer
+      attr_reader tenant_receivable_cents: Integer
+      attr_reader security_deposits_held_cents: Integer
+      attr_reader expenses_by_account: Hash[String, Integer]
+      attr_reader income_by_account: Hash[String, Integer]
+
+      def initialize: (
+        property: Property?,
+        date_range: DateRange,
+        net_cash_movement_cents: Integer,
+        income_recognized_cents: Integer,
+        operating_expenses_cents: Integer,
+        net_operating_income_cents: Integer,
+        tenant_receivable_change_cents: Integer,
+        security_deposit_liability_change_cents: Integer,
+        tenant_receivable_cents: Integer,
+        security_deposits_held_cents: Integer,
+        expenses_by_account: Hash[String, Integer],
+        income_by_account: Hash[String, Integer]
+      ) -> void
+
+      def net_cash_movement: () -> BigDecimal
+      def income_recognized: () -> BigDecimal
+      def operating_expenses: () -> BigDecimal
+      def net_operating_income: () -> BigDecimal
+      def tenant_receivable: () -> BigDecimal
+      def security_deposits_held: () -> BigDecimal
+    end
+
+    def self.call: (property: Property?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> SummaryResult
+    def initialize: (property: Property?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> void
+    def call: () -> SummaryResult
+
+    private
+
+    attr_reader property: Property?
+    attr_reader date_range: DateRange
+    def scoped_period_postings: () -> untyped
+    def empty_summary: () -> SummaryResult
+  end
+end

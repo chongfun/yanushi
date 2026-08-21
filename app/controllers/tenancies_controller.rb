@@ -1,5 +1,5 @@
 class TenanciesController < ApplicationController
-  before_action :set_tenancy, only: %i[show edit update destroy]
+  before_action :set_tenancy, only: %i[show edit update destroy statement]
   before_action :set_form_data, only: %i[new edit create update]
 
   def index
@@ -7,6 +7,30 @@ class TenanciesController < ApplicationController
   end
 
   def show
+    @recent_activity_rows = Accounting::RecentTenantReceivableActivityQuery.call(
+      tenancy: @tenancy,
+      limit: 5,
+      as_of: Date.current
+    )
+  end
+
+  def statement
+    @date_range = Accounting::DateRange.parse(params)
+    unless @date_range.valid?
+      flash.now[:alert] = @date_range.errors.to_sentence
+    end
+    @view_mode = params[:view] == "all" ? "all" : "receivable"
+    if @view_mode == "all"
+      @financial_activity = Accounting::TenancyActivityQuery.call(
+        tenancy: @tenancy,
+        date_range: @date_range
+      )
+    else
+      @statement = Accounting::TenantReceivableActivityQuery.call(
+        tenancy: @tenancy,
+        date_range: @date_range
+      )
+    end
   end
 
   def new

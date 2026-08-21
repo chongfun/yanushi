@@ -12,16 +12,16 @@ RSpec.describe "Tenancies", type: :request do
     create(:tenancy,
       rentable_unit: unit,
       agreement_type: "fixed_term",
-      commencement_date: Date.current,
-      termination_date: Date.current + 1.year
+      commencement_date: Date.current.beginning_of_month,
+      termination_date: Date.current.beginning_of_month + 1.year
     )
   end
   let!(:rent_term) do
     create(:rent_term,
       tenancy: tenancy,
       amount_cents: 150_000,
-      effective_from: Date.current,
-      effective_until: Date.current + 1.year
+      effective_from: Date.current.beginning_of_month,
+      effective_until: Date.current.beginning_of_month + 1.year
     )
   end
   let!(:tenancy_party) do
@@ -29,8 +29,8 @@ RSpec.describe "Tenancies", type: :request do
       tenancy: tenancy,
       party: party,
       role: "tenant",
-      effective_from: Date.current,
-      effective_until: Date.current + 1.year
+      effective_from: tenancy.commencement_date,
+      effective_until: tenancy.termination_date
     )
   end
 
@@ -57,7 +57,7 @@ RSpec.describe "Tenancies", type: :request do
   end
 
   describe "POST /tenancies" do
-    let(:new_unit) { create(:rentable_unit, property: property, name: "Unit 2") }
+    let(:new_unit) { create(:rentable_unit, property: property) }
 
     it "creates a tenancy with valid attributes (HTML & JSON)" do
       expect {
@@ -78,7 +78,7 @@ RSpec.describe "Tenancies", type: :request do
 
       expect(response).to redirect_to(tenancy_url(Tenancy.last))
 
-      another_unit = create(:rentable_unit, property: property, name: "Unit 3")
+      another_unit = create(:rentable_unit, property: property)
       post tenancies_url(format: :json), params: {
         tenancy: {
           rentable_unit_id: another_unit.id,
@@ -90,7 +90,7 @@ RSpec.describe "Tenancies", type: :request do
       }
       expect(response).to have_http_status(:created)
 
-      unit4 = create(:rentable_unit, property: property, name: "Unit 4")
+      unit4 = create(:rentable_unit, property: property)
       post tenancies_url, params: {
         tenancy: {
           rentable_unit_id: unit4.id,
@@ -109,7 +109,7 @@ RSpec.describe "Tenancies", type: :request do
       }
       expect(response).to redirect_to(tenancy_url(Tenancy.last))
 
-      unit5 = create(:rentable_unit, property: property, name: "Unit 5")
+      unit5 = create(:rentable_unit, property: property)
       post tenancies_url, params: {
         tenancy: {
           rentable_unit_id: unit5.id,
@@ -201,9 +201,66 @@ RSpec.describe "Tenancies", type: :request do
   end
 
   describe "GET /tenancies/:id" do
+    before do
+      Accounting::ChartOfAccounts.ensure_for(user)
+    end
+
     it "renders a successful response" do
       get tenancy_url(tenancy)
       expect(response).to be_successful
+    end
+
+    it "excludes future charges from Recent Account Activity and aligns with Current Balance" do
+      # 1. Past payment: $1,500 on 5 days ago
+      res = Receipts::CreateService.call(
+        tenancy: tenancy,
+        payer_party: party,
+        amount_cents: 150_000,
+        received_on: Date.current - 5.days,
+        payment_method: "check"
+      )
+      expect(res).to be_success
+
+      # 2. Future charge: $1,500 on 10 days in the future
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 150_000,
+        charge_date: Date.current + 10.days,
+        description: "Future Month Rent"
+      )
+
+      get tenancy_url(tenancy)
+      expect(response).to be_successful
+
+      # Current balance card is as of Date.current (excludes future charge)
+      expect(response.body).to include("Account Balance")
+      expect(response.body).to include("-$1,500.00")
+
+      # Recent Account Activity includes past payment, does not include future rent
+      expect(response.body).to include("Recent Account Activity")
+      recent_activity_section = response.body.split("Recent Account Activity").last.split("Payments & Receipts").first
+      expect(recent_activity_section).to include("Payment")
+      expect(recent_activity_section).not_to include("Future Month Rent")
+    end
+
+    it "distinguishes charge waivers from corrections in Recent Account Activity" do
+      charge_res = Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 5_000,
+        charge_date: Date.current - 2.days,
+        description: "Late Fee"
+      )
+      charge = charge_res.value!.data[:charge]
+
+      Charges::VoidService.call(charge: charge, occurred_on: Date.current)
+
+      get tenancy_url(tenancy)
+      expect(response).to be_successful
+      expect(response.body).to include("Waiver")
+      expect(response.body).to include("Waived")
+      expect(response.body).to include("Void charge")
     end
   end
 
@@ -260,6 +317,105 @@ RSpec.describe "Tenancies", type: :request do
 
       delete tenancy_url(tenancy, format: :json)
       expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "GET /tenancies/:id/statement" do
+    before do
+      Accounting::ChartOfAccounts.ensure_for(user)
+    end
+
+    it "renders the running account statement" do
+      res = Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 150_000,
+        charge_date: Date.current
+      )
+      expect(res).to be_success
+
+      get statement_tenancy_path(tenancy)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Tenant Account Statement")
+      expect(response.body).to include("Opening Balance")
+      expect(response.body).to include("Closing Balance")
+      expect(response.body).to include("Rent")
+      expect(response.body).to include("$1,500.00")
+      expect(response.body).to include("Custom Range")
+    end
+
+    it "filters statement by date range" do
+      get statement_tenancy_path(tenancy, from: "2026-01-01", through: "2026-12-31")
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "handles invalid date range by showing flash alert and suppressing balance cards" do
+      get statement_tenancy_path(tenancy, from: "2026-12-31", through: "2026-01-01")
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("From date cannot be after through date")
+      expect(response.body).to include("Unable to generate financial report")
+      expect(response.body).not_to include("Opening Balance")
+      expect(response.body).not_to include("Closing Balance")
+      expect(response.body).not_to include("Paid in full")
+      expect(response.body).not_to include("Settled")
+    end
+
+    it "accurately labels credit balances and does not display '(Owed)' on overpayment" do
+      party = create(:party, user: user)
+      # Rent $1,500
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 150_000,
+        charge_date: Date.current
+      )
+      # Payment $1,600 -> $100 credit
+      Receipts::CreateService.call(
+        tenancy: tenancy,
+        payer_party: party,
+        amount_cents: 160_000,
+        received_on: Date.current,
+        payment_method: "check"
+      )
+
+      get statement_tenancy_path(tenancy)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Closing Balance")
+      expect(response.body).to include("Tenant credit")
+      expect(response.body).not_to include("Closing Balance (Owed)")
+      expect(response.body).not_to include("(Owed)")
+    end
+
+    it "renders all tenancy financial activity including security deposit transactions when view=all" do
+      party = create(:party, user: user)
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 150_000,
+        charge_date: Date.current,
+        description: "Monthly Rent"
+      )
+      deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 100_000)
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: deposit,
+        amount_cents: 100_000,
+        occurred_on: Date.current,
+        party: party,
+        memo: "Holding Deposit"
+      )
+
+      # 1. Receivable Statement: includes Rent, excludes Deposit Received
+      get statement_tenancy_path(tenancy)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Monthly Rent")
+      expect(response.body).not_to include("Holding Deposit")
+
+      # 2. All Financial Activity: includes both Rent and Deposit Received
+      get statement_tenancy_path(tenancy, view: "all")
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Monthly Rent")
+      expect(response.body).to include("Holding Deposit")
+      expect(response.body).to include("Deposit Received")
     end
   end
 end

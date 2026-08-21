@@ -3,9 +3,14 @@ class TenanciesController < ApplicationController
   @tenancy: Tenancy
   @properties: Property::ActiveRecord_Relation
   @parties: Party::ActiveRecord_Relation
+  @recent_statement: Accounting::TenantReceivableActivityQuery::StatementResult
+  @recent_activity_rows: Array[Accounting::TenantReceivableActivityQuery::StatementRow]
+  @date_range: Accounting::DateRange
+  @statement: Accounting::TenantReceivableActivityQuery::StatementResult
 
   def index: () -> void
   def show: () -> void
+  def statement: () -> void
   def new: () -> void
   def edit: () -> void
   def create: () -> void

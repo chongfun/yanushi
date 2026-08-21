@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,7 +24,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.bigint "user_id", null: false
     t.index ["user_id", "key"], name: "index_accounts_on_user_id_and_key", unique: true
     t.index ["user_id"], name: "index_accounts_on_user_id"
-    t.check_constraint "account_type::text = ANY (ARRAY['asset'::character varying, 'liability'::character varying, 'equity'::character varying, 'income'::character varying, 'expense'::character varying]::text[])", name: "check_accounts_account_type"
+    t.check_constraint "account_type::text = ANY (ARRAY['asset'::character varying::text, 'liability'::character varying::text, 'equity'::character varying::text, 'income'::character varying::text, 'expense'::character varying::text])", name: "check_accounts_account_type"
   end
 
   create_table "charges", force: :cascade do |t|
@@ -54,7 +54,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.index ["tenancy_id"], name: "index_charges_on_tenancy_id"
     t.index ["voided_at"], name: "index_charges_on_voided_at"
     t.check_constraint "amount_cents > 0", name: "charges_amount_cents_positive"
-    t.check_constraint "charge_kind::text = ANY (ARRAY['rent'::character varying, 'late_fee'::character varying, 'reimbursement'::character varying, 'other'::character varying]::text[])", name: "charges_charge_kind_valid"
+    t.check_constraint "charge_kind::text = ANY (ARRAY['rent'::character varying::text, 'late_fee'::character varying::text, 'reimbursement'::character varying::text, 'other'::character varying::text])", name: "charges_charge_kind_valid"
     t.check_constraint "service_period_end IS NULL OR service_period_start IS NULL OR service_period_end >= service_period_start", name: "charges_service_period_valid"
   end
 
@@ -81,7 +81,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.index ["superseded_by_id"], name: "index_expenses_on_superseded_by_id_unique", unique: true, where: "(superseded_by_id IS NOT NULL)"
     t.index ["voided_at"], name: "index_expenses_on_voided_at"
     t.check_constraint "amount_cents > 0", name: "expenses_amount_cents_positive"
-    t.check_constraint "expense_kind::text = ANY (ARRAY['advertising'::character varying, 'auto_and_travel'::character varying, 'cleaning_and_maintenance'::character varying, 'commissions'::character varying, 'insurance'::character varying, 'legal_and_professional'::character varying, 'management'::character varying, 'mortgage_interest'::character varying, 'other_interest'::character varying, 'repairs'::character varying, 'supplies'::character varying, 'taxes'::character varying, 'utilities'::character varying, 'other'::character varying]::text[])", name: "expenses_expense_kind_valid"
+    t.check_constraint "expense_kind::text = ANY (ARRAY['advertising'::character varying::text, 'auto_and_travel'::character varying::text, 'cleaning_and_maintenance'::character varying::text, 'commissions'::character varying::text, 'insurance'::character varying::text, 'legal_and_professional'::character varying::text, 'management'::character varying::text, 'mortgage_interest'::character varying::text, 'other_interest'::character varying::text, 'repairs'::character varying::text, 'supplies'::character varying::text, 'taxes'::character varying::text, 'utilities'::character varying::text, 'other'::character varying::text])", name: "expenses_expense_kind_valid"
   end
 
   create_table "imported_transactions", force: :cascade do |t|
@@ -112,8 +112,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.index ["user_id"], name: "index_imported_transactions_on_user_id"
     t.check_constraint "amount_cents IS NULL OR amount_cents > 0", name: "imported_transactions_amount_cents_check"
     t.check_constraint "status::text = 'confirmed'::text AND confirmed_source_type IS NOT NULL AND confirmed_source_id IS NOT NULL OR status::text <> 'confirmed'::text AND confirmed_source_type IS NULL AND confirmed_source_id IS NULL", name: "imported_transactions_confirmed_source_check"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'matched'::character varying, 'unmatched'::character varying, 'ambiguous'::character varying, 'confirmed'::character varying, 'failed'::character varying]::text[])", name: "imported_transactions_status_check"
-    t.check_constraint "transaction_kind::text = ANY (ARRAY['unknown'::character varying, 'tenant_receipt'::character varying, 'security_deposit'::character varying]::text[])", name: "imported_transactions_kind_check"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'matched'::character varying::text, 'unmatched'::character varying::text, 'ambiguous'::character varying::text, 'confirmed'::character varying::text, 'failed'::character varying::text])", name: "imported_transactions_status_check"
+    t.check_constraint "transaction_kind::text = ANY (ARRAY['unknown'::character varying::text, 'tenant_receipt'::character varying::text, 'security_deposit'::character varying::text])", name: "imported_transactions_kind_check"
   end
 
   create_table "journal_entries", force: :cascade do |t|
@@ -128,6 +128,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.bigint "user_id", null: false
     t.index ["occurred_on"], name: "index_journal_entries_on_occurred_on"
     t.index ["reversal_of_id"], name: "idx_journal_entries_single_reversal", unique: true, where: "(reversal_of_id IS NOT NULL)"
+    t.index ["user_id", "occurred_on", "id"], name: "index_journal_entries_on_user_id_and_occurred_on_and_id"
     t.index ["user_id", "source_type", "source_id", "event_type"], name: "idx_journal_entries_source_event", unique: true
     t.index ["user_id"], name: "index_journal_entries_on_user_id"
     t.check_constraint "source_id > 0", name: "check_journal_entries_source_id_positive"
@@ -164,13 +165,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.bigint "property_id"
     t.bigint "rentable_unit_id"
     t.bigint "tenancy_id"
+    t.index ["account_id", "journal_entry_id"], name: "index_postings_on_account_id_and_journal_entry_id"
     t.index ["account_id", "property_id"], name: "index_postings_on_account_id_and_property_id"
     t.index ["account_id", "tenancy_id"], name: "index_postings_on_account_id_and_tenancy_id"
     t.index ["account_id"], name: "index_postings_on_account_id"
     t.index ["journal_entry_id"], name: "index_postings_on_journal_entry_id"
     t.index ["party_id"], name: "index_postings_on_party_id"
+    t.index ["property_id", "journal_entry_id"], name: "index_postings_on_property_id_and_journal_entry_id"
     t.index ["property_id"], name: "index_postings_on_property_id"
     t.index ["rentable_unit_id"], name: "index_postings_on_rentable_unit_id"
+    t.index ["tenancy_id", "journal_entry_id"], name: "index_postings_on_tenancy_id_and_journal_entry_id"
     t.index ["tenancy_id"], name: "index_postings_on_tenancy_id"
     t.check_constraint "amount_cents <> 0", name: "check_postings_amount_cents_nonzero"
   end
@@ -258,7 +262,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.index ["superseded_by_id"], name: "index_security_deposit_transactions_on_superseded_by_id"
     t.index ["voided_at"], name: "index_security_deposit_transactions_on_voided_at"
     t.check_constraint "amount_cents > 0", name: "security_deposit_transactions_amount_cents_positive"
-    t.check_constraint "transaction_kind::text = ANY (ARRAY['received'::character varying, 'refunded'::character varying, 'applied'::character varying]::text[])", name: "security_deposit_transactions_kind_check"
+    t.check_constraint "transaction_kind::text = ANY (ARRAY['received'::character varying::text, 'refunded'::character varying::text, 'applied'::character varying::text])", name: "security_deposit_transactions_kind_check"
   end
 
   create_table "security_deposits", force: :cascade do |t|

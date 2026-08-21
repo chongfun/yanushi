@@ -1,0 +1,12 @@
+module Accounting
+  class TenancyActivityQuery
+    def self.call: (tenancy: Tenancy?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> Array[ActivityRow]
+    def initialize: (tenancy: Tenancy?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> void
+    def call: () -> Array[ActivityRow]
+
+    private
+
+    attr_reader tenancy: Tenancy?
+    attr_reader date_range: DateRange
+  end
+end

@@ -1,0 +1,18 @@
+class AccountsController < ApplicationController
+  @accounts: untyped
+  @balances: Hash[Integer, Integer]
+  @account: Account
+  @date_range: Accounting::DateRange
+  @properties: untyped
+  @tenancies: untyped
+  @selected_property: Property?
+  @selected_tenancy: Tenancy?
+  @activity_result: Accounting::AccountActivityQuery::QueryResult
+
+  def index: () -> void
+  def show: () -> void
+
+  private
+
+  def set_account: () -> void
+end

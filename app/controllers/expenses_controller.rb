@@ -63,14 +63,22 @@ class ExpensesController < ApplicationController
       respond_to do |format|
         if (nested = @nested_property)
           year = @expense.paid_on&.year || Date.current.year
-          @financial_items = nested.financial_items(year)
+          date_range = Accounting::DateRange.parse(year: year)
+          @financial_activity = Accounting::PropertyLedgerQuery.call(property: nested, date_range: date_range)
+          @financial_summary = Accounting::PropertySummaryQuery.call(property: nested, date_range: date_range)
           @year = year
 
           format.turbo_stream {
             render turbo_stream: [
               turbo_stream.action(:close_modal, "modal-container"),
               turbo_stream.update("property_financials", partial: "properties/financials",
-                                  locals: { property: nested, financial_items: @financial_items, year: @year }),
+                                  locals: {
+                                    property: nested,
+                                    financial_activity: @financial_activity,
+                                    financial_summary: @financial_summary,
+                                    date_range: date_range,
+                                    year: @year
+                                  }),
               turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
             ]
           }

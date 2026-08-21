@@ -1,0 +1,76 @@
+module Accounting
+  class AccountActivityQuery
+    class AccountPostingRow
+      attr_reader id: Integer
+      attr_reader posting: Posting
+      attr_reader occurred_on: Date
+      attr_reader journal_entry: JournalEntry
+      attr_reader description: String?
+      attr_reader debit_cents: Integer
+      attr_reader credit_cents: Integer
+      attr_reader amount_cents: Integer
+      attr_reader running_raw_balance_cents: Integer
+      attr_reader running_natural_balance_cents: Integer
+      attr_reader property: Property?
+      attr_reader rentable_unit: RentableUnit?
+      attr_reader tenancy: Tenancy?
+      attr_reader party: Party?
+      attr_reader memo: String?
+
+      def initialize: (
+        id: Integer,
+        posting: Posting,
+        occurred_on: Date,
+        journal_entry: JournalEntry,
+        description: String?,
+        debit_cents: Integer,
+        credit_cents: Integer,
+        amount_cents: Integer,
+        running_raw_balance_cents: Integer,
+        running_natural_balance_cents: Integer,
+        property: Property?,
+        rentable_unit: RentableUnit?,
+        tenancy: Tenancy?,
+        party: Party?,
+        memo: String?
+      ) -> void
+    end
+
+    class QueryResult
+      attr_reader account: Account?
+      attr_reader date_range: DateRange
+      attr_reader opening_raw_balance_cents: Integer
+      attr_reader opening_natural_balance_cents: Integer
+      attr_reader closing_raw_balance_cents: Integer
+      attr_reader closing_natural_balance_cents: Integer
+      attr_reader rows: Array[AccountPostingRow]
+
+      def initialize: (
+        account: Account?,
+        date_range: DateRange,
+        opening_raw_balance_cents: Integer,
+        opening_natural_balance_cents: Integer,
+        closing_raw_balance_cents: Integer,
+        closing_natural_balance_cents: Integer,
+        rows: Array[AccountPostingRow]
+      ) -> void
+    end
+
+    def self.call: (account: Account?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?, ?property: Property?, ?rentable_unit: RentableUnit?, ?tenancy: Tenancy?, ?party: Party?) -> QueryResult
+    def initialize: (account: Account?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?, ?property: Property?, ?rentable_unit: RentableUnit?, ?tenancy: Tenancy?, ?party: Party?) -> void
+    def call: () -> QueryResult
+
+    private
+
+    attr_reader account: Account?
+    attr_reader date_range: DateRange
+    attr_reader property: Property?
+    attr_reader rentable_unit: RentableUnit?
+    attr_reader tenancy: Tenancy?
+    attr_reader party: Party?
+
+    def base_scope: () -> untyped
+    def compute_opening_raw_balance: () -> Integer
+    def scoped_postings_query: () -> untyped
+  end
+end

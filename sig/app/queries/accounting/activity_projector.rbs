@@ -1,0 +1,29 @@
+module Accounting
+  class ActivityProjector
+    def self.project: (JournalEntry, ?as_of: Date?) -> ActivityRow
+    def initialize: (JournalEntry, ?as_of: Date?) -> void
+    def project: () -> ActivityRow
+
+    private
+
+    attr_reader journal_entry: JournalEntry
+    attr_reader as_of: Date?
+    attr_reader postings: Array[Posting]
+    attr_reader source: untyped
+
+    def project_reversal: () -> ActivityRow
+    def project_standard: () -> ActivityRow
+    def project_charge: () -> ActivityRow
+    def project_receipt: () -> ActivityRow
+    def project_expense: () -> ActivityRow
+    def project_deposit_received: () -> ActivityRow
+    def project_deposit_refunded: () -> ActivityRow
+    def project_deposit_applied: () -> ActivityRow
+    def project_fallback: () -> ActivityRow
+    def build_row: (kind: String, label: String, amount_cents: Integer, primary_posting: Posting?) -> ActivityRow
+    def determine_lifecycle_status: () -> Symbol
+    def check_corrected: () -> bool
+    def find_posting_by_account_key: (String) -> Posting?
+    def fallback_amount_cents: () -> Integer
+  end
+end

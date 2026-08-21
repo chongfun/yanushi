@@ -1,0 +1,15 @@
+module Accounting
+  class TenancyBalanceQuery
+    def self.call: (tenancy: Tenancy?, ?as_of: untyped) -> BigDecimal
+    def self.balance_cents_as_of: (tenancy: Tenancy?, ?as_of: untyped) -> Integer
+    def initialize: (tenancy: Tenancy?) -> void
+    def balance_cents_as_of: (?untyped) -> Integer
+    def balance_as_of: (?untyped) -> BigDecimal
+    def current_balance: () -> BigDecimal
+    def current_balance_cents: () -> Integer
+
+    private
+
+    attr_reader tenancy: Tenancy?
+  end
+end

@@ -1,8 +1,11 @@
 class Property < ApplicationRecord
   ASSET_TYPES: Array[String]
 
-  def financial_items: (*untyped, ?year: Integer?) -> Array[untyped]
+  def postings: () -> Posting::ActiveRecord_Associations_CollectionProxy
+  def financial_items: (*untyped, ?year: Integer?) -> Array[Accounting::ActivityRow]
   def active_years: (?Array[untyped]) -> Array[Integer]
+  def accounting_activity: (?from: untyped, ?through: untyped, ?year: untyped) -> Array[Accounting::ActivityRow]
+  def accounting_summary: (?from: untyped, ?through: untyped, ?year: untyped) -> Accounting::PropertySummaryQuery::SummaryResult
   def schedule_e_summary: (*untyped, ?year: Integer?) -> Properties::ScheduleESummaryQuery::Result
   def accounting_user: () -> User?
 end

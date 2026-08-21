@@ -14,7 +14,7 @@ class Tenancy < ApplicationRecord
 
   private
 
-  def balance_query: () -> Tenancies::BalanceQuery
+  def balance_query: () -> Accounting::TenancyBalanceQuery
   def rentable_unit_is_active: () -> void
   def termination_date_after_commencement_date: () -> void
   def fixed_term_requires_termination_date: () -> void

@@ -1,0 +1,21 @@
+module Accounting
+  class DateRange
+    attr_reader from: Date?
+    attr_reader through: Date?
+    attr_reader year: Integer?
+    attr_reader errors: Array[String]
+
+    def self.parse: (?untyped) -> DateRange
+    def initialize: (?from: untyped, ?through: untyped, ?year: untyped) -> void
+    def valid?: () -> bool
+    def range: () -> Range[Date]?
+    def as_of: () -> Date
+    def to_h: () -> Hash[Symbol, untyped]
+
+    private
+
+    def parse_year: (untyped) -> Integer?
+    def parse_date: (untyped, Symbol) -> Date?
+    def validate!: () -> void
+  end
+end

@@ -70,6 +70,50 @@ RSpec.describe "Properties", type: :request do
       expect(response.body).to include("Security Deposits Held")
       expect(response.body).to include("$1,500.00")
       expect(response.body).to include("Current refundable liability")
+
+      # Viewing past year (2025) still shows current liability in quick-stat, while 2025 ledger has $0
+      get property_url(property, year: 2025)
+      expect(response).to be_successful
+      expect(response.body).to include("Current refundable liability")
+      expect(response.body).to include("$1,500.00")
+    end
+
+    it "handles invalid date range by showing flash alert and suppressing summary cards" do
+      Accounting::ChartOfAccounts.ensure_for(user)
+      unit = create(:rentable_unit, property: property)
+      tenancy = create(:tenancy, rentable_unit: unit)
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 200_000,
+        charge_date: Date.current
+      )
+
+      get property_url(property, from: "2026-12-31", through: "2026-01-01")
+      expect(response).to be_successful
+      expect(response.body).to include("From date cannot be after through date")
+      expect(response.body).to include("Unable to calculate financial summary")
+      # Summary cards and balance claims are suppressed
+      expect(response.body).not_to include("Cash Movement (Period)")
+      expect(response.body).not_to include("Operating Activity (Accrual)")
+      expect(response.body).not_to include("Tenant Receivable:")
+    end
+
+    it "links Schedule E and formats empty state accurately for single-year and multi-year custom ranges" do
+      Accounting::ChartOfAccounts.ensure_for(user)
+
+      # 1. Custom range within single calendar year 2025
+      get property_url(property, from: "2025-03-01", through: "2025-03-31")
+      expect(response).to be_successful
+      expect(response.body).to include("schedule_e?year=2025")
+      expect(response.body).to include("No financial activity found for the selected period.")
+
+      # 2. Custom multi-year range 2024-2025: Schedule E is disabled with tooltip
+      get property_url(property, from: "2024-11-01", through: "2025-03-31")
+      expect(response).to be_successful
+      expect(response.body).not_to include("schedule_e_property_path")
+      expect(response.body).to include("Choose a single tax year to view Schedule E")
+      expect(response.body).to include("No financial activity found for the selected period.")
     end
   end
 

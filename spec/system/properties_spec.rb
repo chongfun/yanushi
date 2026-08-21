@@ -28,11 +28,17 @@ RSpec.describe "Properties", type: :system do
     property = create(:property, user: user, address: "999 Ledger St")
     unit = create(:rentable_unit, property: property)
     tenancy = create(:tenancy, rentable_unit: unit, commencement_date: Date.current)
-    create(:charge, :other_charge, tenancy: tenancy, charge_date: Date.current, amount_cents: 100_000, description: "Current Charge")
+    Charges::CreateService.call(
+      tenancy: tenancy,
+      charge_kind: "other",
+      charge_date: Date.current,
+      amount_cents: 100_000,
+      description: "Current Charge"
+    )
 
     past_year = Date.current.year - 1
 
-    create(:expense, :posted,
+    Expenses::CreateService.call(
       property: property,
       expense_kind: "repairs",
       amount_cents: 5000,
@@ -45,7 +51,12 @@ RSpec.describe "Properties", type: :system do
     expect(page).to have_text("Current Charge")
     expect(page).not_to have_text("Past year plumbing")
 
-    visit property_path(property, year: past_year)
+    # Select past year from dropdown
+    within("[data-turbo-frame='property_financials']") do
+      select past_year.to_s, from: "Year"
+      # In system specs without full JS evaluation, submitting the form tests the parameter parsing
+      click_on "Go"
+    end
 
     expect(page).to have_text("Past year plumbing")
     expect(page).not_to have_text("Current Charge")
