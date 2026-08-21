@@ -47,6 +47,29 @@ RSpec.describe Charges::CreateService do
       expect(result.value!.data[:charge].amount_cents).to eq(15_025)
     end
 
+    it "creates rent charge using active rent term by default" do
+      create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+
+      result = described_class.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 100_000,
+        charge_date: Date.new(2026, 6, 1)
+      )
+      expect(result).to be_success
+      charge = result.value!.data[:charge]
+      expect(charge.rent_term).to be_present
+      expect(charge.service_period_start).to eq(Date.new(2026, 6, 1))
+      expect(charge.service_period_end).to eq(Date.new(2026, 6, 30))
+    end
+
+    it "rejects invalid amounts and non-integer amount_cents" do
+      expect(described_class.call(tenancy: tenancy, charge_kind: "other", amount: "0")).to be_failure
+      expect(described_class.call(tenancy: tenancy, charge_kind: "other", amount: "-10")).to be_failure
+      expect(described_class.call(tenancy: tenancy, charge_kind: "other", amount: "invalid")).to be_failure
+      expect(described_class.call(tenancy: tenancy, charge_kind: "other", amount_cents: "5000")).to be_failure
+    end
+
     it "rolls back Charge creation if posting fails" do
       allow(Accounting::PostEntryService).to receive(:call).and_return(
         ServiceResult.failure(error: "Posting rejected", code: :posting_failed)
@@ -73,7 +96,38 @@ RSpec.describe Charges::CreateService do
           amount_cents: -500
         )
         expect(result).to be_failure
+        expect(result.failure.code).to eq(:invalid_amount)
+      }.not_to change(Charge, :count)
+
+      expect {
+        result = described_class.call(
+          tenancy: tenancy,
+          charge_kind: "rent",
+          amount_cents: 5000,
+          rent_term: nil # Invalid for rent charge
+        )
+        expect(result).to be_failure
         expect(result.failure.code).to eq(:validation_error)
+      }.not_to change(Charge, :count)
+
+      expect(JournalEntry.count).to eq(0)
+    end
+
+    it "rejects direct creation of reimbursement charge with mismatched unit expense" do
+      other_unit = create(:rentable_unit, property: property, name: "Unit B")
+      unit_b_expense = create(:expense, :posted, property: property, rentable_unit: other_unit, amount_cents: 10_000)
+
+      expect {
+        result = described_class.call(
+          tenancy: tenancy, # tenancy is on Unit A
+          charge_kind: "reimbursement",
+          source_expense: unit_b_expense,
+          amount_cents: 5000,
+          charge_date: Date.current
+        )
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:validation_error)
+        expect(result.failure.error).to include("scoped to the same unit")
       }.not_to change(Charge, :count)
 
       expect(JournalEntry.count).to eq(0)

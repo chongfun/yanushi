@@ -9,9 +9,9 @@ RSpec.describe Properties::FinancialItemsQuery do
   it "returns all yearly financial item types sorted by date" do
     charge = create(:charge, :other_charge, tenancy: tenancy, charge_date: Date.new(2026, 5, 1), amount_cents: 100_000)
     receipt = create(:receipt, tenancy: tenancy, received_on: Date.new(2026, 5, 5), amount_cents: 100_000)
-    expense = create(:expense, property: property, expense_date: Date.new(2026, 5, 10), amount: 50)
+    expense = create(:expense, :posted, property: property, paid_on: Date.new(2026, 5, 10), amount_cents: 5000)
     reimburse_charge = create(:charge, :reimbursement_charge, tenancy: tenancy, source_expense: expense, charge_date: Date.new(2026, 5, 10), amount_cents: 5000)
-    create(:expense, property: property, expense_date: Date.new(2025, 5, 10), amount: 30)
+    create(:expense, :posted, property: property, paid_on: Date.new(2025, 5, 10), amount_cents: 3000)
 
     items = described_class.new(property: property).call(year: 2026)
 

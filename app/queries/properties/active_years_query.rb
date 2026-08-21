@@ -9,7 +9,7 @@ module Properties
       years << Date.current.year
       years.merge(years_for(:charges, :charge_date))
       years.merge(years_for(:receipts, :received_on))
-      years.merge(years_for(:expenses, :expense_date))
+      years.merge(years_for(:expenses, :paid_on))
       additional_years.each do |year|
         next unless year.respond_to?(:to_i)
 

@@ -36,23 +36,18 @@ RSpec.describe "ScheduleE", type: :system do
       payment_method: "Check"
     )
 
-    categories = [
-      "advertising", "auto_and_travel", "cleaning_and_maintenance", "commissions",
-      "insurance", "legal_and_other_professional_fees", "management_fees",
-      "mortgage_interest", "other_interest", "repairs", "supplies", "taxes",
-      "utilities", "depreciation_expense", "other"
-    ]
+    categories = Expense::EXPENSE_KINDS
 
     total_expenses = 0
-    categories.each_with_index do |category, index|
+    categories.each_with_index do |kind, index|
       amount = 100.00 + (index * 10)
       total_expenses += amount
-      create(:expense,
+      create(:expense, :posted,
         property: property,
-        category: category,
-        amount: amount,
-        expense_date: Date.new(year, 3, 1),
-        description: "Test #{category}"
+        expense_kind: kind,
+        amount_cents: (amount * 100).to_i,
+        paid_on: Date.new(year, 3, 1),
+        description: "Test #{kind}"
       )
     end
 
@@ -64,7 +59,7 @@ RSpec.describe "ScheduleE", type: :system do
     expect(page).to have_text("Total Income")
     expect(page).to have_text("$5,150.00")
 
-    categories.each_with_index do |category, index|
+    categories.each_with_index do |_kind, index|
       amount = 100.00 + (index * 10)
       formatted_amount = ActionController::Base.helpers.number_to_currency(amount)
       expect(page).to have_text(formatted_amount)

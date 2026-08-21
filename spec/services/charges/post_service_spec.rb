@@ -133,5 +133,43 @@ RSpec.describe Charges::PostService do
       expect(result).to be_failure
       expect(result.failure.code).to eq(:invalid_state)
     end
+
+    it "rejects unpersisted charge and invalid charge kind" do
+      expect(described_class.call(charge: Charge.new)).to be_failure
+      expect(described_class.call(charge: Charge.new).failure.code).to eq(:invalid_source)
+
+      charge = create(:charge, :other_charge, tenancy: tenancy)
+      allow(charge).to receive(:charge_kind).and_return("unknown_kind")
+      result = described_class.call(charge: charge)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:invalid_input)
+    end
+
+    it "formats default descriptions correctly when description is omitted" do
+      # Rent with service_period_start formats Rent - Month Year
+      rent_charge = create(:charge, :rent_charge,
+        tenancy: tenancy,
+        rent_term: rent_term,
+        description: nil,
+        service_period_start: Date.new(2026, 5, 1),
+        service_period_end: Date.new(2026, 5, 31)
+      )
+      res_rent = described_class.call(charge: rent_charge)
+      expect(res_rent).to be_success
+      expect(res_rent.value!.data[:journal_entry].description).to eq("Rent - May 2026")
+
+      # Reimbursement without description
+      expense = create(:expense, property: property, amount: 300)
+      reimb_charge = create(:charge, :reimbursement_charge, tenancy: tenancy, source_expense: expense, description: nil)
+      res_reimb = described_class.call(charge: reimb_charge)
+      expect(res_reimb).to be_success
+      expect(res_reimb.value!.data[:journal_entry].description).to eq("Utility reimbursement")
+
+      # Other without description
+      other_charge = create(:charge, :other_charge, tenancy: tenancy, description: nil)
+      res_other = described_class.call(charge: other_charge)
+      expect(res_other).to be_success
+      expect(res_other.value!.data[:journal_entry].description).to eq("Tenant charge")
+    end
   end
 end

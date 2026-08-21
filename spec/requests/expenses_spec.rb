@@ -8,8 +8,15 @@ RSpec.describe "Expenses", type: :request do
   let(:unit) { create(:rentable_unit, property: property) }
   let(:other_unit) { create(:rentable_unit, property: other_property) }
   let(:tenancy) { create(:tenancy, rentable_unit: unit) }
-  let(:other_tenancy) { create(:tenancy, rentable_unit: other_unit) }
-  let!(:expense) { create(:expense, property: property) }
+  let!(:expense) do
+    res = Expenses::CreateService.call(
+      property: property,
+      expense_kind: "repairs",
+      amount_cents: 10_000,
+      paid_on: Date.today
+    )
+    res.value!.data[:expense]
+  end
 
   before do
     sign_in_as(user)
@@ -24,15 +31,13 @@ RSpec.describe "Expenses", type: :request do
 
   describe "GET /new" do
     it "renders a successful response and filters out other user data" do
-      other_party = create(:party, user: other_user, display_name: "Other Party")
       get new_expense_url
       expect(response).to be_successful
       expect(response.body).not_to include(other_property.address)
-      expect(response.body).not_to include("Other Party")
     end
 
-    it "sets property when property_id is passed" do
-      get new_expense_url, params: { property_id: property.id }
+    it "sets property when property_id is passed in nested route" do
+      get new_property_expense_url(property)
       expect(response).to be_successful
       expect(response.body).to include(property.address)
     end
@@ -41,15 +46,51 @@ RSpec.describe "Expenses", type: :request do
   describe "POST /create" do
     it "creates an expense with valid parameters" do
       expect {
-        post expenses_url, params: { expense: { amount: 100.00, category: "repairs", description: "Faucet", expense_date: Date.today, property_id: property.id } }
+        post expenses_url, params: {
+          expense: {
+            amount: "100.00",
+            expense_kind: "repairs",
+            description: "Faucet repair",
+            paid_on: Date.today,
+            property_id: property.id
+          }
+        }
       }.to change(Expense, :count).by(1)
+       .and change(JournalEntry, :count).by(1)
 
       expect(response).to redirect_to(expense_url(Expense.last))
     end
 
+    it "ignores submitted amount_cents parameter and creates with amount" do
+      expect {
+        post expenses_url, params: {
+          expense: {
+            amount: "100.00",
+            amount_cents: 1,
+            expense_kind: "repairs",
+            description: "Faucet repair",
+            paid_on: Date.today,
+            property_id: property.id
+          }
+        }
+      }.to change(Expense, :count).by(1)
+
+      expense = Expense.last
+      expect(expense.amount_cents).to eq(10_000)
+      expect(expense.amount).to eq(100.00)
+    end
+
     it "fails to create an expense when property_id is blank" do
       expect {
-        post expenses_url, params: { expense: { amount: 100.00, category: "repairs", description: "Faucet", expense_date: Date.today, property_id: "" } }
+        post expenses_url, params: {
+          expense: {
+            amount: "100.00",
+            expense_kind: "repairs",
+            description: "Faucet",
+            paid_on: Date.today,
+            property_id: ""
+          }
+        }
       }.not_to change(Expense, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
@@ -57,75 +98,108 @@ RSpec.describe "Expenses", type: :request do
 
     it "handles modal-submit success with turbo_stream" do
       expect {
-        post expenses_url, params: {
-          property_id: property.id,
-          expense: { amount: 100.00, category: "repairs", description: "Faucet", expense_date: Date.today, property_id: property.id }
+        post property_expenses_url(property), params: {
+          expense: {
+            amount: "100.00",
+            expense_kind: "repairs",
+            description: "Faucet",
+            paid_on: Date.today
+          }
         }, as: :turbo_stream
       }.to change(Expense, :count).by(1)
 
       expect(response).to have_http_status(:ok)
     end
 
-    it "handles modal-submit success with turbo_stream and empty expense_date" do
-      allow_any_instance_of(Property).to receive(:financial_items).and_return([])
-      allow_any_instance_of(Expense).to receive(:save!).and_return(true)
-      allow_any_instance_of(Expense).to receive(:expense_date).and_return(nil)
-
-      post expenses_url, params: {
-        property_id: property.id,
-        expense: { amount: 100.00, category: "repairs", description: "Faucet", expense_date: "", property_id: property.id }
-      }, as: :turbo_stream
-
-      expect(response).to have_http_status(:ok)
-    end
-
     it "handles modal-submit validation failure with turbo_stream" do
       expect {
-        post expenses_url, params: {
-          property_id: property.id,
-          expense: { amount: -50.0, category: "repairs", description: "Faucet", expense_date: Date.today, property_id: property.id }
+        post property_expenses_url(property), params: {
+          expense: {
+            amount: "-50.0",
+            expense_kind: "repairs",
+            description: "Faucet",
+            paid_on: Date.today
+          }
         }, as: :turbo_stream
       }.not_to change(Expense, :count)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("turbo-stream")
-      expect(response.body).to include("modal-frame")
     end
 
     it "should not create expense with other user's property" do
       expect {
-        post expenses_url, params: { expense: { amount: 100.0, category: "repairs", expense_date: Date.today, property_id: other_property.id } }
-      }.not_to change(Expense, :count)
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "should not create expense with other user's reimburse tenancy" do
-      expect {
-        post expenses_url, params: { expense: { amount: 100.0, category: "repairs", expense_date: Date.today, property_id: property.id, reimburse_tenancy_id: other_tenancy.id } }
-      }.not_to change(Expense, :count)
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "fails validation and returns errors when custom reimburse amount is invalid" do
-      expect {
         post expenses_url, params: {
           expense: {
-            amount: 100.0,
-            category: "repairs",
-            expense_date: Date.today,
-            property_id: property.id,
-            tenant_reimbursable: "1",
-            reimburse_tenancy_id: tenancy.id,
-            reimburse_amount: -50.0
+            amount: "100.00",
+            expense_kind: "repairs",
+            paid_on: Date.today,
+            property_id: other_property.id
           }
-        }, as: :json
+        }
       }.not_to change(Expense, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
-      response_json = JSON.parse(response.body)
-      expect(response_json.keys).to include("reimburse_amount")
+    end
+
+    it "rejects nested route with mismatched property_id" do
+      post property_expenses_url(property), params: {
+        expense: {
+          amount: "100.00",
+          expense_kind: "repairs",
+          paid_on: Date.today,
+          property_id: other_property.id
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "rejects rentable_unit from wrong property" do
+      post expenses_url, params: {
+        expense: {
+          amount: "100.00",
+          expense_kind: "repairs",
+          paid_on: Date.today,
+          property_id: property.id,
+          rentable_unit_id: other_unit.id
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "creates expense and returns JSON" do
+      post expenses_url, params: {
+        expense: {
+          amount: "100.00",
+          expense_kind: "repairs",
+          paid_on: Date.today,
+          property_id: property.id
+        }
+      }, as: :json
+      expect(response).to have_http_status(:created)
+    end
+
+    it "returns JSON errors on validation failure" do
+      post expenses_url, params: {
+        expense: {
+          amount: "-50.0",
+          expense_kind: "repairs",
+          paid_on: Date.today,
+          property_id: property.id
+        }
+      }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "redirects to nested property on non-turbo success" do
+      post property_expenses_url(property), params: {
+        expense: {
+          amount: "100.00",
+          expense_kind: "repairs",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to redirect_to(property_url(property))
     end
   end
 
@@ -136,89 +210,241 @@ RSpec.describe "Expenses", type: :request do
     end
   end
 
-  describe "GET /edit" do
-    it "renders a successful response" do
-      get edit_expense_url(expense)
+  describe "GET /expenses/:id/correction" do
+    it "renders the correction form for active expense" do
+      get correction_expense_url(expense)
       expect(response).to be_successful
     end
-  end
 
-  describe "PATCH /update" do
-    it "updates the expense and redirects" do
-      patch expense_url(expense), params: { expense: { amount: 200.0 } }
-      expect(response).to redirect_to(expense_url(expense))
-      expect(expense.reload.amount).to eq(200.0)
-    end
-
-    it "updates the expense with reimburse_tenancy_id" do
-      patch expense_url(expense), params: { expense: { reimburse_tenancy_id: tenancy.id } }
-      expect(response).to redirect_to(expense_url(expense))
-    end
-
-    it "should not update expense to other user's property" do
-      patch expense_url(expense), params: { expense: { property_id: other_property.id } }
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "renders edit on validation failure" do
-      patch expense_url(expense), params: { expense: { amount: -50.0 } }
-      expect(response).to have_http_status(:unprocessable_content)
-    end
-
-    it "rejects changing property when reimbursement charges exist" do
+    it "renders correction form and notice when expense has active reimbursement charges" do
       Charges::CreateReimbursementService.call(
         expense: expense,
         tenancy: tenancy,
-        amount: 50.0,
-        charge_date: Date.current,
-        due_on: Date.current
+        amount_cents: 5_000
       )
 
-      another_property = create(:property, user: user)
-      patch expense_url(expense), params: { expense: { property_id: another_property.id } }
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(expense.reload.property_id).to eq(property.id)
+      get correction_expense_url(expense)
+      expect(response).to be_successful
+      expect(response.body).to include("Active Reimbursements Notice")
     end
 
-    it "rejects reducing expense amount below active reimbursement charges" do
-      Charges::CreateReimbursementService.call(
-        expense: expense,
-        tenancy: tenancy,
-        amount: 80.0,
-        charge_date: Date.current,
-        due_on: Date.current
-      )
+    it "redirects if expense is voided" do
+      Expenses::VoidService.call(expense: expense)
 
-      patch expense_url(expense), params: { expense: { amount: 60.0 } }
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(expense.reload.amount).to eq(100.0)
+      get correction_expense_url(expense)
+      expect(response).to redirect_to(expense_url(expense))
+      expect(flash[:alert]).to include("already been corrected or voided")
     end
   end
 
-  describe "DELETE /destroy" do
-    it "destroys the expense and redirects" do
+  describe "POST /expenses/:id/correct" do
+    it "corrects the expense, reversing original and creating replacement" do
       expect {
-        delete expense_url(expense)
-      }.to change(Expense, :count).by(-1)
+        post correct_expense_url(expense), params: {
+          expense: {
+            property_id: property.id,
+            expense_kind: "utilities",
+            amount: "150.00",
+            paid_on: Date.today,
+            vendor_name: "Power Co"
+          }
+        }
+      }.to change(Expense, :count).by(1)
+       .and change(JournalEntry, :count).by(2)
 
-      expect(response).to redirect_to(expenses_url)
+      replacement = Expense.last
+      expect(response).to redirect_to(expense_url(replacement))
+      expect(expense.reload).to be_voided
+      expect(expense.superseded_by).to eq(replacement)
     end
 
-    it "rejects destroying an expense with linked reimbursement charges" do
+    it "successfully corrects expense and restates active reimbursements" do
+      reimb_res = Charges::CreateReimbursementService.call(
+        expense: expense,
+        tenancy: tenancy,
+        amount_cents: 5_000
+      )
+      orig_charge = reimb_res.value!.data[:charge]
+
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "utilities",
+          amount: "150.00",
+          paid_on: Date.today
+        }
+      }
+      replacement = Expense.last
+      expect(response).to redirect_to(expense_url(replacement))
+      expect(orig_charge.reload).to be_superseded
+      expect(orig_charge.superseded_by.source_expense_id).to eq(replacement.id)
+    end
+
+    it "rejects correction if expense is already voided" do
+      Expenses::VoidService.call(expense: expense)
+
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "utilities",
+          amount: "150.00",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to redirect_to(expense_url(expense))
+      expect(flash[:alert]).to include("already been corrected or voided")
+    end
+
+    it "rejects correction if expense is already superseded" do
+      Expenses::CorrectService.call(expense: expense, amount_cents: 15_000)
+
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "utilities",
+          amount: "200.00",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to redirect_to(expense_url(expense))
+      expect(flash[:alert]).to include("already been corrected or voided")
+    end
+
+    it "rejects correction with unit from wrong property" do
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          rentable_unit_id: other_unit.id,
+          expense_kind: "utilities",
+          amount: "150.00",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "rejects correction with property belonging to another user" do
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: other_property.id,
+          expense_kind: "utilities",
+          amount: "150.00",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "renders correction with unprocessable_content when service fails" do
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "utilities",
+          amount: "garbage",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "executes the complete Expense-correction workflow with active reimbursements without historical doubling" do
+      # 1. Jan 1: Post expense $300
+      post expenses_url, params: {
+        expense: {
+          property_id: property.id,
+          rentable_unit_id: unit.id,
+          expense_kind: "utilities",
+          amount: "300.00",
+          paid_on: "2026-01-01",
+          description: "Water bill Jan"
+        }
+      }
+      expect(response).to redirect_to(expense_path(Expense.last))
+      original_expense = Expense.last
+
+      # 2. Jan 1: Create reimbursement $150 via UI endpoint
+      post expense_reimbursements_url(original_expense), params: {
+        charge: {
+          tenancy_id: tenancy.id,
+          amount: "150.00",
+          charge_date: "2026-01-01",
+          due_on: "2026-01-01",
+          description: "Water reimbursement"
+        }
+      }
+      expect(response).to redirect_to(expense_path(original_expense))
+
+      # Verify point-in-time tenancy balance before correction
+      expect(Tenancies::BalanceQuery.call(tenancy: tenancy, as_of: Date.new(2026, 7, 1))).to eq(150.0)
+      expect(Tenancies::BalanceQuery.call(tenancy: tenancy, as_of: Date.new(2026, 8, 16))).to eq(150.0)
+
+      # 3. Aug 16: Correct source Expense through UI workflow to $350
+      post correct_expense_url(original_expense), params: {
+        expense: {
+          property_id: property.id,
+          rentable_unit_id: unit.id,
+          expense_kind: "utilities",
+          amount: "350.00",
+          paid_on: "2026-01-01",
+          description: "Water bill Jan (adjusted)"
+        }
+      }
+      expect(response).to redirect_to(expense_path(Expense.last))
+      replacement_expense = Expense.last
+      expect(replacement_expense.id).not_to eq(original_expense.id)
+
+      # 4. Verify historical and current tenancy balances remain exactly $150 (no doubling on Jul 1!)
+      expect(Tenancies::BalanceQuery.call(tenancy: tenancy, as_of: Date.new(2026, 7, 1))).to eq(150.0)
+      expect(Tenancies::BalanceQuery.call(tenancy: tenancy, as_of: Date.new(2026, 8, 16))).to eq(150.0)
+
+      # 5. Add additional reimbursement on replacement expense for the extra $50
+      post expense_reimbursements_url(replacement_expense), params: {
+        charge: {
+          tenancy_id: tenancy.id,
+          amount: "50.00",
+          charge_date: "2026-01-01",
+          due_on: "2026-01-01",
+          description: "Additional water share"
+        }
+      }
+      expect(response).to redirect_to(expense_path(replacement_expense))
+
+      # Tenancy balance is now $200
+      expect(Tenancies::BalanceQuery.call(tenancy: tenancy, as_of: Date.new(2026, 7, 1))).to eq(200.0)
+      expect(Tenancies::BalanceQuery.call(tenancy: tenancy, as_of: Date.new(2026, 8, 16))).to eq(200.0)
+    end
+  end
+
+  describe "POST /expenses/:id/void" do
+    it "voids the expense and reverses journal entry" do
+      expect {
+        post void_expense_url(expense)
+      }.to change(JournalEntry, :count).by(1)
+
+      expect(response).to redirect_to(expense_url(expense))
+      expect(expense.reload).to be_voided
+    end
+
+    it "handles void failure from service" do
+      allow(Expenses::VoidService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Void failed", code: :void_error)
+      )
+      post void_expense_url(expense)
+      expect(response).to redirect_to(expense_url(expense))
+      expect(flash[:alert]).to eq("Void failed")
+    end
+
+    it "rejects voiding if active reimbursements exist" do
       Charges::CreateReimbursementService.call(
         expense: expense,
         tenancy: tenancy,
-        amount: 100.0,
-        charge_date: Date.current,
-        due_on: Date.current
+        amount_cents: 5_000
       )
 
-      expect {
-        delete expense_url(expense)
-      }.not_to change(Expense, :count)
-
+      post void_expense_url(expense)
       expect(response).to redirect_to(expense_url(expense))
-      expect(flash[:alert]).to include("Cannot delete expense")
+      expect(flash[:alert]).to include("active reimbursement charges")
+      expect(expense.reload).not_to be_voided
     end
   end
 end

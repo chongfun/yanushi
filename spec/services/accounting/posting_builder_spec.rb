@@ -208,17 +208,35 @@ RSpec.describe Accounting::PostingBuilder do
       ]).failure.code).to eq(:invalid_dimension)
     end
 
-    it "rejects destroyed dimensions" do
-      temp_party = create(:party, user: user)
-      temp_party.destroy
-
-      result = described_class.call(user: user, postings: [
-        Accounting::PostingSpec.new(account_key: "cash", amount_cents: 50_000, party: temp_party),
+    it "rejects when derived associations are unpersisted or destroyed" do
+      # Unsaved unit on tenancy
+      unsaved_unit = build(:rentable_unit, property: property)
+      allow(tenancy).to receive(:rentable_unit).and_return(unsaved_unit)
+      res1 = described_class.call(user: user, postings: [
+        Accounting::PostingSpec.new(account_key: "cash", amount_cents: 50_000, tenancy: tenancy),
         Accounting::PostingSpec.new(account_key: "rental_income", amount_cents: -50_000)
       ])
+      expect(res1).to be_failure
+      expect(res1.failure.code).to eq(:invalid_dimension)
 
-      expect(result).to be_failure
-      expect(result.failure.code).to eq(:invalid_dimension)
+      # Unsaved property on unit
+      allow(tenancy).to receive(:rentable_unit).and_return(unit)
+      unsaved_prop = build(:property, user: user)
+      allow(unit).to receive(:property).and_return(unsaved_prop)
+      res2 = described_class.call(user: user, postings: [
+        Accounting::PostingSpec.new(account_key: "cash", amount_cents: 50_000, tenancy: tenancy),
+        Accounting::PostingSpec.new(account_key: "rental_income", amount_cents: -50_000)
+      ])
+      expect(res2).to be_failure
+      expect(res2.failure.code).to eq(:invalid_dimension)
+
+      # Direct unit with unsaved property
+      res3 = described_class.call(user: user, postings: [
+        Accounting::PostingSpec.new(account_key: "cash", amount_cents: 50_000, rentable_unit: unit),
+        Accounting::PostingSpec.new(account_key: "rental_income", amount_cents: -50_000)
+      ])
+      expect(res3).to be_failure
+      expect(res3.failure.code).to eq(:invalid_dimension)
     end
   end
 end

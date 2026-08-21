@@ -1,0 +1,56 @@
+module Charges
+  class CorrectService
+    def self.call: (
+      charge: Charge,
+      ?amount_cents: Integer?,
+      ?amount: (Numeric | String)?,
+      ?charge_date: (Date | String)?,
+      ?due_on: (Date | String)?,
+      ?description: untyped,
+      ?tenancy: Tenancy?,
+      ?source_expense: untyped,
+      ?rent_term: untyped,
+      ?service_period_start: untyped,
+      ?service_period_end: untyped,
+      ?user: User?
+    ) -> untyped
+
+    def initialize: (
+      charge: Charge,
+      ?amount_cents: Integer?,
+      ?amount: (Numeric | String)?,
+      ?charge_date: (Date | String)?,
+      ?due_on: (Date | String)?,
+      ?description: untyped,
+      ?tenancy: Tenancy?,
+      ?source_expense: untyped,
+      ?rent_term: untyped,
+      ?service_period_start: untyped,
+      ?service_period_end: untyped,
+      ?user: User?
+    ) -> void
+
+    def call: () -> untyped
+
+    private
+
+    attr_reader charge: Charge
+    attr_reader raw_amount_cents: Integer?
+    attr_reader raw_amount: (Numeric | String)?
+    attr_reader raw_charge_date: (Date | String)?
+    attr_reader raw_due_on: (Date | String)?
+    attr_reader raw_description: untyped
+    attr_reader target_tenancy: Tenancy?
+    attr_reader raw_source_expense: untyped
+    attr_reader raw_rent_term: untyped
+    attr_reader raw_service_period_start: untyped
+    attr_reader raw_service_period_end: untyped
+    attr_reader user: User?
+
+    def parse_date: (untyped val) -> Date?
+    def parse_cents: () -> Integer?
+    def matches_replacement?: (Charge rep, Tenancy t_tenancy, Integer cents, Date date, Date due, String? desc, Expense? exp, RentTerm? term, Date? start_date, Date? end_date) -> bool
+    def success: (untyped data) -> untyped
+    def failure: (String error, Symbol code, ?untyped data) -> untyped
+  end
+end

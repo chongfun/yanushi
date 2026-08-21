@@ -11,7 +11,7 @@
     <div class="card-body">
       <h2 class="card-title text-2xl font-bold mb-2">Add Reimbursement Charge</h2>
       <p class="text-xs text-base-content/60 mb-6">
-        Bill all or part of Expense #<%= @expense.id %> (<%= number_to_currency(@expense.amount) %> - <%= @expense.category.titleize %>) to a tenancy at <%= @expense.property.address %>.<br>
+        Bill all or part of Expense #<%= @expense.id %> (<%= number_to_currency(@expense.amount) %> - <%= @expense.expense_kind&.titleize %>) to a tenancy at <%= @expense.property.address %>.<br>
         <span class="font-semibold text-primary">Available to reimburse: <%= number_to_currency(@expense.remaining_reimbursable_amount) %></span>
       </p>
 
@@ -45,12 +45,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div class="form-control w-full">
             <%= form.label :charge_date, "Charge Date", class: "label font-semibold" %>
-            <%= form.date_field :charge_date, value: (@charge.charge_date || @expense.expense_date || Date.current), class: "input input-bordered w-full", required: true %>
+            <%= form.date_field :charge_date, value: (@charge.charge_date || @expense.paid_on || Date.current), class: "input input-bordered w-full", required: true %>
           </div>
 
           <div class="form-control w-full">
             <%= form.label :due_on, "Due Date", class: "label font-semibold" %>
-            <%= form.date_field :due_on, value: (@charge.due_on || @expense.expense_date || Date.current), class: "input input-bordered w-full", required: true %>
+            <%= form.date_field :due_on, value: (@charge.due_on || @expense.paid_on || Date.current), class: "input input-bordered w-full", required: true %>
           </div>
         </div>
 

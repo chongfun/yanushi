@@ -8,9 +8,9 @@ RSpec.describe Properties::ScheduleESummaryQuery do
 
   it "computes Schedule E summary values for a year" do
     create(:receipt, tenancy: tenancy, received_on: Date.new(2026, 1, 1), amount_cents: 120_000)
-    create(:expense, property: property, expense_date: Date.new(2026, 1, 2), category: "repairs", amount: 200)
-    create(:expense, property: property, expense_date: Date.new(2026, 1, 3), category: "utilities", amount: 100)
-    create(:expense, property: property, expense_date: Date.new(2025, 1, 3), category: "utilities", amount: 999)
+    create(:expense, :posted, property: property, paid_on: Date.new(2026, 1, 2), expense_kind: "repairs", amount_cents: 20_000)
+    create(:expense, :posted, property: property, paid_on: Date.new(2026, 1, 3), expense_kind: "utilities", amount_cents: 10_000)
+    create(:expense, :posted, property: property, paid_on: Date.new(2025, 1, 3), expense_kind: "utilities", amount_cents: 99_900)
 
     result = described_class.new(property: property).call(year: 2026)
 

@@ -45,5 +45,7 @@ module Charges
     attr_reader service_period_end: Date?
 
     def default_rent_term: () -> RentTerm?
+    def failure: (String error, Symbol code, ?untyped data) -> untyped
+    def success: (untyped data) -> untyped
   end
 end

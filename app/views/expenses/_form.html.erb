@@ -1,120 +1,73 @@
-<%= form_with(model: expense) do |form| %>
+<%= form_with(model: expense, local: true) do |form| %>
   <% if expense.errors.any? %>
-    <div class="alert alert-error shadow-lg mb-6 text-error-content"><div>
-      <h3 class="font-bold"><%= pluralize(expense.errors.count, "error") %> prohibited this expense from being saved:</h3>
-
-      <ul>
-        <% expense.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+      <div>
+        <h3 class="font-bold"><%= pluralize(expense.errors.count, "error") %> prohibited this expense from being saved:</h3>
+        <ul class="list-disc list-inside mt-2 text-sm">
+          <% expense.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
     </div>
   <% end %>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :property_id, "Property", class: "label font-semibold" %>
-    <% if expense.persisted? && expense.charges.exists? %>
-      <div class="input input-bordered w-full bg-base-200 flex items-center font-medium opacity-80 cursor-not-allowed">
-        <%= expense.property.address %>
+  <% if @nested_property %>
+    <%= form.hidden_field :property_id, value: @nested_property.id %>
+    <div class="form-control w-full mb-4">
+      <label class="label font-semibold">Property</label>
+      <div class="input input-bordered w-full bg-base-200 flex items-center font-medium">
+        <%= @nested_property.address %>
       </div>
-      <div class="text-xs text-base-content/60 mt-1">Property cannot be changed after reimbursement charges have been posted.</div>
-    <% else %>
-      <%= form.collection_select :property_id, @properties, :id, :address, {}, { class: "select select-bordered w-full" } %>
-    <% end %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :category, class: "label font-semibold" %>
-    <%= form.select :category, Expense.categories.keys.map { |k| [k.titleize, k] }, {}, { class: "select select-bordered w-full" } %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :amount, class: "label font-semibold" %>
-    <%= form.text_field :amount, class: "input input-bordered w-full" %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :expense_date, class: "label font-semibold" %>
-    <%= form.date_field :expense_date, class: "input input-bordered w-full" %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :description, class: "label font-semibold" %>
-    <%= form.text_field :description, class: "input input-bordered w-full" %>
-  </div>
-
-  <div class="divider">Tenant Reimbursement</div>
-
-  <% if expense.persisted? %>
-    <div class="space-y-3 mb-4">
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="font-bold text-sm">Linked Reimbursement Charges (<%= expense.reimbursement_charges.count %>)</div>
-          <div class="text-xs text-base-content/60">
-            Reimbursed: <%= number_to_currency(expense.total_active_reimbursement_cents / 100.0) %> / <%= number_to_currency(expense.amount) %>
-            (<%= number_to_currency(expense.remaining_reimbursable_amount) %> remaining)
-          </div>
-        </div>
-        <% if expense.fully_reimbursed? %>
-          <span class="badge badge-success badge-sm">Fully Reimbursed</span>
-        <% else %>
-          <%= link_to "＋ Add Reimbursement Charge", new_expense_reimbursement_path(expense), class: "btn btn-xs btn-outline btn-primary" %>
-        <% end %>
-      </div>
-
-      <% if expense.reimbursed? %>
-        <% expense.reimbursement_charges.order(created_at: :asc).each do |charge| %>
-          <div class="card bg-base-200/60 border border-base-300 p-3 text-sm">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="font-semibold">Tenancy #<%= charge.tenancy_id %> (<%= charge.tenancy.rentable_unit.display_name %>)</div>
-                <div class="text-xs text-base-content/60"><%= charge.charge_date.strftime("%b %d, %Y") %> • <%= charge.description %></div>
-              </div>
-              <div class="text-right font-mono font-bold <%= charge.voided? ? 'line-through text-base-content/40' : 'text-error' %>">
-                <%= number_to_currency(charge.amount) %>
-                <div>
-                  <% if charge.voided? %>
-                    <span class="badge badge-xs badge-error">Voided</span>
-                  <% else %>
-                    <span class="badge badge-xs badge-success">Active</span>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            <div class="mt-2 flex justify-end">
-              <%= link_to "View / Void Charge", charge_path(charge), class: "link link-primary text-xs" %>
-            </div>
-          </div>
-        <% end %>
-      <% else %>
-        <div class="text-xs text-base-content/60 p-3 bg-base-200/40 rounded-lg border border-base-300">
-          No reimbursement charges have been posted yet. You can add one using the button above.
-        </div>
-      <% end %>
     </div>
   <% else %>
-    <div class="form-control mb-4">
-      <label class="label cursor-pointer justify-start gap-4">
-        <%= form.check_box :tenant_reimbursable, class: "checkbox checkbox-primary" %>
-        <span class="label-text font-semibold">Tenant Reimbursable (Charges Tenant Running Account)</span>
-      </label>
-    </div>
-
     <div class="form-control w-full mb-4">
-      <%= form.label :reimburse_tenancy_id, "Tenancy to Charge", class: "label font-semibold" %>
-      <%= form.select :reimburse_tenancy_id, 
-            @tenancies.map { |t| ["#{t.property.address} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
-            { include_blank: "Select a tenancy (or auto-assign active tenancy)..." },
-            { class: "select select-bordered w-full" } %>
-    </div>
-
-    <div class="form-control w-full mb-4">
-      <%= form.label :reimburse_amount, "Charge Amount (Defaults to expense amount if left blank)", class: "label font-semibold" %>
-      <%= form.number_field :reimburse_amount, step: "0.01", class: "input input-bordered w-full", placeholder: "e.g. 150.00" %>
+      <%= form.label :property_id, "Property", class: "label font-semibold" %>
+      <%= form.collection_select :property_id, @properties, :id, :address, { prompt: "Select Property" }, { class: "select select-bordered w-full", required: true } %>
     </div>
   <% end %>
 
+  <div class="form-control w-full mb-4">
+    <%= form.label :rentable_unit_id, "Unit (Optional)", class: "label font-semibold" %>
+    <% eligible_units = @nested_property ? @nested_property.rentable_units : @properties.flat_map(&:rentable_units) %>
+    <%= form.collection_select :rentable_unit_id, eligible_units, :id, :display_name, { include_blank: "Entire property / No specific unit" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="form-control w-full mb-4">
+    <%= form.label :expense_kind, "Category", class: "label font-semibold" %>
+    <%= form.select :expense_kind, Expense::EXPENSE_KINDS.map { |k| [k.titleize, k] }, { prompt: "Select Category" }, { class: "select select-bordered w-full", required: true } %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+    <div class="form-control w-full">
+      <%= form.label :amount, "Amount ($)", class: "label font-semibold" %>
+      <%= form.number_field :amount, step: "0.01", min: "0.01", class: "input input-bordered w-full", placeholder: "0.00", required: true %>
+    </div>
+
+    <div class="form-control w-full">
+      <%= form.label :paid_on, "Date Paid", class: "label font-semibold" %>
+      <%= form.date_field :paid_on, value: (expense.paid_on || Date.current), class: "input input-bordered w-full", required: true %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+    <div class="form-control w-full">
+      <%= form.label :vendor_name, "Vendor / Payee", class: "label font-semibold" %>
+      <%= form.text_field :vendor_name, class: "input input-bordered w-full", placeholder: "e.g. City Power, Home Depot" %>
+    </div>
+
+    <div class="form-control w-full">
+      <%= form.label :external_reference, "Invoice / Receipt #", class: "label font-semibold" %>
+      <%= form.text_field :external_reference, class: "input input-bordered w-full", placeholder: "e.g. INV-1002" %>
+    </div>
+  </div>
+
+  <div class="form-control w-full mb-6">
+    <%= form.label :description, class: "label font-semibold" %>
+    <%= form.text_area :description, rows: 3, class: "textarea textarea-bordered w-full", placeholder: "Notes or description of the expense..." %>
+  </div>
+
   <div>
-    <%= form.submit class: "btn btn-primary w-full mt-4" %>
+    <%= form.submit "Record Expense", class: "btn btn-primary w-full" %>
   </div>
 <% end %>

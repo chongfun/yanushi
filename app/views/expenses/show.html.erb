@@ -4,11 +4,55 @@
       <h1 class="text-3xl font-bold">Expense Details</h1>
       <p class="text-base-content/60">Reference: <%= dom_id(@expense) %></p>
     </div>
-    <div class="flex gap-2">
+    <div class="flex gap-2 items-center">
       <%= link_to "Back to List", expenses_path, class: "btn btn-ghost" %>
-      <%= link_to "Edit Expense", edit_expense_path(@expense), class: "btn btn-outline" %>
+      <% if @expense.active? %>
+        <%= link_to "Correct Expense", correction_expense_path(@expense), class: "btn btn-outline btn-sm" %>
+        <% if @expense.reimbursement_charges.active.exists? %>
+          <div class="tooltip tooltip-bottom" data-tip="Void all active reimbursement charges before voiding this expense.">
+            <button class="btn btn-outline btn-error btn-sm btn-disabled" disabled>Void Expense</button>
+          </div>
+        <% else %>
+          <%= button_to "Void Expense", void_expense_path(@expense), method: :post,
+              class: "btn btn-outline btn-error btn-sm",
+              form: { data: { turbo_confirm: "Are you sure you want to void this expense? This will reverse its ledger entry at the original paid date." } } %>
+        <% end %>
+      <% end %>
     </div>
   </div>
+
+  <% if @expense.superseded? %>
+    <div class="alert alert-warning mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <div>
+        <h3 class="font-bold">Expense Corrected</h3>
+        <div class="text-xs">
+          This expense was superseded by replacement <%= link_to "Expense ##{@expense.superseded_by_id}", expense_path(@expense.superseded_by_id), class: "link font-bold" %>
+          on <%= @expense.voided_at&.strftime("%B %d, %Y") %>.
+        </div>
+      </div>
+    </div>
+  <% elsif @expense.voided? %>
+    <div class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold">Expense Voided</h3>
+        <div class="text-xs">This expense was voided on <%= @expense.voided_at.strftime("%B %d, %Y at %I:%M %p") %> and its accounting entries have been reversed.</div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @expense.superseded_expense %>
+    <div class="alert alert-info mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold">Replacement Expense</h3>
+        <div class="text-xs">
+          This record replaces original <%= link_to "Expense ##{@expense.superseded_expense.id}", expense_path(@expense.superseded_expense), class: "link font-bold" %>.
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <div class="card bg-base-100 shadow-xl border border-base-200">
     <div class="card-body">
@@ -17,17 +61,30 @@
         <div class="space-y-6 flex-1">
           <div>
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Amount</div>
-            <div class="text-4xl font-bold text-error"><%= number_to_currency(@expense.amount) %></div>
+            <div class="text-4xl font-bold <%= @expense.voided? ? 'line-through text-base-content/40' : 'text-error' %>">
+              <%= number_to_currency(@expense.amount) %>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Date</div>
-              <div class="text-lg font-medium"><%= @expense.expense_date.strftime("%B %d, %Y") %></div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Paid On</div>
+              <div class="text-lg font-medium"><%= @expense.paid_on.strftime("%B %d, %Y") %></div>
             </div>
             <div>
               <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Category</div>
-              <div><span class="badge badge-warning badge-lg badge-outline font-medium"><%= @expense.category&.humanize %></span></div>
+              <div><span class="badge badge-warning badge-lg badge-outline font-medium"><%= @expense.expense_kind&.titleize %></span></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Vendor</div>
+              <div class="text-base font-medium"><%= @expense.vendor_name.presence || "—" %></div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Reference #</div>
+              <div class="text-base font-mono"><%= @expense.external_reference.presence || "—" %></div>
             </div>
           </div>
 
@@ -43,14 +100,36 @@
 
         <div class="divider md:divider-horizontal"></div>
 
-        <!-- Property Details -->
+        <!-- Property / Scope Details -->
         <div class="space-y-6 flex-1">
           <div>
-            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Associated Property</div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Property</div>
             <div class="text-lg font-bold leading-tight"><%= @expense.property.address %></div>
             <div class="text-sm text-base-content/60 mt-1">
               Type: <%= @expense.property.asset_type.titleize %>
             </div>
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Unit Scope</div>
+            <% if @expense.rentable_unit %>
+              <span class="badge badge-info"><%= @expense.rentable_unit.display_name %></span>
+            <% else %>
+              <span class="badge badge-ghost">Property-wide / No specific unit</span>
+            <% end %>
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Accounting Status</div>
+            <% if @expense.superseded? %>
+              <span class="badge badge-warning">Corrected (Superseded)</span>
+            <% elsif @expense.voided? %>
+              <span class="badge badge-error">Voided & Reversed</span>
+            <% elsif @expense.posted? %>
+              <span class="badge badge-success">Posted to Ledger</span>
+            <% else %>
+              <span class="badge badge-ghost">Unposted</span>
+            <% end %>
           </div>
         </div>
       </div>
@@ -67,10 +146,12 @@
               (<%= number_to_currency(@expense.remaining_reimbursable_amount) %> available)
             </p>
           </div>
-          <% if @expense.fully_reimbursed? %>
-            <span class="badge badge-success">Fully Reimbursed</span>
-          <% else %>
-            <%= link_to "＋ Add Reimbursement Charge", new_expense_reimbursement_path(@expense), class: "btn btn-sm btn-primary" %>
+          <% if @expense.active? %>
+            <% if @expense.fully_reimbursed? %>
+              <span class="badge badge-success">Fully Reimbursed</span>
+            <% else %>
+              <%= link_to "＋ Add Reimbursement Charge", new_expense_reimbursement_path(@expense), class: "btn btn-sm btn-primary" %>
+            <% end %>
           <% end %>
         </div>
 
@@ -101,7 +182,9 @@
                       <%= number_to_currency(charge.amount) %>
                     </td>
                     <td>
-                      <% if charge.voided? %>
+                      <% if charge.superseded? %>
+                        <span class="badge badge-xs badge-warning">Corrected</span>
+                      <% elsif charge.voided? %>
                         <span class="badge badge-xs badge-error">Voided</span>
                       <% else %>
                         <span class="badge badge-xs badge-success">Active</span>
@@ -125,27 +208,6 @@
             No tenant reimbursement charges have been posted for this expense.
           </div>
         <% end %>
-      </div>
-
-      <div class="card-actions justify-between items-center mt-10 border-t border-base-200 pt-8">
-        <div>
-          <% if @expense.charges.exists? %>
-            <span class="text-xs text-base-content/50">
-              Linked to <%= pluralize(@expense.charges.count, "posted charge") %> • Deletion restricted
-            </span>
-          <% end %>
-        </div>
-        <div>
-          <% if @expense.charges.exists? %>
-            <button class="btn btn-disabled btn-sm" disabled title="Cannot delete expense with linked charges">
-              Delete Expense
-            </button>
-          <% else %>
-            <%= button_to "Delete Expense", @expense, method: :delete, 
-                class: "btn btn-error btn-ghost btn-sm", 
-                form: { data: { turbo_confirm: "Are you sure you want to delete this expense record?" } } %>
-          <% end %>
-        </div>
       </div>
     </div>
   </div>

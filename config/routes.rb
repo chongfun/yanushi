@@ -21,8 +21,13 @@ Rails.application.routes.draw do
     resources :rent_terms, only: %i[new create]
   end
 
-  resources :expenses do
+  resources :expenses, only: %i[index show new create] do
     resources :reimbursements, only: %i[new create], controller: "expense_reimbursements"
+    member do
+      get :correction
+      post :correct
+      post :void
+    end
   end
   resources :receipts, only: %i[index show new create] do
     member do

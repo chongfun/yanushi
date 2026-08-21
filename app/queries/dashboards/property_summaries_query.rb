@@ -14,7 +14,7 @@ module Dashboards
 
       def summary_for(property)
         income = property.receipts.active.sum(BigDecimal("0"), &:amount) || BigDecimal("0")
-        expenses = property.expenses.sum(BigDecimal("0"), &:amount) || BigDecimal("0")
+        expenses = BigDecimal(property.expenses.posted.active.sum(:amount_cents).to_s) / 100
         active_tenancies = property.tenancies.select(&:active?)
 
         {

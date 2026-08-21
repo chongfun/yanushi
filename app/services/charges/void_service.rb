@@ -6,7 +6,7 @@ module Charges
 
     def initialize(charge:, occurred_on: nil, reason: nil)
       @charge = charge
-      @occurred_on = occurred_on || Date.current
+      @raw_occurred_on = occurred_on
       @reason = reason
     end
 
@@ -20,15 +20,52 @@ module Charges
         return ServiceResult.failure(error: "Journal entry not found for charge", code: :not_found)
       end
 
+      resolved_occurred_on = if @raw_occurred_on.present?
+        parsed = parse_date(@raw_occurred_on)
+        return ServiceResult.failure(error: "Invalid occurred on date", code: :invalid_input) unless parsed
+
+        parsed
+      else
+        Date.current
+      end
+
       reversal_entry = nil # : JournalEntry?
       failure_result = nil # : Dry::Monads::Result::Failure?
 
+      source_expense = if charge.reimbursement? && charge.source_expense_id.present?
+        Expense.find_by(id: charge.source_expense_id)
+      end
+
       Charge.transaction do
+        source_expense&.lock!
         charge.lock!
 
+        if charge.superseded?
+          failure_result = ServiceResult.failure(
+            error: "Cannot void an already superseded charge",
+            code: :already_superseded
+          )
+          raise ActiveRecord::Rollback
+        end
+
         description = reason.presence || "Void charge ##{charge.id}: #{charge.description || charge.charge_kind}"
-        # Ensure occurred_on is at least the original charge occurred_on
-        effective_occurred_on = [ occurred_on, journal_entry.occurred_on ].max
+        effective_occurred_on = [ resolved_occurred_on, journal_entry.occurred_on ].max
+
+        if charge.voided?
+          existing_reversal = journal_entry.reversal
+          if existing_reversal &&
+             existing_reversal.occurred_on == effective_occurred_on &&
+             existing_reversal.description.to_s.strip == description.to_s.strip
+            reversal_entry = existing_reversal
+            next
+          else
+            failure_result = ServiceResult.failure(
+              error: "Cannot void an already voided charge with different parameters",
+              code: :idempotency_conflict
+            )
+            raise ActiveRecord::Rollback
+          end
+        end
 
         reverse_result = Accounting::ReverseEntryService.call(
           journal_entry: journal_entry,
@@ -56,6 +93,15 @@ module Charges
 
     private
 
-      attr_reader :charge, :occurred_on, :reason
+      attr_reader :charge, :raw_occurred_on, :reason
+
+      def parse_date(val)
+        return val if val.is_a?(Date)
+        return val.to_date if val.respond_to?(:to_date)
+
+        Date.parse(val.to_s)
+      rescue ArgumentError, Date::Error
+        nil
+      end
   end
 end

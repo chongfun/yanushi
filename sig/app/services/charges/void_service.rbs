@@ -1,13 +1,15 @@
 module Charges
   class VoidService
-    def self.call: (charge: Charge, ?occurred_on: Date, ?reason: String?) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
-    def initialize: (charge: Charge, ?occurred_on: Date, ?reason: String?) -> void
+    def self.call: (charge: Charge, ?occurred_on: (Date | String)?, ?reason: String?) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (charge: Charge, ?occurred_on: (Date | String)?, ?reason: String?) -> void
     def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
 
     private
 
     attr_reader charge: Charge
-    attr_reader occurred_on: Date
+    attr_reader raw_occurred_on: (Date | String)?
     attr_reader reason: String?
+
+    def parse_date: (untyped val) -> Date?
   end
 end
