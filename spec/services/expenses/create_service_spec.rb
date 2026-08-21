@@ -26,15 +26,25 @@ RSpec.describe Expenses::CreateService do
      .and change(Posting, :count).by(2)
   end
 
-  it "supports decimal string amount parsing" do
+  it "supports decimal string amount parsing and Numeric amount" do
     result = described_class.call(
       property: property,
       expense_kind: "utilities",
-      paid_on: Date.current,
+      paid_on: "2026-04-15",
       amount: "150.50"
     )
     expect(result).to be_success
     expect(result.value!.data[:expense].amount_cents).to eq(15_050)
+    expect(result.value!.data[:expense].paid_on).to eq(Date.new(2026, 4, 15))
+
+    res_num = described_class.call(
+      property: property,
+      expense_kind: "utilities",
+      paid_on: Date.current,
+      amount: 200.75
+    )
+    expect(res_num).to be_success
+    expect(res_num.value!.data[:expense].amount_cents).to eq(20_075)
   end
 
   it "rejects invalid amounts (negative, zero, fractional cents, garbage)" do

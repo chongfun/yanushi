@@ -1,0 +1,7 @@
+class SourceDocument < ApplicationRecord
+  def prevent_destroy_if_confirmed_transactions_exist: () -> void
+  def prevent_immutable_attributes_mutation: () -> void
+  def prevent_mutation_if_confirmed_transactions_exist: () -> void
+  def compute_attachment_sha256: () -> void
+  def accounting_user: () -> User?
+end

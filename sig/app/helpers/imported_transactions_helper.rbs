@@ -1,0 +1,3 @@
+module ImportedTransactionsHelper
+  def imported_transaction_alias_proposal: (ImportedTransaction transaction) -> String?
+end

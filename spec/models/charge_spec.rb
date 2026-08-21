@@ -290,6 +290,33 @@ RSpec.describe Charge, type: :model do
         late_fee = build(:charge, :late_fee_charge, tenancy: tenancy, source_expense: expense)
         expect(late_fee).not_to be_valid
         expect(late_fee.errors[:source_expense]).to include("must be blank for late fee charge")
+
+        other = build(:charge, :other_charge, tenancy: tenancy, source_expense: expense)
+        expect(other).not_to be_valid
+        expect(other.errors[:source_expense]).to include("must be blank for other charge")
+      end
+
+      it "rejects rent_term on late_fee or other" do
+        term = create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+        late_fee = build(:charge, :late_fee_charge, tenancy: tenancy, rent_term: term)
+        expect(late_fee).not_to be_valid
+        expect(late_fee.errors[:rent_term]).to include("must be blank for late fee charge")
+
+        other = build(:charge, :other_charge, tenancy: tenancy, rent_term: term)
+        expect(other).not_to be_valid
+        expect(other.errors[:rent_term]).to include("must be blank for other charge")
+      end
+
+      it "rejects rent_term or service_period_end on reimbursement" do
+        term = create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+        exp = create(:expense, property: property)
+        reimb1 = build(:charge, charge_kind: "reimbursement", tenancy: tenancy, source_expense: exp, rent_term: term)
+        expect(reimb1).not_to be_valid
+        expect(reimb1.errors[:rent_term]).to include("must be blank for reimbursement charge")
+
+        reimb2 = build(:charge, charge_kind: "reimbursement", tenancy: tenancy, source_expense: exp, service_period_end: Date.new(2026, 5, 31))
+        expect(reimb2).not_to be_valid
+        expect(reimb2.errors[:service_period_end]).to include("must be blank for reimbursement charge")
       end
     end
   end

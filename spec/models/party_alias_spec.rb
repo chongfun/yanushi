@@ -27,6 +27,12 @@ RSpec.describe PartyAlias, type: :model do
 
       expect(other).to be_valid
     end
+
+    it "normalizes alias_name by stripping whitespace" do
+      party = create(:party)
+      pa = create(:party_alias, party: party, alias_name: "   spaced alias   ")
+      expect(pa.alias_name).to eq("spaced alias")
+    end
   end
 
   describe "#accounting_user" do

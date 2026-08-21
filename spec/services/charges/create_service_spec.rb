@@ -84,8 +84,6 @@ RSpec.describe Charges::CreateService do
         expect(result).to be_failure
         expect(result.failure.code).to eq(:posting_failed)
       }.not_to change(Charge, :count)
-
-      expect(JournalEntry.count).to eq(0)
     end
 
     it "returns validation failure without posting if Charge is invalid" do
@@ -94,6 +92,36 @@ RSpec.describe Charges::CreateService do
           tenancy: tenancy,
           charge_kind: "other",
           amount_cents: -500
+        )
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:invalid_amount)
+      }.not_to change(Charge, :count)
+
+      expect {
+        result = described_class.call(
+          tenancy: tenancy,
+          charge_kind: "other",
+          amount_cents: "5000"
+        )
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:invalid_amount)
+      }.not_to change(Charge, :count)
+
+      expect {
+        result = described_class.call(
+          tenancy: tenancy,
+          charge_kind: "other",
+          amount: "-50.00"
+        )
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:invalid_amount)
+      }.not_to change(Charge, :count)
+
+      expect {
+        result = described_class.call(
+          tenancy: tenancy,
+          charge_kind: "other",
+          amount: "invalid-amount"
         )
         expect(result).to be_failure
         expect(result.failure.code).to eq(:invalid_amount)

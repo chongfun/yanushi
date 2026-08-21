@@ -1,0 +1,26 @@
+class ImportedTransactionsController < ApplicationController
+  @transaction: ImportedTransaction
+  @reviewable_transactions: untyped
+  @confirmed_transactions: untyped
+  @processing_documents: untyped
+  @failed_documents: untyped
+  @per_page: Integer
+  @page: Integer
+  @total_confirmed_count: Integer
+  @total_pages: Integer
+  @parties: untyped
+  @tenancies: untyped
+  @party_tenancies_map: Hash[Integer, Array[Integer]]
+  @tenancy_parties_map: Hash[Integer, Array[Integer]]
+
+  def index: () -> void
+  def show: () -> void
+  def update: () -> void
+  def confirm: () -> void
+  def destroy: () -> void
+
+  private
+  def set_transaction: () -> void
+  def imported_transaction_params: () -> untyped
+  def set_form_data: () -> void
+end

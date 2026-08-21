@@ -1,0 +1,23 @@
+module ImportedTransactions
+  class ConfirmService
+    @user: User
+    @transaction: ImportedTransaction
+    @create_aliases: bool
+
+    def self.call: (user: User, transaction: ImportedTransaction, ?create_alias: bool) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, transaction: ImportedTransaction, ?create_alias: bool) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    attr_reader user: User
+    attr_reader transaction: ImportedTransaction
+
+    def confirm_receipt: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def confirm_security_deposit: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def create_party_aliases: () -> void
+    def create_aliases?: () -> bool
+    def create_party_alias: (String? alias_name) -> void
+    def success: (untyped data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

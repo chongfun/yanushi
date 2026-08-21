@@ -1,0 +1,21 @@
+module ImportedTransactions
+  class UpdateService
+    @user: User
+    @transaction: ImportedTransaction
+    @params: untyped
+
+    def self.call: (user: User, transaction: ImportedTransaction, params: untyped) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, transaction: ImportedTransaction, params: untyped) -> void
+    def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+
+    private
+    attr_reader user: User
+    attr_reader transaction: ImportedTransaction
+    attr_reader params: untyped
+
+    def recompute_matching_status: () -> void
+    def matching_fields_changed?: () -> bool
+    def success: (untyped data) -> Dry::Monads::Result::Success
+    def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
+  end
+end

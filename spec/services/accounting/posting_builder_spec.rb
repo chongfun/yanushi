@@ -237,6 +237,24 @@ RSpec.describe Accounting::PostingBuilder do
       ])
       expect(res3).to be_failure
       expect(res3.failure.code).to eq(:invalid_dimension)
+
+      # Unit with nil property
+      allow(unit).to receive(:property).and_return(nil)
+      res4 = described_class.call(user: user, postings: [
+        Accounting::PostingSpec.new(account_key: "cash", amount_cents: 50_000, rentable_unit: unit),
+        Accounting::PostingSpec.new(account_key: "rental_income", amount_cents: -50_000)
+      ])
+      expect(res4).to be_failure
+      expect(res4.failure.code).to eq(:ownership_mismatch)
+
+      # Tenancy with nil rentable unit
+      allow(tenancy).to receive(:rentable_unit).and_return(nil)
+      res5 = described_class.call(user: user, postings: [
+        Accounting::PostingSpec.new(account_key: "cash", amount_cents: 50_000, tenancy: tenancy),
+        Accounting::PostingSpec.new(account_key: "rental_income", amount_cents: -50_000)
+      ])
+      expect(res5).to be_failure
+      expect(res5.failure.code).to eq(:ownership_mismatch)
     end
   end
 end

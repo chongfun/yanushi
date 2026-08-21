@@ -164,6 +164,13 @@ RSpec.describe Charges::CreateReimbursementService do
       res = described_class.call(expense: expense, tenancy: tenancy, amount: "123.45")
       expect(res).to be_success
       expect(res.value!.data[:charge].amount_cents).to eq(12_345)
+
+      res_num = described_class.call(expense: expense, tenancy: tenancy, amount: 50.50)
+      expect(res_num).to be_success
+      expect(res_num.value!.data[:charge].amount_cents).to eq(5_050)
+
+      expect(described_class.call(expense: expense, tenancy: tenancy, amount: "-50.00")).to be_failure
+      expect(described_class.call(expense: expense, tenancy: tenancy, amount: "not_a_number")).to be_failure
     end
 
     it "rejects missing inputs and ownership mismatch" do

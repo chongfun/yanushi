@@ -12,6 +12,7 @@ class SecurityDepositTransaction < ApplicationRecord
   belongs_to :charge, optional: true
   belongs_to :superseded_by, class_name: "SecurityDepositTransaction", optional: true
   has_one :superseded_transaction, class_name: "SecurityDepositTransaction", foreign_key: :superseded_by_id, dependent: :nullify
+  has_one :imported_transaction, as: :confirmed_source
 
   has_many :journal_entries, as: :source, dependent: :restrict_with_error
   has_many :postings, through: :journal_entries
