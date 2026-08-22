@@ -34,7 +34,7 @@ class ScheduleEGenerator
 
   def format_amount: (BigDecimal amount) -> String
 
-  def date_range: () -> Range[Date]
+  def schedule_e_result: () -> TaxReporting::ScheduleEResult
 
   def rents_received: () -> BigDecimal
 

@@ -6,6 +6,8 @@ class Property < ApplicationRecord
   def active_years: (?Array[untyped]) -> Array[Integer]
   def accounting_activity: (?from: untyped, ?through: untyped, ?year: untyped) -> Array[Accounting::ActivityRow]
   def accounting_summary: (?from: untyped, ?through: untyped, ?year: untyped) -> Accounting::PropertySummaryQuery::SummaryResult
-  def schedule_e_summary: (*untyped, ?year: Integer?) -> Properties::ScheduleESummaryQuery::Result
+  def schedule_e_summary: (*untyped, ?year: Integer?) -> TaxReporting::ScheduleEResult
   def accounting_user: () -> User?
+  def tax_profiles: () -> untyped
+  def tax_profile_for: (Integer | String) -> PropertyTaxProfile?
 end

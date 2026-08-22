@@ -1,0 +1,56 @@
+<%= form_with(model: [@property, tax_profile], url: (tax_profile.persisted? ? property_tax_profile_path(@property, tax_profile) : property_tax_profiles_path(@property)), data: { controller: "tax-profile-form" }, class: "space-y-4") do |f| %>
+  <% if tax_profile.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <h3 class="font-bold">Please correct the following errors:</h3>
+        <ul class="list-disc list-inside">
+          <% tax_profile.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full">
+    <%= f.label :tax_year, "Tax Year", class: "label font-semibold" %>
+    <%= f.number_field :tax_year, class: "input input-bordered w-full", min: 1901, required: true %>
+    <label class="label">
+      <span class="label-text-alt text-base-content/60">Tax classifications are configured independently per calendar year.</span>
+    </label>
+  </div>
+
+  <div class="form-control w-full">
+    <%= f.label :schedule_e_property_type, "IRS Schedule E Property Type (Box 1b)", class: "label font-semibold" %>
+    <%= f.select :schedule_e_property_type,
+                 [
+                   ["1 — Single-Family Residence", "single_family_residence"],
+                   ["2 — Multi-Family Residence", "multi_family_residence"],
+                   ["3 — Vacation / Short-Term Rental", "vacation_short_term_rental"],
+                   ["4 — Commercial", "commercial"],
+                   ["5 — Land", "land"],
+                   ["6 — Royalties", "royalties"],
+                   ["7 — Self-Rental", "self_rental"],
+                   ["8 — Other", "other"]
+                 ],
+                 {},
+                 class: "select select-bordered w-full",
+                 data: { tax_profile_form_target: "typeSelect", action: "change->tax-profile-form#typeChanged" } %>
+  </div>
+
+  <div class="form-control w-full <%= 'hidden' unless tax_profile.other? %>" data-tax-profile-form_target="otherContainer">
+    <%= f.label :other_description, "Description for Other Type", class: "label font-semibold" %>
+    <%= f.text_field :other_description,
+                     placeholder: "e.g. Storage units, Boat slip, Parking garage",
+                     class: "input input-bordered w-full",
+                     data: { tax_profile_form_target: "otherInput" } %>
+    <label class="label">
+      <span class="label-text-alt text-base-content/60">Required when '8 — Other' is selected.</span>
+    </label>
+  </div>
+
+  <div class="flex items-center gap-3 pt-4">
+    <%= f.submit (tax_profile.persisted? ? "Save Tax Profile" : "Create Tax Profile"), class: "btn btn-primary" %>
+    <%= link_to "Cancel", schedule_e_property_path(@property, year: tax_profile.tax_year), class: "btn btn-ghost" %>
+  </div>
+<% end %>

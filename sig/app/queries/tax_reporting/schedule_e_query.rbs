@@ -1,0 +1,21 @@
+module TaxReporting
+  class ScheduleEQuery
+    def self.call: (property: Property?, ?tax_year: Integer | String | nil) -> ScheduleEResult
+    def initialize: (property: Property?, ?tax_year: Integer | String | nil) -> void
+    def call: () -> ScheduleEResult
+
+    private
+
+    attr_reader property: Property?
+    attr_reader tax_year: Integer
+
+    def parse_year: (Integer | String | nil) -> Integer
+    def start_date: () -> Date
+    def end_date: () -> Date
+    def load_period_postings: () -> Posting::ActiveRecord_Relation
+    def calculate_rents_received: (untyped) -> [Integer, Array[ScheduleEResult::IncomeDrilldownItem]]
+    def calculate_expenses: (untyped) -> [Hash[Symbol, Integer], Integer, Array[ScheduleEResult::OtherExpenseDetail], Hash[Symbol, Array[ScheduleEResult::ExpenseDrilldownItem]]]
+    def collect_review_items: (untyped) -> Array[ScheduleEResult::TaxReviewItem]
+    def empty_result: () -> ScheduleEResult
+  end
+end

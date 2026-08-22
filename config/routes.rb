@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resources :properties do
     resources :rentable_units
     resources :expenses, only: %i[new create]
+    resources :tax_profiles, controller: "property_tax_profiles", only: %i[new create edit update]
 
     member do
       get :schedule_e

@@ -1,0 +1,5 @@
+module TaxReporting
+  class ScheduleEEventMap
+    def self.classify_income_event: (JournalEntry) -> Symbol
+  end
+end

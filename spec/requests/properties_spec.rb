@@ -195,9 +195,29 @@ RSpec.describe "Properties", type: :request do
   end
 
   describe "GET /properties/:id/schedule_e" do
-    it "renders the schedule_e modal successfully" do
-      get schedule_e_property_url(property)
+    it "renders the schedule_e worksheet successfully when profile is configured" do
+      create(:property_tax_profile, property: property, tax_year: 2026, schedule_e_property_type: "multi_family_residence")
+      get schedule_e_property_url(property, year: 2026)
       expect(response).to be_successful
+      expect(response.body).to include("Schedule E Worksheet")
+      expect(response.body).to include("2 — Multi-Family Residence")
+      expect(response.body).to include("Part I — Income")
+      expect(response.body).to include("Part I — Expenses")
+      expect(response.body).to include("Not tracked or computed by Yanushi")
+    end
+
+    it "shows prompt to configure tax profile when not configured for requested year" do
+      get schedule_e_property_url(property, year: 2024)
+      expect(response).to be_successful
+      expect(response.body).to include("Tax Profile Required")
+      expect(response.body).to include("Configure tax classification now")
+    end
+
+    it "returns 404 for unowned property" do
+      other_user = create(:user)
+      other_prop = create(:property, user: other_user)
+      get schedule_e_property_url(other_prop)
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

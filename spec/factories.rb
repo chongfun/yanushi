@@ -352,4 +352,16 @@ FactoryBot.define do
       end
     end
   end
+
+  factory :property_tax_profile do
+    property
+    tax_year { Date.current.year }
+    schedule_e_property_type { "single_family_residence" }
+    other_description { nil }
+
+    trait :other do
+      schedule_e_property_type { "other" }
+      other_description { "Warehouse storage" }
+    end
+  end
 end

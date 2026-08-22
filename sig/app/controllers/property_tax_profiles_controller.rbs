@@ -1,0 +1,16 @@
+class PropertyTaxProfilesController < ApplicationController
+  @property: Property
+  @tax_profile: PropertyTaxProfile
+
+  def new: () -> void
+  def create: () -> void
+  def edit: () -> void
+  def update: () -> void
+
+  private
+
+  def set_property: () -> Property
+  def set_tax_profile: () -> PropertyTaxProfile
+  def tax_profile_params: () -> ActionController::Parameters
+  def default_schedule_e_type: () -> String
+end

@@ -1,0 +1,24 @@
+module TaxReporting
+  class ScheduleEFormDefinition
+    class LineDefinition
+      attr_reader line_number: Integer
+      attr_reader category: Symbol
+      attr_reader label: String
+      attr_reader type: Symbol
+
+      def initialize: (line_number: Integer, category: Symbol, label: String, type: Symbol) -> void
+    end
+
+    EXPENSE_LINES_2025: Array[LineDefinition]
+    INCOME_LINES_2025: Array[LineDefinition]
+
+    attr_reader tax_year: Integer
+
+    def self.for: (Integer | String) -> ScheduleEFormDefinition
+    def initialize: (Integer | String) -> void
+    def income_lines: () -> Array[LineDefinition]
+    def expense_lines: () -> Array[LineDefinition]
+    def all_lines: () -> Array[LineDefinition]
+    def line_for: (Symbol | String) -> LineDefinition?
+  end
+end

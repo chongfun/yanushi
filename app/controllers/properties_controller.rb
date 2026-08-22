@@ -23,14 +23,17 @@ class PropertiesController < ApplicationController
 
   def schedule_e
     @year = params[:year].present? ? params[:year].to_i : Date.current.year
-    summary = Properties::ScheduleESummaryQuery.new(property: @property).call(year: @year)
+    @schedule_e_result = TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
+    @tax_profile = @schedule_e_result.tax_profile
+    @form_definition = TaxReporting::ScheduleEFormDefinition.for(@year)
+    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
 
-    @rents_received = summary.rents_received
-    @utility_reimbursements = summary.utility_reimbursements
-    @total_income = summary.total_income
-    @expenses_by_category = summary.expenses_by_category
-    @total_expenses = summary.total_expenses
-    @net_income = summary.net_income
+    @rents_received = @schedule_e_result.rents_received
+    @utility_reimbursements = BigDecimal("0.00")
+    @total_income = @schedule_e_result.rents_received
+    @expenses_by_category = @schedule_e_result.expenses_by_category_cents.transform_keys(&:to_s).transform_values { |cents| BigDecimal(cents.to_s) / 100 }
+    @total_expenses = @schedule_e_result.total_expenses
+    @net_income = @schedule_e_result.net_income
   end
 
   def schedule_e_pdf

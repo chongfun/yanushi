@@ -181,7 +181,8 @@ class ScheduleEGenerator
 
   def fill_property_info(form)
     set_field(form, :property_address, @property.address)
-    type_code = schedule_e_type_code(@property.asset_type)
+    profile = @property.tax_profile_for(@year)
+    type_code = profile ? profile.schedule_e_code : schedule_e_type_code(@property.asset_type)
     set_field(form, :property_type, type_code.to_s)
     set_field(form, :fair_rental_days, "365")
     set_field(form, :personal_use_days, "0")
@@ -293,32 +294,25 @@ class ScheduleEGenerator
 
   # --- Data queries ---
 
-  def date_range
-    start_date = Date.new(@year, 1, 1)
-    start_date..start_date.end_of_year
+  def schedule_e_result
+    @schedule_e_result ||= TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
   end
 
   def rents_received
-    @rents_received ||= BigDecimal(@property.receipts.active
-             .where(received_on: date_range)
-             .sum(:amount_cents).to_s) / 100
+    schedule_e_result.rents_received
   end
 
   def expenses_by_category
-    @expenses_by_category ||= begin
-      cents_by_kind = @property.expenses.posted.active
-                               .where(paid_on: date_range)
-                               .group(:expense_kind)
-                               .sum(:amount_cents)
-      cents_by_kind.transform_values { |cents| BigDecimal(cents.to_s) / 100 }
+    @expenses_by_category ||= schedule_e_result.expenses_by_category_cents.transform_keys(&:to_s).transform_values do |cents|
+      BigDecimal(cents.to_s) / 100
     end
   end
 
   def total_expenses
-    @total_expenses ||= expenses_by_category.values.sum
+    schedule_e_result.total_expenses
   end
 
   def net_income
-    rents_received - total_expenses
+    schedule_e_result.net_income
   end
 end

@@ -5,7 +5,15 @@ RSpec.describe ScheduleEGenerator do
   let(:user) { create(:user) }
   let(:property) { create(:property, user: user) }
   let(:unit) { create(:rentable_unit, property: property) }
-  let(:tenancy) { create(:tenancy, rentable_unit: unit) }
+  let(:tenancy) do
+    create(
+      :tenancy,
+      rentable_unit: unit,
+      agreement_type: "month_to_month",
+      commencement_date: Date.new(2010, 1, 1),
+      termination_date: nil
+    )
+  end
 
   EXPENSE_AMOUNTS = {
     "advertising"                       => 100,
@@ -27,19 +35,21 @@ RSpec.describe ScheduleEGenerator do
   RENT_AMOUNT    = 12_000
   UTILITY_AMOUNT = 250
 
+  let(:party) { create(:party, user: user) }
+  let!(:rent_term) { create(:rent_term, tenancy: tenancy, effective_from: Date.new(2010, 1, 1), effective_until: nil) }
+
   TEST_YEARS = [ 2025, 2022, 2021, 2018, 2015 ].freeze
 
   before do
-    Charge.delete_all
-    Expense.delete_all
-    Receipt.delete_all
+    Accounting::ChartOfAccounts.ensure_for(user)
+    create(:tenancy_party, tenancy: tenancy, party: party)
   end
 
   def create_data_for_year(year)
     date_in_year = Date.new(year, 6, 1)
 
     EXPENSE_AMOUNTS.each do |kind, amount|
-      create(:expense, :posted,
+      Expenses::CreateService.call(
         property: property,
         expense_kind: kind,
         amount_cents: amount * 100,
@@ -48,16 +58,18 @@ RSpec.describe ScheduleEGenerator do
       )
     end
 
-    create(:receipt,
+    Receipts::CreateService.call(
       tenancy: tenancy,
+      payer_party: party,
       received_on: date_in_year,
       amount_cents: (RENT_AMOUNT * 100).to_i,
       payment_method: "check",
       external_reference: "TEST-#{year}"
     )
 
-    create(:receipt,
+    Receipts::CreateService.call(
       tenancy: tenancy,
+      payer_party: party,
       amount_cents: (UTILITY_AMOUNT * 100).to_i,
       received_on: date_in_year,
       payment_method: "zelle"
@@ -125,6 +137,8 @@ RSpec.describe ScheduleEGenerator do
           expect(read_field(doc, map[:total_expenses])).to eq(total_expected)
         end
 
+        Posting.delete_all
+        JournalEntry.delete_all
         Charge.delete_all
         Expense.delete_all
         Receipt.delete_all
@@ -140,8 +154,8 @@ RSpec.describe ScheduleEGenerator do
     end
 
     it "handles net loss and covers net loss branches" do
-      create(:expense, :posted, property: property, expense_kind: "repairs", amount_cents: 150_000, paid_on: Date.new(2025, 6, 1))
-      create(:receipt, tenancy: tenancy, received_on: Date.new(2025, 6, 1), amount_cents: 100_000, payment_method: "check")
+      Expenses::CreateService.call(property: property, expense_kind: "repairs", amount_cents: 150_000, paid_on: Date.new(2025, 6, 1))
+      Receipts::CreateService.call(tenancy: tenancy, payer_party: party, received_on: Date.new(2025, 6, 1), amount_cents: 100_000, payment_method: "check")
 
       generator = described_class.new(property, 2025)
       pdf_data = generator.call

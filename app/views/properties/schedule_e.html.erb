@@ -1,19 +1,19 @@
-<turbo-frame id="modal-frame" data-modal-title="Schedule E Summary — <%= @property.address %> (<%= @year %>)">
+<turbo-frame id="modal-frame" data-modal-title="Schedule E Worksheet — <%= @property.address %> (<%= @year %>)">
 
-  <div class="flex justify-between items-center mb-5">
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
     <%# Year selector %>
     <%= form_with url: schedule_e_property_path(@property), method: :get,
           data: { turbo_frame: "modal-frame" },
           class: "flex items-center gap-2" do |f| %>
       <%= f.label :year, "Tax Year:", class: "text-sm font-semibold" %>
       <%= f.select :year,
-            options_for_select(@property.active_years([@year]), @year),
+            options_for_select(@active_years, @year),
             {},
             onchange: "this.form.requestSubmit()",
             class: "select select-bordered select-sm" %>
     <% end %>
 
-    <div class="flex gap-2">
+    <div class="flex items-center gap-2">
       <%= link_to schedule_e_pdf_property_path(@property, year: @year),
             class: "btn btn-sm btn-ghost gap-2",
             data: { turbo: false } do %>
@@ -25,8 +25,43 @@
     </div>
   </div>
 
+  <%# Tax Classification Section %>
+  <div class="card bg-base-200/40 border border-base-200 p-4 mb-6">
+    <div class="flex flex-wrap justify-between items-center gap-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-base-content/60">IRS Schedule E Classification (Box 1b)</div>
+        <% if @tax_profile %>
+          <div class="text-sm font-bold text-primary mt-1">
+            <%= @tax_profile.schedule_e_code_description %>
+          </div>
+        <% else %>
+          <div class="text-sm font-semibold text-warning mt-1">
+            Not configured for <%= @year %>
+          </div>
+        <% end %>
+      </div>
+      <div>
+        <% if @tax_profile %>
+          <%= link_to "Edit Classification", edit_property_tax_profile_path(@property, @tax_profile), class: "btn btn-xs btn-outline" %>
+        <% else %>
+          <%= link_to "Set Up Tax Classification", new_property_tax_profile_path(@property, tax_year: @year), class: "btn btn-xs btn-warning" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% unless @tax_profile %>
+    <div class="alert alert-warning mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <div>
+        <h4 class="font-bold text-sm">Tax Profile Required</h4>
+        <div class="text-xs">IRS property type classification is not yet configured for <%= @year %>. <%= link_to "Configure tax classification now", new_property_tax_profile_path(@property, tax_year: @year), class: "underline font-semibold" %>.</div>
+      </div>
+    </div>
+  <% end %>
+
   <%# Part I — Income %>
-  <h3 class="text-base font-bold uppercase tracking-wide text-base-content/60 mb-2">Income</h3>
+  <h3 class="text-base font-bold uppercase tracking-wide text-base-content/60 mb-2">Part I — Income</h3>
   <div class="overflow-x-auto rounded-box border border-base-200 mb-6">
     <table class="table table-sm w-full">
       <thead>
@@ -38,29 +73,25 @@
       </thead>
       <tbody>
         <tr>
-          <td class="text-base-content/50 text-xs">3</td>
-          <td>Rents Received</td>
-          <td class="text-right font-medium text-success"><%= number_to_currency(@rents_received) %></td>
+          <td class="text-base-content/50 text-xs font-mono">3</td>
+          <td>
+            <span class="font-medium">Rents received</span>
+            <span class="text-xs text-base-content/60 block">Cash received from ordinary tenant payments</span>
+          </td>
+          <td class="text-right font-medium text-success"><%= number_to_currency(@schedule_e_result.rents_received) %></td>
         </tr>
-        <% if @utility_reimbursements > 0 %>
-          <tr>
-            <td class="text-base-content/50 text-xs">—</td>
-            <td>Utility Reimbursements</td>
-            <td class="text-right font-medium text-success"><%= number_to_currency(@utility_reimbursements) %></td>
-          </tr>
-        <% end %>
       </tbody>
       <tfoot>
         <tr class="font-bold border-t-2 border-base-300">
-          <td colspan="2">Total Income</td>
-          <td class="text-right text-success"><%= number_to_currency(@total_income) %></td>
+          <td colspan="2">Total Income (Line 3)</td>
+          <td class="text-right text-success"><%= number_to_currency(@schedule_e_result.rents_received) %></td>
         </tr>
       </tfoot>
     </table>
   </div>
 
   <%# Part I — Expenses %>
-  <h3 class="text-base font-bold uppercase tracking-wide text-base-content/60 mb-2">Expenses</h3>
+  <h3 class="text-base font-bold uppercase tracking-wide text-base-content/60 mb-2">Part I — Expenses</h3>
   <div class="overflow-x-auto rounded-box border border-base-200 mb-6">
     <table class="table table-sm w-full">
       <thead>
@@ -71,38 +102,93 @@
         </tr>
       </thead>
       <tbody>
-        <% if @expenses_by_category.empty? %>
+        <% @form_definition.expense_lines.each do |line| %>
+          <% amount = @schedule_e_result.expense_for(line.category) %>
           <tr>
-            <td colspan="3" class="text-center py-4 text-base-content/50">No expenses recorded for <%= @year %></td>
+            <td class="text-base-content/50 text-xs font-mono"><%= line.line_number %></td>
+            <td>
+              <%= line.label %>
+              <% if line.category == :other && @schedule_e_result.other_expense_details.any? %>
+                <div class="mt-1 pl-2 border-l-2 border-base-300 space-y-1">
+                  <% @schedule_e_result.other_expense_details.each do |detail| %>
+                    <div class="text-xs text-base-content/70 flex justify-between">
+                      <span><%= detail.occurred_on.strftime("%b %-d") %>: <%= detail.description %></span>
+                      <span class="font-mono"><%= number_to_currency(BigDecimal(detail.amount_cents.to_s) / 100) %></span>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </td>
+            <td class="text-right font-medium <%= amount > 0 ? 'text-error' : 'text-base-content/40' %>">
+              <%= number_to_currency(amount) %>
+            </td>
           </tr>
-        <% else %>
-          <% @expenses_by_category.each do |category, amount| %>
-            <tr>
-              <td class="text-base-content/50 text-xs">—</td>
-              <td><%= category.titleize %></td>
-              <td class="text-right font-medium text-error"><%= number_to_currency(amount) %></td>
-            </tr>
-          <% end %>
         <% end %>
       </tbody>
       <tfoot>
         <tr class="font-bold border-t-2 border-base-300">
-          <td colspan="2">Total Expenses</td>
-          <td class="text-right text-error"><%= number_to_currency(@total_expenses) %></td>
+          <td colspan="2">Total Expenses (Line 20)</td>
+          <td class="text-right text-error"><%= number_to_currency(@schedule_e_result.total_expenses) %></td>
         </tr>
       </tfoot>
     </table>
   </div>
 
   <%# Net Income Summary %>
-  <div class="stat bg-base-200/50 rounded-box p-4 flex justify-between items-center">
+  <div class="stat bg-base-200/50 rounded-box p-4 flex justify-between items-center mb-6">
     <div>
-      <div class="stat-title text-xs font-bold uppercase tracking-wider">Net Rental Income (Loss)</div>
-      <div class="stat-desc text-xs text-base-content/50">Schedule E Line 21/22</div>
+      <div class="stat-title text-xs font-bold uppercase tracking-wider">Net Rental Income / (Loss)</div>
+      <div class="stat-desc text-xs text-base-content/50">Schedule E Line 21 / 22 (before untracked adjustments)</div>
     </div>
-    <div class="stat-value text-2xl <%= @net_income >= 0 ? 'text-success' : 'text-error' %>">
-      <%= number_to_currency(@net_income) %>
+    <div class="stat-value text-2xl <%= @schedule_e_result.net_income >= 0 ? 'text-success' : 'text-error' %>">
+      <%= number_to_currency(@schedule_e_result.net_income) %>
     </div>
+  </div>
+
+  <%# Items Requiring Tax Review %>
+  <% if @schedule_e_result.review_items.any? %>
+    <div class="card bg-base-100 border border-warning/30 p-4 mb-6">
+      <h4 class="text-sm font-bold text-warning uppercase tracking-wide mb-2 flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        Items Requiring Tax Review
+      </h4>
+      <div class="overflow-x-auto">
+        <table class="table table-xs w-full">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reason</th>
+              <th class="text-right">Amount</th>
+              <th>Audit Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @schedule_e_result.review_items.each do |item| %>
+              <tr>
+                <td><%= item.occurred_on.strftime("%b %-d, %Y") %></td>
+                <td><%= item.reason %></td>
+                <td class="text-right font-mono"><%= number_to_currency(BigDecimal(item.amount_cents.to_s) / 100) %></td>
+                <td>
+                  <%= link_to "Journal Entry ##{item.journal_entry.id}", journal_entry_path(item.journal_entry), class: "link link-primary", data: { turbo: false } %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Disclaimers %>
+  <div class="card bg-base-200/30 border border-base-200 p-4 text-xs text-base-content/70 space-y-1">
+    <div class="font-bold text-base-content/80">Important Tax Information & Scope</div>
+    <div>This worksheet summarizes tracked cash rental receipts and operating expenses from the double-entry accounting ledger.</div>
+    <div class="font-medium text-base-content/80 mt-1">Not tracked or computed by Yanushi:</div>
+    <ul class="list-disc list-inside space-y-0.5 pl-1">
+      <li>Depreciation & Section 179 property basis allocations (Line 18)</li>
+      <li>Passive activity loss limitations and Form 8582 calculations</li>
+      <li>Personal-use vs. rental percentage allocations</li>
+    </ul>
   </div>
 
 </turbo-frame>
