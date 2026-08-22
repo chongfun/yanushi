@@ -193,6 +193,87 @@
         </div>
       </div>
 
+      <!-- Recent Account Activity Card -->
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="card-title text-xl font-bold">Recent Account Activity</h2>
+              <p class="text-xs text-base-content/60">Chronological tenant receivable ledger activity and running balance</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= link_to "Financial Activity", statement_tenancy_path(@tenancy, view: "all"), class: "btn btn-sm btn-outline btn-secondary" %>
+              <%= link_to "View Statement", statement_tenancy_path(@tenancy), class: "btn btn-sm btn-outline btn-info" %>
+            </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th class="text-right">Amount</th>
+                  <th class="text-right">Running Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @recent_activity_rows.blank? %>
+                  <tr>
+                    <td colspan="5" class="text-center py-6 text-base-content/60">
+                      No account activity recorded yet.
+                    </td>
+                  </tr>
+                <% else %>
+                  <% @recent_activity_rows.each do |row| %>
+                    <tr class="<%= 'opacity-60 bg-base-200/40' if row.corrected? || row.voided? %>">
+                      <td class="text-sm"><%= row.occurred_on.strftime("%b %d, %Y") %></td>
+                      <td>
+                        <% if row.reversal %>
+                          <% if row.kind == 'waiver' %>
+                            <span class="badge badge-neutral text-xs">Waiver</span>
+                          <% else %>
+                            <span class="badge badge-warning text-xs">Correction</span>
+                          <% end %>
+                        <% elsif row.kind == "rent" || row.kind == "late_fee" || row.kind == "reimbursement" || row.kind == "other" %>
+                          <span class="badge badge-info text-xs"><%= row.label %></span>
+                        <% elsif row.kind == "payment" %>
+                          <span class="badge badge-success text-xs text-success-content">Payment</span>
+                        <% elsif row.kind == "deposit_applied" %>
+                          <span class="badge badge-secondary text-xs">Deposit Applied</span>
+                        <% else %>
+                          <span class="badge badge-ghost text-xs"><%= row.label %></span>
+                        <% end %>
+                      </td>
+                      <td class="text-sm">
+                        <%= row.description %>
+                        <% if row.lifecycle_status == :corrected %>
+                          <span class="badge badge-warning badge-xs ml-2">Corrected</span>
+                        <% elsif row.lifecycle_status == :voided %>
+                          <span class="badge badge-neutral badge-xs ml-2">Waived</span>
+                        <% end %>
+                      </td>
+                      <td class="text-right font-mono font-medium text-sm">
+                        <% if row.amount_cents.positive? %>
+                          <span class="text-error">+<%= number_to_currency(row.amount_cents / 100.0) %></span>
+                        <% elsif row.amount_cents.negative? %>
+                          <span class="text-success">-<%= number_to_currency(row.amount_cents.abs / 100.0) %></span>
+                        <% else %>
+                          $0.00
+                        <% end %>
+                      </td>
+                      <td class="text-right font-mono font-bold text-sm <%= row.running_balance_cents > 0 ? 'text-error' : 'text-success' %>">
+                        <%= row.running_balance_cents < 0 ? '-' : '' %><%= number_to_currency(row.running_balance_cents.abs / 100.0) %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Payments & Receipts Card -->
       <div class="card bg-base-100 shadow-xl border border-base-200">
         <div class="card-body">
@@ -310,6 +391,7 @@
           </div>
           <div class="divider my-3"></div>
           <div class="space-y-2">
+            <%= link_to "📄 View Full Statement", statement_tenancy_path(@tenancy), class: "btn btn-outline btn-info btn-sm w-full" %>
             <%= link_to "＋ Record Payment", new_tenancy_receipt_path(@tenancy), class: "btn btn-primary btn-sm w-full" %>
             <%= link_to "＋ Add Charge", new_tenancy_charge_path(@tenancy), class: "btn btn-outline btn-sm w-full" %>
           </div>

@@ -119,7 +119,7 @@ class Tenancy < ApplicationRecord
   private
 
     def balance_query
-      Tenancies::BalanceQuery.new(tenancy: self)
+      Accounting::TenancyBalanceQuery.new(tenancy: self)
     end
 
     def rentable_unit_is_active

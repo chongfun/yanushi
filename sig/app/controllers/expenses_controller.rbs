@@ -3,7 +3,8 @@ class ExpensesController < ApplicationController
   @expenses: Expense::ActiveRecord_Relation
   @nested_property: Property?
   @properties: Property::ActiveRecord_Relation
-  @financial_items: Array[Hash[Symbol, untyped]]
+  @financial_activity: Array[Accounting::ActivityRow]
+  @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
   @year: Integer
 
   def index: () -> untyped

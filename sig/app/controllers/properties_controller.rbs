@@ -1,9 +1,12 @@
 class PropertiesController < ApplicationController
   @properties: Property::ActiveRecord_Relation
   @property: Property
+  @date_range: Accounting::DateRange
   @year: Integer
-  @financial_items: Array[untyped]
+  @financial_activity: Array[Accounting::ActivityRow]
+  @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
   @security_deposits_held_cents: Integer
+  @active_years: Array[Integer]
   @rents_received: Float
   @utility_reimbursements: Float
   @total_income: Float

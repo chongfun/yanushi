@@ -1,0 +1,12 @@
+module Accounting
+  class PropertyLedgerQuery
+    def self.call: (property: Property?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> Array[ActivityRow]
+    def initialize: (property: Property?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> void
+    def call: () -> Array[ActivityRow]
+
+    private
+
+    attr_reader property: Property?
+    attr_reader date_range: DateRange
+  end
+end

@@ -186,18 +186,22 @@ RSpec.describe SourceDocuments::UploadService do
     it "handles concurrent duplicate upload where initial upload encounters enqueue failure" do
       res1 = nil
       res2 = nil
+      q1 = Queue.new
 
       t1 = Thread.new do
         ActiveRecord::Base.connection_pool.with_connection do
           pdf_file = fixture_file_upload("receipts/202604 Zelle.pdf", "application/pdf")
-          allow(IngestSourceDocumentJob).to receive(:perform_later).and_raise(StandardError, "Queue timeout")
+          allow(IngestSourceDocumentJob).to receive(:perform_later) do
+            q1.push(:created)
+            raise StandardError, "Queue timeout"
+          end
           res1 = described_class.call(user: user, pdf_param: pdf_file)
         end
       end
 
       t2 = Thread.new do
         ActiveRecord::Base.connection_pool.with_connection do
-          sleep 0.05
+          q1.pop
           pdf_file = fixture_file_upload("receipts/202604 Zelle.pdf", "application/pdf")
           res2 = described_class.call(user: user, pdf_param: pdf_file)
         end
@@ -225,10 +229,12 @@ RSpec.describe SourceDocuments::UploadService do
       expect(res.failure.code).to eq(:validation_error)
     end
 
-    it "returns :already_processing for existing document with status 'processing'" do
+    it "returns :already_processing for existing document with status 'processing' or other status" do
       pdf_file = fixture_file_upload("receipts/202604 Zelle.pdf", "application/pdf")
       res1 = described_class.call(user: user, pdf_param: pdf_file)
       expect(res1).to be_success
+      doc = res1.value!.data[:source_document]
+      doc.update_columns(status: "custom_status")
 
       pdf_file2 = fixture_file_upload("receipts/202604 Zelle.pdf", "application/pdf")
       res2 = described_class.call(user: user, pdf_param: pdf_file2)

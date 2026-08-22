@@ -1,0 +1,16 @@
+module Accounting
+  class NaturalBalance
+    DEBIT_TYPES: Array[String]
+    CREDIT_TYPES: Array[String]
+
+    def self.multiplier_for: (untyped) -> Integer
+    def self.convert: (untyped, Integer?) -> Integer
+    def self.to_raw: (untyped, Integer?) -> Integer
+    def self.debit_normal?: (untyped) -> bool
+    def self.credit_normal?: (untyped) -> bool
+
+    private
+
+    def self.resolve_type: (untyped) -> String
+  end
+end

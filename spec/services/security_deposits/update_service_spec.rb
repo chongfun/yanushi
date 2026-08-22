@@ -65,6 +65,11 @@ RSpec.describe SecurityDeposits::UpdateService do
     expect(described_class.call(security_deposit: security_deposit, required_amount: "100.999").failure.code).to eq(:invalid_amount)
     expect(described_class.call(security_deposit: security_deposit, required_amount_cents: "invalid").failure.code).to eq(:invalid_amount)
     expect(described_class.call(security_deposit: security_deposit, due_on: "not-a-date").failure.code).to eq(:invalid_due_on)
+
+    # Time due_on
+    res_time = described_class.call(security_deposit: security_deposit, due_on: Time.zone.local(2026, 8, 1))
+    expect(res_time).to be_success
+    expect(security_deposit.reload.due_on).to eq(Date.new(2026, 8, 1))
   end
 
   it "handles validation failure on save" do

@@ -1,13 +1,3 @@
 module Tenancies
-  class BalanceQuery
-    def self.call: (tenancy: Tenancy, ?as_of: Date) -> BigDecimal
-    def initialize: (tenancy: Tenancy) -> void
-    def balance_cents_as_of: (?Date as_of) -> Integer
-    def balance_as_of: (?Date as_of) -> BigDecimal
-    def current_balance: () -> BigDecimal
-
-    private
-
-    attr_reader tenancy: Tenancy
-  end
+  BalanceQuery: singleton(Accounting::TenancyBalanceQuery)
 end

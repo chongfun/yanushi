@@ -24,7 +24,13 @@ Rails.application.routes.draw do
       post :refund
       post :apply
     end
+    member do
+      get :statement
+    end
   end
+
+  resources :accounts, only: %i[index show]
+  resources :journal_entries, only: %i[show]
 
   resources :security_deposit_transactions, only: %i[show] do
     member do

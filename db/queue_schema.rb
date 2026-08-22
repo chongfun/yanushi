@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -128,6 +128,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.bigint "user_id", null: false
     t.index ["occurred_on"], name: "index_journal_entries_on_occurred_on"
     t.index ["reversal_of_id"], name: "idx_journal_entries_single_reversal", unique: true, where: "(reversal_of_id IS NOT NULL)"
+    t.index ["user_id", "occurred_on", "id"], name: "index_journal_entries_on_user_id_and_occurred_on_and_id"
     t.index ["user_id", "source_type", "source_id", "event_type"], name: "idx_journal_entries_source_event", unique: true
     t.index ["user_id"], name: "index_journal_entries_on_user_id"
     t.check_constraint "source_id > 0", name: "check_journal_entries_source_id_positive"
@@ -164,13 +165,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000001) do
     t.bigint "property_id"
     t.bigint "rentable_unit_id"
     t.bigint "tenancy_id"
+    t.index ["account_id", "journal_entry_id"], name: "index_postings_on_account_id_and_journal_entry_id"
     t.index ["account_id", "property_id"], name: "index_postings_on_account_id_and_property_id"
     t.index ["account_id", "tenancy_id"], name: "index_postings_on_account_id_and_tenancy_id"
     t.index ["account_id"], name: "index_postings_on_account_id"
     t.index ["journal_entry_id"], name: "index_postings_on_journal_entry_id"
     t.index ["party_id"], name: "index_postings_on_party_id"
+    t.index ["property_id", "journal_entry_id"], name: "index_postings_on_property_id_and_journal_entry_id"
     t.index ["property_id"], name: "index_postings_on_property_id"
     t.index ["rentable_unit_id"], name: "index_postings_on_rentable_unit_id"
+    t.index ["tenancy_id", "journal_entry_id"], name: "index_postings_on_tenancy_id_and_journal_entry_id"
     t.index ["tenancy_id"], name: "index_postings_on_tenancy_id"
     t.check_constraint "amount_cents <> 0", name: "check_postings_amount_cents_nonzero"
   end

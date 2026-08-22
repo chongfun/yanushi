@@ -1,0 +1,75 @@
+module Accounting
+  class TenantReceivableActivityQuery
+    class StatementRow
+      attr_reader id: Integer
+      attr_reader occurred_on: Date
+      attr_reader journal_entry: JournalEntry
+      attr_reader kind: String
+      attr_reader label: String
+      attr_reader description: String?
+      attr_reader amount_cents: Integer
+      attr_reader running_balance_cents: Integer
+      attr_reader party: Party?
+      attr_reader source: untyped
+      attr_reader reversal: bool
+      attr_reader corrected: bool
+      attr_reader lifecycle_status: Symbol?
+
+      def initialize: (
+        id: Integer,
+        occurred_on: Date,
+        journal_entry: JournalEntry,
+        kind: String,
+        label: String,
+        description: String?,
+        amount_cents: Integer,
+        running_balance_cents: Integer,
+        party: Party?,
+        source: untyped,
+        reversal: bool,
+        corrected: bool,
+        ?lifecycle_status: Symbol?
+      ) -> void
+
+      def amount: () -> BigDecimal
+      def running_balance: () -> BigDecimal
+      def corrected?: () -> bool
+      def voided?: () -> bool
+      def active?: () -> bool
+    end
+
+    class StatementResult
+      attr_reader tenancy: Tenancy?
+      attr_reader date_range: DateRange
+      attr_reader opening_balance_cents: Integer
+      attr_reader closing_balance_cents: Integer
+      attr_reader rows: Array[StatementRow]
+
+      def initialize: (
+        tenancy: Tenancy?,
+        date_range: DateRange,
+        opening_balance_cents: Integer,
+        closing_balance_cents: Integer,
+        rows: Array[StatementRow]
+      ) -> void
+
+      def opening_balance: () -> BigDecimal
+      def closing_balance: () -> BigDecimal
+    end
+
+    def self.call: (tenancy: Tenancy?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> StatementResult
+    def initialize: (tenancy: Tenancy?, ?from: untyped, ?through: untyped, ?year: untyped, ?date_range: DateRange?) -> void
+    def call: () -> StatementResult
+
+    private
+
+    attr_reader tenancy: Tenancy?
+    attr_reader date_range: DateRange
+
+    def base_scope: (Account) -> untyped
+    def compute_opening_balance: (Account) -> Integer
+    def scoped_postings: (Account) -> untyped
+    def empty_result: () -> StatementResult
+    def build_rows: (untyped, Integer) -> Array[StatementRow]
+  end
+end

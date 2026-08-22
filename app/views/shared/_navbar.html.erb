@@ -38,6 +38,10 @@
         <%= link_to "Imported Transactions", imported_transactions_path,
             class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/imported_transactions') || request.path.start_with?('/source_documents')}" %>
       </li>
+      <li>
+        <%= link_to "Accounts", accounts_path,
+            class: "btn btn-ghost btn-sm #{'btn-active' if request.path.start_with?('/accounts') || request.path.start_with?('/journal_entries')}" %>
+      </li>
     </ul>
   </div>
  
@@ -57,6 +61,7 @@
         <li><%= link_to "Payments", receipts_path %></li>
         <li><%= link_to "Imported Transactions", imported_transactions_path %></li>
         <li><%= link_to "Expenses", expenses_path %></li>
+        <li><%= link_to "Accounts", accounts_path %></li>
       </ul>
     </div>
   </div>
