@@ -90,6 +90,14 @@
                 <%= number_to_currency(financial_summary.operating_expenses) %>
               </span>
             </div>
+            <% if financial_summary.interest_expenses_cents > 0 %>
+              <div class="flex justify-between">
+                <span class="text-base-content/70">Interest / Financing:</span>
+                <span class="font-mono text-error">
+                  <%= number_to_currency(financial_summary.interest_expenses) %>
+                </span>
+              </div>
+            <% end %>
             <div class="divider my-1"></div>
             <div class="flex justify-between font-bold">
               <span>Net Operating Income:</span>

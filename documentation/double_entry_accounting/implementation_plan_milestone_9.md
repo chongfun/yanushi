@@ -91,7 +91,7 @@ other
 ``` 
 
 
-Schedule E gets its own enum. For the current IRS form, use semantic internal values such as:
+Schedule E gets its own enum. For the current IRS form, use semantic internal values:
 
 ```text
 single_family_residence
@@ -99,16 +99,15 @@ multi_family_residence
 vacation_short_term_rental
 commercial
 land
-royalties
 self_rental
 other
 ```
 
-and map those to IRS codes 1–8.
+and map those to IRS codes 1–5, 7, and 8.
 
-Do not store `"1"`, `"2"`, etc. as the domain enum. Codes/forms can change; semantic values are more durable.
+*(Note: `royalties` / IRS Code 6 belongs on Line 4 of Schedule E rather than Line 3 rental income. Because Milestone 9 is scoped to rental real estate and implements Line 3 rental income, royalty properties are intentionally unsupported and omitted from the domain enum.)*
 
-The IRS's current property-type list includes exactly those categories. 
+Do not store `"1"`, `"2"`, etc. as the domain enum. Codes/forms can change; semantic values are more durable. 
 
 ## 4. Require an `other_description` for type `other`
 

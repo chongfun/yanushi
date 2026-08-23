@@ -188,5 +188,84 @@ RSpec.describe Accounting::PropertySummaryQuery do
       expect(invalid_summary.tenant_receivable_cents).to eq(0)
       expect(invalid_summary.security_deposits_held_cents).to eq(0)
     end
+
+    it "excludes future-dated charges in an all-time range so period activity reconciles with closing balances" do
+      # Past charge 10 days ago ($1,000)
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 100_000,
+        charge_date: Date.current - 10.days
+      )
+
+      # Future charge 10 days in the future ($2,000)
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 200_000,
+        charge_date: Date.current + 10.days
+      )
+
+      all_time_range = Accounting::DateRange.new(from: nil, through: nil)
+      summary = described_class.call(property: property, date_range: all_time_range)
+
+      expect(summary.income_recognized_cents).to eq(100_000)
+      expect(summary.tenant_receivable_change_cents).to eq(100_000)
+      expect(summary.tenant_receivable_cents).to eq(100_000)
+    end
+
+    it "excludes mortgage and other interest from operating expenses in Net Operating Income" do
+      # 1. Rental income: $2,000
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 200_000,
+        charge_date: Date.new(2026, 1, 1)
+      )
+
+      # 2. Repairs (operating expense): $300
+      Expenses::CreateService.call(
+        property: property,
+        expense_kind: "repairs",
+        paid_on: Date.new(2026, 1, 10),
+        amount_cents: 30_000
+      )
+
+      # 3. Mortgage interest (financing expense): $1,000
+      Expenses::CreateService.call(
+        property: property,
+        expense_kind: "mortgage_interest",
+        paid_on: Date.new(2026, 1, 15),
+        amount_cents: 100_000
+      )
+
+      summary = described_class.call(property: property, year: 2026)
+
+      # NOI before financing: $2,000 - $300 = $1,700
+      expect(summary.income_recognized_cents).to eq(200_000)
+      expect(summary.operating_expenses_cents).to eq(30_000)
+      expect(summary.interest_expenses_cents).to eq(100_000)
+      expect(summary.net_operating_income_cents).to eq(170_000)
+      expect(summary.total_expenses_cents).to eq(130_000)
+      expect(summary.net_income_cents).to eq(70_000)
+
+      expect(summary.income_recognized).to eq(BigDecimal("2000.00"))
+      expect(summary.operating_expenses).to eq(BigDecimal("300.00"))
+      expect(summary.interest_expenses).to eq(BigDecimal("1000.00"))
+      expect(summary.net_operating_income).to eq(BigDecimal("1700.00"))
+      expect(summary.total_expenses).to eq(BigDecimal("1300.00"))
+      expect(summary.net_income).to eq(BigDecimal("700.00"))
+    end
+
+    it "returns empty summary when property is nil or date range is invalid" do
+      summary_nil_prop = described_class.call(property: nil, year: 2026)
+      expect(summary_nil_prop.net_cash_movement_cents).to eq(0)
+      expect(summary_nil_prop.net_operating_income_cents).to eq(0)
+      expect(summary_nil_prop.expenses_by_account).to eq({})
+
+      invalid_range = Accounting::DateRange.new(from: Date.new(2026, 5, 1), through: Date.new(2026, 1, 1))
+      summary_invalid = described_class.call(property: property, date_range: invalid_range)
+      expect(summary_invalid.net_cash_movement_cents).to eq(0)
+    end
   end
 end

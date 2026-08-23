@@ -1,0 +1,103 @@
+module TaxReporting
+  class ScheduleEResult
+    class OtherExpenseDetail
+      attr_reader id: Integer
+      attr_reader occurred_on: Date
+      attr_reader description: String?
+      attr_reader amount_cents: Integer
+      attr_reader journal_entry: JournalEntry
+
+      def initialize: (id: Integer, occurred_on: Date, description: String?, amount_cents: Integer, journal_entry: JournalEntry) -> void
+    end
+
+    class TaxReviewItem
+      attr_reader id: Integer
+      attr_reader occurred_on: Date
+      attr_reader amount_cents: Integer
+      attr_reader reason: String
+      attr_reader source: untyped
+      attr_reader journal_entry: JournalEntry
+      attr_reader resolution: PropertyTaxReviewResolution?
+      attr_reader review_kind: Symbol
+
+      def self.new: (id: Integer, occurred_on: Date, amount_cents: Integer, reason: String, source: untyped, journal_entry: JournalEntry, ?resolution: PropertyTaxReviewResolution?, ?review_kind: Symbol) -> TaxReviewItem
+
+      def resolved?: () -> bool
+      def unresolved?: () -> bool
+      def treatment?: () -> String?
+      def treatment: () -> String?
+      def income?: () -> bool
+      def expense?: () -> bool
+      def resolution_target: () -> JournalEntry?
+      def cross_year_reversal?: () -> bool
+      def can_map_to_expense?: () -> bool
+      def can_include_in_rents?: () -> bool
+    end
+
+    class IncomeDrilldownItem
+      attr_reader id: Integer
+      attr_reader occurred_on: Date
+      attr_reader label: String
+      attr_reader description: String?
+      attr_reader amount_cents: Integer
+      attr_reader party: Party?
+      attr_reader journal_entry: JournalEntry
+      attr_reader reversal: bool
+
+      def initialize: (id: Integer, occurred_on: Date, label: String, description: String?, amount_cents: Integer, party: Party?, journal_entry: JournalEntry, reversal: bool) -> void
+    end
+
+    class ExpenseDrilldownItem
+      attr_reader id: Integer
+      attr_reader occurred_on: Date
+      attr_reader category: Symbol
+      attr_reader description: String?
+      attr_reader amount_cents: Integer
+      attr_reader property: Property?
+      attr_reader rentable_unit: RentableUnit?
+      attr_reader journal_entry: JournalEntry
+      attr_reader reversal: bool
+
+      def initialize: (id: Integer, occurred_on: Date, category: Symbol, description: String?, amount_cents: Integer, property: Property?, rentable_unit: RentableUnit?, journal_entry: JournalEntry, reversal: bool) -> void
+    end
+
+    attr_reader property: Property?
+    attr_reader tax_year: Integer
+    attr_reader tax_profile: PropertyTaxProfile?
+    attr_reader status: Symbol
+    attr_reader rents_received_cents: Integer
+    attr_reader expenses_by_category_cents: Hash[Symbol, Integer]
+    attr_reader total_expenses_cents: Integer
+    attr_reader net_income_cents: Integer
+    attr_reader other_expense_details: Array[OtherExpenseDetail]
+    attr_reader review_items: Array[TaxReviewItem]
+    attr_reader rents_received_drilldown: Array[IncomeDrilldownItem]
+    attr_reader expense_drilldown_by_category: Hash[Symbol, Array[ExpenseDrilldownItem]]
+
+    def initialize: (
+      property: Property?,
+      tax_year: Integer | String,
+      tax_profile: PropertyTaxProfile?,
+      status: Symbol,
+      rents_received_cents: Integer,
+      expenses_by_category_cents: Hash[Symbol, Integer],
+      total_expenses_cents: Integer,
+      net_income_cents: Integer,
+      ?other_expense_details: Array[OtherExpenseDetail],
+      ?review_items: Array[TaxReviewItem],
+      ?rents_received_drilldown: Array[IncomeDrilldownItem],
+      ?expense_drilldown_by_category: Hash[Symbol, Array[ExpenseDrilldownItem]]
+    ) -> void
+
+    def unresolved_review_items: () -> Array[TaxReviewItem]
+    def resolved_review_items: () -> Array[TaxReviewItem]
+    def has_unresolved_reviews?: () -> bool
+    def tax_profile_configured?: () -> bool
+    def cents_for: (Symbol | String) -> Integer
+    def expense_for: (Symbol | String) -> BigDecimal
+    def rents_received: () -> BigDecimal
+    def total_income: () -> BigDecimal
+    def total_expenses: () -> BigDecimal
+    def net_income: () -> BigDecimal
+  end
+end

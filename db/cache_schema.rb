@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -187,6 +187,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_properties_on_user_id"
+  end
+
+  create_table "property_tax_profiles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "other_description"
+    t.bigint "property_id", null: false
+    t.string "schedule_e_property_type", null: false
+    t.integer "tax_year", null: false
+    t.datetime "updated_at", null: false
+    t.index ["property_id", "tax_year"], name: "index_property_tax_profiles_on_property_id_and_tax_year", unique: true
+    t.index ["property_id"], name: "index_property_tax_profiles_on_property_id"
+    t.check_constraint "tax_year >= 1901 AND tax_year <= 2099", name: "check_property_tax_profiles_tax_year_range"
+  end
+
+  create_table "property_tax_review_resolutions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "journal_entry_id", null: false
+    t.text "notes"
+    t.bigint "property_id", null: false
+    t.string "schedule_e_category"
+    t.integer "tax_year", null: false
+    t.string "treatment", null: false
+    t.datetime "updated_at", null: false
+    t.index ["journal_entry_id"], name: "index_property_tax_review_resolutions_on_journal_entry_id"
+    t.index ["property_id", "tax_year", "journal_entry_id"], name: "idx_tax_review_resolutions_on_prop_year_entry", unique: true
+    t.index ["property_id"], name: "index_property_tax_review_resolutions_on_property_id"
   end
 
   create_table "receipts", force: :cascade do |t|
@@ -366,6 +392,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
   add_foreign_key "postings", "rentable_units"
   add_foreign_key "postings", "tenancies"
   add_foreign_key "properties", "users"
+  add_foreign_key "property_tax_profiles", "properties"
+  add_foreign_key "property_tax_review_resolutions", "journal_entries"
+  add_foreign_key "property_tax_review_resolutions", "properties"
   add_foreign_key "receipts", "parties", column: "payer_party_id"
   add_foreign_key "receipts", "receipts", column: "superseded_by_id"
   add_foreign_key "receipts", "tenancies"

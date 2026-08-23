@@ -60,6 +60,12 @@ RSpec.describe JournalEntry, type: :model do
       expect(second_reversal).not_to be_valid
       expect(second_reversal.errors[:reversal_of_id]).to include("has already been reversed")
     end
+
+    it "requires reversal_of_id when event_type is reversal" do
+      orphan = build(:journal_entry, user: user, event_type: "reversal", reversal_of: nil)
+      expect(orphan).not_to be_valid
+      expect(orphan.errors[:reversal_of_id]).to include("can't be blank")
+    end
   end
 
   describe "immutability" do

@@ -1,0 +1,13 @@
+<div class="max-w-2xl mx-auto py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Schedule E", schedule_e_property_path(@property, year: @tax_profile.tax_year), class: "btn btn-ghost btn-sm mb-2" %>
+    <h1 class="text-2xl font-bold">Edit Tax Profile (<%= @tax_profile.tax_year %>)</h1>
+    <p class="text-base-content/70"><%= @property.address %></p>
+  </div>
+
+  <div class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <%= render "form", tax_profile: @tax_profile %>
+    </div>
+  </div>
+</div>

@@ -150,11 +150,9 @@ module Accounting
 
       def scoped_postings(account)
         scope = base_scope(account)
-        if date_range.from && date_range.through
+        if date_range.from
           scope = scope.where("journal_entries.occurred_on BETWEEN ? AND ?", date_range.from, date_range.through)
-        elsif date_range.from
-          scope = scope.where("journal_entries.occurred_on >= ?", date_range.from)
-        elsif date_range.through
+        else
           scope = scope.where("journal_entries.occurred_on <= ?", date_range.through)
         end
 

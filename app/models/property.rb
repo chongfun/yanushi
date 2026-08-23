@@ -8,6 +8,8 @@ class Property < ApplicationRecord
   has_many :security_deposit_transactions, through: :tenancies
   has_many :postings, class_name: "Posting", dependent: :restrict_with_error
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
+  has_many :tax_profiles, class_name: "PropertyTaxProfile", dependent: :destroy
+  has_many :tax_review_resolutions, class_name: "PropertyTaxReviewResolution", dependent: :destroy
 
   ASSET_TYPES = %w[
     single_family
@@ -45,10 +47,14 @@ class Property < ApplicationRecord
 
   def schedule_e_summary(*args, year: nil)
     target_year = year || args.first || Date.current.year
-    Properties::ScheduleESummaryQuery.new(property: self).call(year: target_year)
+    TaxReporting::ScheduleEQuery.call(property: self, tax_year: target_year)
   end
 
   def accounting_user
     user
+  end
+
+  def tax_profile_for(year)
+    tax_profiles.find_by(tax_year: year)
   end
 end

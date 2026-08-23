@@ -352,4 +352,36 @@ FactoryBot.define do
       end
     end
   end
+
+  factory :property_tax_profile do
+    property
+    tax_year { Date.current.year }
+    schedule_e_property_type { "single_family_residence" }
+    other_description { nil }
+
+    trait :other do
+      schedule_e_property_type { "other" }
+      other_description { "Warehouse storage" }
+    end
+  end
+
+  factory :property_tax_review_resolution do
+    property
+    journal_entry do
+      entry = association :journal_entry, user: property.user, occurred_on: Date.new(tax_year, 6, 1), event_type: "custom_income", source: property
+      cash_acct = property.user.accounts.find_by(key: "cash") || create(:account, user: property.user, key: "cash", account_type: "asset")
+      equity_acct = property.user.accounts.find_by(key: "opening_balance_equity") || create(:account, user: property.user, key: "opening_balance_equity", account_type: "equity")
+      create(:posting, journal_entry: entry, property: property, amount_cents: 10_000, account: cash_acct)
+      create(:posting, journal_entry: entry, property: property, amount_cents: -10_000, account: equity_acct)
+      entry
+    end
+    tax_year { Date.current.year }
+    treatment { "include_in_rents" }
+    notes { "Security deposit retained for unpaid rent" }
+
+    trait :exclude do
+      treatment { "exclude" }
+      notes { "Tenant damage reimbursement, reported elsewhere" }
+    end
+  end
 end

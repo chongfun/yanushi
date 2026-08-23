@@ -14,6 +14,7 @@ class JournalEntry < ApplicationRecord
     scope: %i[user_id source_type event_type],
     message: "has already been posted for this event"
   }
+  validates :reversal_of_id, presence: true, if: -> { event_type == "reversal" }
   validates :reversal_of_id, uniqueness: {
     allow_nil: true,
     message: "has already been reversed"

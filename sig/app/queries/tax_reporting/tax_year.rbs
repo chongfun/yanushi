@@ -1,0 +1,23 @@
+module TaxReporting
+  class TaxYear
+    MIN_YEAR: Integer
+    MAX_YEAR: Integer
+    YEAR_REGEX: Regexp
+
+    attr_reader year: Integer
+
+    def self.parse: (untyped raw_value, ?default: Integer) -> TaxYear?
+    def self.parse!: (untyped raw_value, ?default: Integer) -> TaxYear
+
+    def initialize: (Integer | String year) -> void
+
+    def to_i: () -> Integer
+    def to_s: () -> String
+    def ==: (untyped other) -> bool
+    def eql?: (untyped other) -> bool
+    def hash: () -> Integer
+  end
+
+  class InvalidTaxYearError < ArgumentError
+  end
+end

@@ -100,6 +100,13 @@ RSpec.describe Accounting::DateRange do
 
       open_ended_from = described_class.new(from: Date.new(2026, 1, 1), through: nil)
       expect(open_ended_from.year).to be_nil
+      expect(open_ended_from.through).to eq(Date.current)
+
+      all_time = described_class.new(from: nil, through: nil)
+      expect(all_time.year).to be_nil
+      expect(all_time.from).to be_nil
+      expect(all_time.through).to eq(Date.current)
+      expect(all_time.as_of).to eq(Date.current)
     end
 
     it "parses dates from Time objects and handles malformed year inputs" do

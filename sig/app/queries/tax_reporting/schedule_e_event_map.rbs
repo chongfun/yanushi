@@ -1,0 +1,9 @@
+module TaxReporting
+  class ScheduleEEventMap
+    KNOWN_EXCLUDED_EVENT_TYPES: Array[String]
+
+    def self.classify_income_event: (JournalEntry) -> Symbol
+    def self.classify_reversal: (JournalEntry) -> Symbol
+    def self.reviewable?: (JournalEntry?, ?property: Property?) -> bool
+  end
+end
