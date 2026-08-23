@@ -164,4 +164,41 @@ RSpec.describe IngestSourceDocumentJob, type: :job do
       described_class.perform_now(doc.id)
     }.not_to raise_error
   end
+
+  it "rescues errors during error handling lock update" do
+    doc = create(
+      :source_document,
+      user: user,
+      attachment_file: "bad",
+      attachment_filename: "bad.pdf",
+      attachment_content_type: "application/pdf",
+      status: "processing"
+    )
+
+    allow(ImportedTransactions::IngestionService).to receive(:call).and_raise(StandardError, "First crash")
+    allow_any_instance_of(SourceDocument).to receive(:with_lock).and_raise(StandardError, "Lock crash")
+
+    expect {
+      described_class.perform_now(doc.id)
+    }.not_to raise_error
+  end
+
+  it "does not overwrite status if source_document is already success during error rescue" do
+    doc = create(
+      :source_document,
+      user: user,
+      attachment_file: "bad",
+      attachment_filename: "bad.pdf",
+      attachment_content_type: "application/pdf",
+      status: "processing"
+    )
+
+    allow(ImportedTransactions::IngestionService).to receive(:call) do
+      doc.update_columns(status: "success")
+      raise StandardError, "Late crash"
+    end
+
+    described_class.perform_now(doc.id)
+    expect(doc.reload.status).to eq("success")
+  end
 end

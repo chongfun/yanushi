@@ -7,12 +7,15 @@ class PropertiesController < ApplicationController
   @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
   @security_deposits_held_cents: Integer
   @active_years: Array[Integer]
-  @rents_received: Float
-  @utility_reimbursements: Float
-  @total_income: Float
-  @expenses_by_category: Hash[String, Float]
-  @total_expenses: Float
-  @net_income: Float
+  @schedule_e_result: TaxReporting::ScheduleEResult
+  @tax_profile: PropertyTaxProfile?
+  @form_definition: TaxReporting::ScheduleEFormDefinition
+  @rents_received: BigDecimal
+  @utility_reimbursements: BigDecimal
+  @total_income: BigDecimal
+  @expenses_by_category: Hash[String, BigDecimal]
+  @total_expenses: BigDecimal
+  @net_income: BigDecimal
 
   def index: () -> void
   def show: () -> void

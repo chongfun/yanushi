@@ -1,0 +1,9 @@
+module TaxReporting
+  class ScheduleEAccountMap
+    MAPPING: Hash[String, Symbol]
+
+    def self.category_for: (String | Symbol) -> Symbol?
+    def self.supported_keys: () -> Array[String]
+    def self.supported_categories: () -> Array[Symbol]
+  end
+end

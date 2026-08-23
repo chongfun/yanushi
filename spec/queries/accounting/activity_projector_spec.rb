@@ -37,6 +37,36 @@ RSpec.describe Accounting::ActivityProjector do
       expect(row.corrected).to be false
     end
 
+    it "projects reimbursement and other charge kinds with appropriate labels" do
+      exp_res = Expenses::CreateService.call(
+        property: property,
+        expense_kind: "repairs",
+        paid_on: Date.new(2026, 1, 2),
+        amount_cents: 15_000
+      )
+      expense = exp_res.value!.data[:expense]
+
+      reimb_res = Charges::CreateReimbursementService.call(
+        tenancy: tenancy,
+        expense: expense,
+        amount_cents: 15_000,
+        charge_date: Date.new(2026, 1, 3)
+      )
+      reimb_row = described_class.project(reimb_res.value!.data[:journal_entry])
+      expect(reimb_row.label).to eq("Reimbursement")
+      expect(reimb_row.kind).to eq("reimbursement")
+
+      other_res = Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "other",
+        amount_cents: 25_000,
+        charge_date: Date.new(2026, 1, 4)
+      )
+      other_row = described_class.project(other_res.value!.data[:journal_entry])
+      expect(other_row.label).to eq("Charge")
+      expect(other_row.kind).to eq("other")
+    end
+
     it "projects a payment (receipt) entry into an ActivityRow" do
       res = Receipts::CreateService.call(
         tenancy: tenancy,
@@ -194,7 +224,7 @@ RSpec.describe Accounting::ActivityProjector do
       expect(other_row.kind).to eq("other")
     end
 
-    it "handles fallback projection and standalone reversal without reversal_of" do
+    it "handles fallback projection and reversal of custom entry" do
       custom_entry = create(:journal_entry, user: user, event_type: "custom_event", description: "Custom Event")
       cash_account = user.accounts.find_by(key: "cash")
       create(:posting, journal_entry: custom_entry, account: cash_account, amount_cents: 50_000, property: property)
@@ -204,11 +234,11 @@ RSpec.describe Accounting::ActivityProjector do
       expect(custom_row.label).to eq("Custom Event")
       expect(custom_row.amount_cents).to eq(50_000)
 
-      standalone_reversal = create(:journal_entry, user: user, event_type: "reversal", description: "Orphan Reversal")
+      standalone_reversal = create(:journal_entry, user: user, event_type: "reversal", reversal_of: custom_entry, description: "Reversal")
       create(:posting, journal_entry: standalone_reversal, account: cash_account, amount_cents: -50_000, property: property)
       standalone_row = described_class.project(standalone_reversal)
       expect(standalone_row.reversal).to be true
-      expect(standalone_row.label).to eq("Correction of Entry")
+      expect(standalone_row.label).to eq("Correction of Custom Event")
     end
 
     it "projects charge waivers as 'Waiver' with 'Charge Waived' label and :voided status" do
@@ -378,6 +408,17 @@ RSpec.describe Accounting::ActivityProjector do
       create(:posting, journal_entry: dep_app_entry, account: cash_account, amount_cents: 20_000, property: property)
       dep_app_row = described_class.project(dep_app_entry)
       expect(dep_app_row.amount_cents).to eq(-20_000)
+    end
+
+    it "projects a reversal without reversal_of lineage using fallback" do
+      orphan_rev = build(:journal_entry, user: user, event_type: "reversal", reversal_of: nil, description: "Orphan")
+      cash_account = user.accounts.find_by(key: "cash")
+      posting = build(:posting, journal_entry: orphan_rev, account: cash_account, amount_cents: 10_000, property: property)
+      allow(orphan_rev).to receive(:postings).and_return([ posting ])
+
+      row = described_class.project(orphan_rev)
+      expect(row.label).to eq("Correction of Entry")
+      expect(row.amount_cents).to eq(10_000)
     end
   end
 end

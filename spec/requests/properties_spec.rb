@@ -173,20 +173,58 @@ RSpec.describe "Properties", type: :request do
   end
 
   describe "GET /properties/:id/schedule_e_pdf" do
-    it "downloads schedule_e_pdf for available year" do
+    it "downloads schedule_e_pdf for available year when tax profile exists" do
+      create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
       get schedule_e_pdf_property_url(property, year: 2025)
       expect(response).to be_successful
       expect(response.content_type).to eq("application/pdf")
       expect(response.headers["Content-Disposition"]).to match(/attachment/)
     end
 
-    it "redirects and shows alert for missing schedule_e_pdf" do
+    it "redirects and shows alert when tax profile is missing" do
+      get schedule_e_pdf_property_url(property, year: 2025)
+      expect(response).to redirect_to(schedule_e_property_path(property, year: 2025))
+      expect(flash[:alert]).to include("Tax classification must be configured for 2025")
+    end
+
+    it "redirects and shows alert when unresolved review items exist" do
+      Accounting::ChartOfAccounts.ensure_for(user)
+      create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
+      unmapped_account = user.accounts.create!(
+        name: "Capital Improvements",
+        key: "expense_capital_improvements",
+        account_type: "expense",
+        active: true
+      )
+      entry = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(2025, 4, 1),
+        description: "New roof installation",
+        event_type: "expense_posted"
+      )
+      create(
+        :posting,
+        journal_entry: entry,
+        account: unmapped_account,
+        property: property,
+        amount_cents: 800_000
+      )
+
+      get schedule_e_pdf_property_url(property, year: 2025)
+      expect(response).to redirect_to(schedule_e_property_path(property, year: 2025))
+      expect(flash[:alert]).to include("Schedule E PDF cannot be generated while 1 unresolved review item(s) exist")
+    end
+
+    it "redirects and shows alert for missing schedule_e_pdf template" do
+      create(:property_tax_profile, property: property, tax_year: 2026, schedule_e_property_type: "single_family_residence")
       get schedule_e_pdf_property_url(property, year: 2026)
-      expect(response).to redirect_to(property_path(property, year: 2026))
+      expect(response).to redirect_to(schedule_e_property_path(property, year: 2026))
       expect(flash[:alert]).to eq("No Schedule E PDF template found for year 2026")
     end
 
     it "defaults to current year if year parameter is not specified" do
+      create(:property_tax_profile, property: property, tax_year: Date.current.year, schedule_e_property_type: "single_family_residence")
       allow_any_instance_of(ScheduleEGenerator).to receive(:template_path).and_return(Rails.root.join("app/assets/pdfs/f1040se--2025.pdf"))
       get schedule_e_pdf_property_url(property)
       expect(response).to be_successful
@@ -195,9 +233,112 @@ RSpec.describe "Properties", type: :request do
   end
 
   describe "GET /properties/:id/schedule_e" do
-    it "renders the schedule_e modal successfully" do
-      get schedule_e_property_url(property)
+    it "renders the schedule_e worksheet successfully when profile is configured" do
+      create(:property_tax_profile, property: property, tax_year: 2026, schedule_e_property_type: "multi_family_residence")
+      get schedule_e_property_url(property, year: 2026)
       expect(response).to be_successful
+      expect(response.body).to include("Schedule E Worksheet")
+      expect(response.body).to include("2 — Multi-Family Residence")
+      expect(response.body).to include("Part I — Income")
+      expect(response.body).to include("Part I — Expenses")
+      expect(response.body).to include("Not tracked or computed by Yanushi")
+    end
+
+    it "shows prompt to configure tax profile when not configured for requested year" do
+      get schedule_e_property_url(property, year: 2024)
+      expect(response).to be_successful
+      expect(response.body).to include("Tax Profile Required")
+      expect(response.body).to include("Configure tax classification now")
+    end
+
+    it "redirects with alert on malformed year=garbage without mixing year labels and accounting data" do
+      get schedule_e_property_url(property, year: "garbage")
+      expect(response).to redirect_to(schedule_e_property_path(property, year: Date.current.year))
+      expect(flash[:alert]).to include("Invalid tax year 'garbage'")
+    end
+
+    it "redirects with alert on year=0 or negative year" do
+      get schedule_e_property_url(property, year: "0")
+      expect(response).to redirect_to(schedule_e_property_path(property, year: Date.current.year))
+      expect(flash[:alert]).to include("Invalid tax year '0'")
+    end
+
+    it "redirects with alert on implausibly distant year" do
+      get schedule_e_property_url(property, year: "99999")
+      expect(response).to redirect_to(schedule_e_property_path(property, year: Date.current.year))
+      expect(flash[:alert]).to include("Invalid tax year '99999'")
+    end
+
+    it "renders cross-year reversal review item with original audit link and functioning resolution form" do
+      create(:property_tax_profile, property: property, tax_year: 2026, schedule_e_property_type: "single_family_residence")
+      tenancy = create(:tenancy, property: property)
+      party = create(:party, user: user)
+      deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
+      SecurityDepositTransactions::ReceiveService.call(
+        security_deposit: deposit,
+        party: party,
+        amount_cents: 200_000,
+        occurred_on: Date.new(2025, 1, 1)
+      )
+      charge = Charges::CreateFeeService.call(
+        tenancy: tenancy,
+        charge_kind: "other",
+        description: "Repair fee",
+        amount_cents: 50_000,
+        charge_date: Date.new(2025, 6, 1)
+      ).value!.data[:charge]
+      apply_res = SecurityDepositTransactions::ApplyService.call(
+        security_deposit: deposit,
+        charge: charge,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2025, 6, 15)
+      )
+      orig_entry = apply_res.value!.data[:journal_entry]
+
+      # 2026 reversal of the 2025 deposit_applied
+      rev_entry = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(2026, 2, 1),
+        event_type: "reversal",
+        reversal_of: orig_entry,
+        source: property
+      )
+      create(:posting, journal_entry: rev_entry, property: property, amount_cents: 50_000, account: user.accounts.find_by!(key: "tenant_receivable"))
+      create(:posting, journal_entry: rev_entry, property: property, amount_cents: -50_000, account: user.accounts.find_by!(key: "security_deposits_held"))
+
+      get schedule_e_property_url(property, year: 2026)
+      expect(response).to be_successful
+      expect(response.body).to include("Reversal ##{rev_entry.id}")
+      expect(response.body).to include("Reversing")
+      expect(response.body).to include("journal_entry_id%5D=#{orig_entry.id}")
+      expect(response.body).to include("tax_year%5D=2025")
+
+      # Click "Include in Rents" from the 2026 worksheet
+      post property_tax_review_resolutions_path(property), params: {
+        return_to_year: 2026,
+        property_tax_review_resolution: {
+          journal_entry_id: orig_entry.id,
+          tax_year: 2025,
+          treatment: "include_in_rents"
+        }
+      }
+      expect(response).to redirect_to(schedule_e_property_path(property, year: 2026))
+
+      # Follow redirect and verify 2026 worksheet is now resolved with -$500 on Line 3 and retained review item
+      follow_redirect!
+      expect(response.body).to include("-$500.00")
+      expect(response.body).to include("All items resolved")
+      expect(response.body).to include("Included in Line 3 Rents")
+      expect(response.body).to include("Remove")
+      expect(response.body).not_to include("Needs Review")
+    end
+
+    it "returns 404 for unowned property" do
+      other_user = create(:user)
+      other_prop = create(:property, user: other_user)
+      get schedule_e_property_url(other_prop)
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

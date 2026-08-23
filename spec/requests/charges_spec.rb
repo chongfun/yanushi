@@ -113,6 +113,21 @@ RSpec.describe "Charges", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
+    it "renders new with error when service returns failure without charge object" do
+      allow(Charges::CreateFeeService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Posting error", code: :posting_failed)
+      )
+      post tenancy_charges_path(tenancy), params: {
+        charge: {
+          charge_kind: "late_fee",
+          amount: "50.00",
+          charge_date: Date.current,
+          due_on: Date.current
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "rejects manual rent charge creation" do
       post tenancy_charges_path(tenancy), params: {
         charge: {

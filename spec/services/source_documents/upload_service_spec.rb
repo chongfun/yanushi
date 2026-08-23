@@ -241,5 +241,15 @@ RSpec.describe SourceDocuments::UploadService do
       expect(res2).to be_success
       expect(res2.value!.data[:upload_status]).to eq(:already_processing)
     end
+
+    it "handles RecordNotUnique on a non-sha256 column by failing with unexpected_error" do
+      pdf_file = fixture_file_upload("receipts/202604 Zelle.pdf", "application/pdf")
+      allow(user.source_documents).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique, "other constraint")
+      allow(user.source_documents).to receive(:find_by).and_return(nil)
+
+      result = described_class.call(user: user, pdf_param: pdf_file)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:unexpected_error)
+    end
   end
 end

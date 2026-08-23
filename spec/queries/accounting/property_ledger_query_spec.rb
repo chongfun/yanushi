@@ -197,6 +197,14 @@ RSpec.describe Accounting::PropertyLedgerQuery do
       through_only = described_class.call(property: property, through: Date.new(2026, 12, 31))
       expect(through_only.size).to eq(1)
 
+      all_time = described_class.call(property: property, date_range: Accounting::DateRange.new(from: nil, through: nil))
+      expect(all_time.size).to eq(1)
+
+      # Future-dated charge is excluded from all-time range (which defaults through to Date.current)
+      Charges::CreateService.call(tenancy: tenancy, charge_kind: "rent", amount_cents: 100_000, charge_date: Date.current + 10.days)
+      all_time_after_future = described_class.call(property: property, date_range: Accounting::DateRange.new(from: nil, through: nil))
+      expect(all_time_after_future.size).to eq(1)
+
       invalid = described_class.call(property: property, date_range: Accounting::DateRange.parse(from: "2026-12-31", through: "2026-01-01"))
       expect(invalid).to eq([])
     end

@@ -1,12 +1,17 @@
 module Accounting
   class PropertySummaryQuery
+    NON_OPERATING_EXPENSE_KEYS = %w[expense_mortgage_interest expense_other_interest].freeze
+
     class SummaryResult < Data.define(
       :property,
       :date_range,
       :net_cash_movement_cents,
       :income_recognized_cents,
       :operating_expenses_cents,
+      :interest_expenses_cents,
       :net_operating_income_cents,
+      :total_expenses_cents,
+      :net_income_cents,
       :tenant_receivable_change_cents,
       :security_deposit_liability_change_cents,
       :tenant_receivable_cents,
@@ -26,8 +31,20 @@ module Accounting
         BigDecimal(operating_expenses_cents.to_s) / 100
       end
 
+      def interest_expenses
+        BigDecimal(interest_expenses_cents.to_s) / 100
+      end
+
       def net_operating_income
         BigDecimal(net_operating_income_cents.to_s) / 100
+      end
+
+      def total_expenses
+        BigDecimal(total_expenses_cents.to_s) / 100
+      end
+
+      def net_income
+        BigDecimal(net_income_cents.to_s) / 100
       end
 
       def tenant_receivable
@@ -62,6 +79,7 @@ module Accounting
       net_cash_movement_cents = 0
       income_recognized_cents = 0
       operating_expenses_cents = 0
+      interest_expenses_cents = 0
       tenant_receivable_change_cents = 0
       security_deposit_liability_change_cents = 0
 
@@ -86,9 +104,14 @@ module Accounting
           end
         when "expense"
           amt = p.amount_cents.to_i
-          operating_expenses_cents += amt
           acc_key = acc.key.to_s
           expenses_by_acc[acc_key] = ((expenses_by_acc[acc_key] || 0) + amt).to_i
+
+          if NON_OPERATING_EXPENSE_KEYS.include?(acc_key)
+            interest_expenses_cents += amt
+          else
+            operating_expenses_cents += amt
+          end
         when "income"
           amt = -p.amount_cents.to_i
           income_recognized_cents += amt
@@ -98,6 +121,8 @@ module Accounting
       end
 
       net_operating_income_cents = income_recognized_cents - operating_expenses_cents
+      total_expenses_cents = operating_expenses_cents + interest_expenses_cents
+      net_income_cents = income_recognized_cents - total_expenses_cents
 
       as_of_date = date_range.as_of
       user = property.user
@@ -122,7 +147,10 @@ module Accounting
         net_cash_movement_cents: net_cash_movement_cents,
         income_recognized_cents: income_recognized_cents,
         operating_expenses_cents: operating_expenses_cents,
+        interest_expenses_cents: interest_expenses_cents,
         net_operating_income_cents: net_operating_income_cents,
+        total_expenses_cents: total_expenses_cents,
+        net_income_cents: net_income_cents,
         tenant_receivable_change_cents: tenant_receivable_change_cents,
         security_deposit_liability_change_cents: security_deposit_liability_change_cents,
         tenant_receivable_cents: tenant_receivable_cents,
@@ -141,14 +169,11 @@ module Accounting
         return Posting.none unless prop
 
         scope = prop.postings.joins(:journal_entry)
-        if date_range.from && date_range.through
-          scope = scope.where("journal_entries.occurred_on BETWEEN ? AND ?", date_range.from, date_range.through)
-        elsif date_range.from
-          scope = scope.where("journal_entries.occurred_on >= ?", date_range.from)
-        elsif date_range.through
-          scope = scope.where("journal_entries.occurred_on <= ?", date_range.through)
+        if date_range.from
+          scope.where("journal_entries.occurred_on BETWEEN ? AND ?", date_range.from, date_range.through)
+        else
+          scope.where("journal_entries.occurred_on <= ?", date_range.through)
         end
-        scope
       end
 
       def empty_summary
@@ -158,7 +183,10 @@ module Accounting
           net_cash_movement_cents: 0,
           income_recognized_cents: 0,
           operating_expenses_cents: 0,
+          interest_expenses_cents: 0,
           net_operating_income_cents: 0,
+          total_expenses_cents: 0,
+          net_income_cents: 0,
           tenant_receivable_change_cents: 0,
           security_deposit_liability_change_cents: 0,
           tenant_receivable_cents: 0,

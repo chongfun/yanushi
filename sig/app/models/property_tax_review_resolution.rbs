@@ -1,0 +1,39 @@
+class PropertyTaxReviewResolution < ApplicationRecord
+  TREATMENTS: Array[String]
+
+  def property: () -> Property
+  def property=: (Property) -> Property
+  def property_id: () -> Integer
+  def property_id=: (Integer) -> Integer
+
+  def journal_entry: () -> JournalEntry
+  def journal_entry=: (JournalEntry) -> JournalEntry
+  def journal_entry_id: () -> Integer
+  def journal_entry_id=: (Integer) -> Integer
+
+  def tax_year: () -> Integer
+  def tax_year=: (Integer) -> Integer
+
+  def treatment: () -> String
+  def treatment=: (String) -> String
+
+  def schedule_e_category: () -> String?
+  def schedule_e_category=: (String?) -> String?
+
+  def notes: () -> String?
+  def notes=: (String?) -> String?
+
+  def include_in_rents?: () -> bool
+  def map_to_schedule_e_category?: () -> bool
+  def exclude?: () -> bool
+
+  private
+
+  def validate_not_a_reversal: () -> void
+  def validate_entry_requires_review: () -> void
+  def validate_single_unmapped_expense_account: () -> void
+  def validate_journal_entry_consistency: () -> void
+  def property_postings_exist?: () -> bool
+  def posting_belongs_to_property?: (Posting, Property?) -> bool
+  def validate_treatment_compatibility: () -> void
+end

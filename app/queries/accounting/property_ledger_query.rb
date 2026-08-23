@@ -25,11 +25,9 @@ module Accounting
 
       scope = JournalEntry.where(id: journal_entry_ids)
 
-      if date_range.from && date_range.through
+      if date_range.from
         scope = scope.where(occurred_on: date_range.from..date_range.through)
-      elsif date_range.from
-        scope = scope.where("occurred_on >= ?", date_range.from)
-      elsif date_range.through
+      else
         scope = scope.where("occurred_on <= ?", date_range.through)
       end
 

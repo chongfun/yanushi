@@ -43,7 +43,7 @@ module Accounting
         @from = parsed_from
         @through = parsed_through
 
-        if parsed_from.present? && parsed_through.blank?
+        if parsed_through.blank?
           @through = Date.current
         end
 

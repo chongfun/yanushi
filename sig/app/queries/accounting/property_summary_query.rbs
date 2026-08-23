@@ -1,12 +1,17 @@
 module Accounting
   class PropertySummaryQuery
+    NON_OPERATING_EXPENSE_KEYS: Array[String]
+
     class SummaryResult
       attr_reader property: Property?
       attr_reader date_range: DateRange
       attr_reader net_cash_movement_cents: Integer
       attr_reader income_recognized_cents: Integer
       attr_reader operating_expenses_cents: Integer
+      attr_reader interest_expenses_cents: Integer
       attr_reader net_operating_income_cents: Integer
+      attr_reader total_expenses_cents: Integer
+      attr_reader net_income_cents: Integer
       attr_reader tenant_receivable_change_cents: Integer
       attr_reader security_deposit_liability_change_cents: Integer
       attr_reader tenant_receivable_cents: Integer
@@ -20,7 +25,10 @@ module Accounting
         net_cash_movement_cents: Integer,
         income_recognized_cents: Integer,
         operating_expenses_cents: Integer,
+        interest_expenses_cents: Integer,
         net_operating_income_cents: Integer,
+        total_expenses_cents: Integer,
+        net_income_cents: Integer,
         tenant_receivable_change_cents: Integer,
         security_deposit_liability_change_cents: Integer,
         tenant_receivable_cents: Integer,
@@ -32,7 +40,10 @@ module Accounting
       def net_cash_movement: () -> BigDecimal
       def income_recognized: () -> BigDecimal
       def operating_expenses: () -> BigDecimal
+      def interest_expenses: () -> BigDecimal
       def net_operating_income: () -> BigDecimal
+      def total_expenses: () -> BigDecimal
+      def net_income: () -> BigDecimal
       def tenant_receivable: () -> BigDecimal
       def security_deposits_held: () -> BigDecimal
     end

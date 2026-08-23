@@ -22,27 +22,44 @@ class PropertiesController < ApplicationController
   end
 
   def schedule_e
-    @year = params[:year].present? ? params[:year].to_i : Date.current.year
-    summary = Properties::ScheduleESummaryQuery.new(property: @property).call(year: @year)
+    tax_year_obj = TaxReporting::TaxYear.parse(params[:year])
+    unless tax_year_obj
+      redirect_to schedule_e_property_path(@property, year: Date.current.year),
+                  alert: "Invalid tax year '#{params[:year]}'. Displaying #{Date.current.year}."
+      return
+    end
 
-    @rents_received = summary.rents_received
-    @utility_reimbursements = summary.utility_reimbursements
-    @total_income = summary.total_income
-    @expenses_by_category = summary.expenses_by_category
-    @total_expenses = summary.total_expenses
-    @net_income = summary.net_income
+    @year = tax_year_obj.to_i
+    @schedule_e_result = TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
+    @tax_profile = @schedule_e_result.tax_profile
+    @form_definition = TaxReporting::ScheduleEFormDefinition.for(@year)
+    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
+
+    @rents_received = @schedule_e_result.rents_received
+    @utility_reimbursements = BigDecimal("0.00")
+    @total_income = @schedule_e_result.rents_received
+    @expenses_by_category = @schedule_e_result.expenses_by_category_cents.transform_keys(&:to_s).transform_values { |cents| BigDecimal(cents.to_s) / 100 }
+    @total_expenses = @schedule_e_result.total_expenses
+    @net_income = @schedule_e_result.net_income
   end
 
   def schedule_e_pdf
-    year = params[:year].present? ? params[:year].to_i : Date.current.year
+    tax_year_obj = TaxReporting::TaxYear.parse(params[:year])
+    unless tax_year_obj
+      redirect_to schedule_e_property_path(@property, year: Date.current.year),
+                  alert: "Invalid tax year '#{params[:year]}'."
+      return
+    end
+
+    year = tax_year_obj.to_i
     pdf_data = ScheduleEGenerator.new(@property, year).call
 
     send_data pdf_data,
-              filename: "Schedule_E_#{@property.address.parameterize}_#{year}.pdf",
+              filename: "Schedule_E_Worksheet_#{@property.address.parameterize}_#{year}.pdf",
               type: "application/pdf",
               disposition: "attachment"
-  rescue ScheduleEGenerator::TemplateMissingError => e
-    redirect_to property_path(@property, year: year), alert: e.message
+  rescue ScheduleEGenerator::TemplateMissingError, ScheduleEGenerator::TaxProfileRequiredError, ScheduleEGenerator::TaxReviewRequiredError => e
+    redirect_to schedule_e_property_path(@property, year: year), alert: e.message
   end
 
   def new
