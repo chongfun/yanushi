@@ -115,7 +115,7 @@ module Expenses
       creation_failure = nil # : ServiceResult?
 
       result = expense.with_lock do
-        # Check superseded? first: a corrected expense has BOTH voided_at and superseded_by_id
+        # Superseded check takes precedence over voided check
         if expense.superseded?
           replacement = expense.superseded_by
           if matches_replacement?(replacement, target_prop, target_kind, resolved_cents, paid_on_date, resolved_unit, vendor, ref, desc)
@@ -125,7 +125,7 @@ module Expenses
           end
         end
 
-        # A voided expense without a replacement is terminally voided
+        # Reject already voided expense
         if expense.voided?
           return failure("Expense has already been voided", :already_voided)
         end
@@ -246,8 +246,7 @@ module Expenses
         })
       end
 
-      # If replacement creation failed, the transaction rolled back but
-      # we fell through with_lock instead of returning a result.
+      # Return captured failure after lock release
       return creation_failure if creation_failure
 
       result

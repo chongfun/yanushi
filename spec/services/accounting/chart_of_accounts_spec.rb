@@ -70,20 +70,20 @@ RSpec.describe Accounting::ChartOfAccounts do
       }.to raise_error(Accounting::ChartOfAccounts::AccountTypeMismatchError, /Account 'cash' for user #{user.id} has type 'liability', expected 'asset'/)
     end
 
-    it "provisions newly-added Milestone 5 accounts for a pre-existing user and allows posting each category" do
-      # Simulate a pre-M5 user: delete the 4 new expense accounts
-      milestone5_keys = %w[expense_auto_travel expense_commissions expense_mortgage_interest expense_other_interest]
-      user.accounts.where(key: milestone5_keys).each do |acct|
+    it "provisions newly-added system accounts for an existing user missing them" do
+      # Simulate existing user missing specific system accounts
+      system_keys = %w[expense_auto_travel expense_commissions expense_mortgage_interest expense_other_interest]
+      user.accounts.where(key: system_keys).each do |acct|
         acct.postings.destroy_all
         acct.delete
       end
-      expect(user.accounts.reload.where(key: milestone5_keys).count).to eq(0)
+      expect(user.accounts.reload.where(key: system_keys).count).to eq(0)
 
-      # Run ensure_for (simulates what the data migration does)
+      # Run ensure_for
       described_class.ensure_for(user)
 
-      # All 4 accounts now exist and are active
-      milestone5_keys.each do |key|
+      # Accounts now exist and are active
+      system_keys.each do |key|
         acct = user.accounts.reload.find_by(key: key)
         expect(acct).to be_present, "Expected account '#{key}' to be provisioned"
         expect(acct.active).to be(true)

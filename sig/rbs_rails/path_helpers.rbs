@@ -14,6 +14,12 @@ interface ::_RbsRailsPathHelpers
   def property_rentable_unit_path: (*untyped) -> ::String
   def property_expenses_path: (*untyped) -> ::String
   def new_property_expense_path: (*untyped) -> ::String
+  def property_tax_profiles_path: (*untyped) -> ::String
+  def new_property_tax_profile_path: (*untyped) -> ::String
+  def edit_property_tax_profile_path: (*untyped) -> ::String
+  def property_tax_profile_path: (*untyped) -> ::String
+  def property_tax_review_resolutions_path: (*untyped) -> ::String
+  def property_tax_review_resolution_path: (*untyped) -> ::String
   def schedule_e_property_path: (*untyped) -> ::String
   def schedule_e_pdf_property_path: (*untyped) -> ::String
   def properties_path: (*untyped) -> ::String
@@ -40,10 +46,14 @@ interface ::_RbsRailsPathHelpers
   def new_tenancy_security_deposit_path: (*untyped) -> ::String
   def edit_tenancy_security_deposit_path: (*untyped) -> ::String
   def tenancy_security_deposit_path: (*untyped) -> ::String
+  def statement_tenancy_path: (*untyped) -> ::String
   def tenancies_path: (*untyped) -> ::String
   def new_tenancy_path: (*untyped) -> ::String
   def edit_tenancy_path: (*untyped) -> ::String
   def tenancy_path: (*untyped) -> ::String
+  def accounts_path: (*untyped) -> ::String
+  def account_path: (*untyped) -> ::String
+  def journal_entry_path: (*untyped) -> ::String
   def correction_security_deposit_transaction_path: (*untyped) -> ::String
   def correct_security_deposit_transaction_path: (*untyped) -> ::String
   def void_security_deposit_transaction_path: (*untyped) -> ::String
@@ -65,6 +75,7 @@ interface ::_RbsRailsPathHelpers
   def void_charge_path: (*untyped) -> ::String
   def charge_path: (*untyped) -> ::String
   def download_source_document_path: (*untyped) -> ::String
+  def retry_source_document_path: (*untyped) -> ::String
   def source_documents_path: (*untyped) -> ::String
   def new_source_document_path: (*untyped) -> ::String
   def source_document_path: (*untyped) -> ::String
@@ -119,6 +130,12 @@ interface ::_RbsRailsPathHelpers
   def property_rentable_unit_url: (*untyped) -> ::String
   def property_expenses_url: (*untyped) -> ::String
   def new_property_expense_url: (*untyped) -> ::String
+  def property_tax_profiles_url: (*untyped) -> ::String
+  def new_property_tax_profile_url: (*untyped) -> ::String
+  def edit_property_tax_profile_url: (*untyped) -> ::String
+  def property_tax_profile_url: (*untyped) -> ::String
+  def property_tax_review_resolutions_url: (*untyped) -> ::String
+  def property_tax_review_resolution_url: (*untyped) -> ::String
   def schedule_e_property_url: (*untyped) -> ::String
   def schedule_e_pdf_property_url: (*untyped) -> ::String
   def properties_url: (*untyped) -> ::String
@@ -145,10 +162,14 @@ interface ::_RbsRailsPathHelpers
   def new_tenancy_security_deposit_url: (*untyped) -> ::String
   def edit_tenancy_security_deposit_url: (*untyped) -> ::String
   def tenancy_security_deposit_url: (*untyped) -> ::String
+  def statement_tenancy_url: (*untyped) -> ::String
   def tenancies_url: (*untyped) -> ::String
   def new_tenancy_url: (*untyped) -> ::String
   def edit_tenancy_url: (*untyped) -> ::String
   def tenancy_url: (*untyped) -> ::String
+  def accounts_url: (*untyped) -> ::String
+  def account_url: (*untyped) -> ::String
+  def journal_entry_url: (*untyped) -> ::String
   def correction_security_deposit_transaction_url: (*untyped) -> ::String
   def correct_security_deposit_transaction_url: (*untyped) -> ::String
   def void_security_deposit_transaction_url: (*untyped) -> ::String
@@ -170,6 +191,7 @@ interface ::_RbsRailsPathHelpers
   def void_charge_url: (*untyped) -> ::String
   def charge_url: (*untyped) -> ::String
   def download_source_document_url: (*untyped) -> ::String
+  def retry_source_document_url: (*untyped) -> ::String
   def source_documents_url: (*untyped) -> ::String
   def new_source_document_url: (*untyped) -> ::String
   def source_document_url: (*untyped) -> ::String

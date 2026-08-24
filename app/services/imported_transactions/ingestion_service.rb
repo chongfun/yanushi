@@ -107,16 +107,14 @@ module ImportedTransactions
           return ServiceResult.failure(error: "No matching tenant transactions found", code: :no_transactions_found)
         end
 
-        # Persist candidates and mark document success atomically.
-        # If any unexpected error occurs, the transaction rolls back and
-        # no partial candidate set survives.
+        # Persist transactions atomically
         persisted_transactions = [] # : Array[ImportedTransaction]
         transactions.each do |txn|
           begin
             txn.save!
             persisted_transactions << txn
           rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
-            # Race condition / duplicate import: skip duplicate candidate without failing entire document
+            # Skip duplicate transaction on concurrent insert
             duplicate_error = e.is_a?(ActiveRecord::RecordNotUnique) ||
                               txn.errors.added?(:external_reference, :taken)
 

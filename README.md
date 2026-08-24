@@ -1,59 +1,80 @@
 # Yanushi
 
-Yanushi is a property management application designed for landlords who value simplicity and visual excellence. Built with **Ruby on Rails 8** and styled with **Tailwind CSS** and **daisyUI**, Yanushi provides a streamlined experience for managing rental properties, tenants, and finances.
+Yanushi is a modern, double-entry property management and tax reporting platform designed for landlords and property managers who value precision, auditability, and simplicity. Built with **Ruby on Rails 8**, **PostgreSQL**, **Hotwire (Turbo + Stimulus)**, and **daisyUI**, Yanushi provides an immutable ledger foundation for managing rental properties, tenancies, automated ingestion, and tax compliance.
 
-![Yanushi Dashboard](public/screenshots/ledger_view.png)
+---
 
 ## Core Features
 
-- **🏠 Property Portfolio**: Manage all your rental properties in one place with detailed occupancy and financial summaries.
-- **👥 Tenant & Lease Management**: Track active leases, tenant contact information, and automated rent schedules.
-- **📊 Unified Financial Ledger**: A centralized view of all property-related transactions, including scheduled rents, payments, utility bills, and maintenance expenses.
-- **💸 Automated Document Ingestion**: Upload Chase bank statements or Venmo receipts, and Yanushi will automatically parse, extract, and match payments to your tenants.
-- **📑 Tax Reporting**: Generate year-filtered summaries designed to make filing **Schedule E** of Form 1040 simple and stress-free.
+- **🏠 Property Portfolio**: Manage multi-unit and single-family properties with unit-level tracking, occupancy status, and property-scoped financial reporting.
+- **👥 Parties & Tenancies**: Track tenant parties, flexible tenancy agreements (fixed-term and periodic), versioned rent terms, and multiple co-tenants per tenancy.
+- **📒 Immutable Double-Entry Ledger**: Every financial event (rent charge, fee, receipt, expense, security deposit) posts balanced debit and credit entries to a 100% auditable general ledger.
+- **💳 Tenancy Running Accounts**: Dynamic ledger-backed tenant balances eliminating fragile direct-payment linking. Easily generate rent charges, assess late fees, bill utility reimbursements, and record multi-payer receipts.
+- **🛡️ Security Deposit Custody**: Separate trust liability accounting for security deposits with dedicated custody tracking, refunds, and charge settlements.
+- **📄 Automated Source Document Ingestion**: Upload bank statements (e.g. Chase) and digital receipts (Venmo, Zelle). Yanushi automatically parses transactions, deduplicates documents via SHA-256, and provides an interactive confirmation queue.
+- **📑 IRS Schedule E Tax Reporting**: Generate Schedule E tax worksheets and PDFs with property classifications (Codes 1–5, 7–8), cash-basis rental income calculation (Line 3), standardized expense categorization, review resolution workflows, and PDF export with Line 19 itemized statements.
 
 ---
 
-## The Financial Ledger
+## Architecture Highlights
 
-The property ledger provides a unified view of all financial activities, automatically categorizing and color-coding items for quick scanning:
+```
++-----------------------------------------------------------------------------------+
+|                                DOMAIN LAYER                                       |
+|  Property | RentableUnit | Party | Tenancy | RentTerm | Charge | Receipt | Expense  |
+|  SecurityDeposit | SourceDocument | ImportedTransaction                           |
++-----------------------------------------------------------------------------------+
+                                         |
+                                         v
++-----------------------------------------------------------------------------------+
+|                              ACCOUNTING LAYER                                     |
+|  Accounting::PostEntryService | Accounting::PostingBuilder | ReverseEntryService  |
+|  - Balanced double-entry postings (Debits > 0, Credits < 0, Sum = 0)             |
+|  - Idempotent source-event dispatch: (user_id, source_type, source_id, event_type)|
++-----------------------------------------------------------------------------------+
+                                         |
+                                         v
++-----------------------------------------------------------------------------------+
+|                         IMMUTABLE LEDGER STORAGE                                  |
+|  Account | JournalEntry | Posting                                                 |
++-----------------------------------------------------------------------------------+
+```
 
-- **Scheduled Rent** (Blue): Expected rent payments automatically generated based on the active lease terms. Indicates if a rent is Paid, Unpaid, or Overdue.
-- **Tenant Payment** (Green): Confirmed payments received from tenants. Automatically zeroes out the corresponding scheduled rent and contributes to the property's income.
-- **Expense** (Red): Property maintenance costs, repairs, or utility bills. Reimbursable expenses are clearly tagged.
-- **Tenant Charge** (Yellow): Any charges passed onto the tenant (e.g. late fees, utility reimbursements).
-
-![Financial Ledger Items](public/screenshots/ledger_items.png)
+See [Double-Entry Accounting Architecture](documentation/accounting_architecture.md) for detailed technical specifications, posting rules, and extension guidelines.
 
 ---
 
-## Usage Example: Automating Rent Collection
+## Visual Workflows & Usage Examples
 
-Yanushi eliminates manual data entry by automatically parsing bank statements and payment receipts.
+### 1. Tenancy Running Accounts & Activity Ledger
+Tenancy accounts maintain dynamic, double-entry ledger-backed running balances. Scheduled rent charges, receipts, and billed reimbursements drive the tenancy account, while property and maintenance expenses post separately to the property ledger.
 
-### 1. Upload a Document
-Navigate to the **Payment Ingestions** page and upload a supported document, such as a Chase checking account statement or a Venmo receipt.
+![Tenancy Running Account](public/screenshots/tenancy_view.png)
 
-![Upload Document](public/screenshots/upload_document.png)
+![Charges & Ledger Postings](public/screenshots/ledger_items.png)
 
-### 2. Review Queue
-Once uploaded, Yanushi extracts the transactions and automatically matches them to your active leases based on payer name, tenant name, or rent amount. You can review and confirm these matches in the Review Queue.
+---
 
-![Review Queue](public/screenshots/payment_ingestions_review.png)
+### 2. Automated Document Ingestion & Confirmation Queue
+Upload bank checking statements (e.g. Chase) or digital receipts (Venmo, Zelle). Yanushi parses transaction metadata, deduplicates files via SHA-256, and matches payments directly to active tenancies.
 
-### 3. The Financial Ledger
-Once confirmed, the payments instantly appear in your property's **Financial Ledger**. Overdue scheduled rents are automatically resolved and your property's financial totals are recalculated in real-time.
+![Upload Source Document](public/screenshots/upload_document.png)
 
-![Financial Ledger](public/screenshots/ledger_view.png)
+![Review & Confirmation Queue](public/screenshots/imported_transactions_review.png)
 
-## Usage Example: Manual Payment Recording
+---
 
-While automated ingestion is recommended, you can also record payments manually if a tenant pays with cash or an unsupported method.
+### 3. Direct Receipt & Payment Recording
+Record manual receipts for cash, checks, or direct transfers. Payments immediately debit operating Cash and credit Tenant Receivable on the double-entry ledger.
 
-### 1. Record a Payment
-From the property ledger, click the **"Record Payment"** button next to any scheduled rent. A modal will appear, allowing you to enter the payment date, amount, and a transaction reference.
+![Record Payment](public/screenshots/record_payment_modal.png)
 
-![Record Payment Modal](public/screenshots/record_payment_modal.png)
+---
+
+### 4. Schedule E Tax Worksheet & Reporting
+Generate property-level Schedule E tax worksheets with IRS classifications (Codes 1–5, 7–8), cash-basis rental income calculation (Line 3), standardized expense categorization, review resolution workflows, and PDF export.
+
+![Schedule E Tax Worksheet](public/screenshots/tax_worksheet.png)
 
 ---
 
@@ -61,11 +82,11 @@ From the property ledger, click the **"Record Payment"** button next to any sche
 
 ### Prerequisites
 
-- Ruby 3.3.0+
-- Rails 8.0+
-- PostgreSQL 10+ (any version that supports SELECT FOR UPDATE SKIP LOCKED for job processing)
+- Ruby 4.0+
+- Rails 8.1+
+- PostgreSQL 14+ (with `pg_catalog.plpgsql`)
 
-### Installation
+### Installation & Setup
 
 1. Clone the repository:
    ```bash
@@ -78,12 +99,17 @@ From the property ledger, click the **"Record Payment"** button next to any sche
    bundle install
    ```
 
-3. Setup the database:
+3. Setup database and load schema:
    ```bash
    bin/rails db:prepare
    ```
 
-4. Start the development server:
+4. Run the seed data (optional):
+   ```bash
+   bin/rails db:seed
+   ```
+
+5. Start the development server:
    ```bash
    bin/dev
    ```
@@ -92,37 +118,43 @@ Visit `http://localhost:3000` to start managing your properties.
 
 ---
 
-## Development Workflow
+## Testing & Quality Assurance
 
-### Type Checking
-
-Yanushi uses RBS and Steep for gradual static type checking. Hand-written application signatures live in `sig/app/`, local shims live in `sig/shims/`, and generated Rails signatures live in `sig/rbs_rails/`.
-
-Run the type checks locally before opening a PR:
+Yanushi maintains strict quality gates across tests, type safety, linting, and security:
 
 ```bash
+# Run full test suite with coverage
+bundle exec rspec
+
+# Run RBS type validation and Steep type checker
 bundle exec rbs validate
 bundle exec steep check
+
+# Run Ruby linter
+bundle exec rubocop
+
+# Run security audits
+bin/brakeman --no-pager
+bundle exec bundler-audit check --update
 ```
 
-When adding or changing typed application code:
+---
 
-1. Add or update the matching RBS file under `sig/app/`.
-2. Add new source files to the `check` list in `Steepfile`.
-3. Keep `untyped` at Rails or third-party gem boundaries where precision is not worth the maintenance cost.
-4. Re-run `bundle exec rbs validate` and `bundle exec steep check`.
+## Type Checking with RBS & Steep
 
-After schema migrations, regenerate Rails-aware signatures:
+Yanushi uses **RBS** and **Steep** for static type checking:
+- Hand-written application signatures: `sig/app/`
+- Generated Rails signatures: `sig/rbs_rails/`
+- Third-party gem shims: `sig/shims/`
 
+To regenerate Rails-aware signatures after database migrations:
 ```bash
 bin/rails rbs_rails:all
 bundle exec steep check
 ```
 
-After gem updates, refresh third-party signatures:
+---
 
-```bash
-bundle exec rbs collection install
-```
+## License
 
-See `sig/README.md` for signature ownership, shim conventions, editor setup, and known limitations.
+This project is licensed under the MIT License.

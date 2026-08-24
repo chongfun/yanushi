@@ -21,12 +21,13 @@ if Rails.env.development?
     termination_date: Date.current + 1.year,
     late_period_days: 3
   )
-  tenancy.tenancy_parties.create!(party: party, role: "tenant", effective_from: Date.current - 1.year)
+  tenancy.tenancy_parties.create!(party: party, role: "tenant", effective_from: Date.current - 1.year, effective_until: Date.current + 1.year)
   tenancy.rent_terms.create!(
     amount_cents: 120_000,
     due_day: 1,
     frequency: "monthly",
-    effective_from: Date.current - 1.year
+    effective_from: Date.current - 1.year,
+    effective_until: Date.current + 1.year
   )
 
   RentCharges::GenerateThroughService.call(tenancy: tenancy, through: Date.current)

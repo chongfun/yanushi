@@ -3,16 +3,6 @@ class PropertyTaxProfile < ApplicationRecord
   IRS_CODE_MAP: Hash[String, Integer]
   IRS_LABEL_MAP: Hash[String, String]
 
-  def property: () -> Property
-  def property=: (Property) -> Property
-  def tax_year: () -> Integer
-  def tax_year=: (Integer) -> Integer
-  def schedule_e_property_type: () -> String
-  def schedule_e_property_type=: (String) -> String
-  def other_description: () -> String?
-  def other_description=: (String?) -> String?
-
-  def other?: () -> bool
   def schedule_e_code: () -> Integer
   def schedule_e_code_description: () -> String
   def accounting_user: () -> User?

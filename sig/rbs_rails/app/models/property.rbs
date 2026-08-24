@@ -353,10 +353,22 @@ class ::Property < ::ApplicationRecord
   def security_deposit_transactions=: (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction]) -> (::SecurityDepositTransaction::ActiveRecord_Associations_CollectionProxy | ::Array[::SecurityDepositTransaction])
   def security_deposit_transaction_ids: () -> ::Array[::Integer]
   def security_deposit_transaction_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def postings: () -> ::Posting::ActiveRecord_Associations_CollectionProxy
+  def postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
+  def posting_ids: () -> ::Array[::Integer]
+  def posting_ids=: (::Array[::Integer]) -> ::Array[::Integer]
   def accounting_postings: () -> ::Posting::ActiveRecord_Associations_CollectionProxy
   def accounting_postings=: (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting]) -> (::Posting::ActiveRecord_Associations_CollectionProxy | ::Array[::Posting])
   def accounting_posting_ids: () -> ::Array[::Integer]
   def accounting_posting_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def tax_profiles: () -> ::PropertyTaxProfile::ActiveRecord_Associations_CollectionProxy
+  def tax_profiles=: (::PropertyTaxProfile::ActiveRecord_Associations_CollectionProxy | ::Array[::PropertyTaxProfile]) -> (::PropertyTaxProfile::ActiveRecord_Associations_CollectionProxy | ::Array[::PropertyTaxProfile])
+  def tax_profile_ids: () -> ::Array[::Integer]
+  def tax_profile_ids=: (::Array[::Integer]) -> ::Array[::Integer]
+  def tax_review_resolutions: () -> ::PropertyTaxReviewResolution::ActiveRecord_Associations_CollectionProxy
+  def tax_review_resolutions=: (::PropertyTaxReviewResolution::ActiveRecord_Associations_CollectionProxy | ::Array[::PropertyTaxReviewResolution]) -> (::PropertyTaxReviewResolution::ActiveRecord_Associations_CollectionProxy | ::Array[::PropertyTaxReviewResolution])
+  def tax_review_resolution_ids: () -> ::Array[::Integer]
+  def tax_review_resolution_ids=: (::Array[::Integer]) -> ::Array[::Integer]
 
   def user: () -> ::User
   def user=: (::User?) -> ::User?
@@ -479,6 +491,14 @@ end
 class ::Posting < ::ApplicationRecord
 end
 class ::Posting::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::PropertyTaxProfile < ::ApplicationRecord
+end
+class ::PropertyTaxProfile::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
+end
+class ::PropertyTaxReviewResolution < ::ApplicationRecord
+end
+class ::PropertyTaxReviewResolution::ActiveRecord_Associations_CollectionProxy < ::ActiveRecord::Associations::CollectionProxy
 end
 class ::User < ::ApplicationRecord
 end

@@ -9,7 +9,7 @@ module ImportedTransactions
 
         def clean_name(name)
           return nil if name.blank?
-          # Keep letters, numbers, spaces, apostrophes, hyphens, periods, underscores, and @
+          # Strip special punctuation while preserving common name characters
           name.gsub(/[^\p{Alnum}\p{Space}'\-._@]/, "").squish
         end
 
