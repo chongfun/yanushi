@@ -41,8 +41,7 @@ module ImportedTransactions
         elsif matching_fields_changed?
           transaction.status = "unmatched"
         end
-        # If matching fields were not changed, preserve existing status
-        # (e.g. ambiguous or failed) to retain the resolver's signal
+        # Preserve status if match fields were not modified
       end
 
       def matching_fields_changed?

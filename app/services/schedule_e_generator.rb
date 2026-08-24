@@ -1,24 +1,10 @@
-# Generates a filled IRS Schedule E (Form 1040) PDF for a given
-# rental property and tax year using the HexaPDF gem.
+# Generates a filled IRS Schedule E (Form 1040) PDF for a given property and tax year.
 #
 # Usage:
-#   pdf_bytes = ScheduleEGenerator.new(rental_property, 2025).call
+#   pdf_bytes = ScheduleEGenerator.new(property, 2025).call
 #   send_data pdf_bytes, filename: "schedule_e.pdf", type: "application/pdf"
-#
-# The FIELD_MAP constant maps application data keys to the AcroForm
-# field names in the IRS PDF template. Run `bin/rails schedule_e:dump_fields`
-# to discover field names if the template is updated.
 class ScheduleEGenerator
-  # PDF field name mappings for Schedule E Part I (Page 1).
-  #
-  # Discovered by running `bin/rails schedule_e:dump_fields` against
-  # the IRS f1040se.pdf template. Each expense line has 3 fields for
-  # columns A, B, C (up to 3 properties). We fill column A (the first
-  # field in each line group).
-  #
-  # If the IRS updates the PDF, re-run the dump_fields rake task and
-  # update this mapping.
-  # PDF field name mappings for Schedule E Part I (Page 1) - 2023-2025
+  # PDF field mappings for Schedule E Part I (Page 1) - 2023-present
   MAP_2023_PRESENT = {
     name:                              "topmostSubform[0].Page1[0].f1_1[0]",
     ssn:                               "topmostSubform[0].Page1[0].f1_2[0]",
@@ -190,8 +176,8 @@ class ScheduleEGenerator
     File.exist?(path)
   end
 
-  def initialize(rental_property, year = Date.current.year)
-    @property = rental_property
+  def initialize(property, year = Date.current.year)
+    @property = property
     @tax_year_obj = TaxReporting::TaxYear.parse(year, default: Date.current.year) || TaxReporting::TaxYear.new(Date.current.year)
     @year = @tax_year_obj.to_i
   end
@@ -233,8 +219,7 @@ class ScheduleEGenerator
     if profile.schedule_e_code == 8 && profile.other_description.present?
       set_field(form, :other_type_description, profile.other_description)
     end
-    # Fair rental days and personal use days are intentionally not tracked by Yanushi
-    # and remain blank on the official form.
+    # Fair rental days and personal use days remain blank on single-property worksheet.
   end
 
   def fill_income(form)
@@ -332,16 +317,7 @@ class ScheduleEGenerator
   end
 
   def fill_totals(form)
-    # Summary totals (Lines 23a–26):
-    # On IRS Form 1040 Schedule E, Lines 23a–23e and 24–26 report portfolio-wide
-    # totals across all rental properties (Columns A, B, C across all Schedule E forms).
-    #
-    # In Yanushi's single-property Schedule E worksheet, Lines 23a–26 are intentionally
-    # left blank because:
-    # 1. Populating a single property's Line 3 (rents) or Line 12 (mortgage interest) into
-    #    Lines 23a/23c would misrepresent a property-level subtotal as a portfolio-wide total.
-    # 2. Final totals (Lines 18, 20, 21, 22, 23d, 23e, 24, 25, 26) depend on untracked
-    #    depreciation and Form 8582 passive activity loss limitations.
+    # Portfolio summary totals (Lines 23a–26) remain blank on single-property worksheet.
   end
 
   def set_field(form, key, value)

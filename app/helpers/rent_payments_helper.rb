@@ -1,2 +1,0 @@
-module RentPaymentsHelper
-end

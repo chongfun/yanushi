@@ -1,3 +1,0 @@
-module PaymentIngestionsHelper
-  def payment_ingestion_alias_proposal: (PaymentIngestion ingestion) -> String?
-end

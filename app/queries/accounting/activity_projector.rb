@@ -115,7 +115,7 @@ module Accounting
 
       def project_expense
         cash_posting = find_posting_by_account_key("cash")
-        # In DB cash is credited (-30000). For user display, expense is negative (-30000).
+        # Expense displays as negative cash outflow
         amount_cents = cash_posting ? cash_posting.amount_cents : -fallback_amount_cents
 
         build_row(
@@ -140,7 +140,7 @@ module Accounting
 
       def project_deposit_refunded
         cash_posting = find_posting_by_account_key("cash")
-        # Cash credited (-50000) -> display as -$500
+        # Refund displays as negative cash outflow
         amount_cents = cash_posting ? cash_posting.amount_cents : -fallback_amount_cents
 
         build_row(
@@ -153,7 +153,7 @@ module Accounting
 
       def project_deposit_applied
         ar_posting = find_posting_by_account_key("tenant_receivable")
-        # AR credited (-50000) -> display as -$500 application against balance
+        # Deposit application reduces receivable balance
         amount_cents = ar_posting ? ar_posting.amount_cents : -fallback_amount_cents
 
         build_row(
