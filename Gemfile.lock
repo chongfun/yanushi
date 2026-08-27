@@ -162,7 +162,7 @@ GEM
     geom2d (0.4.1)
     globalid (1.4.0)
       activesupport (>= 6.1)
-    hexapdf (1.9.1)
+    hexapdf (1.10.0)
       cmdparse (~> 3.0, >= 3.0.3)
       geom2d (~> 0.4, >= 0.4.1)
       openssl (>= 2.2.1)
@@ -514,7 +514,7 @@ DEPENDENCIES
   dry-struct (~> 1.8.1)
   dry-types (~> 1.9.1)
   factory_bot_rails (~> 6.5.1)
-  hexapdf (~> 1.9)
+  hexapdf (~> 1.10)
   image_processing (~> 2.0)
   importmap-rails (~> 2.2.3)
   jbuilder (~> 2.15.1)
@@ -604,7 +604,7 @@ CHECKSUMS
   fugit (1.13.0) sha256=a4f093fce740da52f216740a5041e2a594ea763cdb89e8b2754ca4399634ab18
   geom2d (0.4.1) sha256=ea0998ea90c4f2752e24fe13d85a4f89bee689d151316140ebcc6369bf634ed9
   globalid (1.4.0) sha256=037f12fbf1d9d7a014d501c2d5c77356fd4ddd96d7a7991d6700bba96706f427
-  hexapdf (1.9.1) sha256=2d1f6a3622e6bc2a70a707d4c3f3fa44f5552ecd9d899f6283abb07398a84884
+  hexapdf (1.10.0) sha256=9c2e8d094876878c6203d441655fafc1890870041456e03205eec7d83edf9db2
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   ice_nine (0.11.2) sha256=5d506a7d2723d5592dc121b9928e4931742730131f22a1a37649df1c1e2e63db
   image_processing (2.0.3) sha256=793e33f38470edd0a2d6bfd00acf8cb239c76284ba2e3dfb76633ac2b457f23a
