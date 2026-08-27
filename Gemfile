@@ -58,7 +58,7 @@ group :development, :test do
   gem "factory_bot_rails", "~> 6.5.1"
   gem "shoulda-matchers", "~> 8.0.1"
 
-  gem "ruby-lsp", "~> 0.26.10", require: false
+  gem "ruby-lsp", "~> 0.26.11", require: false
   gem "ruby-lsp-rspec", "~> 0.1.29", require: false
   gem "rbs", "~> 4.2.0", require: false
   gem "rbs_rails", require: false
