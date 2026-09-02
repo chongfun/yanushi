@@ -54,7 +54,10 @@ export default class extends Controller {
         this.dialogTarget.close()
       }
       const frame = this.contentTarget.querySelector("turbo-frame")
-      if (frame) frame.innerHTML = ""
+      if (frame) {
+        frame.innerHTML = ""
+        frame.removeAttribute("src")
+      }
       if (this.hasTitleTarget) this.titleTarget.textContent = ""
     }, 200)
   }

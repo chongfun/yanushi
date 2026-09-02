@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schedule E — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 5 REFERENCE — Schedule E workflow page
+  (properties#schedule_e, /properties/:id/schedule_e?year=2025).
+
+  This becomes a FULL PAGE (today it renders inside the 480px modal frame —
+  that stops). Hierarchy: header/readiness → needs review → projection →
+  supporting detail → export. Accounting semantics unchanged
+  (TaxReporting::ScheduleEQuery).
+
+  Turbo Stream targets after a review resolution (create/destroy):
+    #schedule_e_review      — the review list
+    #schedule_e_projection  — projected form values
+    #schedule_e_readiness   — header status line
+    #schedule_e_export      — export block (button + blocker alert)
+  The controller reruns ScheduleEQuery and re-renders these partials; no
+  totals are computed anywhere else.
+
+  When ready: the warn alert disappears, header status shows dot-ok
+  "Ready", and Download PDF (schedule_e_pdf) becomes the enabled primary.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link" aria-current="page">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-4xl">
+
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">Reports</a>
+          <span class="mx-1 text-stone-300">/</span>
+          456 Oak Ave
+        </p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">Schedule E — 2025</h1>
+            <p class="mt-1 text-sm text-stone-500" id="schedule_e_readiness">
+              456 Oak Ave · Single family residence (IRS type 1) ·
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 items need review</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-2" id="schedule_e_export">
+            <a href="#" class="yn-btn yn-btn-secondary">Edit tax profile</a>
+            <button class="yn-btn yn-btn-primary" disabled aria-disabled="true">Download PDF</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Blocked-export explanation, paired with the disabled button -->
+      <div class="yn-alert yn-alert-warn mb-8" role="status">
+        <span>PDF export is unavailable — <strong>2 review items</strong> below still need decisions.</span>
+      </div>
+
+      <div class="space-y-10">
+
+        <!-- ============================== Needs review — before the form -->
+        <section id="schedule_e_review" aria-labelledby="se-review-heading">
+          <h2 id="se-review-heading" class="text-sm font-semibold mb-3">
+            Needs review <span class="yn-count ml-1">2</span>
+          </h2>
+
+          <div class="yn-surface divide-y divide-stone-200">
+
+            <!-- Unresolved item: inline resolution form
+                 (POST property_tax_review_resolutions_path) -->
+            <div class="px-4 py-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium m-0">Security deposit applied to unpaid rent</p>
+                  <p class="text-[13px] text-stone-500 m-0 mt-0.5">Jun 30, 2025 · <a href="#" class="yn-link">Journal entry</a></p>
+                </div>
+                <p class="text-sm font-semibold tabular-nums whitespace-nowrap m-0">$1,200.00</p>
+              </div>
+              <form class="flex flex-wrap items-end gap-3 mt-3">
+                <div>
+                  <label class="yn-label" for="se-treat-1">Treatment</label>
+                  <select class="yn-select w-64" id="se-treat-1">
+                    <option selected>Include in rents received (Line 3)</option>
+                    <option>Map to a Schedule E expense category</option>
+                    <option>Exclude from Schedule E</option>
+                  </select>
+                </div>
+                <!-- Category select appears only for "Map to…" (existing
+                     tax_profile_form-style toggle, tiny Stimulus behavior) -->
+                <button class="yn-btn yn-btn-secondary">Resolve</button>
+              </form>
+            </div>
+
+            <div class="px-4 py-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium m-0">Unclassified bank credit “REFUND — CITY UTILITIES”</p>
+                  <p class="text-[13px] text-stone-500 m-0 mt-0.5">Sep 12, 2025 · <a href="#" class="yn-link">Journal entry</a></p>
+                </div>
+                <p class="text-sm font-semibold tabular-nums whitespace-nowrap m-0">$86.00</p>
+              </div>
+              <form class="flex flex-wrap items-end gap-3 mt-3">
+                <div>
+                  <label class="yn-label" for="se-treat-2">Treatment</label>
+                  <select class="yn-select w-64" id="se-treat-2">
+                    <option>Include in rents received (Line 3)</option>
+                    <option selected>Map to a Schedule E expense category</option>
+                    <option>Exclude from Schedule E</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="yn-label" for="se-cat-2">Category</label>
+                  <select class="yn-select w-48" id="se-cat-2">
+                    <option selected>Utilities (Line 17)</option>
+                    <option>Repairs (Line 14)</option>
+                    <option>Other (Line 19)</option>
+                  </select>
+                </div>
+                <button class="yn-btn yn-btn-secondary">Resolve</button>
+              </form>
+            </div>
+
+            <!-- Resolved item: quiet, undoable
+                 (DELETE property_tax_review_resolution_path) -->
+            <div class="px-4 py-3 bg-stone-50">
+              <div class="flex items-center justify-between gap-4">
+                <p class="text-sm text-stone-500 m-0">
+                  <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Resolved</span>
+                  “Interest adjustment” · excluded from Schedule E
+                </p>
+                <form class="m-0"><button class="yn-link text-[13px]">Undo</button></form>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ============================== Projection -->
+        <section id="schedule_e_projection" aria-labelledby="se-proj-heading">
+          <h2 id="se-proj-heading" class="text-sm font-semibold mb-3">Projected Schedule E</h2>
+          <p class="text-sm text-stone-500 mb-3">Values update as review items are resolved. Lines follow the 2025 IRS form.</p>
+
+          <table class="yn-table max-w-2xl">
+            <thead>
+              <tr>
+                <th scope="col" class="w-16">Line</th>
+                <th scope="col">Category</th>
+                <th scope="col" class="text-right tabular-nums">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-stone-500">3</td>
+                <td class="font-medium">Rents received
+                  <a href="#" class="yn-link text-[13px] ml-2">detail</a></td>
+                <td class="text-right tabular-nums whitespace-nowrap font-medium">$28,800.00</td>
+              </tr>
+              <tr>
+                <td class="text-stone-500">9</td>
+                <td>Insurance</td>
+                <td class="text-right tabular-nums whitespace-nowrap">$2,440.00</td>
+              </tr>
+              <tr>
+                <td class="text-stone-500">14</td>
+                <td>Repairs</td>
+                <td class="text-right tabular-nums whitespace-nowrap">$3,180.00</td>
+              </tr>
+              <tr>
+                <td class="text-stone-500">16</td>
+                <td>Taxes</td>
+                <td class="text-right tabular-nums whitespace-nowrap">$6,900.00</td>
+              </tr>
+              <tr>
+                <td class="text-stone-500">17</td>
+                <td>Utilities</td>
+                <td class="text-right tabular-nums whitespace-nowrap">$1,420.00</td>
+              </tr>
+              <tr>
+                <td class="text-stone-500">19</td>
+                <td>Other <a href="#" class="yn-link text-[13px] ml-2">itemized statement</a></td>
+                <td class="text-right tabular-nums whitespace-nowrap">$610.00</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td class="font-medium">Total expenses</td>
+                <td class="text-right tabular-nums whitespace-nowrap font-medium">$14,550.00</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td class="font-semibold">Net income</td>
+                <td class="text-right tabular-nums whitespace-nowrap font-semibold">$14,250.00</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- "detail" links expand the existing drilldown rows
+               (rents_received_drilldown / expense_drilldown_by_category)
+               in a native <details> block under the line — audit trail
+               preserved, collapsed by default. -->
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

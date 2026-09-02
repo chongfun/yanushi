@@ -1,0 +1,25 @@
+<header class="mb-6">
+  <% if local_assigns[:eyebrow].present? %>
+    <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+      <%= eyebrow %>
+    </p>
+  <% end %>
+  <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold tracking-tight text-stone-900"><%= title %></h1>
+      <% if local_assigns[:meta].present? %>
+        <p class="mt-1 text-sm text-stone-500">
+          <%= meta %>
+        </p>
+      <% end %>
+    </div>
+    <% if local_assigns[:actions].present? %>
+      <div class="flex items-center gap-2">
+        <%= actions %>
+      </div>
+    <% end %>
+  </div>
+  <% if local_assigns[:tabs].present? %>
+    <%= tabs %>
+  <% end %>
+</header>

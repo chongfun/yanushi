@@ -1,0 +1,3 @@
+class MoneyController < ApplicationController
+  def show: () -> untyped
+end

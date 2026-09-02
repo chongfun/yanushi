@@ -1,0 +1,11 @@
+<% aria_label = local_assigns.fetch(:aria_label, "Sections") %>
+<nav class="yn-tabs mt-4" aria-label="<%= aria_label %>">
+  <% items.each do |item| %>
+    <%= link_to item[:path], class: "yn-tab", "aria-current": (item[:current] ? "page" : nil) do %>
+      <%= item[:label] %>
+      <% if item[:count].to_i > 0 %>
+        <span class="yn-count"><%= item[:count] %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+</nav>

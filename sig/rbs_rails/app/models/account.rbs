@@ -44,126 +44,6 @@ class ::Account < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
-    def user_id: () -> ::Integer
-
-    def user_id=: (::Integer) -> ::Integer
-
-    def user_id?: () -> bool
-
-    def user_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def user_id_change: () -> [ ::Integer?, ::Integer? ]
-
-    def user_id_will_change!: () -> void
-
-    def user_id_was: () -> ::Integer?
-
-    def user_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def user_id_previous_change: () -> ::Array[::Integer?]?
-
-    def user_id_previously_was: () -> ::Integer?
-
-    def user_id_before_last_save: () -> ::Integer?
-
-    def user_id_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def user_id_in_database: () -> ::Integer?
-
-    def saved_change_to_user_id: () -> ::Array[::Integer?]?
-
-    def saved_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_user_id!: () -> void
-
-    def clear_user_id_change: () -> void
-
-    def user_id_before_type_cast: () -> ::Integer
-
-    def user_id_for_database: () -> ::Integer
-
-    def key: () -> ::String
-
-    def key=: (::String) -> ::String
-
-    def key?: () -> bool
-
-    def key_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def key_change: () -> [ ::String?, ::String? ]
-
-    def key_will_change!: () -> void
-
-    def key_was: () -> ::String?
-
-    def key_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def key_previous_change: () -> ::Array[::String?]?
-
-    def key_previously_was: () -> ::String?
-
-    def key_before_last_save: () -> ::String?
-
-    def key_change_to_be_saved: () -> ::Array[::String?]?
-
-    def key_in_database: () -> ::String?
-
-    def saved_change_to_key: () -> ::Array[::String?]?
-
-    def saved_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_key!: () -> void
-
-    def clear_key_change: () -> void
-
-    def key_before_type_cast: () -> ::String
-
-    def key_for_database: () -> ::String
-
-    def name: () -> ::String
-
-    def name=: (::String) -> ::String
-
-    def name?: () -> bool
-
-    def name_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def name_change: () -> [ ::String?, ::String? ]
-
-    def name_will_change!: () -> void
-
-    def name_was: () -> ::String?
-
-    def name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def name_previous_change: () -> ::Array[::String?]?
-
-    def name_previously_was: () -> ::String?
-
-    def name_before_last_save: () -> ::String?
-
-    def name_change_to_be_saved: () -> ::Array[::String?]?
-
-    def name_in_database: () -> ::String?
-
-    def saved_change_to_name: () -> ::Array[::String?]?
-
-    def saved_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_name!: () -> void
-
-    def clear_name_change: () -> void
-
-    def name_before_type_cast: () -> ::String
-
-    def name_for_database: () -> ::String
-
     def account_type: () -> ::String
 
     def account_type=: (::String | ::Symbol) -> ::String
@@ -284,6 +164,86 @@ class ::Account < ::ApplicationRecord
 
     def created_at_for_database: () -> ::Time
 
+    def key: () -> ::String
+
+    def key=: (::String) -> ::String
+
+    def key?: () -> bool
+
+    def key_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def key_change: () -> [ ::String?, ::String? ]
+
+    def key_will_change!: () -> void
+
+    def key_was: () -> ::String?
+
+    def key_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def key_previous_change: () -> ::Array[::String?]?
+
+    def key_previously_was: () -> ::String?
+
+    def key_before_last_save: () -> ::String?
+
+    def key_change_to_be_saved: () -> ::Array[::String?]?
+
+    def key_in_database: () -> ::String?
+
+    def saved_change_to_key: () -> ::Array[::String?]?
+
+    def saved_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_key!: () -> void
+
+    def clear_key_change: () -> void
+
+    def key_before_type_cast: () -> ::String
+
+    def key_for_database: () -> ::String
+
+    def name: () -> ::String
+
+    def name=: (::String) -> ::String
+
+    def name?: () -> bool
+
+    def name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def name_change: () -> [ ::String?, ::String? ]
+
+    def name_will_change!: () -> void
+
+    def name_was: () -> ::String?
+
+    def name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def name_previous_change: () -> ::Array[::String?]?
+
+    def name_previously_was: () -> ::String?
+
+    def name_before_last_save: () -> ::String?
+
+    def name_change_to_be_saved: () -> ::Array[::String?]?
+
+    def name_in_database: () -> ::String?
+
+    def saved_change_to_name: () -> ::Array[::String?]?
+
+    def saved_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_name!: () -> void
+
+    def clear_name_change: () -> void
+
+    def name_before_type_cast: () -> ::String
+
+    def name_for_database: () -> ::String
+
     def updated_at: () -> ::ActiveSupport::TimeWithZone
 
     def updated_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
@@ -323,6 +283,46 @@ class ::Account < ::ApplicationRecord
     def updated_at_before_type_cast: () -> ::Time
 
     def updated_at_for_database: () -> ::Time
+
+    def user_id: () -> ::Integer
+
+    def user_id=: (::Integer) -> ::Integer
+
+    def user_id?: () -> bool
+
+    def user_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def user_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def user_id_will_change!: () -> void
+
+    def user_id_was: () -> ::Integer?
+
+    def user_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def user_id_previous_change: () -> ::Array[::Integer?]?
+
+    def user_id_previously_was: () -> ::Integer?
+
+    def user_id_before_last_save: () -> ::Integer?
+
+    def user_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def user_id_in_database: () -> ::Integer?
+
+    def saved_change_to_user_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_user_id!: () -> void
+
+    def clear_user_id_change: () -> void
+
+    def user_id_before_type_cast: () -> ::Integer
+
+    def user_id_for_database: () -> ::Integer
   end
   include ::Account::GeneratedAttributeMethods
   module ::Account::GeneratedAliasAttributeMethods

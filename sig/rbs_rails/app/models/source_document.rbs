@@ -44,85 +44,45 @@ class ::SourceDocument < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
-    def user_id: () -> ::Integer
+    def attachment_content_type: () -> ::String?
 
-    def user_id=: (::Integer) -> ::Integer
+    def attachment_content_type=: (::String?) -> ::String?
 
-    def user_id?: () -> bool
+    def attachment_content_type?: () -> bool
 
-    def user_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def attachment_content_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def user_id_change: () -> [ ::Integer?, ::Integer? ]
+    def attachment_content_type_change: () -> [ ::String?, ::String? ]
 
-    def user_id_will_change!: () -> void
+    def attachment_content_type_will_change!: () -> void
 
-    def user_id_was: () -> ::Integer?
+    def attachment_content_type_was: () -> ::String?
 
-    def user_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def attachment_content_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def user_id_previous_change: () -> ::Array[::Integer?]?
+    def attachment_content_type_previous_change: () -> ::Array[::String?]?
 
-    def user_id_previously_was: () -> ::Integer?
+    def attachment_content_type_previously_was: () -> ::String?
 
-    def user_id_before_last_save: () -> ::Integer?
+    def attachment_content_type_before_last_save: () -> ::String?
 
-    def user_id_change_to_be_saved: () -> ::Array[::Integer?]?
+    def attachment_content_type_change_to_be_saved: () -> ::Array[::String?]?
 
-    def user_id_in_database: () -> ::Integer?
+    def attachment_content_type_in_database: () -> ::String?
 
-    def saved_change_to_user_id: () -> ::Array[::Integer?]?
+    def saved_change_to_attachment_content_type: () -> ::Array[::String?]?
 
-    def saved_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def saved_change_to_attachment_content_type?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def will_save_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def will_save_change_to_attachment_content_type?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def restore_user_id!: () -> void
+    def restore_attachment_content_type!: () -> void
 
-    def clear_user_id_change: () -> void
+    def clear_attachment_content_type_change: () -> void
 
-    def user_id_before_type_cast: () -> ::Integer
+    def attachment_content_type_before_type_cast: () -> ::String?
 
-    def user_id_for_database: () -> ::Integer
-
-    def document_type: () -> ::String
-
-    def document_type=: (::String | ::Symbol) -> ::String
-
-    def document_type?: () -> bool
-
-    def document_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def document_type_change: () -> [ ::String?, ::String? ]
-
-    def document_type_will_change!: () -> void
-
-    def document_type_was: () -> ::String?
-
-    def document_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def document_type_previous_change: () -> ::Array[::String?]?
-
-    def document_type_previously_was: () -> ::String?
-
-    def document_type_before_last_save: () -> ::String?
-
-    def document_type_change_to_be_saved: () -> ::Array[::String?]?
-
-    def document_type_in_database: () -> ::String?
-
-    def saved_change_to_document_type: () -> ::Array[::String?]?
-
-    def saved_change_to_document_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_document_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_document_type!: () -> void
-
-    def clear_document_type_change: () -> void
-
-    def document_type_before_type_cast: () -> ::String
-
-    def document_type_for_database: () -> ::String
+    def attachment_content_type_for_database: () -> ::String?
 
     def attachment_file: () -> ::String?
 
@@ -204,125 +164,45 @@ class ::SourceDocument < ::ApplicationRecord
 
     def attachment_filename_for_database: () -> ::String?
 
-    def attachment_content_type: () -> ::String?
+    def attachment_sha256: () -> ::String
 
-    def attachment_content_type=: (::String?) -> ::String?
+    def attachment_sha256=: (::String) -> ::String
 
-    def attachment_content_type?: () -> bool
+    def attachment_sha256?: () -> bool
 
-    def attachment_content_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def attachment_sha256_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def attachment_content_type_change: () -> [ ::String?, ::String? ]
+    def attachment_sha256_change: () -> [ ::String?, ::String? ]
 
-    def attachment_content_type_will_change!: () -> void
+    def attachment_sha256_will_change!: () -> void
 
-    def attachment_content_type_was: () -> ::String?
+    def attachment_sha256_was: () -> ::String?
 
-    def attachment_content_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def attachment_sha256_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def attachment_content_type_previous_change: () -> ::Array[::String?]?
+    def attachment_sha256_previous_change: () -> ::Array[::String?]?
 
-    def attachment_content_type_previously_was: () -> ::String?
+    def attachment_sha256_previously_was: () -> ::String?
 
-    def attachment_content_type_before_last_save: () -> ::String?
+    def attachment_sha256_before_last_save: () -> ::String?
 
-    def attachment_content_type_change_to_be_saved: () -> ::Array[::String?]?
+    def attachment_sha256_change_to_be_saved: () -> ::Array[::String?]?
 
-    def attachment_content_type_in_database: () -> ::String?
+    def attachment_sha256_in_database: () -> ::String?
 
-    def saved_change_to_attachment_content_type: () -> ::Array[::String?]?
+    def saved_change_to_attachment_sha256: () -> ::Array[::String?]?
 
-    def saved_change_to_attachment_content_type?: (?from: ::String?, ?to: ::String?) -> bool
+    def saved_change_to_attachment_sha256?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def will_save_change_to_attachment_content_type?: (?from: ::String?, ?to: ::String?) -> bool
+    def will_save_change_to_attachment_sha256?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def restore_attachment_content_type!: () -> void
+    def restore_attachment_sha256!: () -> void
 
-    def clear_attachment_content_type_change: () -> void
+    def clear_attachment_sha256_change: () -> void
 
-    def attachment_content_type_before_type_cast: () -> ::String?
+    def attachment_sha256_before_type_cast: () -> ::String
 
-    def attachment_content_type_for_database: () -> ::String?
-
-    def status: () -> ::String
-
-    def status=: (::String | ::Symbol) -> ::String
-
-    def status?: () -> bool
-
-    def status_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def status_change: () -> [ ::String?, ::String? ]
-
-    def status_will_change!: () -> void
-
-    def status_was: () -> ::String?
-
-    def status_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def status_previous_change: () -> ::Array[::String?]?
-
-    def status_previously_was: () -> ::String?
-
-    def status_before_last_save: () -> ::String?
-
-    def status_change_to_be_saved: () -> ::Array[::String?]?
-
-    def status_in_database: () -> ::String?
-
-    def saved_change_to_status: () -> ::Array[::String?]?
-
-    def saved_change_to_status?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_status?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_status!: () -> void
-
-    def clear_status_change: () -> void
-
-    def status_before_type_cast: () -> ::String
-
-    def status_for_database: () -> ::String
-
-    def error_message: () -> ::String?
-
-    def error_message=: (::String?) -> ::String?
-
-    def error_message?: () -> bool
-
-    def error_message_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def error_message_change: () -> [ ::String?, ::String? ]
-
-    def error_message_will_change!: () -> void
-
-    def error_message_was: () -> ::String?
-
-    def error_message_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def error_message_previous_change: () -> ::Array[::String?]?
-
-    def error_message_previously_was: () -> ::String?
-
-    def error_message_before_last_save: () -> ::String?
-
-    def error_message_change_to_be_saved: () -> ::Array[::String?]?
-
-    def error_message_in_database: () -> ::String?
-
-    def saved_change_to_error_message: () -> ::Array[::String?]?
-
-    def saved_change_to_error_message?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_error_message?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_error_message!: () -> void
-
-    def clear_error_message_change: () -> void
-
-    def error_message_before_type_cast: () -> ::String?
-
-    def error_message_for_database: () -> ::String?
+    def attachment_sha256_for_database: () -> ::String
 
     def created_at: () -> ::ActiveSupport::TimeWithZone
 
@@ -364,6 +244,126 @@ class ::SourceDocument < ::ApplicationRecord
 
     def created_at_for_database: () -> ::Time
 
+    def document_type: () -> ::String
+
+    def document_type=: (::String | ::Symbol) -> ::String
+
+    def document_type?: () -> bool
+
+    def document_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def document_type_change: () -> [ ::String?, ::String? ]
+
+    def document_type_will_change!: () -> void
+
+    def document_type_was: () -> ::String?
+
+    def document_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def document_type_previous_change: () -> ::Array[::String?]?
+
+    def document_type_previously_was: () -> ::String?
+
+    def document_type_before_last_save: () -> ::String?
+
+    def document_type_change_to_be_saved: () -> ::Array[::String?]?
+
+    def document_type_in_database: () -> ::String?
+
+    def saved_change_to_document_type: () -> ::Array[::String?]?
+
+    def saved_change_to_document_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_document_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_document_type!: () -> void
+
+    def clear_document_type_change: () -> void
+
+    def document_type_before_type_cast: () -> ::String
+
+    def document_type_for_database: () -> ::String
+
+    def error_message: () -> ::String?
+
+    def error_message=: (::String?) -> ::String?
+
+    def error_message?: () -> bool
+
+    def error_message_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def error_message_change: () -> [ ::String?, ::String? ]
+
+    def error_message_will_change!: () -> void
+
+    def error_message_was: () -> ::String?
+
+    def error_message_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def error_message_previous_change: () -> ::Array[::String?]?
+
+    def error_message_previously_was: () -> ::String?
+
+    def error_message_before_last_save: () -> ::String?
+
+    def error_message_change_to_be_saved: () -> ::Array[::String?]?
+
+    def error_message_in_database: () -> ::String?
+
+    def saved_change_to_error_message: () -> ::Array[::String?]?
+
+    def saved_change_to_error_message?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_error_message?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_error_message!: () -> void
+
+    def clear_error_message_change: () -> void
+
+    def error_message_before_type_cast: () -> ::String?
+
+    def error_message_for_database: () -> ::String?
+
+    def status: () -> ::String
+
+    def status=: (::String | ::Symbol) -> ::String
+
+    def status?: () -> bool
+
+    def status_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def status_change: () -> [ ::String?, ::String? ]
+
+    def status_will_change!: () -> void
+
+    def status_was: () -> ::String?
+
+    def status_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def status_previous_change: () -> ::Array[::String?]?
+
+    def status_previously_was: () -> ::String?
+
+    def status_before_last_save: () -> ::String?
+
+    def status_change_to_be_saved: () -> ::Array[::String?]?
+
+    def status_in_database: () -> ::String?
+
+    def saved_change_to_status: () -> ::Array[::String?]?
+
+    def saved_change_to_status?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_status?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_status!: () -> void
+
+    def clear_status_change: () -> void
+
+    def status_before_type_cast: () -> ::String
+
+    def status_for_database: () -> ::String
+
     def updated_at: () -> ::ActiveSupport::TimeWithZone
 
     def updated_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
@@ -404,45 +404,45 @@ class ::SourceDocument < ::ApplicationRecord
 
     def updated_at_for_database: () -> ::Time
 
-    def attachment_sha256: () -> ::String
+    def user_id: () -> ::Integer
 
-    def attachment_sha256=: (::String) -> ::String
+    def user_id=: (::Integer) -> ::Integer
 
-    def attachment_sha256?: () -> bool
+    def user_id?: () -> bool
 
-    def attachment_sha256_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def user_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def attachment_sha256_change: () -> [ ::String?, ::String? ]
+    def user_id_change: () -> [ ::Integer?, ::Integer? ]
 
-    def attachment_sha256_will_change!: () -> void
+    def user_id_will_change!: () -> void
 
-    def attachment_sha256_was: () -> ::String?
+    def user_id_was: () -> ::Integer?
 
-    def attachment_sha256_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def user_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def attachment_sha256_previous_change: () -> ::Array[::String?]?
+    def user_id_previous_change: () -> ::Array[::Integer?]?
 
-    def attachment_sha256_previously_was: () -> ::String?
+    def user_id_previously_was: () -> ::Integer?
 
-    def attachment_sha256_before_last_save: () -> ::String?
+    def user_id_before_last_save: () -> ::Integer?
 
-    def attachment_sha256_change_to_be_saved: () -> ::Array[::String?]?
+    def user_id_change_to_be_saved: () -> ::Array[::Integer?]?
 
-    def attachment_sha256_in_database: () -> ::String?
+    def user_id_in_database: () -> ::Integer?
 
-    def saved_change_to_attachment_sha256: () -> ::Array[::String?]?
+    def saved_change_to_user_id: () -> ::Array[::Integer?]?
 
-    def saved_change_to_attachment_sha256?: (?from: ::String?, ?to: ::String?) -> bool
+    def saved_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def will_save_change_to_attachment_sha256?: (?from: ::String?, ?to: ::String?) -> bool
+    def will_save_change_to_user_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def restore_attachment_sha256!: () -> void
+    def restore_user_id!: () -> void
 
-    def clear_attachment_sha256_change: () -> void
+    def clear_user_id_change: () -> void
 
-    def attachment_sha256_before_type_cast: () -> ::String
+    def user_id_before_type_cast: () -> ::Integer
 
-    def attachment_sha256_for_database: () -> ::String
+    def user_id_for_database: () -> ::Integer
   end
   include ::SourceDocument::GeneratedAttributeMethods
   module ::SourceDocument::GeneratedAliasAttributeMethods

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Property tax — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 2 REFERENCE (status language finalized in M5) — Property
+  workspace, Tax tab (Properties::TaxesController#show,
+  /properties/:id/tax?year=2025).
+
+  Entry point into Schedule E for THIS property. Does NOT reproduce the
+  worksheet — it shows profile + readiness for the selected year and links
+  into the full Schedule E page. Status vocabulary must be shared with the
+  Reports landing (same partial):
+    "Needs profile"  → no PropertyTaxProfile for the year
+    "Needs review"   → unresolved ScheduleEResult review items
+    "Ready"          → profile present, zero unresolved items
+  Header/tabs identical to property-overview.html.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">Portfolio</a>
+          <span class="mx-1 text-stone-300">/</span>
+          456 Oak Ave
+        </p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">456 Oak Ave</h1>
+            <p class="mt-1 text-sm text-stone-500">
+              Single family · 1 unit ·
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="yn-btn yn-btn-secondary">More</button>
+            <a href="#" class="yn-btn yn-btn-primary">Record expense</a>
+          </div>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Property sections">
+          <a href="#" class="yn-tab">Overview</a>
+          <a href="#" class="yn-tab">Tenancies</a>
+          <a href="#" class="yn-tab">Activity</a>
+          <a href="#" class="yn-tab" aria-current="page">Tax</a>
+        </nav>
+      </header>
+
+      <!-- Year selector: GET form, auto-submitted; year persists in URL -->
+      <form class="mb-6">
+        <label class="yn-label" for="tax-year">Tax year</label>
+        <select class="yn-select w-32" id="tax-year" name="year">
+          <option>2026</option>
+          <option selected>2025</option>
+          <option>2024</option>
+        </select>
+      </form>
+
+      <div class="yn-surface divide-y divide-stone-200 max-w-2xl">
+
+        <!-- Profile row -->
+        <div class="flex items-center gap-4 px-4 py-3.5">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium m-0">Tax profile</p>
+            <p class="text-sm text-stone-500 m-0">Single family residence — IRS type 1 · Fair rental days: 365</p>
+          </div>
+          <a href="#" class="yn-link text-sm whitespace-nowrap">Edit profile</a>
+        </div>
+
+        <!-- Readiness row: the strongest signal on the page -->
+        <div class="flex items-center gap-4 px-4 py-3.5">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium m-0">Schedule E, 2025</p>
+            <p class="text-sm m-0">
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 items need review</span>
+            </p>
+          </div>
+          <a href="#" class="yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap">Review Schedule E</a>
+        </div>
+
+        <!-- When ready, the readiness row reads:
+             status: dot-ok "Ready" + net income figure
+             action: secondary "View Schedule E" + primary "Download PDF"
+        -->
+      </div>
+
+      <!-- "Needs profile" variant replaces the surface body:
+      <div class="yn-alert yn-alert-warn max-w-2xl">
+        <span>No tax profile exists for 2025, so Schedule E can’t be prepared.
+        <a href="#" class="yn-link">Set up the 2025 tax profile</a></span>
+      </div>
+      -->
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

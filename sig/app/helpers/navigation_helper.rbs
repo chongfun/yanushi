@@ -1,0 +1,11 @@
+module NavigationHelper
+  PRIMARY_ITEMS: Array[{ key: Symbol, label: String, path_helper: Symbol }]
+
+  def request: () -> ActionDispatch::Request
+
+  def active_primary_navigation_key: () -> Symbol?
+
+  def primary_navigation_item_active?: (Symbol | String key) -> bool
+
+  def inbox_reviewable_count: () -> Integer
+end

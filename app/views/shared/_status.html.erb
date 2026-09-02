@@ -1,0 +1,9 @@
+<% tone = local_assigns.fetch(:tone, :neutral).to_sym %>
+<% dot_class = case tone
+   when :ok then "yn-dot-ok"
+   when :warn then "yn-dot-warn"
+   when :danger then "yn-dot-danger"
+   else ""
+   end %>
+<% status_class = local_assigns[:size] == :sm ? "yn-status yn-status-sm" : "yn-status" %>
+<span class="<%= status_class %>"><span class="yn-dot <%= dot_class %>"></span><%= text %></span>

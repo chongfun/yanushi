@@ -44,6 +44,46 @@ class ::Tenancy < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
+    def agreement_type: () -> ::String
+
+    def agreement_type=: (::String | ::Symbol) -> ::String
+
+    def agreement_type?: () -> bool
+
+    def agreement_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def agreement_type_change: () -> [ ::String?, ::String? ]
+
+    def agreement_type_will_change!: () -> void
+
+    def agreement_type_was: () -> ::String?
+
+    def agreement_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def agreement_type_previous_change: () -> ::Array[::String?]?
+
+    def agreement_type_previously_was: () -> ::String?
+
+    def agreement_type_before_last_save: () -> ::String?
+
+    def agreement_type_change_to_be_saved: () -> ::Array[::String?]?
+
+    def agreement_type_in_database: () -> ::String?
+
+    def saved_change_to_agreement_type: () -> ::Array[::String?]?
+
+    def saved_change_to_agreement_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_agreement_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_agreement_type!: () -> void
+
+    def clear_agreement_type_change: () -> void
+
+    def agreement_type_before_type_cast: () -> ::String
+
+    def agreement_type_for_database: () -> ::String
+
     def commencement_date: () -> ::Date
 
     def commencement_date=: (::Date) -> ::Date
@@ -164,6 +204,46 @@ class ::Tenancy < ::ApplicationRecord
 
     def late_period_days_for_database: () -> ::Integer
 
+    def rentable_unit_id: () -> ::Integer
+
+    def rentable_unit_id=: (::Integer) -> ::Integer
+
+    def rentable_unit_id?: () -> bool
+
+    def rentable_unit_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def rentable_unit_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def rentable_unit_id_will_change!: () -> void
+
+    def rentable_unit_id_was: () -> ::Integer?
+
+    def rentable_unit_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def rentable_unit_id_previous_change: () -> ::Array[::Integer?]?
+
+    def rentable_unit_id_previously_was: () -> ::Integer?
+
+    def rentable_unit_id_before_last_save: () -> ::Integer?
+
+    def rentable_unit_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def rentable_unit_id_in_database: () -> ::Integer?
+
+    def saved_change_to_rentable_unit_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_rentable_unit_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_rentable_unit_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_rentable_unit_id!: () -> void
+
+    def clear_rentable_unit_id_change: () -> void
+
+    def rentable_unit_id_before_type_cast: () -> ::Integer
+
+    def rentable_unit_id_for_database: () -> ::Integer
+
     def termination_date: () -> ::Date?
 
     def termination_date=: (::Date?) -> ::Date?
@@ -243,86 +323,6 @@ class ::Tenancy < ::ApplicationRecord
     def updated_at_before_type_cast: () -> ::Time
 
     def updated_at_for_database: () -> ::Time
-
-    def rentable_unit_id: () -> ::Integer
-
-    def rentable_unit_id=: (::Integer) -> ::Integer
-
-    def rentable_unit_id?: () -> bool
-
-    def rentable_unit_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def rentable_unit_id_change: () -> [ ::Integer?, ::Integer? ]
-
-    def rentable_unit_id_will_change!: () -> void
-
-    def rentable_unit_id_was: () -> ::Integer?
-
-    def rentable_unit_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def rentable_unit_id_previous_change: () -> ::Array[::Integer?]?
-
-    def rentable_unit_id_previously_was: () -> ::Integer?
-
-    def rentable_unit_id_before_last_save: () -> ::Integer?
-
-    def rentable_unit_id_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def rentable_unit_id_in_database: () -> ::Integer?
-
-    def saved_change_to_rentable_unit_id: () -> ::Array[::Integer?]?
-
-    def saved_change_to_rentable_unit_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_rentable_unit_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_rentable_unit_id!: () -> void
-
-    def clear_rentable_unit_id_change: () -> void
-
-    def rentable_unit_id_before_type_cast: () -> ::Integer
-
-    def rentable_unit_id_for_database: () -> ::Integer
-
-    def agreement_type: () -> ::String
-
-    def agreement_type=: (::String | ::Symbol) -> ::String
-
-    def agreement_type?: () -> bool
-
-    def agreement_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def agreement_type_change: () -> [ ::String?, ::String? ]
-
-    def agreement_type_will_change!: () -> void
-
-    def agreement_type_was: () -> ::String?
-
-    def agreement_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def agreement_type_previous_change: () -> ::Array[::String?]?
-
-    def agreement_type_previously_was: () -> ::String?
-
-    def agreement_type_before_last_save: () -> ::String?
-
-    def agreement_type_change_to_be_saved: () -> ::Array[::String?]?
-
-    def agreement_type_in_database: () -> ::String?
-
-    def saved_change_to_agreement_type: () -> ::Array[::String?]?
-
-    def saved_change_to_agreement_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_agreement_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_agreement_type!: () -> void
-
-    def clear_agreement_type_change: () -> void
-
-    def agreement_type_before_type_cast: () -> ::String
-
-    def agreement_type_for_database: () -> ::String
   end
   include ::Tenancy::GeneratedAttributeMethods
   module ::Tenancy::GeneratedAliasAttributeMethods

@@ -44,85 +44,45 @@ class ::SecurityDeposit < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
-    def tenancy_id: () -> ::Integer
+    def created_at: () -> ::ActiveSupport::TimeWithZone
 
-    def tenancy_id=: (::Integer) -> ::Integer
+    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
 
-    def tenancy_id?: () -> bool
+    def created_at?: () -> bool
 
-    def tenancy_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def tenancy_id_change: () -> [ ::Integer?, ::Integer? ]
+    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
 
-    def tenancy_id_will_change!: () -> void
+    def created_at_will_change!: () -> void
 
-    def tenancy_id_was: () -> ::Integer?
+    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
 
-    def tenancy_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def tenancy_id_previous_change: () -> ::Array[::Integer?]?
+    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def tenancy_id_previously_was: () -> ::Integer?
+    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
 
-    def tenancy_id_before_last_save: () -> ::Integer?
+    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
 
-    def tenancy_id_change_to_be_saved: () -> ::Array[::Integer?]?
+    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def tenancy_id_in_database: () -> ::Integer?
+    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
 
-    def saved_change_to_tenancy_id: () -> ::Array[::Integer?]?
+    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def saved_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def will_save_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def restore_tenancy_id!: () -> void
+    def restore_created_at!: () -> void
 
-    def clear_tenancy_id_change: () -> void
+    def clear_created_at_change: () -> void
 
-    def tenancy_id_before_type_cast: () -> ::Integer
+    def created_at_before_type_cast: () -> ::Time
 
-    def tenancy_id_for_database: () -> ::Integer
-
-    def required_amount_cents: () -> ::Integer
-
-    def required_amount_cents=: (::Integer) -> ::Integer
-
-    def required_amount_cents?: () -> bool
-
-    def required_amount_cents_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def required_amount_cents_change: () -> [ ::Integer?, ::Integer? ]
-
-    def required_amount_cents_will_change!: () -> void
-
-    def required_amount_cents_was: () -> ::Integer?
-
-    def required_amount_cents_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def required_amount_cents_previous_change: () -> ::Array[::Integer?]?
-
-    def required_amount_cents_previously_was: () -> ::Integer?
-
-    def required_amount_cents_before_last_save: () -> ::Integer?
-
-    def required_amount_cents_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def required_amount_cents_in_database: () -> ::Integer?
-
-    def saved_change_to_required_amount_cents: () -> ::Array[::Integer?]?
-
-    def saved_change_to_required_amount_cents?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_required_amount_cents?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_required_amount_cents!: () -> void
-
-    def clear_required_amount_cents_change: () -> void
-
-    def required_amount_cents_before_type_cast: () -> ::Integer
-
-    def required_amount_cents_for_database: () -> ::Integer
+    def created_at_for_database: () -> ::Time
 
     def due_on: () -> ::Date
 
@@ -164,45 +124,85 @@ class ::SecurityDeposit < ::ApplicationRecord
 
     def due_on_for_database: () -> ::Date
 
-    def created_at: () -> ::ActiveSupport::TimeWithZone
+    def required_amount_cents: () -> ::Integer
 
-    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+    def required_amount_cents=: (::Integer) -> ::Integer
 
-    def created_at?: () -> bool
+    def required_amount_cents?: () -> bool
 
-    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def required_amount_cents_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+    def required_amount_cents_change: () -> [ ::Integer?, ::Integer? ]
 
-    def created_at_will_change!: () -> void
+    def required_amount_cents_will_change!: () -> void
 
-    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+    def required_amount_cents_was: () -> ::Integer?
 
-    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def required_amount_cents_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def required_amount_cents_previous_change: () -> ::Array[::Integer?]?
 
-    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+    def required_amount_cents_previously_was: () -> ::Integer?
 
-    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+    def required_amount_cents_before_last_save: () -> ::Integer?
 
-    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def required_amount_cents_change_to_be_saved: () -> ::Array[::Integer?]?
 
-    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+    def required_amount_cents_in_database: () -> ::Integer?
 
-    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def saved_change_to_required_amount_cents: () -> ::Array[::Integer?]?
 
-    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def saved_change_to_required_amount_cents?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def will_save_change_to_required_amount_cents?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def restore_created_at!: () -> void
+    def restore_required_amount_cents!: () -> void
 
-    def clear_created_at_change: () -> void
+    def clear_required_amount_cents_change: () -> void
 
-    def created_at_before_type_cast: () -> ::Time
+    def required_amount_cents_before_type_cast: () -> ::Integer
 
-    def created_at_for_database: () -> ::Time
+    def required_amount_cents_for_database: () -> ::Integer
+
+    def tenancy_id: () -> ::Integer
+
+    def tenancy_id=: (::Integer) -> ::Integer
+
+    def tenancy_id?: () -> bool
+
+    def tenancy_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tenancy_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def tenancy_id_will_change!: () -> void
+
+    def tenancy_id_was: () -> ::Integer?
+
+    def tenancy_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tenancy_id_previous_change: () -> ::Array[::Integer?]?
+
+    def tenancy_id_previously_was: () -> ::Integer?
+
+    def tenancy_id_before_last_save: () -> ::Integer?
+
+    def tenancy_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def tenancy_id_in_database: () -> ::Integer?
+
+    def saved_change_to_tenancy_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_tenancy_id!: () -> void
+
+    def clear_tenancy_id_change: () -> void
+
+    def tenancy_id_before_type_cast: () -> ::Integer
+
+    def tenancy_id_for_database: () -> ::Integer
 
     def updated_at: () -> ::ActiveSupport::TimeWithZone
 

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Property activity — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 2 REFERENCE — Property workspace, Activity tab
+  (Properties::ActivitiesController#show, /properties/:id/activity).
+
+  This is the detailed property ledger, moved off the property Overview.
+  Owns: Accounting::DateRange, Accounting::PropertyLedgerQuery,
+  Accounting::PropertySummaryQuery, Accounting::ActiveYearsQuery.
+
+  Filters are a GET form (year select OR custom from/through — the existing
+  date_range_filter Stimulus controller already makes them mutually
+  exclusive and auto-submits). Filter state lives in the URL.
+
+  Rows lead with the human-readable event; each links to its source record
+  (receipt/expense/charge). "Journal" is the audit link (journal_entries#show).
+  Header/tabs identical to property-overview.html.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">Portfolio</a>
+          <span class="mx-1 text-stone-300">/</span>
+          123 Main St
+        </p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">123 Main St</h1>
+            <p class="mt-1 text-sm text-stone-500">
+              Multifamily · 3 units ·
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 of 3 occupied</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="yn-btn yn-btn-secondary">More</button>
+            <a href="#" class="yn-btn yn-btn-primary">Record expense</a>
+          </div>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Property sections">
+          <a href="#" class="yn-tab">Overview</a>
+          <a href="#" class="yn-tab">Tenancies</a>
+          <a href="#" class="yn-tab" aria-current="page">Activity</a>
+          <a href="#" class="yn-tab">Tax</a>
+        </nav>
+      </header>
+
+      <!-- ============================== Filter bar (GET form) -->
+      <form class="flex flex-wrap items-end gap-3 mb-6">
+        <div>
+          <label class="yn-label" for="pa-year">Year</label>
+          <select class="yn-select w-32" id="pa-year" name="year">
+            <option>2026</option>
+            <option>2025</option>
+            <option>2024</option>
+          </select>
+        </div>
+        <div>
+          <label class="yn-label" for="pa-from">From</label>
+          <input class="yn-input w-40" id="pa-from" name="from" type="date">
+        </div>
+        <div>
+          <label class="yn-label" for="pa-through">Through</label>
+          <input class="yn-input w-40" id="pa-through" name="through" type="date">
+        </div>
+        <button class="yn-btn yn-btn-secondary">Apply</button>
+      </form>
+
+      <!-- ============================== Compact period totals -->
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6">
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$29,800.00</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$7,320.00</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$22,480.00</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net cash movement</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$21,150.00</dd>
+        </div>
+      </dl>
+
+      <!-- ============================== Chronological ledger -->
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Event</th>
+            <th scope="col">Context</th>
+            <th scope="col" class="text-right tabular-nums">Amount</th>
+            <th scope="col"><span class="sr-only">Audit</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="whitespace-nowrap text-stone-500 w-20">Aug 18</td>
+            <td><a href="#" class="yn-row-link">Plumbing repair — Ace Plumbing</a>
+              <span class="block text-[13px] text-stone-500">Expense · Repairs</span></td>
+            <td class="text-stone-500 whitespace-nowrap">Unit 2</td>
+            <td class="text-right tabular-nums whitespace-nowrap">$480.00</td>
+            <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+          </tr>
+          <tr>
+            <td class="whitespace-nowrap text-stone-500">Aug 3</td>
+            <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a>
+              <span class="block text-[13px] text-stone-500">Receipt · Zelle</span></td>
+            <td class="whitespace-nowrap"><a href="#" class="yn-link text-[13px]">Unit 2 tenancy</a></td>
+            <td class="text-right tabular-nums whitespace-nowrap">$2,000.00</td>
+            <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+          </tr>
+          <tr>
+            <td class="whitespace-nowrap text-stone-500">Aug 1</td>
+            <td><a href="#" class="yn-row-link">August rent — Jane Smith</a>
+              <span class="block text-[13px] text-stone-500">Charge · Rent</span></td>
+            <td class="whitespace-nowrap"><a href="#" class="yn-link text-[13px]">Unit 2 tenancy</a></td>
+            <td class="text-right tabular-nums whitespace-nowrap">$2,400.00</td>
+            <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+          </tr>
+          <tr>
+            <td class="whitespace-nowrap text-stone-500">Jul 12</td>
+            <td>
+              <span class="text-stone-500 line-through">Landscaping — GreenCo</span>
+              <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span>
+              <span class="block text-[13px] text-stone-500">Expense · <a href="#" class="yn-link">corrected Jul 14</a></span>
+            </td>
+            <td class="text-stone-500">—</td>
+            <td class="text-right tabular-nums whitespace-nowrap text-stone-400 line-through">$220.00</td>
+            <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination (styleguide pattern) when the period exceeds a page. -->
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

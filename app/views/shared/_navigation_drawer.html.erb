@@ -1,0 +1,27 @@
+<dialog id="navigation-drawer"
+        class="navigation-drawer fixed inset-y-0 left-0 m-0 h-full max-h-none w-72 max-w-[85vw] border-r border-stone-200 bg-stone-50 p-0 shadow-xl backdrop:bg-stone-900/40"
+        data-navigation-drawer-target="dialog"
+        data-action="keydown->navigation-drawer#handleKeydown click->navigation-drawer#backdropClick"
+        aria-label="Navigation">
+  <div class="flex flex-col h-full">
+    <div class="flex items-center justify-between px-4 h-14">
+      <span class="text-[15px] font-semibold tracking-tight">Yanushi</span>
+      <button type="button" class="yn-btn yn-btn-ghost yn-btn-sm -mr-2" aria-label="Close navigation" data-action="click->navigation-drawer#close">
+        <svg viewBox="0 0 16 16" class="w-4 h-4" fill="currentColor" aria-hidden="true"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto">
+      <%= render "shared/navigation", badge_id: "drawer_inbox_badge" %>
+    </div>
+
+    <% if Current.user %>
+      <div class="mt-auto border-t border-stone-200 p-3">
+        <div class="flex items-center justify-between gap-2 px-1.5">
+          <p class="text-sm font-medium text-stone-800 truncate"><%= Current.user.email %></p>
+          <%= button_to "Sign out", session_path, method: :delete, class: "yn-btn yn-btn-ghost yn-btn-sm", title: "Sign out" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</dialog>

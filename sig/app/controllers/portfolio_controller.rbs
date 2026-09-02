@@ -1,0 +1,5 @@
+class PortfolioController < ApplicationController
+  @properties: Property::ActiveRecord_Relation
+
+  def show: () -> untyped
+end

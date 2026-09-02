@@ -44,46 +44,6 @@ class ::RentTerm < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
-    def tenancy_id: () -> ::Integer
-
-    def tenancy_id=: (::Integer) -> ::Integer
-
-    def tenancy_id?: () -> bool
-
-    def tenancy_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def tenancy_id_change: () -> [ ::Integer?, ::Integer? ]
-
-    def tenancy_id_will_change!: () -> void
-
-    def tenancy_id_was: () -> ::Integer?
-
-    def tenancy_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def tenancy_id_previous_change: () -> ::Array[::Integer?]?
-
-    def tenancy_id_previously_was: () -> ::Integer?
-
-    def tenancy_id_before_last_save: () -> ::Integer?
-
-    def tenancy_id_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def tenancy_id_in_database: () -> ::Integer?
-
-    def saved_change_to_tenancy_id: () -> ::Array[::Integer?]?
-
-    def saved_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_tenancy_id!: () -> void
-
-    def clear_tenancy_id_change: () -> void
-
-    def tenancy_id_before_type_cast: () -> ::Integer
-
-    def tenancy_id_for_database: () -> ::Integer
-
     def amount_cents: () -> ::Integer
 
     def amount_cents=: (::Integer) -> ::Integer
@@ -124,45 +84,45 @@ class ::RentTerm < ::ApplicationRecord
 
     def amount_cents_for_database: () -> ::Integer
 
-    def frequency: () -> ::String
+    def created_at: () -> ::ActiveSupport::TimeWithZone
 
-    def frequency=: (::String | ::Symbol) -> ::String
+    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
 
-    def frequency?: () -> bool
+    def created_at?: () -> bool
 
-    def frequency_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def frequency_change: () -> [ ::String?, ::String? ]
+    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
 
-    def frequency_will_change!: () -> void
+    def created_at_will_change!: () -> void
 
-    def frequency_was: () -> ::String?
+    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
 
-    def frequency_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def frequency_previous_change: () -> ::Array[::String?]?
+    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def frequency_previously_was: () -> ::String?
+    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
 
-    def frequency_before_last_save: () -> ::String?
+    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
 
-    def frequency_change_to_be_saved: () -> ::Array[::String?]?
+    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def frequency_in_database: () -> ::String?
+    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
 
-    def saved_change_to_frequency: () -> ::Array[::String?]?
+    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def saved_change_to_frequency?: (?from: ::String?, ?to: ::String?) -> bool
+    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def will_save_change_to_frequency?: (?from: ::String?, ?to: ::String?) -> bool
+    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def restore_frequency!: () -> void
+    def restore_created_at!: () -> void
 
-    def clear_frequency_change: () -> void
+    def clear_created_at_change: () -> void
 
-    def frequency_before_type_cast: () -> ::String
+    def created_at_before_type_cast: () -> ::Time
 
-    def frequency_for_database: () -> ::String
+    def created_at_for_database: () -> ::Time
 
     def due_day: () -> ::Integer
 
@@ -284,45 +244,85 @@ class ::RentTerm < ::ApplicationRecord
 
     def effective_until_for_database: () -> ::Date?
 
-    def created_at: () -> ::ActiveSupport::TimeWithZone
+    def frequency: () -> ::String
 
-    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+    def frequency=: (::String | ::Symbol) -> ::String
 
-    def created_at?: () -> bool
+    def frequency?: () -> bool
 
-    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def frequency_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+    def frequency_change: () -> [ ::String?, ::String? ]
 
-    def created_at_will_change!: () -> void
+    def frequency_will_change!: () -> void
 
-    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+    def frequency_was: () -> ::String?
 
-    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def frequency_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def frequency_previous_change: () -> ::Array[::String?]?
 
-    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+    def frequency_previously_was: () -> ::String?
 
-    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+    def frequency_before_last_save: () -> ::String?
 
-    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def frequency_change_to_be_saved: () -> ::Array[::String?]?
 
-    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+    def frequency_in_database: () -> ::String?
 
-    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def saved_change_to_frequency: () -> ::Array[::String?]?
 
-    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def saved_change_to_frequency?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def will_save_change_to_frequency?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def restore_created_at!: () -> void
+    def restore_frequency!: () -> void
 
-    def clear_created_at_change: () -> void
+    def clear_frequency_change: () -> void
 
-    def created_at_before_type_cast: () -> ::Time
+    def frequency_before_type_cast: () -> ::String
 
-    def created_at_for_database: () -> ::Time
+    def frequency_for_database: () -> ::String
+
+    def tenancy_id: () -> ::Integer
+
+    def tenancy_id=: (::Integer) -> ::Integer
+
+    def tenancy_id?: () -> bool
+
+    def tenancy_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tenancy_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def tenancy_id_will_change!: () -> void
+
+    def tenancy_id_was: () -> ::Integer?
+
+    def tenancy_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tenancy_id_previous_change: () -> ::Array[::Integer?]?
+
+    def tenancy_id_previously_was: () -> ::Integer?
+
+    def tenancy_id_before_last_save: () -> ::Integer?
+
+    def tenancy_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def tenancy_id_in_database: () -> ::Integer?
+
+    def saved_change_to_tenancy_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_tenancy_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_tenancy_id!: () -> void
+
+    def clear_tenancy_id_change: () -> void
+
+    def tenancy_id_before_type_cast: () -> ::Integer
+
+    def tenancy_id_for_database: () -> ::Integer
 
     def updated_at: () -> ::ActiveSupport::TimeWithZone
 

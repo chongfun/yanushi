@@ -45,6 +45,86 @@ module ::SolidQueue
 
       def id_for_database: () -> ::Integer
 
+      def created_at: () -> ::ActiveSupport::TimeWithZone
+
+      def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+      def created_at?: () -> bool
+
+      def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+      def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+      def created_at_will_change!: () -> void
+
+      def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+      def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+      def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+      def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+      def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+      def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+      def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+      def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+      def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+      def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+      def restore_created_at!: () -> void
+
+      def clear_created_at_change: () -> void
+
+      def created_at_before_type_cast: () -> ::Time
+
+      def created_at_for_database: () -> ::Time
+
+      def hostname: () -> ::String?
+
+      def hostname=: (::String?) -> ::String?
+
+      def hostname?: () -> bool
+
+      def hostname_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def hostname_change: () -> [ ::String?, ::String? ]
+
+      def hostname_will_change!: () -> void
+
+      def hostname_was: () -> ::String?
+
+      def hostname_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def hostname_previous_change: () -> ::Array[::String?]?
+
+      def hostname_previously_was: () -> ::String?
+
+      def hostname_before_last_save: () -> ::String?
+
+      def hostname_change_to_be_saved: () -> ::Array[::String?]?
+
+      def hostname_in_database: () -> ::String?
+
+      def saved_change_to_hostname: () -> ::Array[::String?]?
+
+      def saved_change_to_hostname?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def will_save_change_to_hostname?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def restore_hostname!: () -> void
+
+      def clear_hostname_change: () -> void
+
+      def hostname_before_type_cast: () -> ::String?
+
+      def hostname_for_database: () -> ::String?
+
       def kind: () -> ::String
 
       def kind=: (::String) -> ::String
@@ -125,45 +205,85 @@ module ::SolidQueue
 
       def last_heartbeat_at_for_database: () -> ::Time
 
-      def supervisor_id: () -> ::Integer?
+      def metadata: () -> ::String?
 
-      def supervisor_id=: (::Integer?) -> ::Integer?
+      def metadata=: (::String?) -> ::String?
 
-      def supervisor_id?: () -> bool
+      def metadata?: () -> bool
 
-      def supervisor_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+      def metadata_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def supervisor_id_change: () -> [ ::Integer?, ::Integer? ]
+      def metadata_change: () -> [ ::String?, ::String? ]
 
-      def supervisor_id_will_change!: () -> void
+      def metadata_will_change!: () -> void
 
-      def supervisor_id_was: () -> ::Integer?
+      def metadata_was: () -> ::String?
 
-      def supervisor_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+      def metadata_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def supervisor_id_previous_change: () -> ::Array[::Integer?]?
+      def metadata_previous_change: () -> ::Array[::String?]?
 
-      def supervisor_id_previously_was: () -> ::Integer?
+      def metadata_previously_was: () -> ::String?
 
-      def supervisor_id_before_last_save: () -> ::Integer?
+      def metadata_before_last_save: () -> ::String?
 
-      def supervisor_id_change_to_be_saved: () -> ::Array[::Integer?]?
+      def metadata_change_to_be_saved: () -> ::Array[::String?]?
 
-      def supervisor_id_in_database: () -> ::Integer?
+      def metadata_in_database: () -> ::String?
 
-      def saved_change_to_supervisor_id: () -> ::Array[::Integer?]?
+      def saved_change_to_metadata: () -> ::Array[::String?]?
 
-      def saved_change_to_supervisor_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+      def saved_change_to_metadata?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def will_save_change_to_supervisor_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+      def will_save_change_to_metadata?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def restore_supervisor_id!: () -> void
+      def restore_metadata!: () -> void
 
-      def clear_supervisor_id_change: () -> void
+      def clear_metadata_change: () -> void
 
-      def supervisor_id_before_type_cast: () -> ::Integer?
+      def metadata_before_type_cast: () -> ::String?
 
-      def supervisor_id_for_database: () -> ::Integer?
+      def metadata_for_database: () -> ::String?
+
+      def name: () -> ::String
+
+      def name=: (::String) -> ::String
+
+      def name?: () -> bool
+
+      def name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def name_change: () -> [ ::String?, ::String? ]
+
+      def name_will_change!: () -> void
+
+      def name_was: () -> ::String?
+
+      def name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def name_previous_change: () -> ::Array[::String?]?
+
+      def name_previously_was: () -> ::String?
+
+      def name_before_last_save: () -> ::String?
+
+      def name_change_to_be_saved: () -> ::Array[::String?]?
+
+      def name_in_database: () -> ::String?
+
+      def saved_change_to_name: () -> ::Array[::String?]?
+
+      def saved_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def will_save_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def restore_name!: () -> void
+
+      def clear_name_change: () -> void
+
+      def name_before_type_cast: () -> ::String
+
+      def name_for_database: () -> ::String
 
       def pid: () -> ::Integer
 
@@ -205,165 +325,45 @@ module ::SolidQueue
 
       def pid_for_database: () -> ::Integer
 
-      def hostname: () -> ::String?
+      def supervisor_id: () -> ::Integer?
 
-      def hostname=: (::String?) -> ::String?
+      def supervisor_id=: (::Integer?) -> ::Integer?
 
-      def hostname?: () -> bool
+      def supervisor_id?: () -> bool
 
-      def hostname_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def supervisor_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-      def hostname_change: () -> [ ::String?, ::String? ]
+      def supervisor_id_change: () -> [ ::Integer?, ::Integer? ]
 
-      def hostname_will_change!: () -> void
+      def supervisor_id_will_change!: () -> void
 
-      def hostname_was: () -> ::String?
+      def supervisor_id_was: () -> ::Integer?
 
-      def hostname_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def supervisor_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-      def hostname_previous_change: () -> ::Array[::String?]?
+      def supervisor_id_previous_change: () -> ::Array[::Integer?]?
 
-      def hostname_previously_was: () -> ::String?
+      def supervisor_id_previously_was: () -> ::Integer?
 
-      def hostname_before_last_save: () -> ::String?
+      def supervisor_id_before_last_save: () -> ::Integer?
 
-      def hostname_change_to_be_saved: () -> ::Array[::String?]?
+      def supervisor_id_change_to_be_saved: () -> ::Array[::Integer?]?
 
-      def hostname_in_database: () -> ::String?
+      def supervisor_id_in_database: () -> ::Integer?
 
-      def saved_change_to_hostname: () -> ::Array[::String?]?
+      def saved_change_to_supervisor_id: () -> ::Array[::Integer?]?
 
-      def saved_change_to_hostname?: (?from: ::String?, ?to: ::String?) -> bool
+      def saved_change_to_supervisor_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-      def will_save_change_to_hostname?: (?from: ::String?, ?to: ::String?) -> bool
+      def will_save_change_to_supervisor_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-      def restore_hostname!: () -> void
+      def restore_supervisor_id!: () -> void
 
-      def clear_hostname_change: () -> void
+      def clear_supervisor_id_change: () -> void
 
-      def hostname_before_type_cast: () -> ::String?
+      def supervisor_id_before_type_cast: () -> ::Integer?
 
-      def hostname_for_database: () -> ::String?
-
-      def metadata: () -> ::String?
-
-      def metadata=: (::String?) -> ::String?
-
-      def metadata?: () -> bool
-
-      def metadata_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def metadata_change: () -> [ ::String?, ::String? ]
-
-      def metadata_will_change!: () -> void
-
-      def metadata_was: () -> ::String?
-
-      def metadata_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def metadata_previous_change: () -> ::Array[::String?]?
-
-      def metadata_previously_was: () -> ::String?
-
-      def metadata_before_last_save: () -> ::String?
-
-      def metadata_change_to_be_saved: () -> ::Array[::String?]?
-
-      def metadata_in_database: () -> ::String?
-
-      def saved_change_to_metadata: () -> ::Array[::String?]?
-
-      def saved_change_to_metadata?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def will_save_change_to_metadata?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def restore_metadata!: () -> void
-
-      def clear_metadata_change: () -> void
-
-      def metadata_before_type_cast: () -> ::String?
-
-      def metadata_for_database: () -> ::String?
-
-      def created_at: () -> ::ActiveSupport::TimeWithZone
-
-      def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
-
-      def created_at?: () -> bool
-
-      def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-      def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
-
-      def created_at_will_change!: () -> void
-
-      def created_at_was: () -> ::ActiveSupport::TimeWithZone?
-
-      def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-      def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
-
-      def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
-
-      def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
-
-      def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
-
-      def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
-
-      def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
-
-      def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-      def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-      def restore_created_at!: () -> void
-
-      def clear_created_at_change: () -> void
-
-      def created_at_before_type_cast: () -> ::Time
-
-      def created_at_for_database: () -> ::Time
-
-      def name: () -> ::String
-
-      def name=: (::String) -> ::String
-
-      def name?: () -> bool
-
-      def name_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def name_change: () -> [ ::String?, ::String? ]
-
-      def name_will_change!: () -> void
-
-      def name_was: () -> ::String?
-
-      def name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def name_previous_change: () -> ::Array[::String?]?
-
-      def name_previously_was: () -> ::String?
-
-      def name_before_last_save: () -> ::String?
-
-      def name_change_to_be_saved: () -> ::Array[::String?]?
-
-      def name_in_database: () -> ::String?
-
-      def saved_change_to_name: () -> ::Array[::String?]?
-
-      def saved_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def will_save_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def restore_name!: () -> void
-
-      def clear_name_change: () -> void
-
-      def name_before_type_cast: () -> ::String
-
-      def name_for_database: () -> ::String
+      def supervisor_id_for_database: () -> ::Integer?
     end
     include ::SolidQueue::Process::GeneratedAttributeMethods
     module ::SolidQueue::Process::GeneratedAliasAttributeMethods

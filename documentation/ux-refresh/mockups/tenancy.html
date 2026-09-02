@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tenancy — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 3 REFERENCE — Tenancy workspace, Activity tab (tenancies#show,
+  /tenancies/:id — the canonical tenancy URL).
+  Question: "What does this tenancy owe, and why?"
+
+  Regions with stable DOM IDs (Turbo Stream targets after receipt/charge):
+    #tenancy_balance            — balance figure block
+    #security_deposit_summary   — compact deposit line
+    #tenancy_activity           — the activity table wrapper
+
+  Action hierarchy (active tenancy):
+    primary   Record receipt  → modal-frame dialog (see dialog-record-receipt.html)
+    secondary Add charge      → modal-frame dialog, same contract
+    overflow  Change rent / Manage security deposit / Edit agreement /
+              Manage participants / End tenancy…
+  An ENDED tenancy hides Record receipt/Add charge and shows only overflow
+  items that remain valid; the header status reads "Ended <date>".
+
+  Amount semantics: charges/reimbursements positive, receipts shown with a
+  real minus sign (−). The balance column always spells "due" or "credit";
+  color is never the carrier.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <!-- ============================== tenancies/_header (shared by both tabs) -->
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">Portfolio</a>
+          <span class="mx-1 text-stone-300">/</span>
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">123 Main St</a>
+          <span class="mx-1 text-stone-300">/</span>
+          Unit 2
+        </p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">Jane Smith · Unit 2</h1>
+            <p class="mt-1 text-sm text-stone-500">
+              123 Main St ·
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Active</span>
+              · <span class="tabular-nums">$2,400.00</span>/month · Fixed term through Dec 2026
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <details class="relative">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer" aria-haspopup="menu">
+                More
+                <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+              </summary>
+              <div class="yn-menu" role="menu">
+                <a href="#" class="yn-menu-item" role="menuitem">Change rent</a>
+                <a href="#" class="yn-menu-item" role="menuitem">Manage security deposit</a>
+                <a href="#" class="yn-menu-item" role="menuitem">Edit agreement</a>
+                <a href="#" class="yn-menu-item" role="menuitem">Manage participants</a>
+                <hr class="yn-menu-separator">
+                <button class="yn-menu-item yn-menu-item-danger" role="menuitem">End tenancy…</button>
+              </div>
+            </details>
+            <a href="#" class="yn-btn yn-btn-secondary">Add charge</a>
+            <a href="#" class="yn-btn yn-btn-primary">Record receipt</a>
+          </div>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Tenancy sections">
+          <a href="#" class="yn-tab" aria-current="page">Activity</a>
+          <a href="#" class="yn-tab">Agreement</a>
+        </nav>
+      </header>
+
+      <!-- ============================== Balance + deposit summary row -->
+      <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 mb-8">
+        <div id="tenancy_balance">
+          <p class="text-xs font-medium uppercase tracking-wider text-stone-500 m-0">Balance</p>
+          <p class="mt-1 text-3xl font-semibold tracking-tight tabular-nums m-0">$350.00 <span class="text-lg font-medium text-stone-500">due</span></p>
+          <p class="mt-0.5 text-sm text-stone-500 m-0">as of Aug 23, 2026</p>
+        </div>
+
+        <div id="security_deposit_summary" class="text-sm">
+          <p class="text-xs font-medium uppercase tracking-wider text-stone-500 m-0">Security deposit</p>
+          <p class="mt-1 m-0">
+            <span class="font-medium tabular-nums">$2,400.00</span>
+            <span class="text-stone-500">held in trust</span>
+            · <a href="#" class="yn-link">Manage</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- ============================== Activity (default view: 5 most recent
+           rows via Accounting::RecentTenantReceivableActivityQuery, newest first,
+           running balance). "Full statement" links to the statement route with
+           date-range filters for complete history. -->
+      <section id="tenancy_activity" aria-labelledby="activity-heading">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 id="activity-heading" class="text-sm font-semibold">Activity</h2>
+          <a href="#" class="yn-link text-sm">Full statement →</a>
+        </div>
+
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Activity</th>
+              <th scope="col" class="text-right tabular-nums">Amount</th>
+              <th scope="col" class="text-right tabular-nums">Balance</th>
+              <th scope="col"><span class="sr-only">Audit</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500 w-20">Aug 5</td>
+              <td><a href="#" class="yn-row-link">Water reimbursement</a>
+                <span class="block text-[13px] text-stone-500">Charge · billed from July water bill</span></td>
+              <td class="text-right tabular-nums whitespace-nowrap">$75.00</td>
+              <td class="text-right tabular-nums whitespace-nowrap text-stone-500">$350.00 due</td>
+              <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+            </tr>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500">Aug 3</td>
+              <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a>
+                <span class="block text-[13px] text-stone-500">Zelle · ref 4418</span></td>
+              <td class="text-right tabular-nums whitespace-nowrap">−$2,125.00</td>
+              <td class="text-right tabular-nums whitespace-nowrap text-stone-500">$275.00 due</td>
+              <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+            </tr>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500">Aug 1</td>
+              <td><a href="#" class="yn-row-link">August rent</a></td>
+              <td class="text-right tabular-nums whitespace-nowrap">$2,400.00</td>
+              <td class="text-right tabular-nums whitespace-nowrap text-stone-500">$2,400.00 due</td>
+              <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+            </tr>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500">Jul 3</td>
+              <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a>
+                <span class="block text-[13px] text-stone-500">Zelle · ref 4180</span></td>
+              <td class="text-right tabular-nums whitespace-nowrap">−$2,400.00</td>
+              <td class="text-right tabular-nums whitespace-nowrap text-stone-500">Settled</td>
+              <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+            </tr>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500">Jul 1</td>
+              <td><a href="#" class="yn-row-link">July rent</a></td>
+              <td class="text-right tabular-nums whitespace-nowrap">$2,400.00</td>
+              <td class="text-right tabular-nums whitespace-nowrap text-stone-500">$2,400.00 due</td>
+              <td class="text-right"><a href="#" class="yn-link text-[13px]">Journal</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

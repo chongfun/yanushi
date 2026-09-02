@@ -44,85 +44,45 @@ class ::PropertyTaxReviewResolution < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
-    def property_id: () -> ::Integer
+    def created_at: () -> ::ActiveSupport::TimeWithZone
 
-    def property_id=: (::Integer) -> ::Integer
+    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
 
-    def property_id?: () -> bool
+    def created_at?: () -> bool
 
-    def property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def property_id_change: () -> [ ::Integer?, ::Integer? ]
+    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
 
-    def property_id_will_change!: () -> void
+    def created_at_will_change!: () -> void
 
-    def property_id_was: () -> ::Integer?
+    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
 
-    def property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def property_id_previous_change: () -> ::Array[::Integer?]?
+    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def property_id_previously_was: () -> ::Integer?
+    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
 
-    def property_id_before_last_save: () -> ::Integer?
+    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
 
-    def property_id_change_to_be_saved: () -> ::Array[::Integer?]?
+    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def property_id_in_database: () -> ::Integer?
+    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
 
-    def saved_change_to_property_id: () -> ::Array[::Integer?]?
+    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-    def saved_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def will_save_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-    def restore_property_id!: () -> void
+    def restore_created_at!: () -> void
 
-    def clear_property_id_change: () -> void
+    def clear_created_at_change: () -> void
 
-    def property_id_before_type_cast: () -> ::Integer
+    def created_at_before_type_cast: () -> ::Time
 
-    def property_id_for_database: () -> ::Integer
-
-    def tax_year: () -> ::Integer
-
-    def tax_year=: (::Integer) -> ::Integer
-
-    def tax_year?: () -> bool
-
-    def tax_year_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def tax_year_change: () -> [ ::Integer?, ::Integer? ]
-
-    def tax_year_will_change!: () -> void
-
-    def tax_year_was: () -> ::Integer?
-
-    def tax_year_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def tax_year_previous_change: () -> ::Array[::Integer?]?
-
-    def tax_year_previously_was: () -> ::Integer?
-
-    def tax_year_before_last_save: () -> ::Integer?
-
-    def tax_year_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def tax_year_in_database: () -> ::Integer?
-
-    def saved_change_to_tax_year: () -> ::Array[::Integer?]?
-
-    def saved_change_to_tax_year?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_tax_year?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_tax_year!: () -> void
-
-    def clear_tax_year_change: () -> void
-
-    def tax_year_before_type_cast: () -> ::Integer
-
-    def tax_year_for_database: () -> ::Integer
+    def created_at_for_database: () -> ::Time
 
     def journal_entry_id: () -> ::Integer
 
@@ -164,46 +124,6 @@ class ::PropertyTaxReviewResolution < ::ApplicationRecord
 
     def journal_entry_id_for_database: () -> ::Integer
 
-    def treatment: () -> ::String
-
-    def treatment=: (::String | ::Symbol) -> ::String
-
-    def treatment?: () -> bool
-
-    def treatment_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def treatment_change: () -> [ ::String?, ::String? ]
-
-    def treatment_will_change!: () -> void
-
-    def treatment_was: () -> ::String?
-
-    def treatment_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def treatment_previous_change: () -> ::Array[::String?]?
-
-    def treatment_previously_was: () -> ::String?
-
-    def treatment_before_last_save: () -> ::String?
-
-    def treatment_change_to_be_saved: () -> ::Array[::String?]?
-
-    def treatment_in_database: () -> ::String?
-
-    def saved_change_to_treatment: () -> ::Array[::String?]?
-
-    def saved_change_to_treatment?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_treatment?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_treatment!: () -> void
-
-    def clear_treatment_change: () -> void
-
-    def treatment_before_type_cast: () -> ::String
-
-    def treatment_for_database: () -> ::String
-
     def notes: () -> ::String?
 
     def notes=: (::String?) -> ::String?
@@ -244,85 +164,45 @@ class ::PropertyTaxReviewResolution < ::ApplicationRecord
 
     def notes_for_database: () -> ::String?
 
-    def created_at: () -> ::ActiveSupport::TimeWithZone
+    def property_id: () -> ::Integer
 
-    def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+    def property_id=: (::Integer) -> ::Integer
 
-    def created_at?: () -> bool
+    def property_id?: () -> bool
 
-    def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+    def property_id_change: () -> [ ::Integer?, ::Integer? ]
 
-    def created_at_will_change!: () -> void
+    def property_id_will_change!: () -> void
 
-    def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+    def property_id_was: () -> ::Integer?
 
-    def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def property_id_previous_change: () -> ::Array[::Integer?]?
 
-    def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+    def property_id_previously_was: () -> ::Integer?
 
-    def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+    def property_id_before_last_save: () -> ::Integer?
 
-    def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def property_id_change_to_be_saved: () -> ::Array[::Integer?]?
 
-    def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+    def property_id_in_database: () -> ::Integer?
 
-    def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+    def saved_change_to_property_id: () -> ::Array[::Integer?]?
 
-    def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def saved_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+    def will_save_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
 
-    def restore_created_at!: () -> void
+    def restore_property_id!: () -> void
 
-    def clear_created_at_change: () -> void
+    def clear_property_id_change: () -> void
 
-    def created_at_before_type_cast: () -> ::Time
+    def property_id_before_type_cast: () -> ::Integer
 
-    def created_at_for_database: () -> ::Time
-
-    def updated_at: () -> ::ActiveSupport::TimeWithZone
-
-    def updated_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
-
-    def updated_at?: () -> bool
-
-    def updated_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-    def updated_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
-
-    def updated_at_will_change!: () -> void
-
-    def updated_at_was: () -> ::ActiveSupport::TimeWithZone?
-
-    def updated_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-    def updated_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
-
-    def updated_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
-
-    def updated_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
-
-    def updated_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
-
-    def updated_at_in_database: () -> ::ActiveSupport::TimeWithZone?
-
-    def saved_change_to_updated_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
-
-    def saved_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-    def will_save_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
-
-    def restore_updated_at!: () -> void
-
-    def clear_updated_at_change: () -> void
-
-    def updated_at_before_type_cast: () -> ::Time
-
-    def updated_at_for_database: () -> ::Time
+    def property_id_for_database: () -> ::Integer
 
     def schedule_e_category: () -> ::String?
 
@@ -363,6 +243,126 @@ class ::PropertyTaxReviewResolution < ::ApplicationRecord
     def schedule_e_category_before_type_cast: () -> ::String?
 
     def schedule_e_category_for_database: () -> ::String?
+
+    def tax_year: () -> ::Integer
+
+    def tax_year=: (::Integer) -> ::Integer
+
+    def tax_year?: () -> bool
+
+    def tax_year_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tax_year_change: () -> [ ::Integer?, ::Integer? ]
+
+    def tax_year_will_change!: () -> void
+
+    def tax_year_was: () -> ::Integer?
+
+    def tax_year_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def tax_year_previous_change: () -> ::Array[::Integer?]?
+
+    def tax_year_previously_was: () -> ::Integer?
+
+    def tax_year_before_last_save: () -> ::Integer?
+
+    def tax_year_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def tax_year_in_database: () -> ::Integer?
+
+    def saved_change_to_tax_year: () -> ::Array[::Integer?]?
+
+    def saved_change_to_tax_year?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_tax_year?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_tax_year!: () -> void
+
+    def clear_tax_year_change: () -> void
+
+    def tax_year_before_type_cast: () -> ::Integer
+
+    def tax_year_for_database: () -> ::Integer
+
+    def treatment: () -> ::String
+
+    def treatment=: (::String | ::Symbol) -> ::String
+
+    def treatment?: () -> bool
+
+    def treatment_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def treatment_change: () -> [ ::String?, ::String? ]
+
+    def treatment_will_change!: () -> void
+
+    def treatment_was: () -> ::String?
+
+    def treatment_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def treatment_previous_change: () -> ::Array[::String?]?
+
+    def treatment_previously_was: () -> ::String?
+
+    def treatment_before_last_save: () -> ::String?
+
+    def treatment_change_to_be_saved: () -> ::Array[::String?]?
+
+    def treatment_in_database: () -> ::String?
+
+    def saved_change_to_treatment: () -> ::Array[::String?]?
+
+    def saved_change_to_treatment?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_treatment?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_treatment!: () -> void
+
+    def clear_treatment_change: () -> void
+
+    def treatment_before_type_cast: () -> ::String
+
+    def treatment_for_database: () -> ::String
+
+    def updated_at: () -> ::ActiveSupport::TimeWithZone
+
+    def updated_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+
+    def updated_at?: () -> bool
+
+    def updated_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def updated_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+
+    def updated_at_will_change!: () -> void
+
+    def updated_at_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def updated_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def updated_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+
+    def updated_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def updated_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+
+    def saved_change_to_updated_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+
+    def saved_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def will_save_change_to_updated_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+
+    def restore_updated_at!: () -> void
+
+    def clear_updated_at_change: () -> void
+
+    def updated_at_before_type_cast: () -> ::Time
+
+    def updated_at_for_database: () -> ::Time
   end
   include ::PropertyTaxReviewResolution::GeneratedAttributeMethods
   module ::PropertyTaxReviewResolution::GeneratedAliasAttributeMethods

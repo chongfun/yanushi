@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yanushi UI styleguide — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 1 REFERENCE — the shared UI vocabulary.
+  Everything on this page maps 1:1 to classes in yanushi-ui.css plus plain
+  Tailwind utilities. Copy markup patterns from here into ERB partials.
+  Layout utilities (flex/grid/px/py/max-w) come from Tailwind and are part
+  of the pattern; do not translate them into new custom classes.
+-->
+<main class="max-w-3xl mx-auto px-6 py-10 space-y-12">
+
+  <header>
+    <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1">Yanushi UX refresh</p>
+    <h1 class="text-2xl font-semibold tracking-tight">UI vocabulary</h1>
+    <p class="text-sm text-stone-500 mt-2 max-w-xl">
+      The complete set of shared atoms. A screen is composed of these plus
+      Tailwind layout utilities. If a screen seems to need a new atom,
+      add it here and to <code class="text-[13px] bg-stone-100 px-1 py-0.5 rounded">yanushi-ui.css</code> first.
+    </p>
+  </header>
+
+  <!-- ======================================================= Buttons -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Buttons</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <button class="yn-btn yn-btn-primary">Record receipt</button>
+      <button class="yn-btn yn-btn-secondary">Add charge</button>
+      <button class="yn-btn yn-btn-ghost">Cancel</button>
+      <button class="yn-btn yn-btn-danger">Delete property</button>
+      <button class="yn-btn yn-btn-primary" disabled>Download PDF</button>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <button class="yn-btn yn-btn-primary yn-btn-sm">Primary small</button>
+      <button class="yn-btn yn-btn-secondary yn-btn-sm">Secondary small</button>
+      <a href="#" class="yn-link text-sm">Text link</a>
+    </div>
+    <ul class="text-sm text-stone-500 list-disc pl-5 space-y-1">
+      <li>At most <strong class="text-stone-700">one</strong> <code>yn-btn-primary</code> per screen.</li>
+      <li><code>yn-btn-danger</code> lives inside the confirm dialog or an overflow menu, not in page headers.</li>
+      <li>A disabled primary action must be accompanied by visible text explaining the blocker (see Alerts).</li>
+      <li>No emoji in button labels. Icons are optional 16px inline SVG.</li>
+    </ul>
+  </section>
+
+  <!-- ======================================================= Form fields -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Form fields</h2>
+    <div class="grid sm:grid-cols-2 gap-4 max-w-xl">
+      <div>
+        <label class="yn-label" for="sg-amount">Amount</label>
+        <input class="yn-input tabular-nums" id="sg-amount" type="text" inputmode="decimal" placeholder="0.00">
+        <p class="yn-hint">Dollars and cents, e.g. 2,400.00</p>
+      </div>
+      <div>
+        <label class="yn-label" for="sg-date">Received on</label>
+        <input class="yn-input" id="sg-date" type="date" value="2026-08-23">
+      </div>
+      <div>
+        <label class="yn-label" for="sg-payer">Payer</label>
+        <select class="yn-select" id="sg-payer">
+          <option>Jane Smith</option>
+          <option>Homer Simpson</option>
+        </select>
+      </div>
+      <div>
+        <label class="yn-label" for="sg-method">Payment method</label>
+        <input class="yn-input yn-field-invalid" id="sg-method" aria-invalid="true" aria-describedby="sg-method-error">
+        <p class="yn-error-text" id="sg-method-error">Payment method can’t be blank</p>
+      </div>
+    </div>
+    <ul class="text-sm text-stone-500 list-disc pl-5 space-y-1">
+      <li>Every control gets a <code>&lt;label for&gt;</code>. Errors use <code>yn-field-invalid</code> + <code>aria-invalid</code> + <code>aria-describedby</code> pointing at the <code>yn-error-text</code>.</li>
+      <li>Money inputs add <code>tabular-nums</code> and <code>inputmode="decimal"</code>.</li>
+    </ul>
+  </section>
+
+  <!-- ======================================================= Status -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Status</h2>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+      <span class="yn-status"><span class="yn-dot yn-dot-ok"></span>Active</span>
+      <span class="yn-status"><span class="yn-dot"></span>Ended</span>
+      <span class="yn-status"><span class="yn-dot yn-dot-warn"></span>Needs review</span>
+      <span class="yn-status"><span class="yn-dot yn-dot-danger"></span>Failed</span>
+      <span class="yn-status"><span class="yn-dot yn-dot-ok"></span>Ready to export</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+      <span class="text-sm text-stone-500">Ordinary metadata is plain text separated by middots:</span>
+      <span class="text-sm text-stone-500">Single family · 2,200 sqft · 1 unit</span>
+    </div>
+    <ul class="text-sm text-stone-500 list-disc pl-5 space-y-1">
+      <li>Status = dot + word. The word carries the meaning; the dot only reinforces it (never color alone).</li>
+      <li>Colored pills/badges for ordinary metadata (asset type, dimensions, categories) are retired.</li>
+    </ul>
+  </section>
+
+  <!-- ======================================================= Counts -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Count badges</h2>
+    <div class="flex items-center gap-6">
+      <span class="inline-flex items-center gap-2 text-sm font-medium">Inbox <span class="yn-count">3</span></span>
+      <span class="inline-flex items-center gap-2 text-sm font-medium">History <span class="yn-count yn-count-neutral">128</span></span>
+    </div>
+    <p class="text-sm text-stone-500">Amber = work waiting on the user. Neutral = informational count. Render nothing when the count is zero.</p>
+  </section>
+
+  <!-- ======================================================= Tabs -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Tabs</h2>
+    <nav class="yn-tabs" aria-label="Property sections">
+      <a href="#" class="yn-tab" aria-current="page">Overview</a>
+      <a href="#" class="yn-tab">Tenancies</a>
+      <a href="#" class="yn-tab">Activity</a>
+      <a href="#" class="yn-tab">Tax <span class="yn-count">2</span></a>
+    </nav>
+    <p class="text-sm text-stone-500">Tabs are ordinary Rails links to stable URLs. The server sets <code>aria-current="page"</code>; there is no client-side tab state.</p>
+  </section>
+
+  <!-- ======================================================= Table -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Data table</h2>
+    <table class="yn-table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Description</th>
+          <th scope="col" class="text-right tabular-nums">Amount</th>
+          <th scope="col" class="text-right tabular-nums">Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="whitespace-nowrap text-stone-500">Aug 1</td>
+          <td><a href="#" class="yn-row-link">August rent</a></td>
+          <td class="text-right tabular-nums">$2,400.00</td>
+          <td class="text-right tabular-nums text-stone-500">$2,400.00 due</td>
+        </tr>
+        <tr>
+          <td class="whitespace-nowrap text-stone-500">Aug 3</td>
+          <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a> <span class="text-stone-400">· Zelle</span></td>
+          <td class="text-right tabular-nums">−$2,000.00</td>
+          <td class="text-right tabular-nums text-stone-500">$400.00 due</td>
+        </tr>
+        <tr>
+          <td class="whitespace-nowrap text-stone-500">Aug 5</td>
+          <td><span class="text-stone-500 line-through">Late fee</span> <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span></td>
+          <td class="text-right tabular-nums text-stone-400 line-through">$75.00</td>
+          <td class="text-right tabular-nums text-stone-500">$400.00 due</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="text-sm text-stone-500 list-disc pl-5 space-y-1">
+      <li>Money columns: <code>text-right tabular-nums</code> on both <code>th</code> and <code>td</code>. Amounts always show cents.</li>
+      <li>Credits/receipts use a real minus sign (−). Balance columns append the word <em>due</em> or <em>credit</em>; balances never rely on sign color.</li>
+      <li>Voided/corrected rows stay in place: strikethrough + neutral status, linked to the correction.</li>
+      <li>No zebra striping. Hover highlight only.</li>
+    </ul>
+  </section>
+
+  <!-- ======================================================= Overflow menu -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Overflow menu</h2>
+    <details class="relative inline-block">
+      <summary class="yn-btn yn-btn-secondary list-none cursor-pointer" aria-haspopup="menu">
+        More
+        <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+      </summary>
+      <div class="yn-menu" role="menu">
+        <a href="#" class="yn-menu-item" role="menuitem">Change rent</a>
+        <a href="#" class="yn-menu-item" role="menuitem">Manage security deposit</a>
+        <a href="#" class="yn-menu-item" role="menuitem">Edit agreement</a>
+        <hr class="yn-menu-separator">
+        <button class="yn-menu-item yn-menu-item-danger" role="menuitem">End tenancy…</button>
+      </div>
+    </details>
+    <p class="text-sm text-stone-500">
+      Mockups use <code>&lt;details&gt;</code>. The implementation uses the same markup plus a small
+      <code>menu</code> Stimulus controller for Escape-to-close and outside-click-to-close.
+      Destructive items sit last, after a separator, and always open the confirm dialog.
+    </p>
+  </section>
+
+  <!-- ======================================================= Alerts -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Alerts and blocked actions</h2>
+    <div class="space-y-3 max-w-xl">
+      <div class="yn-alert" role="status">
+        Statement uploads are processed in the background. This page updates automatically.
+      </div>
+      <div class="yn-alert yn-alert-warn" role="status">
+        <span>PDF export is unavailable — <strong>2 tax review items</strong> still need decisions.
+        <a href="#" class="yn-link">Review them</a></span>
+      </div>
+      <div class="yn-alert yn-alert-danger" role="alert">
+        chase_statement_aug.pdf failed to process: Multi-page statement PDFs are not supported.
+      </div>
+    </div>
+    <p class="text-sm text-stone-500">A blocked primary action always pairs the disabled button with a warn alert naming the prerequisite and linking to it (PRD §19).</p>
+  </section>
+
+  <!-- ======================================================= Empty state -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Empty state</h2>
+    <div class="yn-empty max-w-xl">
+      <p class="yn-empty-title">You’re caught up</p>
+      <p class="yn-empty-body">No imported transactions need review.</p>
+      <button class="yn-btn yn-btn-secondary">Upload a statement</button>
+    </div>
+    <p class="text-sm text-stone-500">Say what is absent, whether that’s good, and what to do next. No illustration art.</p>
+  </section>
+
+  <!-- ======================================================= Pagination -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Pagination</h2>
+    <nav class="flex items-center justify-between" aria-label="Pagination">
+      <p class="text-sm text-stone-500">Showing <span class="tabular-nums">21–40</span> of <span class="tabular-nums">128</span></p>
+      <div class="flex gap-2">
+        <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm">Previous</a>
+        <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm">Next</a>
+      </div>
+    </nav>
+    <p class="text-sm text-stone-500">Page state lives in the URL (<code>?page=2</code>). Words, not « » glyphs.</p>
+  </section>
+
+  <!-- ======================================================= Dialog -->
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Dialog</h2>
+    <!-- Shown statically (open, non-modal) for reference. Class names are
+         load-bearing for modal_controller.js — do not rename. -->
+    <dialog class="modal-dialog static" open aria-labelledby="modal-title-demo">
+      <div class="modal-inner">
+        <header class="modal-header">
+          <h2 id="modal-title-demo">Record receipt</h2>
+          <button class="modal-close" aria-label="Close dialog">&times;</button>
+        </header>
+        <div class="modal-body">
+          <div class="space-y-4">
+            <div>
+              <label class="yn-label" for="sg-d-payer">Payer</label>
+              <select class="yn-select" id="sg-d-payer"><option>Jane Smith</option></select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="yn-label" for="sg-d-amount">Amount</label>
+                <input class="yn-input tabular-nums" id="sg-d-amount" inputmode="decimal" placeholder="0.00">
+              </div>
+              <div>
+                <label class="yn-label" for="sg-d-date">Received on</label>
+                <input class="yn-input" id="sg-d-date" type="date" value="2026-08-23">
+              </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button class="yn-btn yn-btn-ghost">Cancel</button>
+              <button class="yn-btn yn-btn-primary">Record receipt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+    <ul class="text-sm text-stone-500 list-disc pl-5 space-y-1">
+      <li>The dialog title is the verb phrase of its one primary action; the confirm button repeats it.</li>
+      <li>The <code>&lt;dialog&gt;</code> element must carry <code>aria-labelledby</code> pointing at the header (missing in the current layout — fix in M1).</li>
+      <li>Validation failure re-renders the form inside the frame with a 422; the dialog stays open.</li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>

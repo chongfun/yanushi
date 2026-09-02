@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 2 REFERENCE — Overview (dashboards#index, route "/").
+  Question the page answers: "What needs my attention?"
+
+  Data sources (implementation):
+    Dashboards::OverviewQuery →
+      attention_items    (Dashboards::AttentionQuery)
+      portfolio_summary  (counts + aggregate balance)
+      properties         (compact rows)
+      recent_activity    (bounded, ~8 events)
+
+  Section order is fixed: Attention → Portfolio summary → Properties →
+  Recent activity. When there are zero attention items the Attention
+  section renders the single caught-up line shown in the comment below —
+  never an empty warning box.
+
+  Sidebar abbreviated here; canonical sidebar (icons, sign out) is in
+  app-shell.html.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link" aria-current="page">Overview</a>
+      <a href="#" class="yn-nav-link">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl space-y-10">
+
+      <header>
+        <h1 class="text-2xl font-semibold tracking-tight">Overview</h1>
+        <p class="mt-1 text-sm text-stone-500">Sunday, August 23</p>
+      </header>
+
+      <!-- ================================================= Attention -->
+      <section aria-labelledby="attention-heading">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 id="attention-heading" class="text-sm font-semibold">
+            Needs attention <span class="yn-count ml-1">3</span>
+          </h2>
+        </div>
+
+        <!-- Each row IS a link to the place the work happens. Severity dot +
+             what happened + context; right side names the action. -->
+        <div class="yn-surface divide-y divide-stone-200">
+
+          <a href="#" class="flex items-center gap-3 px-4 py-3 no-underline text-inherit hover:bg-stone-50 first:rounded-t-xl">
+            <span class="yn-dot yn-dot-warn mt-0.5"></span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-stone-900">3 imported transactions need review</span>
+              <span class="block text-sm text-stone-500">Most recent: $2,400.00 from Homer Simpson, Aug 21</span>
+            </span>
+            <span class="text-sm font-medium text-stone-500 whitespace-nowrap">Open Inbox →</span>
+          </a>
+
+          <a href="#" class="flex items-center gap-3 px-4 py-3 no-underline text-inherit hover:bg-stone-50">
+            <span class="yn-dot yn-dot-danger mt-0.5"></span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-stone-900">A statement upload failed to process</span>
+              <span class="block text-sm text-stone-500">chase_statement_aug.pdf · Multi-page statement PDFs are not supported</span>
+            </span>
+            <span class="text-sm font-medium text-stone-500 whitespace-nowrap">View →</span>
+          </a>
+
+          <a href="#" class="flex items-center gap-3 px-4 py-3 no-underline text-inherit hover:bg-stone-50 last:rounded-b-xl">
+            <span class="yn-dot yn-dot-warn mt-0.5"></span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-stone-900">Jane Smith owes <span class="tabular-nums">$350.00</span></span>
+              <span class="block text-sm text-stone-500">123 Main St · Unit 2 · balance outstanding</span>
+            </span>
+            <span class="text-sm font-medium text-stone-500 whitespace-nowrap">Open tenancy →</span>
+          </a>
+
+          <!-- M5 may add Schedule E review attention once Reports::ScheduleEStatusesQuery exists cheaply. -->
+        </div>
+
+        <!-- Zero-state replaces the surface entirely:
+        <p class="text-sm text-stone-500">
+          <span class="yn-status"><span class="yn-dot yn-dot-ok"></span>Nothing needs attention.</span>
+        </p>
+        -->
+      </section>
+
+      <!-- ================================================= Portfolio summary -->
+      <section aria-labelledby="summary-heading">
+        <h2 id="summary-heading" class="sr-only">Portfolio summary</h2>
+        <!-- Inline metric strip — no boxes, no icons. Only metrics with an
+             operational purpose. -->
+        <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4">
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Properties</dt>
+            <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">3</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Units occupied</dt>
+            <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">4 <span class="text-sm font-normal text-stone-500">of 5</span></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Outstanding balances</dt>
+            <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$350.00</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income, YTD</dt>
+            <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$18,240.00</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ================================================= Properties -->
+      <section aria-labelledby="properties-heading">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 id="properties-heading" class="text-sm font-semibold">Properties</h2>
+          <a href="#" class="yn-link text-sm">Portfolio →</a>
+        </div>
+
+        <!-- Compact rows, one line each. One status signal per property:
+             either "all settled" or the thing that isn't. -->
+        <ul class="divide-y divide-stone-200 border-y border-stone-200 list-none m-0 p-0">
+          <li>
+            <a href="#" class="flex items-center gap-4 py-3 no-underline text-inherit hover:bg-stone-50 px-1">
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-medium text-stone-900">123 Main St</span>
+                <span class="block text-sm text-stone-500">3 units · 2 occupied, 1 vacant</span>
+              </span>
+              <span class="text-sm text-stone-500 whitespace-nowrap tabular-nums">$350.00 outstanding</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="flex items-center gap-4 py-3 no-underline text-inherit hover:bg-stone-50 px-1">
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-medium text-stone-900">456 Oak Ave</span>
+                <span class="block text-sm text-stone-500">1 unit · occupied</span>
+              </span>
+              <span class="yn-status yn-status-sm whitespace-nowrap"><span class="yn-dot yn-dot-ok"></span>Settled</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="flex items-center gap-4 py-3 no-underline text-inherit hover:bg-stone-50 px-1">
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-medium text-stone-900">742 Evergreen Terrace</span>
+                <span class="block text-sm text-stone-500">1 unit · occupied</span>
+              </span>
+              <span class="text-sm text-stone-500 whitespace-nowrap tabular-nums">$8,860.00 credit</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================= Recent activity -->
+      <section aria-labelledby="recent-heading">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 id="recent-heading" class="text-sm font-semibold">Recent activity</h2>
+          <!-- M5 adds "All activity →" linking to /money once the cross-portfolio Activity destination exists. -->
+        </div>
+
+        <table class="yn-table">
+          <thead class="sr-only"><tr><th>Date</th><th>Event</th><th>Property</th><th class="text-right">Amount</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500 w-20">Aug 21</td>
+              <td><a href="#" class="yn-row-link">Receipt from Homer Simpson</a></td>
+              <td class="text-stone-500">742 Evergreen Terrace</td>
+              <td class="text-right tabular-nums whitespace-nowrap">$2,400.00</td>
+            </tr>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500">Aug 18</td>
+              <td><a href="#" class="yn-row-link">Plumbing repair — Ace Plumbing</a></td>
+              <td class="text-stone-500">123 Main St</td>
+              <td class="text-right tabular-nums whitespace-nowrap">$480.00</td>
+            </tr>
+            <tr>
+              <td class="whitespace-nowrap text-stone-500">Aug 1</td>
+              <td><a href="#" class="yn-row-link">August rent</a> <span class="text-stone-400">· Unit 2</span></td>
+              <td class="text-stone-500">123 Main St</td>
+              <td class="text-right tabular-nums whitespace-nowrap">$2,400.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<% content_for :title, "Reports" %>
+
+<div class="max-w-5xl">
+  <header class="mb-6">
+    <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Reports</h1>
+    </div>
+  </header>
+
+  <div class="space-y-4">
+    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Schedule E tax reporting by property</h2>
+    <% if @properties.any? %>
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Property</th>
+            <th scope="col">Schedule E</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @properties.each do |property| %>
+            <tr>
+              <td><%= property.address %></td>
+              <td><%= link_to "View Schedule E", schedule_e_property_path(property), class: "yn-link" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="yn-empty">
+        <p class="yn-empty-title">No properties found</p>
+        <p class="yn-empty-body">Add a property to generate Schedule E tax reports.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

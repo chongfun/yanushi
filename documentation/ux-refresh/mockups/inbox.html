@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inbox — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 4 REFERENCE — Inbox, Needs review view
+  (/inbox?view=review — the default whenever reviewable items exist).
+  Question: "Which imported transactions still need a decision?"
+
+  NORMATIVE SCOPE: this file is normative for the DESKTOP master/detail
+  layout (lg and up) only. The queue (left) stays put; selecting a row
+  loads the review form into <turbo-frame id="inbox_review"> (right).
+
+  Below lg, the stacked rendering of this page is a side effect of the
+  responsive HTML and is NOT normative. The selected narrow strategy
+  (decided 2026-08-24) is STANDALONE REVIEW: below lg, queue rows
+  navigate _top to imported_transactions#show. The normative narrow
+  mockup is inbox-review-mobile.html. A responsive_frame Stimulus
+  controller flips each row's data-turbo-frame between "inbox_review"
+  (lg and up) and "_top" (below lg); it owns only that attribute.
+  See plan M4 §7 for the rationale.
+
+  Row status vocabulary (ImportedTransaction):
+    matched    dot-ok    ready to confirm
+    unmatched  dot-warn  needs a party/tenancy
+    ambiguous  dot-warn  multiple candidate tenancies
+    failed     dot-danger unparseable row needing manual entry
+
+  Confirm success:
+    - Frame flow (master/detail) → format.turbo_stream:
+        remove   #imported_transaction_<id>        (row leaves the queue)
+        replace  #sidebar_inbox_badge              (desktop sidebar count)
+        replace  #drawer_inbox_badge               (mobile drawer count)
+        replace  #mobile_inbox_badge               (mobile topbar count)
+        replace  #inbox_tab_counts                 (tab counts)
+        replace  #inbox_review                     (server picks next item,
+                                                    or caught-up state)
+        append   #flash-messages                   (toast notification)
+    - Standalone flow (direct visit to imported_transactions#show, and
+      the selected below-lg flow; see inbox-review-mobile.html)
+      → POST to explicit .html URL:
+        Success → 303 redirect to next reviewable item (or /inbox if caught up).
+        Validation failure → 422 HTML render of show page.
+  The server decides "next", never JavaScript.
+
+  Empty queue: yn-empty "You’re caught up / No imported transactions need
+  review" + secondary "Upload a statement" replaces the two-pane area.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <!-- Badge shape matches shared/_inbox_badge: the id lives on a
+           persistent wrapper that stays in the DOM at zero count (it then
+           gains "hidden" and omits the inner .yn-count). Streams replace
+           the wrapper, not the count. -->
+      <a href="#" class="yn-nav-link" aria-current="page">Inbox
+        <span class="ml-auto"><span id="sidebar_inbox_badge" class="inline-flex"><span class="yn-count">3</span></span></span>
+      </a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-6xl">
+
+      <header class="mb-6">
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <h1 class="text-2xl font-semibold tracking-tight">Inbox</h1>
+          <a href="#" class="yn-btn yn-btn-primary">Upload statement</a>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Inbox views" id="inbox_tab_counts">
+          <a href="#" class="yn-tab" aria-current="page">Needs review <span class="yn-count">3</span></a>
+          <a href="#" class="yn-tab">Processing &amp; failed <span class="yn-count">1</span></a>
+          <a href="#" class="yn-tab">History <span class="yn-count yn-count-neutral">128</span></a>
+        </nav>
+      </header>
+
+      <div class="lg:flex lg:gap-6 lg:items-start">
+
+        <!-- ============================== Queue (imported_transactions/_review_list) -->
+        <div class="lg:w-96 lg:shrink-0 yn-surface divide-y divide-stone-200 overflow-hidden" role="list">
+
+          <!-- Selected row: aria-current="true" + bg-stone-100 -->
+          <a href="#" id="imported_transaction_101" role="listitem" aria-current="true"
+             class="block px-4 py-3 no-underline text-inherit bg-stone-100">
+            <span class="flex items-baseline justify-between gap-3">
+              <span class="text-sm font-medium text-stone-900">Homer Simpson</span>
+              <span class="text-sm font-semibold tabular-nums whitespace-nowrap">$2,400.00</span>
+            </span>
+            <span class="flex items-baseline justify-between gap-3 mt-0.5">
+              <span class="text-[13px] text-stone-500 truncate">Zelle · “HSIMPSON RENT AUG”</span>
+              <span class="text-[13px] text-stone-500 whitespace-nowrap">Aug 21</span>
+            </span>
+            <span class="yn-status yn-status-sm mt-1.5"><span class="yn-dot yn-dot-ok"></span>Matched · 742 Evergreen Terrace</span>
+          </a>
+
+          <a href="#" id="imported_transaction_102" role="listitem"
+             class="block px-4 py-3 no-underline text-inherit hover:bg-stone-50">
+            <span class="flex items-baseline justify-between gap-3">
+              <span class="text-sm font-medium text-stone-900">JSMITH99</span>
+              <span class="text-sm font-semibold tabular-nums whitespace-nowrap">$2,125.00</span>
+            </span>
+            <span class="flex items-baseline justify-between gap-3 mt-0.5">
+              <span class="text-[13px] text-stone-500 truncate">Venmo · “rent + water”</span>
+              <span class="text-[13px] text-stone-500 whitespace-nowrap">Aug 20</span>
+            </span>
+            <span class="yn-status yn-status-sm mt-1.5"><span class="yn-dot yn-dot-warn"></span>Unmatched payer</span>
+          </a>
+
+          <a href="#" id="imported_transaction_103" role="listitem"
+             class="block px-4 py-3 no-underline text-inherit hover:bg-stone-50">
+            <span class="flex items-baseline justify-between gap-3">
+              <span class="text-sm font-medium text-stone-900">Marge Bouvier</span>
+              <span class="text-sm font-semibold tabular-nums whitespace-nowrap">$1,850.00</span>
+            </span>
+            <span class="flex items-baseline justify-between gap-3 mt-0.5">
+              <span class="text-[13px] text-stone-500 truncate">Chase · “ZELLE FROM BOUVIER M”</span>
+              <span class="text-[13px] text-stone-500 whitespace-nowrap">Aug 19</span>
+            </span>
+            <span class="yn-status yn-status-sm mt-1.5"><span class="yn-dot yn-dot-warn"></span>Ambiguous · 2 possible tenancies</span>
+          </a>
+
+        </div>
+
+        <!-- ============================== Review detail (turbo-frame#inbox_review)
+             Renders imported_transactions/_review_form — the same partial the
+             standalone show page uses. -->
+        <div class="flex-1 min-w-0 mt-6 lg:mt-0" id="inbox_review">
+          <div class="yn-surface p-5">
+
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h2 class="text-base font-semibold m-0">Zelle payment · Aug 21, 2026</h2>
+                <p class="text-sm text-stone-500 m-0 mt-0.5">“HSIMPSON RENT AUG” · from chase_statement_aug.pdf</p>
+              </div>
+              <p class="text-xl font-semibold tabular-nums whitespace-nowrap m-0">$2,400.00</p>
+            </div>
+
+            <form class="space-y-4 max-w-lg">
+              <div>
+                <label class="yn-label" for="rev-kind">Record as</label>
+                <select class="yn-select" id="rev-kind">
+                  <option selected>Tenant receipt</option>
+                  <option>Security deposit</option>
+                </select>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="yn-label" for="rev-party">Payer</label>
+                  <select class="yn-select" id="rev-party">
+                    <option selected>Homer Simpson</option>
+                    <option>Jane Smith</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="yn-label" for="rev-tenancy">Tenancy</label>
+                  <select class="yn-select" id="rev-tenancy">
+                    <option selected>742 Evergreen Terrace — Main Residence</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="yn-label" for="rev-method">Payment method</label>
+                  <input class="yn-input" id="rev-method" value="Zelle">
+                </div>
+                <div>
+                  <label class="yn-label" for="rev-ref">Reference</label>
+                  <input class="yn-input" id="rev-ref" value="ZL-99841">
+                </div>
+              </div>
+
+              <!-- Alias proposal — only when the payer text is a new alias
+                   candidate for the matched party -->
+              <label class="flex items-start gap-2.5 text-sm text-stone-600">
+                <input type="checkbox" class="mt-0.5 accent-stone-900" checked>
+                <span>Remember “HSIMPSON” as Homer Simpson for future imports</span>
+              </label>
+
+              <div class="flex items-center justify-between gap-2 pt-2">
+                <button type="button" class="yn-btn yn-btn-ghost text-red-700">Delete…</button>
+                <div class="flex gap-2">
+                  <button type="submit" class="yn-btn yn-btn-secondary">Save without confirming</button>
+                  <button type="submit" class="yn-btn yn-btn-primary">Confirm receipt</button>
+                </div>
+              </div>
+            </form>
+
+          </div>
+
+          <!-- Caught-up state streamed into #inbox_review after the last item:
+          <div class="yn-empty">
+            <p class="yn-empty-title">You’re caught up</p>
+            <p class="yn-empty-body">No imported transactions need review.</p>
+          </div>
+          -->
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- =============================================================== -->
+<!-- STATIC VARIANT — caught-up state (queue empty).                  -->
+<!-- With zero reviewable transactions, the two-pane area above is    -->
+<!-- replaced by this block: server-rendered on a fresh load, or      -->
+<!-- streamed into place after the last confirmation.                 -->
+<!-- =============================================================== -->
+<section class="border-t border-stone-200 bg-stone-100 py-10 mt-16">
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="text-sm font-semibold mb-4">Variant: caught up (replaces the queue and review panes)</h2>
+    <div class="bg-white rounded-xl border border-stone-200 p-6">
+      <div class="yn-empty max-w-xl mx-auto">
+        <p class="yn-empty-title">You’re caught up</p>
+        <p class="yn-empty-body">No imported transactions need review.</p>
+        <button class="yn-btn yn-btn-secondary">Upload a statement</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

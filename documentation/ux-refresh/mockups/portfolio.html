@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 2 REFERENCE — Portfolio landing (/portfolio).
+  Properties are the default perspective. Tenancies and Parties are the
+  same page-level tabs backed by the existing global indexes
+  (tenancies#index, parties#index) restyled to the same table vocabulary.
+
+  Tab URLs: /portfolio (Properties) · /tenancies · /parties — plain Turbo
+  Drive links; aria-current is server-set on whichever index is showing.
+
+  Empty state (no properties): yn-empty with title "Add your first
+  property", body explaining Yanushi tracks units/tenancies/finances per
+  property, and the primary Add property button.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <header class="mb-6">
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <h1 class="text-2xl font-semibold tracking-tight">Portfolio</h1>
+          <a href="#" class="yn-btn yn-btn-primary">Add property</a>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Portfolio sections">
+          <a href="#" class="yn-tab" aria-current="page">Properties</a>
+          <a href="#" class="yn-tab">Tenancies</a>
+          <a href="#" class="yn-tab">Parties</a>
+        </nav>
+      </header>
+
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Property</th>
+            <th scope="col">Units</th>
+            <th scope="col">Occupancy</th>
+            <th scope="col" class="text-right tabular-nums">Outstanding</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="#" class="yn-row-link">123 Main St</a>
+              <span class="block text-[13px] text-stone-500">Multifamily</span>
+            </td>
+            <td class="tabular-nums">3</td>
+            <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 of 3 occupied</span></td>
+            <td class="text-right tabular-nums whitespace-nowrap">$350.00</td>
+          </tr>
+          <tr>
+            <td>
+              <a href="#" class="yn-row-link">456 Oak Ave</a>
+              <span class="block text-[13px] text-stone-500">Single family</span>
+            </td>
+            <td class="tabular-nums">1</td>
+            <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span></td>
+            <td class="text-right tabular-nums whitespace-nowrap text-stone-400">—</td>
+          </tr>
+          <tr>
+            <td>
+              <a href="#" class="yn-row-link">742 Evergreen Terrace</a>
+              <span class="block text-[13px] text-stone-500">Single family</span>
+            </td>
+            <td class="tabular-nums">1</td>
+            <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span></td>
+            <td class="text-right tabular-nums whitespace-nowrap">$8,860.00 credit</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Narrow screens: this table collapses to stacked rows — the plan’s
+           per-table mobile strategy. Address + occupancy stay; “Units”
+           merges into the meta line. -->
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

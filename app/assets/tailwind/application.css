@@ -6,63 +6,467 @@
     themes: silk --default;
 }
 
-/* Modal styles */
+/*
+ * Yanushi UI — first-party component layer for the UX refresh.
+ *
+ * This file is NORMATIVE. The implementing agent copies these rules into
+ * `app/assets/tailwind/application.css` (below the `@import "tailwindcss";`
+ * line) during Milestone 1, and the mockups in this directory link to it
+ * directly so mockup markup and production ERB markup stay identical.
+ *
+ * Rules of the system:
+ *  - Layout, spacing, and typography come from Tailwind utility classes in
+ *    markup. This file only defines the repeated atoms (buttons, fields,
+ *    status, tabs, tables, menus, alerts, dialog) so they cannot drift
+ *    between screens.
+ *  - The neutral scale is Tailwind's `stone`. The single interactive accent
+ *    is `indigo`. Semantic colors (green/amber/red) are reserved for real
+ *    state: success/active, needs-attention, error/destructive.
+ *  - The `.modal-dialog` / `.modal-inner` / `.modal-header` / `.modal-close`
+ *    / `.modal-body` class names are load-bearing: `modal_controller.js`
+ *    and both `_modal_form` partials depend on them. They are restyled here
+ *    but must not be renamed.
+ */
+
+:root {
+  /* Neutrals (Tailwind stone) */
+  --yn-bg: #fafaf9;            /* stone-50 — sidebar + page chrome */
+  --yn-surface: #ffffff;       /* content surfaces */
+  --yn-border: #e7e5e4;        /* stone-200 — hairline borders/dividers */
+  --yn-border-strong: #d6d3d1; /* stone-300 — form control borders */
+  --yn-ink: #1c1917;           /* stone-900 — primary text */
+  --yn-ink-soft: #44403c;      /* stone-700 */
+  --yn-muted: #78716c;         /* stone-500 — secondary text */
+  --yn-faint: #a8a29e;         /* stone-400 — tertiary text, icons */
+
+  /* Interactive accent (Tailwind indigo) */
+  --yn-accent: #4f46e5;        /* indigo-600 — links */
+  --yn-accent-strong: #4338ca; /* indigo-700 — link hover */
+  --yn-focus: #6366f1;         /* indigo-500 — focus rings */
+
+  /* Semantic state */
+  --yn-ok: #15803d;            /* green-700 text */
+  --yn-ok-dot: #16a34a;        /* green-600 */
+  --yn-warn: #b45309;          /* amber-700 text */
+  --yn-warn-dot: #f59e0b;      /* amber-500 */
+  --yn-warn-bg: #fffbeb;       /* amber-50 */
+  --yn-warn-border: #fde68a;   /* amber-200 */
+  --yn-danger: #b91c1c;        /* red-700 text */
+  --yn-danger-dot: #dc2626;    /* red-600 */
+  --yn-danger-bg: #fef2f2;     /* red-50 */
+  --yn-danger-border: #fecaca; /* red-200 */
+}
+
+/* ---------------------------------------------------------------------------
+ * Base (mockup viewing only — the app gets this from Tailwind preflight)
+ * ------------------------------------------------------------------------ */
+
+.yn-body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  color: var(--yn-ink);
+  background: var(--yn-surface);
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+ * Buttons
+ *
+ * Hierarchy per PRD §3.2/§17: at most ONE .yn-btn-primary per screen.
+ * Secondary = bordered. Ghost = toolbar/inline. Danger = destructive
+ * confirmations only (normally inside the confirm dialog or overflow menu).
+ * ------------------------------------------------------------------------ */
+
+.yn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.25rem;               /* 36px */
+  padding: 0 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.12s ease, border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.yn-btn:focus-visible,
+.yn-input:focus-visible,
+.yn-select:focus-visible,
+.yn-textarea:focus-visible,
+.yn-tab:focus-visible,
+.yn-link:focus-visible,
+.yn-nav-link:focus-visible,
+.yn-menu-item:focus-visible {
+  outline: 2px solid var(--yn-focus);
+  outline-offset: 2px;
+}
+
+.yn-btn-primary {
+  background: var(--yn-ink);
+  color: #ffffff;
+}
+.yn-btn-primary:hover { background: #292524; } /* stone-800 */
+
+.yn-btn-secondary {
+  background: var(--yn-surface);
+  border-color: var(--yn-border-strong);
+  color: var(--yn-ink);
+}
+.yn-btn-secondary:hover { background: #f5f5f4; } /* stone-100 */
+
+.yn-btn-ghost {
+  background: transparent;
+  color: var(--yn-ink-soft);
+}
+.yn-btn-ghost:hover { background: #f5f5f4; color: var(--yn-ink); }
+
+.yn-btn-danger {
+  background: var(--yn-danger-dot);
+  color: #ffffff;
+}
+.yn-btn-danger:hover { background: var(--yn-danger); }
+
+.yn-btn-sm { height: 2rem; padding: 0 0.75rem; font-size: 0.8125rem; }
+
+.yn-btn[disabled],
+.yn-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Text link */
+.yn-link {
+  color: var(--yn-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.yn-link:hover { color: var(--yn-accent-strong); text-decoration: underline; }
+
+/* ---------------------------------------------------------------------------
+ * Form fields
+ * ------------------------------------------------------------------------ */
+
+.yn-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--yn-ink-soft);
+  margin-bottom: 0.375rem;
+}
+
+.yn-input,
+.yn-select,
+.yn-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--yn-border-strong);
+  border-radius: 0.5rem;
+  background: var(--yn-surface);
+  color: var(--yn-ink);
+  font-size: 0.875rem;
+  font-family: inherit;
+  padding: 0.5rem 0.75rem;
+}
+.yn-input::placeholder,
+.yn-textarea::placeholder { color: var(--yn-faint); }
+
+.yn-hint { font-size: 0.8125rem; color: var(--yn-muted); margin-top: 0.25rem; }
+
+/* Attach to inputs alongside aria-invalid="true" */
+.yn-field-invalid { border-color: var(--yn-danger-dot); }
+.yn-error-text {
+  font-size: 0.8125rem;
+  color: var(--yn-danger);
+  margin-top: 0.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Status — dot + text, never color alone (PRD §17.4, §20)
+ * ------------------------------------------------------------------------ */
+
+.yn-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--yn-ink-soft);
+}
+.yn-status-sm { font-size: 0.8125rem; }
+
+.yn-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 9999px;
+  background: var(--yn-faint);   /* neutral default */
+  flex: none;
+}
+.yn-dot-ok { background: var(--yn-ok-dot); }
+.yn-dot-warn { background: var(--yn-warn-dot); }
+.yn-dot-danger { background: var(--yn-danger-dot); }
+
+/* Count badge — only for attention counts (Inbox nav, tab counts) */
+.yn-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 9999px;
+  background: #fbbf24;           /* amber-400 */
+  color: #451a03;                /* amber-950 */
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+/* Neutral variant for non-attention counts (e.g. History tab) */
+.yn-count-neutral { background: var(--yn-border); color: var(--yn-ink-soft); }
+
+/* ---------------------------------------------------------------------------
+ * Tabs — server-addressable Rails links (PRD §7.2). Mark the active tab
+ * with aria-current="page"; weight + underline carry the state, not color.
+ * ------------------------------------------------------------------------ */
+
+.yn-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--yn-border);
+  overflow-x: auto;
+}
+
+.yn-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--yn-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.yn-tab:hover { color: var(--yn-ink); }
+.yn-tab[aria-current="page"] {
+  color: var(--yn-ink);
+  font-weight: 600;
+  border-bottom-color: var(--yn-ink);
+}
+
+/* ---------------------------------------------------------------------------
+ * Tables — dense data (PRD §18). Money columns: add `text-right tabular-nums`
+ * on both th and td in markup.
+ * ------------------------------------------------------------------------ */
+
+.yn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.yn-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--yn-muted);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--yn-border);
+}
+.yn-table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--yn-border);
+  vertical-align: top;
+}
+.yn-table tbody tr:last-child td { border-bottom: none; }
+.yn-table tbody tr:hover { background: #fafaf9; } /* stone-50 */
+
+/* Clickable-row affordance: put the row's primary link in the first cell */
+.yn-table .yn-row-link { color: var(--yn-ink); font-weight: 500; text-decoration: none; }
+.yn-table .yn-row-link:hover { color: var(--yn-accent-strong); text-decoration: underline; }
+
+/* ---------------------------------------------------------------------------
+ * Surface — the ONLY boxed container. Use for genuinely separate regions
+ * (dialog bodies already have one; Overview attention queue; master/detail
+ * panes). Most sections should be heading + divider, not a card.
+ * ------------------------------------------------------------------------ */
+
+.yn-surface {
+  background: var(--yn-surface);
+  border: 1px solid var(--yn-border);
+  border-radius: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Overflow menu (native <details> + .yn-menu, or Stimulus menu controller)
+ * ------------------------------------------------------------------------ */
+
+.yn-menu {
+  position: absolute;
+  right: 0;
+  margin-top: 0.375rem;
+  min-width: 12rem;
+  background: var(--yn-surface);
+  border: 1px solid var(--yn-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px -8px rgba(28, 25, 23, 0.18);
+  padding: 0.25rem;
+  z-index: 50;
+}
+
+.yn-menu-item {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 0.4375rem 0.625rem;
+  border: none;
+  background: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--yn-ink-soft);
+  text-decoration: none;
+  cursor: pointer;
+}
+.yn-menu-item:hover { background: #f5f5f4; color: var(--yn-ink); }
+.yn-menu-item-danger { color: var(--yn-danger); }
+.yn-menu-item-danger:hover { background: var(--yn-danger-bg); color: var(--yn-danger); }
+.yn-menu-separator { border: none; border-top: 1px solid var(--yn-border); margin: 0.25rem 0; }
+
+/* ---------------------------------------------------------------------------
+ * Alerts / inline messages
+ * ------------------------------------------------------------------------ */
+
+.yn-alert {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  border: 1px solid var(--yn-border);
+  border-radius: 0.5rem;
+  background: var(--yn-bg);
+  color: var(--yn-ink-soft);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+.yn-alert-warn {
+  background: var(--yn-warn-bg);
+  border-color: var(--yn-warn-border);
+  color: var(--yn-warn);
+}
+.yn-alert-danger {
+  background: var(--yn-danger-bg);
+  border-color: var(--yn-danger-border);
+  color: var(--yn-danger);
+}
+
+/* ---------------------------------------------------------------------------
+ * Empty states (PRD §19)
+ * ------------------------------------------------------------------------ */
+
+.yn-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--yn-border-strong);
+  border-radius: 0.75rem;
+}
+.yn-empty-title { font-size: 0.9375rem; font-weight: 600; color: var(--yn-ink); margin: 0 0 0.25rem; }
+.yn-empty-body { font-size: 0.875rem; color: var(--yn-muted); margin: 0 0 1rem; }
+
+/* ---------------------------------------------------------------------------
+ * Sidebar navigation
+ * ------------------------------------------------------------------------ */
+
+.yn-sidebar {
+  background: var(--yn-bg);
+  border-right: 1px solid var(--yn-border);
+}
+
+.yn-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--yn-ink-soft);
+  text-decoration: none;
+}
+.yn-nav-link:hover { background: #e7e5e4; color: var(--yn-ink); } /* stone-200 */
+.yn-nav-link[aria-current="page"] {
+  background: #e7e5e4;
+  color: var(--yn-ink);
+  font-weight: 600;
+}
+.yn-nav-link svg { width: 1rem; height: 1rem; flex: none; color: var(--yn-faint); }
+.yn-nav-link[aria-current="page"] svg { color: var(--yn-ink-soft); }
+
+.yn-nav-heading {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--yn-faint);
+  padding: 0 0.625rem;
+  margin: 0 0 0.375rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Dialog — class names load-bearing for modal_controller.js. Restyled only.
+ * ------------------------------------------------------------------------ */
+
 dialog.modal-dialog {
   padding: 0;
-  border: none;
-  border-radius: var(--radius-box, 1rem);
-  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
-  background: var(--color-base-100);
-  width: min(480px, 95vw);
-  max-height: 90vh;
+  border: 1px solid var(--yn-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 24px 48px -12px rgba(28, 25, 23, 0.25);
+  background: var(--yn-surface);
+  width: min(520px, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
   overflow: hidden;
 }
 
 dialog.modal-dialog::backdrop {
-  background: oklch(0% 0 0 / 0.5);
-  backdrop-filter: blur(2px);
+  background: rgba(28, 25, 23, 0.4);
 }
 
-.modal-inner {
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
+.modal-inner { display: flex; flex-direction: column; max-height: calc(100vh - 4rem); }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-base-200);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--yn-border);
 }
-
-.modal-header h2 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-base-content);
-  margin: 0;
-}
+.modal-header h2 { font-size: 1rem; font-weight: 600; color: var(--yn-ink); margin: 0; }
 
 .modal-close {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   line-height: 1;
-  color: var(--color-base-content);
-  opacity: 0.5;
-  transition: opacity 0.15s;
+  color: var(--yn-muted);
   padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-field);
+  border-radius: 0.375rem;
 }
+.modal-close:hover { color: var(--yn-ink); background: #f5f5f4; }
+.modal-close:focus-visible { outline: 2px solid var(--yn-focus); outline-offset: 2px; }
 
-.modal-close:hover {
-  opacity: 1;
-  background: var(--color-base-200);
-}
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-}
+.modal-body { padding: 1.25rem; overflow-y: auto; }

@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   root "dashboards#index"
-  get "dashboards/index"
+
+  get "portfolio", to: "portfolio#show", as: :portfolio
+  get "money", to: "money#show", as: :money
+  get "inbox", to: "imported_transactions#index", as: :inbox
+  get "reports", to: "reports#show", as: :reports
 
   resources :properties do
     resources :rentable_units

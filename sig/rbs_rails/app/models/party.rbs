@@ -84,6 +84,46 @@ class ::Party < ::ApplicationRecord
 
     def created_at_for_database: () -> ::Time
 
+    def display_name: () -> ::String
+
+    def display_name=: (::String) -> ::String
+
+    def display_name?: () -> bool
+
+    def display_name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def display_name_change: () -> [ ::String?, ::String? ]
+
+    def display_name_will_change!: () -> void
+
+    def display_name_was: () -> ::String?
+
+    def display_name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def display_name_previous_change: () -> ::Array[::String?]?
+
+    def display_name_previously_was: () -> ::String?
+
+    def display_name_before_last_save: () -> ::String?
+
+    def display_name_change_to_be_saved: () -> ::Array[::String?]?
+
+    def display_name_in_database: () -> ::String?
+
+    def saved_change_to_display_name: () -> ::Array[::String?]?
+
+    def saved_change_to_display_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_display_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_display_name!: () -> void
+
+    def clear_display_name_change: () -> void
+
+    def display_name_before_type_cast: () -> ::String
+
+    def display_name_for_database: () -> ::String
+
     def email_address: () -> ::String?
 
     def email_address=: (::String?) -> ::String?
@@ -164,45 +204,45 @@ class ::Party < ::ApplicationRecord
 
     def mailing_address_for_database: () -> ::String?
 
-    def display_name: () -> ::String
+    def party_type: () -> ::String
 
-    def display_name=: (::String) -> ::String
+    def party_type=: (::String | ::Symbol) -> ::String
 
-    def display_name?: () -> bool
+    def party_type?: () -> bool
 
-    def display_name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def party_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def display_name_change: () -> [ ::String?, ::String? ]
+    def party_type_change: () -> [ ::String?, ::String? ]
 
-    def display_name_will_change!: () -> void
+    def party_type_will_change!: () -> void
 
-    def display_name_was: () -> ::String?
+    def party_type_was: () -> ::String?
 
-    def display_name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+    def party_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def display_name_previous_change: () -> ::Array[::String?]?
+    def party_type_previous_change: () -> ::Array[::String?]?
 
-    def display_name_previously_was: () -> ::String?
+    def party_type_previously_was: () -> ::String?
 
-    def display_name_before_last_save: () -> ::String?
+    def party_type_before_last_save: () -> ::String?
 
-    def display_name_change_to_be_saved: () -> ::Array[::String?]?
+    def party_type_change_to_be_saved: () -> ::Array[::String?]?
 
-    def display_name_in_database: () -> ::String?
+    def party_type_in_database: () -> ::String?
 
-    def saved_change_to_display_name: () -> ::Array[::String?]?
+    def saved_change_to_party_type: () -> ::Array[::String?]?
 
-    def saved_change_to_display_name?: (?from: ::String?, ?to: ::String?) -> bool
+    def saved_change_to_party_type?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def will_save_change_to_display_name?: (?from: ::String?, ?to: ::String?) -> bool
+    def will_save_change_to_party_type?: (?from: ::String?, ?to: ::String?) -> bool
 
-    def restore_display_name!: () -> void
+    def restore_party_type!: () -> void
 
-    def clear_display_name_change: () -> void
+    def clear_party_type_change: () -> void
 
-    def display_name_before_type_cast: () -> ::String
+    def party_type_before_type_cast: () -> ::String
 
-    def display_name_for_database: () -> ::String
+    def party_type_for_database: () -> ::String
 
     def phone_number: () -> ::String?
 
@@ -323,46 +363,6 @@ class ::Party < ::ApplicationRecord
     def user_id_before_type_cast: () -> ::Integer
 
     def user_id_for_database: () -> ::Integer
-
-    def party_type: () -> ::String
-
-    def party_type=: (::String | ::Symbol) -> ::String
-
-    def party_type?: () -> bool
-
-    def party_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def party_type_change: () -> [ ::String?, ::String? ]
-
-    def party_type_will_change!: () -> void
-
-    def party_type_was: () -> ::String?
-
-    def party_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def party_type_previous_change: () -> ::Array[::String?]?
-
-    def party_type_previously_was: () -> ::String?
-
-    def party_type_before_last_save: () -> ::String?
-
-    def party_type_change_to_be_saved: () -> ::Array[::String?]?
-
-    def party_type_in_database: () -> ::String?
-
-    def saved_change_to_party_type: () -> ::Array[::String?]?
-
-    def saved_change_to_party_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_party_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_party_type!: () -> void
-
-    def clear_party_type_change: () -> void
-
-    def party_type_before_type_cast: () -> ::String
-
-    def party_type_for_database: () -> ::String
   end
   include ::Party::GeneratedAttributeMethods
   module ::Party::GeneratedAliasAttributeMethods

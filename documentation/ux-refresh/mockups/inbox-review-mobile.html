@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inbox standalone review — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 4 REFERENCE — Standalone review page
+  (imported_transactions#show, /imported_transactions/:id).
+
+  NARROW STRATEGY DECISION (2026-08-24): the selected narrow-screen Inbox
+  flow is STANDALONE REVIEW. This page is therefore normative twice over:
+    1. It is the standalone review experience at ANY width (direct visit,
+       bookmark, JS-off).
+    2. Below lg, Inbox queue rows navigate here (_top) instead of loading
+       the inbox_review frame. View this file at ~375 px for the
+       normative narrow flow. Same-frame single-column was considered and
+       rejected: at 375 px the stacked queue pushes the form below the
+       fold and stream updates leave focus far from the visible content.
+
+  Row link targeting: a responsive_frame Stimulus controller sets each
+  queue row's data-turbo-frame from matchMedia("(min-width: 1024px)"):
+    wide:   data-turbo-frame="inbox_review"
+    narrow: data-turbo-frame="_top"
+  It owns only that attribute. Mutation forms do not vary by viewport.
+
+  Mutation contract (HTML-format, per the plan's standalone contract):
+    - The form posts to the explicit .html action URL
+      (review_context: :standalone generates it).
+    - Confirm success → 303 redirect to the NEXT reviewable transaction's
+      standalone page (server-selected), or to /inbox when caught up,
+      with a flash toast either way.
+    - Save without confirming → 303 redirect back to this page with toast.
+    - Validation failure → 422 HTML re-render of this page: yn-alert-danger
+      summary above the form, yn-field-invalid + yn-error-text on fields,
+      values preserved (variant noted at the bottom of this file).
+    - Delete → turbo_confirm, then 303 redirect to /inbox.
+
+  "Back to Inbox" returns to the queue; browser Back also works because
+  every step is a real navigation.
+-->
+<div class="min-h-screen lg:flex">
+
+  <!-- Desktop sidebar (abbreviated): direct visits exist at lg+ too -->
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <!-- Badge shape matches shared/_inbox_badge: persistent wrapper id,
+           optional inner .yn-count (see inbox.html for the contract). -->
+      <a href="#" class="yn-nav-link" aria-current="page">Inbox
+        <span class="ml-auto"><span id="sidebar_inbox_badge" class="inline-flex"><span class="yn-count">3</span></span></span>
+      </a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <div class="flex-1 min-w-0">
+
+    <!-- Mobile top bar (shared/_mobile_topbar), visible below lg -->
+    <header class="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-200">
+      <div class="flex items-center gap-2 px-4 h-14">
+        <button class="yn-btn yn-btn-ghost yn-btn-sm -ml-2" aria-label="Open navigation" aria-haspopup="dialog">
+          <svg viewBox="0 0 16 16" class="w-5 h-5" fill="currentColor" aria-hidden="true"><path d="M1 3.75A.75.75 0 0 1 1.75 3h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 3.75Zm0 4.25A.75.75 0 0 1 1.75 7.25h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 8Zm.75 3.5a.75.75 0 0 0 0 1.5h12.5a.75.75 0 0 0 0-1.5H1.75Z"/></svg>
+        </button>
+        <span class="text-[15px] font-semibold tracking-tight">Yanushi</span>
+        <!-- Shape matches shared/_mobile_inbox_badge: the persistent
+             wrapper carries the id and holds the whole Inbox link; at
+             zero count the wrapper stays in the DOM with "hidden". -->
+        <span id="mobile_inbox_badge" class="ml-auto inline-flex items-center gap-1.5 text-sm font-medium text-stone-600">
+          <a href="#" class="inline-flex items-center gap-1.5 text-stone-600 hover:text-stone-900 no-underline">
+            Inbox <span class="yn-count">3</span>
+          </a>
+        </span>
+      </div>
+    </header>
+
+    <main class="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+      <div class="max-w-2xl">
+
+        <header class="mb-6">
+          <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+            <a href="#" class="hover:text-stone-700 no-underline text-inherit">Inbox</a>
+            <span class="mx-1 text-stone-300">/</span>
+            Needs review
+          </p>
+          <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+            <div class="min-w-0">
+              <h1 class="text-2xl font-semibold tracking-tight">Zelle payment · Aug 21, 2026</h1>
+              <p class="mt-1 text-sm text-stone-500">“HSIMPSON RENT AUG” · from chase_statement_aug.pdf</p>
+            </div>
+            <p class="text-xl font-semibold tabular-nums whitespace-nowrap m-0">$2,400.00</p>
+          </div>
+          <p class="mt-2 text-sm text-stone-500 m-0">Item 1 of 3 needing review · <a href="#" class="yn-link">Back to Inbox</a></p>
+        </header>
+
+        <!-- Same _review_form partial as the desktop frame, rendered with
+             review_context: :standalone (explicit .html action URL). -->
+        <form class="space-y-4">
+          <div>
+            <label class="yn-label" for="srev-kind">Record as</label>
+            <select class="yn-select" id="srev-kind">
+              <option selected>Tenant receipt</option>
+              <option>Security deposit</option>
+            </select>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="yn-label" for="srev-party">Payer</label>
+              <select class="yn-select" id="srev-party">
+                <option selected>Homer Simpson</option>
+                <option>Jane Smith</option>
+              </select>
+            </div>
+            <div>
+              <label class="yn-label" for="srev-tenancy">Tenancy</label>
+              <select class="yn-select" id="srev-tenancy">
+                <option selected>742 Evergreen Terrace — Main Residence</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="yn-label" for="srev-method">Payment method</label>
+              <input class="yn-input" id="srev-method" value="Zelle">
+            </div>
+            <div>
+              <label class="yn-label" for="srev-ref">Reference</label>
+              <input class="yn-input" id="srev-ref" value="ZL-99841">
+            </div>
+          </div>
+
+          <label class="flex items-start gap-2.5 text-sm text-stone-600">
+            <input type="checkbox" class="mt-0.5 accent-stone-900" checked>
+            <span>Remember “HSIMPSON” as Homer Simpson for future imports</span>
+          </label>
+
+          <!-- Buttons stack on narrow screens in DOM order (Delete, Save,
+               Confirm) so the primary action is truly last/bottom for
+               thumb reach; on wide screens Delete sits left and the
+               Save/Confirm group right. -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+            <button type="button" class="yn-btn yn-btn-ghost text-red-700">Delete…</button>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button type="submit" class="yn-btn yn-btn-secondary">Save without confirming</button>
+              <button type="submit" class="yn-btn yn-btn-primary">Confirm receipt</button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===================================================================
+     VALIDATION FAILURE VARIANT (422 HTML re-render of this page):
+     - a yn-alert-danger summary appears directly above the form:
+         <div class="yn-alert yn-alert-danger" role="alert">
+           Transaction couldn’t be confirmed — 1 field needs a fix.
+         </div>
+     - offending fields get yn-field-invalid + aria-invalid="true" +
+       yn-error-text (see styleguide.html "Form fields");
+     - entered values are preserved; focus moves to the first invalid
+       field.
+     CAUGHT-UP AFTER LAST CONFIRM: the 303 redirect goes to /inbox, which
+     renders the caught-up state (see the static variant in inbox.html).
+==================================================================== -->
+
+</body>
+</html>

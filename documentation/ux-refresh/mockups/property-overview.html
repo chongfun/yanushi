@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Property overview — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 2 REFERENCE — Property workspace, Overview tab
+  (properties#show, URL /properties/:id).
+  Question: "What is happening at this property?"
+
+  The property header + tabs render from properties/_header.html.erb and
+  are IDENTICAL on all four tabs (only aria-current moves):
+    Overview   /properties/:id
+    Tenancies  /properties/:id/tenancies
+    Activity   /properties/:id/activity
+    Tax        /properties/:id/tax
+
+  This page loads NO full/filterable ledger and NO ledger date-range state;
+  it loads only a bounded recent-activity projection.
+  Controller loads: units + current tenancies (eager-loaded), per-tenancy
+  balances (batch query), deposits held, YTD summary through today (from
+  beginning of year to Date.current), and 5 recent activity rows through today
+  (Accounting::PropertyLedgerQuery with through: Date.current, limit: 5).
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <!-- ============================== properties/_header (shared by all tabs) -->
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">Portfolio</a>
+          <span class="mx-1 text-stone-300">/</span>
+          123 Main St
+        </p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">123 Main St</h1>
+            <p class="mt-1 text-sm text-stone-500">
+              Multifamily · 3 units ·
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 of 3 occupied</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <details class="relative">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer" aria-haspopup="menu">
+                More
+                <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+              </summary>
+              <div class="yn-menu" role="menu">
+                <a href="#" class="yn-menu-item" role="menuitem">Edit property</a>
+                <a href="#" class="yn-menu-item" role="menuitem">Add unit</a>
+                <hr class="yn-menu-separator">
+                <button class="yn-menu-item yn-menu-item-danger" role="menuitem">Delete property…</button>
+              </div>
+            </details>
+            <a href="#" class="yn-btn yn-btn-primary">Record expense</a>
+          </div>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Property sections">
+          <a href="#" class="yn-tab" aria-current="page">Overview</a>
+          <a href="#" class="yn-tab">Tenancies</a>
+          <a href="#" class="yn-tab">Activity</a>
+          <a href="#" class="yn-tab">Tax</a>
+        </nav>
+      </header>
+
+      <div class="space-y-10">
+
+        <!-- ============================== Units & current occupancy -->
+        <section aria-labelledby="units-heading">
+          <h2 id="units-heading" class="text-sm font-semibold mb-3">Units</h2>
+          <table class="yn-table">
+            <thead>
+              <tr>
+                <th scope="col">Unit</th>
+                <th scope="col">Occupant</th>
+                <th scope="col" class="text-right tabular-nums">Rent</th>
+                <th scope="col" class="text-right tabular-nums">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-medium">Unit 1</td>
+                <td><a href="#" class="yn-row-link">Marge Bouvier</a> <span class="text-stone-400 text-[13px]">· since Jan 2025</span></td>
+                <td class="text-right tabular-nums whitespace-nowrap">$1,850.00/mo</td>
+                <td class="text-right tabular-nums whitespace-nowrap text-stone-400">—</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Unit 2</td>
+                <td><a href="#" class="yn-row-link">Jane Smith</a> <span class="text-stone-400 text-[13px]">· since Mar 2026</span></td>
+                <td class="text-right tabular-nums whitespace-nowrap">$2,400.00/mo</td>
+                <td class="text-right tabular-nums whitespace-nowrap">$350.00 due</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Unit 3</td>
+                <td>
+                  <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Vacant</span>
+                  <a href="#" class="yn-link text-[13px] ml-2">Create tenancy</a>
+                </td>
+                <td class="text-right tabular-nums text-stone-400">—</td>
+                <td class="text-right tabular-nums text-stone-400">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ============================== Compact summary (period = current year) -->
+        <section aria-labelledby="psummary-heading">
+          <h2 id="psummary-heading" class="sr-only">Summary</h2>
+          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4">
+            <div>
+              <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income, YTD</dt>
+              <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$29,800.00</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses, YTD</dt>
+              <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$7,320.00</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income, YTD</dt>
+              <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$22,480.00</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Deposits held</dt>
+              <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">$4,250.00</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- ============================== Recent activity (bounded, links to Activity tab) -->
+        <section aria-labelledby="pactivity-heading">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 id="pactivity-heading" class="text-sm font-semibold">Recent activity</h2>
+            <a href="#" class="yn-link text-sm">All activity →</a>
+          </div>
+          <table class="yn-table">
+            <thead class="sr-only"><tr><th>Date</th><th>Event</th><th class="text-right">Amount</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="whitespace-nowrap text-stone-500 w-20">Aug 18</td>
+                <td><a href="#" class="yn-row-link">Plumbing repair — Ace Plumbing</a> <span class="text-stone-400">· Unit 2</span></td>
+                <td class="text-right tabular-nums whitespace-nowrap">$480.00</td>
+              </tr>
+              <tr>
+                <td class="whitespace-nowrap text-stone-500">Aug 3</td>
+                <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a> <span class="text-stone-400">· Unit 2</span></td>
+                <td class="text-right tabular-nums whitespace-nowrap">$2,000.00</td>
+              </tr>
+              <tr>
+                <td class="whitespace-nowrap text-stone-500">Aug 1</td>
+                <td><a href="#" class="yn-row-link">August rent charged</a> <span class="text-stone-400">· Units 1–2</span></td>
+                <td class="text-right tabular-nums whitespace-nowrap">$4,250.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

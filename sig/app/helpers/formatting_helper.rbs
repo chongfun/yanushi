@@ -1,0 +1,7 @@
+module FormattingHelper
+  def format_money_cents: (Integer? cents) -> String
+
+  def signed_money_cents: (Integer? cents, ?plus: bool) -> String
+
+  def balance_phrase_cents: (Integer? cents) -> String
+end

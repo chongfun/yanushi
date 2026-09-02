@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record receipt dialog — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 3 REFERENCE — Record receipt dialog, open over the tenancy
+  page. This file is ALSO the normative shared short-form dialog shell:
+  Add Charge (and later short-form dialogs, such as M5's contextual
+  expense dialog) must reuse this shell rather than getting a separate,
+  nearly identical mockup.
+
+  Interaction contract (same for Add charge, and reused by later dialogs):
+    1. Dialog flow: "Record receipt" link carries data-turbo-frame="modal-frame"
+       and points at new_tenancy_receipt_path.
+    2. receipts#new renders <turbo-frame id="modal-frame"
+       data-modal-title="Record receipt"> around receipts/_modal_form.
+    3. Dialog form submit:
+       - Success → format.turbo_stream: close_modal + replace #tenancy_balance +
+         replace #tenancy_activity + toast.
+       - Validation failure → 422 turbo_stream update of #modal-frame;
+         dialog stays open, fields and errors preserved (variant below).
+    4. Standalone / non-frame fallback flow (direct visit or JS-disabled):
+       - receipts#new renders full page.
+       - Form targets explicit .html mutation URL (tenancy_receipts_path(format: :html)).
+       - Success → 303 redirect to tenancy_path with flash notice.
+       - Validation failure → 422 HTML render of receipts/new with error alert.
+    5. Focus: opening dialog moves focus to the first field; closing returns it
+       to the "Record receipt" trigger.
+
+  The context strip (tenancy + current balance) is read-only server-rendered
+  context, so the user never records against the wrong tenancy.
+
+  Add Charge reuses this shell exactly (title bar, read-only context
+  strip, two-column field layout, button row, validation-failure variant,
+  focus behavior), substituting its own fields: kind (late fee / utility
+  reimbursement / other), amount, charge date, due date, description.
+  Its dialog title and submit button both read "Add charge".
+-->
+
+<!-- Page behind the dialog (abbreviated tenancy.html) -->
+<div class="min-h-screen lg:flex" aria-hidden="true">
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+  </aside>
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">Portfolio / 123 Main St / Unit 2</p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Jane Smith · Unit 2</h1>
+            <p class="mt-1 text-sm text-stone-500">123 Main St · Active · $2,400.00/month</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="yn-btn yn-btn-secondary">More</button>
+            <button class="yn-btn yn-btn-secondary">Add charge</button>
+            <button class="yn-btn yn-btn-primary">Record receipt</button>
+          </div>
+        </div>
+      </header>
+      <p class="text-3xl font-semibold tracking-tight tabular-nums">$350.00 <span class="text-lg font-medium text-stone-500">due</span></p>
+    </div>
+  </main>
+</div>
+
+<!-- Dialog, open state -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-stone-900/40" aria-hidden="true"></div>
+
+  <dialog open class="modal-dialog relative" aria-labelledby="modal-title">
+    <div class="modal-inner">
+      <header class="modal-header">
+        <h2 id="modal-title">Record receipt</h2>
+        <button class="modal-close" aria-label="Close dialog">&times;</button>
+      </header>
+      <div class="modal-body">
+        <form class="space-y-4">
+
+          <!-- Read-only context strip -->
+          <div class="rounded-lg bg-stone-50 border border-stone-200 px-3.5 py-2.5 text-sm">
+            <div class="flex justify-between gap-4">
+              <span class="text-stone-500">Tenancy</span>
+              <span class="font-medium text-right">Jane Smith · Unit 2, 123 Main St</span>
+            </div>
+            <div class="flex justify-between gap-4 mt-1">
+              <span class="text-stone-500">Current balance</span>
+              <span class="font-medium tabular-nums">$350.00 due</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="yn-label" for="receipt-payer">Payer</label>
+            <select class="yn-select" id="receipt-payer">
+              <option>Jane Smith</option>
+              <option>Robert Smith</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="yn-label" for="receipt-amount">Amount</label>
+              <input class="yn-input tabular-nums" id="receipt-amount" inputmode="decimal" placeholder="0.00" autofocus>
+            </div>
+            <div>
+              <label class="yn-label" for="receipt-date">Received on</label>
+              <input class="yn-input" id="receipt-date" type="date" value="2026-08-23">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="yn-label" for="receipt-method">Payment method</label>
+              <input class="yn-input" id="receipt-method" placeholder="Zelle, check, cash…">
+            </div>
+            <div>
+              <label class="yn-label" for="receipt-ref">Reference <span class="font-normal text-stone-400">(optional)</span></label>
+              <input class="yn-input" id="receipt-ref" placeholder="Check #1042">
+            </div>
+          </div>
+
+          <div>
+            <label class="yn-label" for="receipt-memo">Memo <span class="font-normal text-stone-400">(optional)</span></label>
+            <textarea class="yn-textarea" id="receipt-memo" rows="2"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" class="yn-btn yn-btn-ghost">Cancel</button>
+            <button type="submit" class="yn-btn yn-btn-primary">Record receipt</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<!-- ===================================================================
+     VALIDATION FAILURE VARIANT (422 re-render inside the frame):
+     - a yn-alert-danger summary appears above the context strip:
+         <div class="yn-alert yn-alert-danger" role="alert">
+           Receipt couldn’t be recorded — 1 field needs a fix.
+         </div>
+     - the offending field gets yn-field-invalid + aria-invalid="true"
+       + a yn-error-text line (see styleguide.html "Form fields");
+     - all entered values are preserved; focus moves to the first
+       invalid field; the dialog stays open.
+==================================================================== -->
+
+</body>
+</html>

@@ -7,7 +7,10 @@ interface ::_RbsRailsPathHelpers
   def rails_info_notes_path: (*untyped) -> ::String
   def rails_info_path: (*untyped) -> ::String
   def root_path: (*untyped) -> ::String
-  def dashboards_index_path: (*untyped) -> ::String
+  def portfolio_path: (*untyped) -> ::String
+  def money_path: (*untyped) -> ::String
+  def inbox_path: (*untyped) -> ::String
+  def reports_path: (*untyped) -> ::String
   def property_rentable_units_path: (*untyped) -> ::String
   def new_property_rentable_unit_path: (*untyped) -> ::String
   def edit_property_rentable_unit_path: (*untyped) -> ::String
@@ -123,7 +126,10 @@ interface ::_RbsRailsPathHelpers
   def rails_info_notes_url: (*untyped) -> ::String
   def rails_info_url: (*untyped) -> ::String
   def root_url: (*untyped) -> ::String
-  def dashboards_index_url: (*untyped) -> ::String
+  def portfolio_url: (*untyped) -> ::String
+  def money_url: (*untyped) -> ::String
+  def inbox_url: (*untyped) -> ::String
+  def reports_url: (*untyped) -> ::String
   def property_rentable_units_url: (*untyped) -> ::String
   def new_property_rentable_unit_url: (*untyped) -> ::String
   def edit_property_rentable_unit_url: (*untyped) -> ::String

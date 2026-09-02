@@ -45,125 +45,45 @@ module ::SolidQueue
 
       def id_for_database: () -> ::Integer
 
-      def key: () -> ::String
+      def arguments: () -> ::String?
 
-      def key=: (::String) -> ::String
+      def arguments=: (::String?) -> ::String?
 
-      def key?: () -> bool
+      def arguments?: () -> bool
 
-      def key_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def arguments_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def key_change: () -> [ ::String?, ::String? ]
+      def arguments_change: () -> [ ::String?, ::String? ]
 
-      def key_will_change!: () -> void
+      def arguments_will_change!: () -> void
 
-      def key_was: () -> ::String?
+      def arguments_was: () -> ::String?
 
-      def key_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def arguments_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def key_previous_change: () -> ::Array[::String?]?
+      def arguments_previous_change: () -> ::Array[::String?]?
 
-      def key_previously_was: () -> ::String?
+      def arguments_previously_was: () -> ::String?
 
-      def key_before_last_save: () -> ::String?
+      def arguments_before_last_save: () -> ::String?
 
-      def key_change_to_be_saved: () -> ::Array[::String?]?
+      def arguments_change_to_be_saved: () -> ::Array[::String?]?
 
-      def key_in_database: () -> ::String?
+      def arguments_in_database: () -> ::String?
 
-      def saved_change_to_key: () -> ::Array[::String?]?
+      def saved_change_to_arguments: () -> ::Array[::String?]?
 
-      def saved_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
+      def saved_change_to_arguments?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def will_save_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
+      def will_save_change_to_arguments?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def restore_key!: () -> void
+      def restore_arguments!: () -> void
 
-      def clear_key_change: () -> void
+      def clear_arguments_change: () -> void
 
-      def key_before_type_cast: () -> ::String
+      def arguments_before_type_cast: () -> ::String?
 
-      def key_for_database: () -> ::String
-
-      def schedule: () -> ::String
-
-      def schedule=: (::String) -> ::String
-
-      def schedule?: () -> bool
-
-      def schedule_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def schedule_change: () -> [ ::String?, ::String? ]
-
-      def schedule_will_change!: () -> void
-
-      def schedule_was: () -> ::String?
-
-      def schedule_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def schedule_previous_change: () -> ::Array[::String?]?
-
-      def schedule_previously_was: () -> ::String?
-
-      def schedule_before_last_save: () -> ::String?
-
-      def schedule_change_to_be_saved: () -> ::Array[::String?]?
-
-      def schedule_in_database: () -> ::String?
-
-      def saved_change_to_schedule: () -> ::Array[::String?]?
-
-      def saved_change_to_schedule?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def will_save_change_to_schedule?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def restore_schedule!: () -> void
-
-      def clear_schedule_change: () -> void
-
-      def schedule_before_type_cast: () -> ::String
-
-      def schedule_for_database: () -> ::String
-
-      def command: () -> ::String?
-
-      def command=: (::String?) -> ::String?
-
-      def command?: () -> bool
-
-      def command_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def command_change: () -> [ ::String?, ::String? ]
-
-      def command_will_change!: () -> void
-
-      def command_was: () -> ::String?
-
-      def command_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def command_previous_change: () -> ::Array[::String?]?
-
-      def command_previously_was: () -> ::String?
-
-      def command_before_last_save: () -> ::String?
-
-      def command_change_to_be_saved: () -> ::Array[::String?]?
-
-      def command_in_database: () -> ::String?
-
-      def saved_change_to_command: () -> ::Array[::String?]?
-
-      def saved_change_to_command?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def will_save_change_to_command?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def restore_command!: () -> void
-
-      def clear_command_change: () -> void
-
-      def command_before_type_cast: () -> ::String?
-
-      def command_for_database: () -> ::String?
+      def arguments_for_database: () -> ::String?
 
       def class_name: () -> ::String?
 
@@ -205,165 +125,85 @@ module ::SolidQueue
 
       def class_name_for_database: () -> ::String?
 
-      def arguments: () -> ::String?
+      def command: () -> ::String?
 
-      def arguments=: (::String?) -> ::String?
+      def command=: (::String?) -> ::String?
 
-      def arguments?: () -> bool
+      def command?: () -> bool
 
-      def arguments_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def command_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def arguments_change: () -> [ ::String?, ::String? ]
+      def command_change: () -> [ ::String?, ::String? ]
 
-      def arguments_will_change!: () -> void
+      def command_will_change!: () -> void
 
-      def arguments_was: () -> ::String?
+      def command_was: () -> ::String?
 
-      def arguments_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def command_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def arguments_previous_change: () -> ::Array[::String?]?
+      def command_previous_change: () -> ::Array[::String?]?
 
-      def arguments_previously_was: () -> ::String?
+      def command_previously_was: () -> ::String?
 
-      def arguments_before_last_save: () -> ::String?
+      def command_before_last_save: () -> ::String?
 
-      def arguments_change_to_be_saved: () -> ::Array[::String?]?
+      def command_change_to_be_saved: () -> ::Array[::String?]?
 
-      def arguments_in_database: () -> ::String?
+      def command_in_database: () -> ::String?
 
-      def saved_change_to_arguments: () -> ::Array[::String?]?
+      def saved_change_to_command: () -> ::Array[::String?]?
 
-      def saved_change_to_arguments?: (?from: ::String?, ?to: ::String?) -> bool
+      def saved_change_to_command?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def will_save_change_to_arguments?: (?from: ::String?, ?to: ::String?) -> bool
+      def will_save_change_to_command?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def restore_arguments!: () -> void
+      def restore_command!: () -> void
 
-      def clear_arguments_change: () -> void
+      def clear_command_change: () -> void
 
-      def arguments_before_type_cast: () -> ::String?
+      def command_before_type_cast: () -> ::String?
 
-      def arguments_for_database: () -> ::String?
+      def command_for_database: () -> ::String?
 
-      def queue_name: () -> ::String?
+      def created_at: () -> ::ActiveSupport::TimeWithZone
 
-      def queue_name=: (::String?) -> ::String?
+      def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
 
-      def queue_name?: () -> bool
+      def created_at?: () -> bool
 
-      def queue_name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-      def queue_name_change: () -> [ ::String?, ::String? ]
+      def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
 
-      def queue_name_will_change!: () -> void
+      def created_at_will_change!: () -> void
 
-      def queue_name_was: () -> ::String?
+      def created_at_was: () -> ::ActiveSupport::TimeWithZone?
 
-      def queue_name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+      def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-      def queue_name_previous_change: () -> ::Array[::String?]?
+      def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-      def queue_name_previously_was: () -> ::String?
+      def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
 
-      def queue_name_before_last_save: () -> ::String?
+      def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
 
-      def queue_name_change_to_be_saved: () -> ::Array[::String?]?
+      def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-      def queue_name_in_database: () -> ::String?
+      def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
 
-      def saved_change_to_queue_name: () -> ::Array[::String?]?
+      def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
 
-      def saved_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
+      def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-      def will_save_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
+      def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
 
-      def restore_queue_name!: () -> void
+      def restore_created_at!: () -> void
 
-      def clear_queue_name_change: () -> void
+      def clear_created_at_change: () -> void
 
-      def queue_name_before_type_cast: () -> ::String?
+      def created_at_before_type_cast: () -> ::Time
 
-      def queue_name_for_database: () -> ::String?
-
-      def priority: () -> ::Integer?
-
-      def priority=: (::Integer?) -> ::Integer?
-
-      def priority?: () -> bool
-
-      def priority_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-      def priority_change: () -> [ ::Integer?, ::Integer? ]
-
-      def priority_will_change!: () -> void
-
-      def priority_was: () -> ::Integer?
-
-      def priority_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-      def priority_previous_change: () -> ::Array[::Integer?]?
-
-      def priority_previously_was: () -> ::Integer?
-
-      def priority_before_last_save: () -> ::Integer?
-
-      def priority_change_to_be_saved: () -> ::Array[::Integer?]?
-
-      def priority_in_database: () -> ::Integer?
-
-      def saved_change_to_priority: () -> ::Array[::Integer?]?
-
-      def saved_change_to_priority?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-      def will_save_change_to_priority?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-      def restore_priority!: () -> void
-
-      def clear_priority_change: () -> void
-
-      def priority_before_type_cast: () -> ::Integer?
-
-      def priority_for_database: () -> ::Integer?
-
-      def static: () -> bool
-
-      def static=: (bool) -> bool
-
-      def static?: () -> bool
-
-      def static_changed?: (?from: bool?, ?to: bool?) -> bool
-
-      def static_change: () -> [ bool?, bool? ]
-
-      def static_will_change!: () -> void
-
-      def static_was: () -> bool?
-
-      def static_previously_changed?: (?from: bool?, ?to: bool?) -> bool
-
-      def static_previous_change: () -> ::Array[bool?]?
-
-      def static_previously_was: () -> bool?
-
-      def static_before_last_save: () -> bool?
-
-      def static_change_to_be_saved: () -> ::Array[bool?]?
-
-      def static_in_database: () -> bool?
-
-      def saved_change_to_static: () -> ::Array[bool?]?
-
-      def saved_change_to_static?: (?from: bool?, ?to: bool?) -> bool
-
-      def will_save_change_to_static?: (?from: bool?, ?to: bool?) -> bool
-
-      def restore_static!: () -> void
-
-      def clear_static_change: () -> void
-
-      def static_before_type_cast: () -> bool
-
-      def static_for_database: () -> bool
+      def created_at_for_database: () -> ::Time
 
       def description: () -> ::String?
 
@@ -405,45 +245,205 @@ module ::SolidQueue
 
       def description_for_database: () -> ::String?
 
-      def created_at: () -> ::ActiveSupport::TimeWithZone
+      def key: () -> ::String
 
-      def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
+      def key=: (::String) -> ::String
 
-      def created_at?: () -> bool
+      def key?: () -> bool
 
-      def created_at_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+      def key_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def created_at_change: () -> [ ::ActiveSupport::TimeWithZone?, ::ActiveSupport::TimeWithZone? ]
+      def key_change: () -> [ ::String?, ::String? ]
 
-      def created_at_will_change!: () -> void
+      def key_will_change!: () -> void
 
-      def created_at_was: () -> ::ActiveSupport::TimeWithZone?
+      def key_was: () -> ::String?
 
-      def created_at_previously_changed?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+      def key_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def created_at_previous_change: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+      def key_previous_change: () -> ::Array[::String?]?
 
-      def created_at_previously_was: () -> ::ActiveSupport::TimeWithZone?
+      def key_previously_was: () -> ::String?
 
-      def created_at_before_last_save: () -> ::ActiveSupport::TimeWithZone?
+      def key_before_last_save: () -> ::String?
 
-      def created_at_change_to_be_saved: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+      def key_change_to_be_saved: () -> ::Array[::String?]?
 
-      def created_at_in_database: () -> ::ActiveSupport::TimeWithZone?
+      def key_in_database: () -> ::String?
 
-      def saved_change_to_created_at: () -> ::Array[::ActiveSupport::TimeWithZone?]?
+      def saved_change_to_key: () -> ::Array[::String?]?
 
-      def saved_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+      def saved_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def will_save_change_to_created_at?: (?from: ::ActiveSupport::TimeWithZone?, ?to: ::ActiveSupport::TimeWithZone?) -> bool
+      def will_save_change_to_key?: (?from: ::String?, ?to: ::String?) -> bool
 
-      def restore_created_at!: () -> void
+      def restore_key!: () -> void
 
-      def clear_created_at_change: () -> void
+      def clear_key_change: () -> void
 
-      def created_at_before_type_cast: () -> ::Time
+      def key_before_type_cast: () -> ::String
 
-      def created_at_for_database: () -> ::Time
+      def key_for_database: () -> ::String
+
+      def priority: () -> ::Integer?
+
+      def priority=: (::Integer?) -> ::Integer?
+
+      def priority?: () -> bool
+
+      def priority_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+      def priority_change: () -> [ ::Integer?, ::Integer? ]
+
+      def priority_will_change!: () -> void
+
+      def priority_was: () -> ::Integer?
+
+      def priority_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+      def priority_previous_change: () -> ::Array[::Integer?]?
+
+      def priority_previously_was: () -> ::Integer?
+
+      def priority_before_last_save: () -> ::Integer?
+
+      def priority_change_to_be_saved: () -> ::Array[::Integer?]?
+
+      def priority_in_database: () -> ::Integer?
+
+      def saved_change_to_priority: () -> ::Array[::Integer?]?
+
+      def saved_change_to_priority?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+      def will_save_change_to_priority?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+      def restore_priority!: () -> void
+
+      def clear_priority_change: () -> void
+
+      def priority_before_type_cast: () -> ::Integer?
+
+      def priority_for_database: () -> ::Integer?
+
+      def queue_name: () -> ::String?
+
+      def queue_name=: (::String?) -> ::String?
+
+      def queue_name?: () -> bool
+
+      def queue_name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def queue_name_change: () -> [ ::String?, ::String? ]
+
+      def queue_name_will_change!: () -> void
+
+      def queue_name_was: () -> ::String?
+
+      def queue_name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def queue_name_previous_change: () -> ::Array[::String?]?
+
+      def queue_name_previously_was: () -> ::String?
+
+      def queue_name_before_last_save: () -> ::String?
+
+      def queue_name_change_to_be_saved: () -> ::Array[::String?]?
+
+      def queue_name_in_database: () -> ::String?
+
+      def saved_change_to_queue_name: () -> ::Array[::String?]?
+
+      def saved_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def will_save_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def restore_queue_name!: () -> void
+
+      def clear_queue_name_change: () -> void
+
+      def queue_name_before_type_cast: () -> ::String?
+
+      def queue_name_for_database: () -> ::String?
+
+      def schedule: () -> ::String
+
+      def schedule=: (::String) -> ::String
+
+      def schedule?: () -> bool
+
+      def schedule_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def schedule_change: () -> [ ::String?, ::String? ]
+
+      def schedule_will_change!: () -> void
+
+      def schedule_was: () -> ::String?
+
+      def schedule_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def schedule_previous_change: () -> ::Array[::String?]?
+
+      def schedule_previously_was: () -> ::String?
+
+      def schedule_before_last_save: () -> ::String?
+
+      def schedule_change_to_be_saved: () -> ::Array[::String?]?
+
+      def schedule_in_database: () -> ::String?
+
+      def saved_change_to_schedule: () -> ::Array[::String?]?
+
+      def saved_change_to_schedule?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def will_save_change_to_schedule?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def restore_schedule!: () -> void
+
+      def clear_schedule_change: () -> void
+
+      def schedule_before_type_cast: () -> ::String
+
+      def schedule_for_database: () -> ::String
+
+      def static: () -> bool
+
+      def static=: (bool) -> bool
+
+      def static?: () -> bool
+
+      def static_changed?: (?from: bool?, ?to: bool?) -> bool
+
+      def static_change: () -> [ bool?, bool? ]
+
+      def static_will_change!: () -> void
+
+      def static_was: () -> bool?
+
+      def static_previously_changed?: (?from: bool?, ?to: bool?) -> bool
+
+      def static_previous_change: () -> ::Array[bool?]?
+
+      def static_previously_was: () -> bool?
+
+      def static_before_last_save: () -> bool?
+
+      def static_change_to_be_saved: () -> ::Array[bool?]?
+
+      def static_in_database: () -> bool?
+
+      def saved_change_to_static: () -> ::Array[bool?]?
+
+      def saved_change_to_static?: (?from: bool?, ?to: bool?) -> bool
+
+      def will_save_change_to_static?: (?from: bool?, ?to: bool?) -> bool
+
+      def restore_static!: () -> void
+
+      def clear_static_change: () -> void
+
+      def static_before_type_cast: () -> bool
+
+      def static_for_database: () -> bool
 
       def updated_at: () -> ::ActiveSupport::TimeWithZone
 

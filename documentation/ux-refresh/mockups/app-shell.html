@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yanushi app shell — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 1 REFERENCE — the application shell.
+
+  Structure (becomes app/views/layouts/application.html.erb):
+    body
+    ├─ skip link (first focusable element)
+    ├─ div.min-h-screen.lg:flex
+    │   ├─ aside  = shared/_sidebar   (hidden below lg)
+    │   └─ div.flex-1.min-w-0
+    │       ├─ header = shared/_mobile_topbar  (hidden at lg and up)
+    │       └─ main#main  = yield
+    └─ modal + confirm dialogs (unchanged from current layout)
+
+  The sidebar is a real element, not a drawer, at lg+. On small screens the
+  mobile top bar shows a menu button that opens the navigation drawer
+  (static replica at the bottom of this page; a navigation_drawer Stimulus
+  controller owns open/close/Escape/focus in the implementation).
+
+  Active nav state: server-rendered aria-current="page" via NavigationHelper.
+  Resize this window below 1024px to see the mobile top bar.
+-->
+
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:px-3 focus:py-2 focus:rounded-lg focus:border focus:border-stone-300 text-sm font-medium">
+  Skip to content
+</a>
+
+<div class="min-h-screen lg:flex">
+
+  <!-- ============================================= shared/_sidebar -->
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-2 px-4 h-14">
+      <svg viewBox="0 0 24 24" class="w-5 h-5 text-stone-900" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75L12 3l9 9.75M4.5 9V21h5.25v-5.25h4.5V21H19.5V9"/>
+      </svg>
+      <a href="#" class="text-[15px] font-semibold tracking-tight text-stone-900 no-underline">Yanushi</a>
+    </div>
+
+    <!-- Primary navigation -->
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link" aria-current="page">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1.5 2.75c0-.69.56-1.25 1.25-1.25h3.5c.69 0 1.25.56 1.25 1.25v3.5c0 .69-.56 1.25-1.25 1.25h-3.5C2.06 7.5 1.5 6.94 1.5 6.25v-3.5Zm7 0c0-.69.56-1.25 1.25-1.25h3.5c.69 0 1.25.56 1.25 1.25v3.5c0 .69-.56 1.25-1.25 1.25h-3.5c-.69 0-1.25-.56-1.25-1.25v-3.5Zm-7 7c0-.69.56-1.25 1.25-1.25h3.5c.69 0 1.25.56 1.25 1.25v3.5c0 .69-.56 1.25-1.25 1.25h-3.5c-.69 0-1.25-.56-1.25-1.25v-3.5Zm7 0c0-.69.56-1.25 1.25-1.25h3.5c.69 0 1.25.56 1.25 1.25v3.5c0 .69-.56 1.25-1.25 1.25h-3.5c-.69 0-1.25-.56-1.25-1.25v-3.5Z"/></svg>
+        Overview
+      </a>
+      <a href="#" class="yn-nav-link">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 14V4.75A1.75 1.75 0 0 1 3.75 3h5.5A1.75 1.75 0 0 1 11 4.75V14h1.25v-6h1A1.75 1.75 0 0 1 15 9.75V14h.25a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1 0-1.5H2Zm2.5-8.25h1.75V7.5H4.5V5.75Zm0 3.75h1.75v1.75H4.5V9.5Zm4.25-3.75H7V7.5h1.75V5.75ZM7 9.5h1.75v1.75H7V9.5Z"/></svg>
+        Portfolio
+      </a>
+      <a href="#" class="yn-nav-link">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm.75 3.25v.573c.987.128 1.75.834 1.75 1.802h-1.5c0-.322-.336-.625-1-.625s-1 .303-1 .625c0 .247.176.487.732.62l1.128.27c1.06.253 1.64.937 1.64 1.86 0 .968-.763 1.674-1.75 1.802v.573h-1.5v-.573c-.987-.128-1.75-.834-1.75-1.802h1.5c0 .322.336.625 1 .625s1-.303 1-.625c0-.247-.176-.487-.732-.62l-1.128-.27c-1.06-.253-1.64-.937-1.64-1.86 0-.968.763-1.674 1.75-1.802V4.25h1.5Z"/></svg>
+        Money
+      </a>
+      <a href="#" class="yn-nav-link">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.8 3.06A1.75 1.75 0 0 1 4.41 2h7.18c.7 0 1.33.42 1.61 1.06l1.65 3.85c.1.22.15.46.15.7v4.64A1.75 1.75 0 0 1 13.25 14H2.75A1.75 1.75 0 0 1 1 12.25V7.61c0-.24.05-.48.15-.7L2.8 3.06ZM4.41 3.5a.25.25 0 0 0-.23.15L2.77 7h2.98l.75 1.5h3l.75-1.5h2.98l-1.41-3.35a.25.25 0 0 0-.23-.15H4.41Z"/></svg>
+        Inbox
+        <span class="yn-count ml-auto">3</span>
+      </a>
+      <a href="#" class="yn-nav-link">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3.75 1A1.75 1.75 0 0 0 2 2.75v10.5A1.75 1.75 0 0 0 3.75 15h8.5A1.75 1.75 0 0 0 14 13.25V5.62c0-.46-.18-.9-.51-1.23l-2.88-2.88A1.75 1.75 0 0 0 9.38 1H3.75ZM5 8.25a.75.75 0 0 1 1.5 0v3a.75.75 0 0 1-1.5 0v-3ZM8 6.5a.75.75 0 0 0-.75.75v4a.75.75 0 0 0 1.5 0v-4A.75.75 0 0 0 8 6.5Zm2.25 2.75a.75.75 0 0 1 1.5 0v2a.75.75 0 0 1-1.5 0v-2Z"/></svg>
+        Reports
+      </a>
+    </nav>
+
+    <!-- Secondary navigation -->
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 3.75C1 2.784 1.784 2 2.75 2h10.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 13.25 14H2.75A1.75 1.75 0 0 1 1 12.25v-8.5Zm1.5 1.5v7c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-7h-11ZM4 8h4v1.5H4V8Zm6 0h2v1.5h-2V8Zm-6 3h2v1.5H4V11Z"/></svg>
+        Accounts
+      </a>
+    </nav>
+
+    <!-- User / session (bottom-pinned) -->
+    <div class="mt-auto border-t border-stone-200 p-3">
+      <div class="flex items-center justify-between gap-2 px-1.5">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-stone-800 truncate">kyle@example.com</p>
+        </div>
+        <!-- Implementation: button_to session_path, method: :delete -->
+        <button class="yn-btn yn-btn-ghost yn-btn-sm" title="Sign out">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="flex-1 min-w-0">
+
+    <!-- ============================================= shared/_mobile_topbar
+         Visible below lg. Menu button opens the navigation drawer
+         (navigation_drawer Stimulus controller + <dialog>). -->
+    <header class="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-200">
+      <div class="flex items-center gap-2 px-4 h-14">
+        <button class="yn-btn yn-btn-ghost yn-btn-sm -ml-2" aria-label="Open navigation" aria-haspopup="dialog">
+          <svg viewBox="0 0 16 16" class="w-5 h-5" fill="currentColor" aria-hidden="true"><path d="M1 3.75A.75.75 0 0 1 1.75 3h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 3.75Zm0 4.25A.75.75 0 0 1 1.75 7.25h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 8Zm.75 3.5a.75.75 0 0 0 0 1.5h12.5a.75.75 0 0 0 0-1.5H1.75Z"/></svg>
+        </button>
+        <span class="text-[15px] font-semibold tracking-tight">Yanushi</span>
+        <span class="ml-auto inline-flex items-center gap-1.5 text-sm font-medium text-stone-600">
+          Inbox <span class="yn-count">3</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- ============================================= main content area.
+         Demonstrates the canonical page header (shared/_page_header). -->
+    <main id="main" class="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+      <div class="max-w-5xl">
+
+        <!-- shared/_page_header pattern:
+             eyebrow (breadcrumb) → title row (title+meta | actions) → tabs.
+             Every slot optional except title. -->
+        <header class="mb-6">
+          <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+            <a href="#" class="hover:text-stone-700 no-underline text-inherit">Portfolio</a>
+            <span class="mx-1 text-stone-300">/</span>
+            123 Main St
+          </p>
+          <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+            <div class="min-w-0">
+              <h1 class="text-2xl font-semibold tracking-tight text-stone-900">123 Main St</h1>
+              <p class="mt-1 text-sm text-stone-500">
+                Single family · 2,200 sqft · 1 unit ·
+                <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span>
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <details class="relative">
+                <summary class="yn-btn yn-btn-secondary list-none cursor-pointer" aria-haspopup="menu">
+                  More
+                  <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                </summary>
+                <div class="yn-menu" role="menu">
+                  <a href="#" class="yn-menu-item" role="menuitem">Edit property</a>
+                  <a href="#" class="yn-menu-item" role="menuitem">Add unit</a>
+                  <hr class="yn-menu-separator">
+                  <button class="yn-menu-item yn-menu-item-danger" role="menuitem">Delete property…</button>
+                </div>
+              </details>
+              <button class="yn-btn yn-btn-primary">Record expense</button>
+            </div>
+          </div>
+          <nav class="yn-tabs mt-4" aria-label="Property sections">
+            <a href="#" class="yn-tab" aria-current="page">Overview</a>
+            <a href="#" class="yn-tab">Tenancies</a>
+            <a href="#" class="yn-tab">Activity</a>
+            <a href="#" class="yn-tab">Tax</a>
+          </nav>
+        </header>
+
+        <!-- Placeholder body -->
+        <div class="space-y-3">
+          <div class="h-24 rounded-xl border border-dashed border-stone-300 flex items-center justify-center text-sm text-stone-400">
+            Page content — see the per-screen mockups
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- STATIC REPLICA — mobile drawer in its OPEN state (375px frame).  -->
+<!-- Implementation: a <dialog> styled as a left sheet, opened by the -->
+<!-- top-bar menu button via navigation_drawer_controller (open,      -->
+<!-- close, Escape, focus restore, body scroll lock). Same nav markup -->
+<!-- as the desktop sidebar, rendered from the same partial.          -->
+<!-- =============================================================== -->
+<section class="border-t border-stone-200 bg-stone-100 py-10 mt-16">
+  <div class="max-w-5xl mx-auto px-6">
+    <h2 class="text-sm font-semibold mb-4">Mobile drawer — open state (375px)</h2>
+    <div class="relative w-[375px] h-[560px] overflow-hidden rounded-2xl border border-stone-300 bg-white shadow-sm">
+      <!-- page behind, dimmed -->
+      <div class="absolute inset-0 bg-stone-900/40" aria-hidden="true"></div>
+      <!-- drawer -->
+      <div class="absolute inset-y-0 left-0 w-72 bg-stone-50 border-r border-stone-200 flex flex-col" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div class="flex items-center justify-between px-4 h-14">
+          <span class="text-[15px] font-semibold tracking-tight">Yanushi</span>
+          <button class="yn-btn yn-btn-ghost yn-btn-sm -mr-2" aria-label="Close navigation">
+            <svg viewBox="0 0 16 16" class="w-4 h-4" fill="currentColor" aria-hidden="true"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+          </button>
+        </div>
+        <nav class="px-3 space-y-0.5" aria-label="Primary">
+          <a href="#" class="yn-nav-link" aria-current="page">Overview</a>
+          <a href="#" class="yn-nav-link">Portfolio</a>
+          <a href="#" class="yn-nav-link">Money</a>
+          <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+          <a href="#" class="yn-nav-link">Reports</a>
+        </nav>
+        <nav class="px-3 mt-8" aria-label="Accounting">
+          <p class="yn-nav-heading">Accounting</p>
+          <a href="#" class="yn-nav-link">Accounts</a>
+        </nav>
+        <div class="mt-auto border-t border-stone-200 p-3">
+          <div class="flex items-center justify-between gap-2 px-1.5">
+            <p class="text-sm font-medium text-stone-800 truncate">kyle@example.com</p>
+            <button class="yn-btn yn-btn-ghost yn-btn-sm">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
