@@ -23,8 +23,10 @@
     secondary Add charge      → modal-frame dialog, same contract
     overflow  Change rent / Manage security deposit / Edit agreement /
               Manage participants / End tenancy…
-  An ENDED tenancy hides Record receipt/Add charge and shows only overflow
-  items that remain valid; the header status reads "Ended <date>".
+  An ENDED tenancy hides Add charge and shows only overflow items that remain
+  valid (Change rent is suppressed); Record receipt remains available if the
+  tenancy has an outstanding receivable balance due. The header status reads
+  "Ended <date>".
 
   Amount semantics: charges/reimbursements positive, receipts shown with a
   real minus sign (−). The balance column always spells "due" or "credit";

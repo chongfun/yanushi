@@ -8,14 +8,16 @@ RSpec.describe "Receipts", type: :system do
   let!(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.today, late_period_days: 5) }
 
   before do
+    Accounting::ChartOfAccounts.ensure_for(user)
     create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: Date.today)
     visit new_session_path
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
+    expect(page).to have_text("Overview")
   end
 
-  it "records a payment and verifies details and PDF download link" do
+  it "records a payment and verifies details and PDF download link", :js do
     visit receipts_path
 
     click_on "＋ Record Payment"
@@ -36,23 +38,23 @@ RSpec.describe "Receipts", type: :system do
     expect(page).to have_link("Download PDF Receipt")
   end
 
-  it "records a payment from the tenancy show page" do
-    visit tenancy_path(tenancy)
+  it "records a payment from the standalone tenancy receipt form in real Turbo browser", :js do
+    visit new_tenancy_receipt_path(tenancy)
 
-    click_on "＋ Record Payment", match: :first
+    expect(page).to have_content("Record receipt")
+    select party.display_name, from: "receipt-payer"
+    fill_in "receipt-amount", with: "750.00"
+    fill_in "receipt-method", with: "Check"
 
-    select party.display_name, from: "Payer (Party)"
-    fill_in "Amount ($)", with: "750.00"
-    fill_in "Received Date", with: Date.today.to_s
-    fill_in "Payment Method", with: "Check"
+    click_on "Record receipt"
 
-    click_on "Record Payment"
-
+    expect(page).to have_current_path(tenancy_path(tenancy))
     expect(page).to have_text("Payment recorded successfully.")
-    expect(page).to have_text("$750.00")
+    expect(page).to have_css("#tenancy_balance", text: "credit")
+    expect(page).to have_css("#tenancy_activity", text: "Check")
   end
 
-  it "corrects a payment through the correction flow" do
+  it "corrects a payment through the correction flow", :js do
     res = Receipts::CreateService.call(
       tenancy: tenancy,
       payer_party: party,
@@ -74,7 +76,7 @@ RSpec.describe "Receipts", type: :system do
     expect(page).to have_text("$1,100.00")
   end
 
-  it "voids a payment with confirmation" do
+  it "voids a payment with confirmation", :js do
     res = Receipts::CreateService.call(
       tenancy: tenancy,
       payer_party: party,
@@ -86,6 +88,9 @@ RSpec.describe "Receipts", type: :system do
 
     visit receipt_path(receipt)
     click_on "Void Payment"
+    within("#confirm-modal") do
+      click_on "Confirm"
+    end
 
     expect(page).to have_text("Payment has been voided")
     expect(page).to have_text("This payment was voided.")

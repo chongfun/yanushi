@@ -1,0 +1,105 @@
+<%
+  form_context = local_assigns[:form_context] || :dialog
+  tenancy = local_assigns[:tenancy] || charge.tenancy
+  balance_cents = local_assigns[:balance_cents]
+  balance_cents ||= Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: tenancy, as_of: Date.current) if tenancy
+
+  action_url = if form_context == :standalone
+    tenancy_charges_path(tenancy, format: :html)
+  else
+    tenancy_charges_path(tenancy)
+  end
+%>
+
+<%= form_with(model: charge, url: action_url, class: "space-y-4", id: "charge-form") do |form| %>
+  <% if charge.errors.any? || flash[:alert].present? %>
+    <div class="yn-alert yn-alert-danger" role="alert">
+      <% if flash[:alert].present? %>
+        <%= flash[:alert] %>
+      <% else %>
+        Charge couldn't be posted — <%= pluralize(charge.errors.count, "field") %> needs a fix.
+      <% end %>
+      <% if charge.errors.any? %>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+          <% charge.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Read-only context strip -->
+  <div class="rounded-lg bg-stone-50 border border-stone-200 px-3.5 py-2.5 text-sm">
+    <div class="flex justify-between gap-4">
+      <span class="text-stone-500">Tenancy</span>
+      <span class="font-medium text-right">
+        <% primary = tenancy.primary_tenant_parties.map(&:display_name).to_sentence %>
+        <%= primary.presence || "Tenancy ##{tenancy.id}" %> · <%= tenancy.rentable_unit.display_name %>, <%= tenancy.property.address %>
+      </span>
+    </div>
+    <div class="flex justify-between gap-4 mt-1">
+      <span class="text-stone-500">Current balance</span>
+      <span class="font-medium tabular-nums"><%= balance_phrase_cents(balance_cents) %></span>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :charge_kind, "Charge type", class: "yn-label", for: "charge-kind" %>
+    <%= form.select :charge_kind,
+          [["Late fee", "late_fee"], ["Other fee / charge", "other"]],
+          {},
+          { class: "yn-select #{'yn-field-invalid' if charge.errors[:charge_kind].any?}", id: "charge-kind",
+            "aria-invalid": charge.errors[:charge_kind].any? ? "true" : nil } %>
+    <% if charge.errors[:charge_kind].any? %>
+      <p class="yn-error-text"><%= charge.errors[:charge_kind].first %></p>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= form.label :amount, "Amount", class: "yn-label", for: "charge-amount" %>
+      <%= form.number_field :amount, step: "0.01", min: "0.01", inputmode: "decimal", placeholder: "0.00",
+            value: (charge.amount_cents ? charge.amount_cents / 100.0 : nil),
+            class: "yn-input tabular-nums #{'yn-field-invalid' if charge.errors[:amount].any?}", id: "charge-amount",
+            autofocus: (charge.errors.empty? ? true : nil),
+            "aria-invalid": charge.errors[:amount].any? ? "true" : nil %>
+      <% if charge.errors[:amount].any? %>
+        <p class="yn-error-text"><%= charge.errors[:amount].first %></p>
+      <% end %>
+    </div>
+    <div>
+      <%= form.label :charge_date, "Charge date", class: "yn-label", for: "charge-date" %>
+      <%= form.date_field :charge_date, class: "yn-input #{'yn-field-invalid' if charge.errors[:charge_date].any?}", id: "charge-date",
+            "aria-invalid": charge.errors[:charge_date].any? ? "true" : nil %>
+      <% if charge.errors[:charge_date].any? %>
+        <p class="yn-error-text"><%= charge.errors[:charge_date].first %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :due_on, "Due date", class: "yn-label", for: "charge-due" %>
+    <%= form.date_field :due_on, class: "yn-input #{'yn-field-invalid' if charge.errors[:due_on].any?}", id: "charge-due",
+          "aria-invalid": charge.errors[:due_on].any? ? "true" : nil %>
+    <% if charge.errors[:due_on].any? %>
+      <p class="yn-error-text"><%= charge.errors[:due_on].first %></p>
+    <% end %>
+  </div>
+
+  <div>
+    <%= form.label :description, class: "yn-label", for: "charge-desc" do %>
+      Description <span class="font-normal text-stone-400">(optional)</span>
+    <% end %>
+    <%= form.text_field :description, class: "yn-input", id: "charge-desc", placeholder: "e.g. Late fee for August rent" %>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-2">
+    <% if form_context == :dialog %>
+      <button type="button" data-action="modal#close" class="yn-btn yn-btn-ghost">Cancel</button>
+    <% else %>
+      <%= link_to "Cancel", tenancy_path(tenancy), class: "yn-btn yn-btn-ghost" %>
+    <% end %>
+    <%= form.submit "Add charge", class: "yn-btn yn-btn-primary" %>
+  </div>
+<% end %>

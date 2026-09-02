@@ -1,6 +1,8 @@
 class ChargesController < ApplicationController
   @tenancy: Tenancy
   @charge: Charge
+  @balance_cents: Integer
+  @recent_activity_rows: Array[Accounting::TenantReceivableActivityQuery::StatementRow]
 
   def new: () -> void
   def show: () -> void
@@ -12,4 +14,5 @@ class ChargesController < ApplicationController
   def set_tenancy: () -> void
   def set_charge: () -> void
   def charge_params: () -> ActionController::Parameters
+  def render_charge_failure: () -> void
 end

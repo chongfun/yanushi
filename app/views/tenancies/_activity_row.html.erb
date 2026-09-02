@@ -1,0 +1,46 @@
+<%
+  # row is a TenantReceivableActivityQuery::StatementRow
+  amount_cents = row.amount_cents
+  is_receipt = amount_cents.negative?
+
+  amount_display = if is_receipt
+    "−#{format_money_cents(amount_cents.abs)}"
+  else
+    format_money_cents(amount_cents)
+  end
+
+  balance_display = balance_phrase_cents(row.running_balance_cents)
+
+  description_sub = []
+  description_sub << row.label.capitalize if row.label.present? && row.label != row.description
+  if row.reversal
+    description_sub << (row.kind == "waiver" ? "Waiver" : "Correction")
+  end
+  if row.lifecycle_status == :corrected
+    description_sub << "Corrected"
+  elsif row.lifecycle_status == :voided
+    description_sub << "Voided"
+  end
+
+  row_class = (row.corrected? || row.voided?) ? "opacity-60" : ""
+%>
+<tr class="<%= row_class %>">
+  <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
+  <td>
+    <% if row.source.present? %>
+      <%= link_to row.description, polymorphic_path(row.source), class: "yn-row-link" %>
+    <% else %>
+      <%= row.description %>
+    <% end %>
+    <% if description_sub.any? %>
+      <span class="block text-[13px] text-stone-500"><%= description_sub.join(" · ") %></span>
+    <% end %>
+  </td>
+  <td class="text-right tabular-nums whitespace-nowrap"><%= amount_display %></td>
+  <td class="text-right tabular-nums whitespace-nowrap text-stone-500"><%= balance_display %></td>
+  <td class="text-right">
+    <% if row.journal_entry.present? %>
+      <%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
+    <% end %>
+  </td>
+</tr>

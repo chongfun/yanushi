@@ -6,10 +6,13 @@ class Tenancy < ApplicationRecord
   def past?: (?Date date, ?as_of: untyped) -> bool
   def continuous_tenant_coverage?: (?untyped candidate_parties) -> bool
   def current_rent_term: (?Date date, ?as_of: untyped) -> RentTerm?
+  def primary_rent_term: (?Date date) -> RentTerm?
   def tenant_parties_as_of: (?Date date, ?as_of: untyped) -> Array[Party]
+  def primary_tenant_parties: (?Date date) -> Array[Party]
   def all_tenant_parties: () -> Array[Party]
   def non_tenant_parties_as_of: (?Date date, ?as_of: untyped) -> Array[Party]
   def most_recent_rent_term: () -> RentTerm?
+  def deletable?: () -> bool
   def financial_history?: () -> bool
   def balance_cents: (?as_of: Date) -> Integer
   def current_balance_cents: () -> Integer

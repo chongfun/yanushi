@@ -1,0 +1,22 @@
+<%= turbo_stream.replace "tenancy_balance" do %>
+  <%= render "tenancies/balance", balance_cents: @balance_cents %>
+<% end %>
+<%= turbo_stream.replace "tenancy_activity" do %>
+  <%= render "tenancies/activity" %>
+<% end %>
+<%= turbo_stream.replace "tenancy_delete_action" do %>
+  <div id="tenancy_delete_action">
+    <% if @tenancy.deletable? %>
+      <%= button_to "Delete tenancy…", tenancy_path(@tenancy), method: :delete, data: { turbo_confirm: "Are you sure you want to delete this tenancy?" }, class: "yn-menu-item yn-menu-item-danger" %>
+    <% end %>
+  </div>
+<% end %>
+<% if (@tenancy.past? || @tenancy.upcoming?) && @balance_cents <= 0 %>
+  <%= turbo_stream.replace "tenancy_actions" do %>
+    <%= render "tenancies/actions", tenancy: @tenancy %>
+  <% end %>
+<% end %>
+<%= turbo_stream.action :close_modal, "modal-frame" %>
+<%= turbo_stream.append "flash-messages" do %>
+  <%= render partial: "shared/toast", locals: { type: "notice", message: "Payment recorded successfully." } %>
+<% end %>

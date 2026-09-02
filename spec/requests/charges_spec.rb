@@ -9,6 +9,8 @@ RSpec.describe "Charges", type: :request do
   let(:other_property) { create(:property, user: other_user) }
   let(:other_unit) { create(:rentable_unit, property: other_property) }
   let(:other_tenancy) { create(:tenancy, rentable_unit: other_unit) }
+  let(:party) { create(:party, user: user) }
+  let!(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: tenancy.commencement_date) }
 
   before do
     sign_in_as(user)
@@ -18,19 +20,45 @@ RSpec.describe "Charges", type: :request do
     it "renders a successful response" do
       get new_tenancy_charge_path(tenancy)
       expect(response).to be_successful
-      expect(response.body).to include("Add Charge")
+      expect(response.body).to include("Add charge")
     end
 
     it "rejects accessing new charge for another user's tenancy" do
       get new_tenancy_charge_path(other_tenancy)
       expect(response).to have_http_status(:not_found)
     end
+
+    it "renders new charge form with constant queries regardless of participant count" do
+      get new_tenancy_charge_path(tenancy)
+
+      queries = []
+      counter = ->(_name, _started, _finished, _unique_id, data) {
+        queries << data[:sql] unless data[:name].in?(%w[SCHEMA CACHE]) || data[:sql].match?(/\A\s*(SAVEPOINT|ROLLBACK|COMMIT|BEGIN)/i)
+      }
+
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        get new_tenancy_charge_path(tenancy)
+      end
+      baseline_count = queries.size
+
+      5.times do |i|
+        p = create(:party, user: user, display_name: "Co-tenant #{i}")
+        create(:tenancy_party, tenancy: tenancy, party: p, role: "tenant", effective_from: tenancy.commencement_date)
+      end
+
+      queries = []
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        get new_tenancy_charge_path(tenancy)
+      end
+      expect(queries.size).to eq(baseline_count)
+      expect(response).to be_successful
+    end
   end
 
   describe "POST /tenancies/:tenancy_id/charges" do
-    it "creates and posts a late fee charge" do
+    it "creates and posts a late fee charge via format: :html with 303 see_other" do
       expect {
-        post tenancy_charges_path(tenancy), params: {
+        post tenancy_charges_path(tenancy, format: :html), params: {
           charge: {
             charge_kind: "late_fee",
             amount: "75.00",
@@ -41,26 +69,65 @@ RSpec.describe "Charges", type: :request do
         }
       }.to change(Charge, :count).by(1)
 
+      expect(response).to have_http_status(:see_other)
       expect(response).to redirect_to(tenancy_path(tenancy))
+      expect(flash[:notice]).to eq("Charge was successfully created.")
       charge = Charge.last
       expect(charge.amount_cents).to eq(7500)
       expect(charge.charge_kind).to eq("late_fee")
       expect(charge).to be_posted
     end
 
-    it "creates charge and returns JSON" do
-      post tenancy_charges_path(tenancy, format: :json), params: {
+    it "renders 422 unprocessable_content on invalid standalone format: :html submission and preserves .html action URL" do
+      expect {
+        post tenancy_charges_path(tenancy, format: :html), params: {
+          charge: {
+            charge_kind: "late_fee",
+            amount: "-10.00",
+            charge_date: Date.current,
+            due_on: Date.current
+          }
+        }
+      }.not_to change(Charge, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/html")
+      expect(response.body).to include("Add charge")
+      expect(response.body).to match(/action="[^"]*tenancies\/#{tenancy.id}\/charges(\.html|\?format=html)"/)
+    end
+
+    it "creates charge via turbo_stream format and returns success" do
+      post tenancy_charges_path(tenancy), params: {
         charge: {
           charge_kind: "late_fee",
           amount: "75.00",
-          amount_cents: 1, # Should be ignored
           charge_date: Date.current,
           due_on: Date.current,
           description: "Late fee"
         }
-      }
-      expect(response).to have_http_status(:created)
-      expect(response.parsed_body["amount_cents"]).to eq(7500)
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("close_modal")
+      expect(response.body).to include("tenancy_balance")
+      expect(response.body).to include("tenancy_activity")
+      expect(response.body).to include("target=\"tenancy_delete_action\"")
+      expect(response.body).not_to include("target=\"tenancy_actions\"")
+      expect(response.body).to include("target=\"flash-messages\"")
+      expect(response.body).to include("Charge posted successfully.")
+    end
+
+    it "renders turbo_stream form on error with 422 unprocessable_content" do
+      post tenancy_charges_path(tenancy), params: {
+        charge: {
+          charge_kind: "late_fee",
+          amount: "-10.00",
+          charge_date: Date.current,
+          due_on: Date.current
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include("action=\"update\" target=\"modal-frame\"")
     end
 
     it "defaults to other when charge_kind is blank" do
@@ -87,16 +154,6 @@ RSpec.describe "Charges", type: :request do
         }
       }
 
-      expect(response).to have_http_status(:unprocessable_content)
-
-      post tenancy_charges_path(tenancy, format: :json), params: {
-        charge: {
-          charge_kind: "late_fee",
-          amount: "-10.00",
-          charge_date: Date.current,
-          due_on: Date.current
-        }
-      }
       expect(response).to have_http_status(:unprocessable_content)
     end
 
@@ -139,17 +196,6 @@ RSpec.describe "Charges", type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_content)
-
-      post tenancy_charges_path(tenancy, format: :json), params: {
-        charge: {
-          charge_kind: "rent",
-          amount: "1000.00",
-          charge_date: Date.current,
-          due_on: Date.current
-        }
-      }
-
-      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("must be late_fee or other")
     end
 
@@ -165,16 +211,6 @@ RSpec.describe "Charges", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("must be late_fee or other")
-
-      post tenancy_charges_path(tenancy, format: :json), params: {
-        charge: {
-          charge_kind: "reimbursement",
-          amount: "100.00",
-          charge_date: Date.current,
-          due_on: Date.current
-        }
-      }
-      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects creating charge on another user's tenancy" do

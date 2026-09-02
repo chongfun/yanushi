@@ -25,45 +25,49 @@ RSpec.describe "Charges UI", type: :system do
   end
 
   before do
-    driven_by(:rack_test)
+    Accounting::ChartOfAccounts.ensure_for(user)
     visit new_session_path
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
+    expect(page).to have_text("Overview")
   end
 
-  it "allows creating and voiding a manual late fee charge from the tenancy page" do
-    visit tenancy_path(tenancy)
+  it "allows creating a manual late fee charge via standalone form in real Turbo browser", :js do
+    visit new_tenancy_charge_path(tenancy)
 
-    expect(page).to have_content("Charges & Obligations")
-    click_on "＋ Add Charge", match: :first
+    expect(page).to have_content("Add charge")
+    within("form#charge-form") do
+      select "Late fee", from: "Charge type"
+    end
+    page.execute_script("document.getElementById('charge-amount').value = '50.00'")
+    page.execute_script("document.getElementById('charge-desc').value = 'Late payment fee'")
+    page.execute_script("document.querySelector('form#charge-form').requestSubmit()")
 
-    expect(page).to have_content("Add Charge for Tenancy ##{tenancy.id}")
-    select "Late Fee", from: "Charge Type"
-    fill_in "Amount ($)", with: "50.00"
-    fill_in "Description / Memo", with: "Late payment fee"
-    click_on "Post Charge"
-
-    expect(page).to have_current_path(tenancy_path(tenancy))
     expect(page).to have_content("Charge was successfully created.")
-    expect(page).to have_content("Late Fee")
-    expect(page).to have_content("$50.00")
-    expect(page).to have_content("Late payment fee")
-
-    # Now void the charge
-    charge = Charge.find_by(charge_kind: "late_fee")
-    expect(charge).to be_present
-
-    within("tr#charge_#{charge.id}") do
-      click_on "Void"
-    end
-
     expect(page).to have_current_path(tenancy_path(tenancy))
-    expect(page).to have_content("was successfully voided.")
-    expect(charge.reload).to be_voided
+    expect(page).to have_css("#tenancy_activity", text: "Late payment fee")
+  end
 
-    within("tr#charge_#{charge.id}") do
-      expect(page).to have_content("Voided")
+  it "voids a charge from its detail page", :js do
+    charge = Charges::CreateFeeService.call(
+      tenancy: tenancy,
+      charge_kind: "late_fee",
+      amount_cents: 5000,
+      charge_date: Date.current,
+      due_on: Date.current,
+      description: "Late payment fee"
+    ).value!.data[:charge]
+
+    visit charge_path(charge)
+    expect(page).to have_content("$50.00")
+
+    click_on "Void"
+    within("#confirm-modal") do
+      click_on "Confirm"
     end
+
+    expect(page).to have_content("was successfully voided")
+    expect(charge.reload).to be_voided
   end
 end

@@ -1,0 +1,29 @@
+<section id="tenancy_activity" aria-labelledby="activity-heading">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 id="activity-heading" class="text-sm font-semibold">Activity</h2>
+    <%= link_to "Full statement →", statement_tenancy_path(@tenancy), class: "yn-link text-sm" %>
+  </div>
+
+  <% if @recent_activity_rows.present? %>
+    <div class="overflow-x-auto">
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Activity</th>
+            <th scope="col" class="text-right tabular-nums">Amount</th>
+            <th scope="col" class="text-right tabular-nums">Balance</th>
+            <th scope="col"><span class="sr-only">Audit</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_activity_rows.each do |row| %>
+            <%= render "tenancies/activity_row", row: row %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-sm text-stone-500 py-6">No account activity recorded yet.</p>
+  <% end %>
+</section>

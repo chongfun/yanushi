@@ -853,8 +853,11 @@ At minimum, maintain mockups for:
 Add Charge has no separate mockup by design. It must reuse the Record
 Receipt dialog shell exactly (title bar, read-only context strip,
 two-column field layout, button row, validation-failure variant, focus
-behavior), substituting its own fields: kind (late fee / utility
-reimbursement / other), amount, charge date, due date, description.
+behavior), substituting its own fields: kind (late fee / other fee),
+amount, charge date, due date, description. (Utility reimbursements
+originate from the expense workflow via `ExpenseReimbursementsController`
+where a source expense is required by the accounting engine, and appear in
+the tenancy running account once billed.)
 Later short-form dialogs (for example M5's contextual expense dialog)
 reuse the same shell the same way.
 

@@ -7,6 +7,9 @@ class TenanciesController < ApplicationController
   end
 
   def show
+    @current_rent_term = @tenancy.primary_rent_term
+    @balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: @tenancy, as_of: Date.current)
+    @security_deposit_held_cents = Accounting::SecurityDepositBalanceQuery.call(tenancy: @tenancy, as_of: Date.current)
     @recent_activity_rows = Accounting::RecentTenantReceivableActivityQuery.call(
       tenancy: @tenancy,
       limit: 5,

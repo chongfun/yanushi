@@ -1,0 +1,62 @@
+<%
+  current_tab = local_assigns[:current_tab] || :activity
+  property = @tenancy.property
+  unit = @tenancy.rentable_unit
+  primary_tenants = @tenancy.primary_tenant_parties.map(&:display_name)
+  title_text = primary_tenants.any? ? "#{primary_tenants.to_sentence} · #{unit.display_name}" : "Tenancy ##{@tenancy.id} · #{unit.display_name}"
+
+  status_html = if @tenancy.active?
+    tag.span(class: "yn-status yn-status-sm") do
+      tag.span(class: "yn-dot yn-dot-ok") + "Active"
+    end
+  elsif @tenancy.termination_date.present? && @tenancy.termination_date < Date.current
+    tag.span(class: "yn-status yn-status-sm") do
+      tag.span(class: "yn-dot") + "Ended #{@tenancy.termination_date.strftime("%b %d, %Y")}"
+    end
+  elsif @tenancy.commencement_date.present? && @tenancy.commencement_date > Date.current
+    tag.span(class: "yn-status yn-status-sm") do
+      tag.span(class: "yn-dot yn-dot-warn") + "Upcoming"
+    end
+  else
+    tag.span(class: "yn-status yn-status-sm") do
+      tag.span(class: "yn-dot") + "Ended"
+    end
+  end
+
+  rent_text = if @current_rent_term
+    tag.span(format_money_cents(@current_rent_term.amount_cents), class: "tabular-nums") + "/month"
+  else
+    "No rent set"
+  end
+
+  term_text = if @tenancy.fixed_term? && @tenancy.termination_date.present?
+    "Fixed term through #{@tenancy.termination_date.strftime("%b %Y")}"
+  elsif @tenancy.month_to_month?
+    "Month-to-month"
+  else
+    @tenancy.agreement_type.humanize
+  end
+
+  tab_items = [
+    { label: "Activity", path: tenancy_path(@tenancy), current: current_tab == :activity },
+    { label: "Agreement", path: tenancy_agreement_path(@tenancy), current: current_tab == :agreement }
+  ]
+%>
+
+<%= render "shared/page_header",
+      eyebrow: capture { %>
+        <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <span class="mx-1 text-stone-300">/</span>
+        <%= link_to property.address, property_path(property), class: "hover:text-stone-700 no-underline text-inherit" %>
+        <span class="mx-1 text-stone-300">/</span>
+        <%= unit.display_name %>
+      <% },
+      title: title_text,
+      meta: capture { %>
+        <%= property.address %> &middot;
+        <%= status_html %> &middot;
+        <%= rent_text %> &middot;
+        <%= term_text %>
+      <% },
+      actions: render("tenancies/actions", tenancy: @tenancy),
+      tabs: render("shared/tabs", items: tab_items, aria_label: "Tenancy sections") %>

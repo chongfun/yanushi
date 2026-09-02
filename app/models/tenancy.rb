@@ -120,6 +120,21 @@ class Tenancy < ApplicationRecord
     tenancy_parties.select { |tp| tp.tenant? && tp.active?(target_date) }.map(&:party).compact.uniq
   end
 
+  def primary_tenant_parties(date = Date.current)
+    if past?(date)
+      as_of_date = termination_date || date
+      parties = tenant_parties_as_of(as_of_date)
+      parties.any? ? parties : all_tenant_parties
+    elsif upcoming?(date)
+      as_of_date = commencement_date || date
+      parties = tenant_parties_as_of(as_of_date)
+      parties.any? ? parties : all_tenant_parties
+    else
+      parties = tenant_parties_as_of(date)
+      parties.any? ? parties : all_tenant_parties
+    end
+  end
+
   def all_tenant_parties
     tenancy_parties.select(&:tenant?).map(&:party).compact.uniq
   end
@@ -131,8 +146,24 @@ class Tenancy < ApplicationRecord
     active_non_tenants - tenant_parties_as_of(target_date)
   end
 
+  def primary_rent_term(date = Date.current)
+    if past?(date)
+      as_of_date = termination_date || date
+      current_rent_term(as_of_date) || most_recent_rent_term
+    elsif upcoming?(date)
+      as_of_date = commencement_date || date
+      current_rent_term(as_of_date) || rent_terms.min_by(&:effective_from)
+    else
+      current_rent_term(date) || most_recent_rent_term
+    end
+  end
+
   def most_recent_rent_term
     rent_terms.order(effective_from: :desc).first
+  end
+
+  def deletable?
+    !charges.exists? && !receipts.exists? && !accounting_postings.exists? && security_deposit.nil?
   end
 
   def financial_history?

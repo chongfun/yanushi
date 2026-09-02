@@ -1,12 +1,80 @@
-<div class="max-w-xl mx-auto py-8">
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold">Record Payment</h1>
-    <p class="text-xs text-base-content/60">Posts payment directly to ledger (Dr Cash / Cr Tenant Receivable)</p>
-  </div>
-
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy %>
+<% if @tenancy && turbo_frame_request? %>
+  <%# Dialog context: wrapped in turbo-frame for modal loading %>
+  <turbo-frame id="modal-frame" data-modal-title="Record receipt">
+    <div data-modal-title="Record receipt">
+      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy, form_context: :dialog %>
+    </div>
+  </turbo-frame>
+<% elsif @tenancy %>
+  <%# Standalone nested tenancy receipt form (direct browser visit) %>
+  <% content_for :title, "Record receipt" %>
+  <div class="max-w-xl mx-auto py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight">Record receipt</h1>
+    </div>
+    <div class="yn-surface p-6">
+      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy, form_context: :standalone %>
     </div>
   </div>
-</div>
+<% else %>
+  <%# Top-level new receipt (no tenancy) — standalone form with tenancy selector %>
+  <% content_for :title, "Record Payment" %>
+  <div class="max-w-xl mx-auto py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight">Record Payment</h1>
+    </div>
+    <div class="yn-surface p-6">
+      <%= form_with(model: @receipt, url: receipts_path(format: :html), class: "space-y-4") do |form| %>
+        <% if @receipt.errors.any? || flash[:alert].present? %>
+          <div class="yn-alert yn-alert-danger" role="alert">
+            <%= flash[:alert].presence || @receipt.errors.full_messages.to_sentence %>
+          </div>
+        <% end %>
+
+        <div>
+          <%= form.label :tenancy_id, "Tenancy / Unit", class: "yn-label" %>
+          <%= form.collection_select :tenancy_id, @tenancies, :id, ->(t) { "##{t.id} - #{t.property.address} (#{t.rentable_unit.display_name})" },
+                { prompt: "Select tenancy" }, { class: "yn-select", required: true } %>
+        </div>
+
+        <div>
+          <%= form.label :payer_party_id, "Payer (Party)", class: "yn-label" %>
+          <%= form.collection_select :payer_party_id, @parties, :id, :display_name,
+                { prompt: "Select Payer" }, { class: "yn-select", required: true } %>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= form.label :amount, "Amount ($)", class: "yn-label" %>
+            <%= form.number_field :amount, step: "0.01", min: "0.01", class: "yn-input tabular-nums", required: true %>
+          </div>
+          <div>
+            <%= form.label :received_on, "Received Date", class: "yn-label" %>
+            <%= form.date_field :received_on, class: "yn-input", required: true %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= form.label :payment_method, "Payment Method", class: "yn-label" %>
+            <%= form.text_field :payment_method, class: "yn-input", placeholder: "Zelle, Check, Venmo, Cash", required: true %>
+          </div>
+          <div>
+            <%= form.label :external_reference, "External Reference / Txn #", class: "yn-label" %>
+            <%= form.text_field :external_reference, class: "yn-input" %>
+          </div>
+        </div>
+
+        <div>
+          <%= form.label :memo, "Memo", class: "yn-label" %>
+          <%= form.text_area :memo, rows: 2, class: "yn-textarea" %>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <%= link_to "Cancel", receipts_path, class: "yn-btn yn-btn-ghost" %>
+          <%= form.submit "Record Payment", class: "yn-btn yn-btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

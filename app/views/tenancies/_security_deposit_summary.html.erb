@@ -1,0 +1,17 @@
+<%
+  held_cents = local_assigns[:security_deposit_held_cents] || @security_deposit_held_cents || 0
+  deposit = @tenancy.security_deposit
+  manage_link = if deposit&.persisted?
+    link_to "Manage", tenancy_security_deposit_path(@tenancy), class: "yn-link"
+  else
+    link_to "Set up", new_tenancy_security_deposit_path(@tenancy), class: "yn-link"
+  end
+%>
+<div id="security_deposit_summary" class="text-sm">
+  <p class="text-xs font-medium uppercase tracking-wider text-stone-500 m-0">Security deposit</p>
+  <p class="mt-1 m-0">
+    <span class="font-medium tabular-nums"><%= format_money_cents(held_cents) %></span>
+    <span class="text-stone-500">held in trust</span>
+    · <%= manage_link %>
+  </p>
+</div>

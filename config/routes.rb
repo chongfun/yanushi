@@ -26,6 +26,9 @@ Rails.application.routes.draw do
   resources :parties
 
   resources :tenancies do
+    scope module: :tenancies do
+      resource :agreement, only: :show
+    end
     resources :receipts, only: %i[new create]
     resources :charges, only: %i[new create]
     resources :tenancy_parties, only: %i[new create edit update destroy]

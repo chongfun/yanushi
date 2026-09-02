@@ -1,0 +1,159 @@
+<% content_for :title, "Agreement · #{@tenancy.rentable_unit.display_name}" %>
+
+<div class="max-w-5xl">
+  <%= render "tenancies/header", current_tab: :agreement %>
+
+  <div class="space-y-10 max-w-3xl">
+
+    <!-- Agreement terms -->
+    <section aria-labelledby="terms-heading">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 id="terms-heading" class="text-sm font-semibold">Terms</h2>
+        <%= link_to "Edit", edit_tenancy_path(@tenancy), class: "yn-link text-sm" %>
+      </div>
+      <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+        <div>
+          <dt class="text-stone-500">Agreement type</dt>
+          <dd class="m-0 mt-0.5 font-medium"><%= @tenancy.agreement_type.humanize %></dd>
+        </div>
+        <div>
+          <dt class="text-stone-500">Late period</dt>
+          <dd class="m-0 mt-0.5 font-medium"><%= pluralize(@tenancy.late_period_days, "day") %></dd>
+        </div>
+        <div>
+          <dt class="text-stone-500">Commencement</dt>
+          <dd class="m-0 mt-0.5 font-medium"><%= @tenancy.commencement_date.strftime("%B %-d, %Y") %></dd>
+        </div>
+        <div>
+          <dt class="text-stone-500">Termination</dt>
+          <dd class="m-0 mt-0.5 font-medium"><%= @tenancy.termination_date&.strftime("%B %-d, %Y") || "Month-to-month" %></dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Participants -->
+    <section aria-labelledby="participants-heading">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 id="participants-heading" class="text-sm font-semibold">Participants</h2>
+        <%= link_to "Add participant", new_tenancy_tenancy_party_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col">Party</th>
+              <th scope="col">Role</th>
+              <th scope="col">Effective</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tenancy.tenancy_parties.includes(:party).each do |tp| %>
+              <tr>
+                <td>
+                  <%= link_to tp.party.display_name, party_path(tp.party), class: "yn-row-link" %>
+                  <% if tp.party.email_address.present? %>
+                    <span class="block text-[13px] text-stone-500"><%= tp.party.email_address %></span>
+                  <% end %>
+                </td>
+                <td><%= tp.role.humanize %></td>
+                <td class="text-stone-500 whitespace-nowrap">
+                  <%= tp.effective_from.strftime("%b %-d") %> –
+                  <%= tp.effective_until&.strftime("%b %-d, %Y") || "present" %>
+                </td>
+                <td class="text-right whitespace-nowrap">
+                  <%= link_to "Edit", edit_tenancy_tenancy_party_path(@tenancy, tp), class: "yn-link text-[13px]" %>
+                  <%= button_to "Remove", tenancy_tenancy_party_path(@tenancy, tp), method: :delete, class: "yn-link text-[13px] ml-3 text-red-700", form: { data: { turbo_confirm: "Are you sure you want to remove this participant?" } } %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Rent history -->
+    <section aria-labelledby="rent-heading">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 id="rent-heading" class="text-sm font-semibold">Rent</h2>
+        <% unless @tenancy.past? %>
+          <%= link_to "Change rent", new_tenancy_rent_term_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+        <% end %>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col" class="text-right tabular-nums">Amount</th>
+              <th scope="col">Due</th>
+              <th scope="col">Frequency</th>
+              <th scope="col">Effective</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tenancy.rent_terms.order(effective_from: :desc).each do |term| %>
+              <%
+                is_current = term.active?(Date.current)
+                is_upcoming = !is_current && term.effective_from > Date.current
+                row_class = is_current ? "" : "text-stone-500"
+              %>
+              <tr>
+                <td class="text-right tabular-nums whitespace-nowrap <%= is_current ? 'font-medium' : 'text-stone-500' %>">
+                  <%= format_money_cents(term.amount_cents) %>
+                </td>
+                <td class="whitespace-nowrap <%= row_class %>">Day <%= term.due_day %></td>
+                <td class="<%= row_class %>"><%= term.frequency.humanize %></td>
+                <td class="text-stone-500 whitespace-nowrap">
+                  <%= term.effective_from.strftime("%b %-d, %Y") %> –
+                  <%= term.effective_until&.strftime("%b %-d, %Y") || "" %>
+                </td>
+                <td>
+                  <% if is_current %>
+                    <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Current</span>
+                  <% elsif is_upcoming %>
+                    <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Upcoming</span>
+                  <% else %>
+                    <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Superseded</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Security deposit configuration -->
+    <section aria-labelledby="deposit-heading">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 id="deposit-heading" class="text-sm font-semibold">Security deposit</h2>
+        <% if @tenancy.security_deposit&.persisted? %>
+          <%= link_to "Manage deposit →", tenancy_security_deposit_path(@tenancy), class: "yn-link text-sm" %>
+        <% else %>
+          <%= link_to "Set up deposit", new_tenancy_security_deposit_path(@tenancy), class: "yn-link text-sm" %>
+        <% end %>
+      </div>
+      <% if @tenancy.security_deposit&.persisted? %>
+        <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+          <div>
+            <dt class="text-stone-500">Required</dt>
+            <dd class="m-0 mt-0.5 font-medium tabular-nums">
+              <%= format_money_cents(@tenancy.security_deposit.required_amount_cents) %>
+              <% if @tenancy.security_deposit.due_on.present? %>
+                · due <%= @tenancy.security_deposit.due_on.strftime("%b %-d, %Y") %>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-stone-500">Currently held</dt>
+            <dd class="m-0 mt-0.5 font-medium tabular-nums"><%= format_money_cents(@security_deposit_held_cents) %></dd>
+          </div>
+        </dl>
+      <% else %>
+        <p class="text-sm text-stone-500">No security deposit requirement recorded.</p>
+      <% end %>
+    </section>
+
+  </div>
+</div>

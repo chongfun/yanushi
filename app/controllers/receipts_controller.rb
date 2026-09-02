@@ -30,8 +30,8 @@ class ReceiptsController < ApplicationController
     if (t = @tenancy)
       balance = t.current_balance
       @receipt.amount = balance > 0 ? balance : nil
-      active_tenants = t.tenancy_parties.active.where(role: :tenant).map(&:party).compact
-      @receipt.payer_party = active_tenants.first if active_tenants.size == 1
+      primary_tenants = t.primary_tenant_parties
+      @receipt.payer_party = primary_tenants.first if primary_tenants.size == 1
     end
 
     load_form_collections
@@ -42,14 +42,15 @@ class ReceiptsController < ApplicationController
       if receipt_params[:tenancy_id].present? && receipt_params[:tenancy_id].to_s != t.id.to_s
         @receipt = Receipt.new(receipt_params)
         @receipt.tenancy = t
+        @receipt.errors.add(:tenancy_id, "Submitted tenancy does not match route tenancy")
         flash.now[:alert] = "Submitted tenancy does not match route tenancy"
         load_form_collections
         return respond_to do |format|
           format.html { render :new, status: :unprocessable_content }
           format.turbo_stream do
-            render turbo_stream: turbo_stream.replace("new_receipt_form",
-                                                     partial: "receipts/modal_form",
-                                                     locals: { receipt: @receipt, tenancy: @tenancy }),
+            render turbo_stream: turbo_stream.update("modal-frame",
+                                                     partial: "receipts/form",
+                                                     locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
                    status: :unprocessable_content
           end
         end
@@ -58,14 +59,15 @@ class ReceiptsController < ApplicationController
     else
       if receipt_params[:tenancy_id].blank?
         @receipt = Receipt.new(receipt_params)
+        @receipt.errors.add(:tenancy_id, "Tenancy is required")
         flash.now[:alert] = "Tenancy is required"
         load_form_collections
         return respond_to do |format|
           format.html { render :new, status: :unprocessable_content }
           format.turbo_stream do
-            render turbo_stream: turbo_stream.replace("new_receipt_form",
-                                                     partial: "receipts/modal_form",
-                                                     locals: { receipt: @receipt, tenancy: @tenancy }),
+            render turbo_stream: turbo_stream.update("modal-frame",
+                                                     partial: "receipts/form",
+                                                     locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
                    status: :unprocessable_content
           end
         end
@@ -74,14 +76,15 @@ class ReceiptsController < ApplicationController
       target_tenancy = authenticated_user.tenancies.find_by(id: receipt_params[:tenancy_id])
       unless target_tenancy
         @receipt = Receipt.new(receipt_params)
+        @receipt.errors.add(:tenancy_id, "Tenancy was not found")
         flash.now[:alert] = "Tenancy was not found"
         load_form_collections
         return respond_to do |format|
           format.html { render :new, status: :unprocessable_content }
           format.turbo_stream do
-            render turbo_stream: turbo_stream.replace("new_receipt_form",
-                                                     partial: "receipts/modal_form",
-                                                     locals: { receipt: @receipt, tenancy: @tenancy }),
+            render turbo_stream: turbo_stream.update("modal-frame",
+                                                     partial: "receipts/form",
+                                                     locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
                    status: :unprocessable_content
           end
         end
@@ -95,14 +98,15 @@ class ReceiptsController < ApplicationController
     if receipt_params[:payer_party_id].present? && target_payer.nil?
       @receipt = Receipt.new(receipt_params)
       @receipt.tenancy = target_tenancy
+      @receipt.errors.add(:payer_party_id, "Payer party was not found")
       flash.now[:alert] = "Payer party was not found"
       load_form_collections
       return respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace("new_receipt_form",
-                                                   partial: "receipts/modal_form",
-                                                   locals: { receipt: @receipt, tenancy: @tenancy }),
+          render turbo_stream: turbo_stream.update("modal-frame",
+                                                   partial: "receipts/form",
+                                                   locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
                  status: :unprocessable_content
         end
       end
@@ -121,21 +125,30 @@ class ReceiptsController < ApplicationController
     if result.success?
       created_receipt = result.value!.data[:receipt]
       respond_to do |format|
-        format.html { redirect_to receipt_path(created_receipt), notice: "Payment recorded successfully." }
-        format.turbo_stream { redirect_to receipt_path(created_receipt), notice: "Payment recorded successfully." }
+        format.html do
+          redirect_path = @tenancy ? tenancy_path(@tenancy) : receipt_path(created_receipt)
+          redirect_to redirect_path, notice: "Payment recorded successfully.", status: :see_other
+        end
+        format.turbo_stream do
+          @tenancy = target_tenancy
+          @balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: target_tenancy, as_of: Date.current)
+          @recent_activity_rows = Accounting::RecentTenantReceivableActivityQuery.call(tenancy: target_tenancy)
+          render "receipts/create", formats: [ :turbo_stream ]
+        end
       end
     else
       @receipt = Receipt.new(receipt_params)
       @receipt.tenancy = target_tenancy
       @receipt.payer_party = target_payer
+      @receipt.errors.add(:base, result.failure.error) if @receipt.errors.empty?
       flash.now[:alert] = result.failure.error
       load_form_collections
       respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace("new_receipt_form",
-                                                   partial: "receipts/modal_form",
-                                                   locals: { receipt: @receipt, tenancy: @tenancy }),
+          render turbo_stream: turbo_stream.update("modal-frame",
+                   partial: "receipts/form",
+                   locals: { receipt: @receipt, tenancy: target_tenancy, form_context: :dialog }),
                  status: :unprocessable_content
         end
       end
@@ -221,7 +234,11 @@ class ReceiptsController < ApplicationController
   private
 
     def set_tenancy
-      @tenancy = authenticated_user.tenancies.find(params[:tenancy_id]) if params[:tenancy_id]
+      if params[:tenancy_id]
+        @tenancy = authenticated_user.tenancies
+                                    .includes({ tenancy_parties: :party }, { rentable_unit: :property })
+                                    .find(params[:tenancy_id])
+      end
     end
 
     def set_receipt

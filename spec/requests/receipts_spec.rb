@@ -90,6 +90,32 @@ RSpec.describe "Receipts", type: :request do
       expect(response.body).to include("Alice Walker")
       expect(response.body).to include(tenancy.property.address)
     end
+
+    it "renders nested new receipt form with constant queries regardless of participant count" do
+      get new_tenancy_receipt_url(tenancy)
+
+      queries = []
+      counter = ->(_name, _started, _finished, _unique_id, data) {
+        queries << data[:sql] unless data[:name].in?(%w[SCHEMA CACHE]) || data[:sql].match?(/\A\s*(SAVEPOINT|ROLLBACK|COMMIT|BEGIN)/i)
+      }
+
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        get new_tenancy_receipt_url(tenancy)
+      end
+      baseline_count = queries.size
+
+      5.times do |i|
+        p = create(:party, user: user, display_name: "Co-tenant #{i}")
+        create(:tenancy_party, tenancy: tenancy, party: p, role: "tenant", effective_from: tenancy.commencement_date)
+      end
+
+      queries = []
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        get new_tenancy_receipt_url(tenancy)
+      end
+      expect(queries.size).to eq(baseline_count)
+      expect(response).to be_successful
+    end
   end
 
   describe "POST /receipts and POST /tenancies/:id/receipts" do
@@ -127,7 +153,7 @@ RSpec.describe "Receipts", type: :request do
         }
       }.to change(Receipt, :count).by(1)
 
-      expect(response).to redirect_to(receipt_path(Receipt.last))
+      expect(response).to redirect_to(tenancy_path(tenancy))
     end
 
     it "rejects nested creation with mismatched tenancy_id in body" do
@@ -186,16 +212,97 @@ RSpec.describe "Receipts", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "creates receipt via format: :html, returns 303 see_other, and redirects to tenancy Activity" do
+      expect {
+        post tenancy_receipts_url(tenancy, format: :html), params: {
+          receipt: {
+            payer_party_id: party.id,
+            amount: "1200.00",
+            received_on: "2026-02-01",
+            payment_method: "zelle"
+          }
+        }
+      }.to change(Receipt, :count).by(1)
+
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to(tenancy_path(tenancy))
+      expect(flash[:notice]).to eq("Payment recorded successfully.")
+    end
+
+    it "renders 422 unprocessable_content on invalid standalone format: :html submission and preserves .html action URL" do
+      expect {
+        post tenancy_receipts_url(tenancy, format: :html), params: {
+          receipt: {
+            payer_party_id: party.id,
+            amount: "-50.00",
+            received_on: "2026-02-01",
+            payment_method: "zelle"
+          }
+        }
+      }.not_to change(Receipt, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/html")
+      expect(response.body).to include("Record receipt")
+      expect(response.body).to match(/action="[^"]*tenancies\/#{tenancy.id}\/receipts(\.html|\?format=html)"/)
+    end
+
     it "creates receipt via turbo_stream format" do
-      post tenancy_receipts_url(tenancy, format: :turbo_stream), params: {
+      post tenancy_receipts_url(tenancy), params: {
         receipt: {
           payer_party_id: party.id,
           amount: "1200.00",
           received_on: "2026-02-01",
           payment_method: "zelle"
         }
-      }
-      expect(response).to redirect_to(receipt_path(Receipt.last))
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("close_modal")
+      expect(response.body).to include("tenancy_balance")
+      expect(response.body).to include("tenancy_activity")
+      expect(response.body).to include("target=\"tenancy_delete_action\"")
+      expect(response.body).not_to include("target=\"tenancy_actions\"")
+      expect(response.body).to include("target=\"flash-messages\"")
+      expect(response.body).to include("Payment recorded successfully.")
+    end
+
+    it "creates receipt via turbo_stream format on past tenancy with partial payment and preserves tenancy_actions" do
+      past_unit = create(:rentable_unit, property: property, name: "Past Stream Unit Partial")
+      past_tenancy = create(:tenancy, rentable_unit: past_unit, commencement_date: Date.current - 1.year, termination_date: Date.current - 1.month)
+      past_party = create(:party, user: user, display_name: "Past Payer 1")
+      create(:tenancy_party, tenancy: past_tenancy, party: past_party, role: "tenant", effective_from: past_tenancy.commencement_date)
+      Charges::CreateFeeService.call(tenancy: past_tenancy, charge_kind: "other", amount_cents: 40_000, charge_date: past_tenancy.termination_date, due_on: past_tenancy.termination_date)
+
+      post tenancy_receipts_url(past_tenancy), params: {
+        receipt: {
+          payer_party_id: past_party.id,
+          amount: "100.00",
+          received_on: Date.current.to_s,
+          payment_method: "zelle"
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("target=\"tenancy_delete_action\"")
+      expect(response.body).not_to include("target=\"tenancy_actions\"")
+    end
+
+    it "creates receipt via turbo_stream format on past tenancy with full payoff and refreshes tenancy_actions" do
+      past_unit = create(:rentable_unit, property: property, name: "Past Stream Unit Full")
+      past_tenancy = create(:tenancy, rentable_unit: past_unit, commencement_date: Date.current - 1.year, termination_date: Date.current - 1.month)
+      past_party = create(:party, user: user, display_name: "Past Payer 2")
+      create(:tenancy_party, tenancy: past_tenancy, party: past_party, role: "tenant", effective_from: past_tenancy.commencement_date)
+      Charges::CreateFeeService.call(tenancy: past_tenancy, charge_kind: "other", amount_cents: 40_000, charge_date: past_tenancy.termination_date, due_on: past_tenancy.termination_date)
+
+      post tenancy_receipts_url(past_tenancy), params: {
+        receipt: {
+          payer_party_id: past_party.id,
+          amount: "400.00",
+          received_on: Date.current.to_s,
+          payment_method: "zelle"
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("target=\"tenancy_actions\"")
     end
 
     it "rejects top-level creation with blank tenancy_id" do
@@ -268,6 +375,7 @@ RSpec.describe "Receipts", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include("action=\"update\" target=\"modal-frame\"")
     end
 
     it "renders unprocessable_content on invalid parameters" do

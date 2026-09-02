@@ -5,8 +5,13 @@ class TenanciesController < ApplicationController
   @parties: Party::ActiveRecord_Relation
   @recent_statement: Accounting::TenantReceivableActivityQuery::StatementResult
   @recent_activity_rows: Array[Accounting::TenantReceivableActivityQuery::StatementRow]
+  @current_rent_term: RentTerm?
+  @balance_cents: Integer
+  @security_deposit_held_cents: Integer
   @date_range: Accounting::DateRange
   @statement: Accounting::TenantReceivableActivityQuery::StatementResult
+  @financial_activity: Accounting::TenancyActivityQuery::ActivityResult
+  @view_mode: String
 
   def index: () -> void
   def show: () -> void
