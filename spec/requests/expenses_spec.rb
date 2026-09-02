@@ -40,7 +40,7 @@ RSpec.describe "Expenses", type: :request do
       get new_property_expense_url(property)
       expect(response).to be_successful
       expect(response.body).to include(property.address)
-      expect(response.body).to include("action=\"#{property_expenses_path(property)}\"")
+      expect(response.body).to match(/action="[^"]*properties\/#{property.id}\/expenses(\.html|\?format=html)"/)
     end
   end
 
@@ -81,9 +81,9 @@ RSpec.describe "Expenses", type: :request do
       expect(expense.amount).to eq(100.00)
     end
 
-    it "fails to create an expense when property_id is blank" do
+    it "fails to create an expense when property_id is blank and renders full HTML with ARIA error associations" do
       expect {
-        post expenses_url, params: {
+        post expenses_url(format: :html), params: {
           expense: {
             amount: "100.00",
             expense_kind: "repairs",
@@ -95,6 +95,57 @@ RSpec.describe "Expenses", type: :request do
       }.not_to change(Expense, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/html")
+      expect(response.body).to include('aria-describedby="expense-property-error"')
+      expect(response.body).to include('id="expense-property-error"')
+    end
+
+    it "renders field-level ARIA error attributes for amount and category on validation failure" do
+      post expenses_url(format: :html), params: {
+        expense: {
+          amount: "-50.00",
+          expense_kind: "repairs",
+          description: "Faucet",
+          paid_on: Date.today,
+          property_id: property.id
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/html")
+      expect(response.body).to include('aria-describedby="expense-amount-error"')
+      expect(response.body).to include('id="expense-amount-error"')
+
+      post expenses_url(format: :html), params: {
+        expense: {
+          amount: "50.00",
+          expense_kind: "",
+          description: "Faucet",
+          paid_on: Date.today,
+          property_id: property.id
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/html")
+      expect(response.body).to include('aria-describedby="expense-kind-error"')
+      expect(response.body).to include('id="expense-kind-error"')
+    end
+
+    it "preserves blank amount and blank date on validation failure without defaulting" do
+      post expenses_url(format: :html), params: {
+        expense: {
+          amount: "",
+          expense_kind: "repairs",
+          description: "Faucet",
+          paid_on: "",
+          property_id: property.id
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('id="expense-amount-error"')
+      expect(response.body).to include('id="expense-date-error"')
+      # Value attributes should not contain 0.00 or today's date
+      expect(response.body).not_to include('id="expense-amount" placeholder="0.00" required="required" value="0.00"')
+      expect(response.body).not_to include("value=\"#{Date.current}\"")
     end
 
     it "creates nested expense and redirects to property activity path" do
@@ -131,9 +182,27 @@ RSpec.describe "Expenses", type: :request do
       expect(response.body).to include('target="property_recent_activity"')
     end
 
-    it "handles nested expense validation failure with unprocessable content" do
+    it "handles nested expense validation failure in dialog variant with turbo_stream" do
       expect {
         post property_expenses_url(property), params: {
+          expense: {
+            amount: "-50.0",
+            expense_kind: "repairs",
+            description: "Faucet",
+            paid_on: Date.today
+          }
+        }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      }.not_to change(Expense, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include('action="update" target="modal-frame"')
+      expect(response.body).to include('id="expense-amount-error"')
+    end
+
+    it "handles nested expense validation failure in standalone variant with text/html" do
+      expect {
+        post property_expenses_url(property, format: :html), params: {
           expense: {
             amount: "-50.0",
             expense_kind: "repairs",
@@ -144,6 +213,9 @@ RSpec.describe "Expenses", type: :request do
       }.not_to change(Expense, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq("text/html")
+      expect(response.body).to include('aria-describedby="expense-amount-error"')
+      expect(response.body).to include('id="expense-amount-error"')
     end
 
     it "should not create expense with other user's property" do
@@ -159,6 +231,50 @@ RSpec.describe "Expenses", type: :request do
       }.not_to change(Expense, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "does not disclose foreign property rentable units on 422 create response (P1 isolation)" do
+      foreign_unit = create(:rentable_unit, property: other_property, name: "Secret Penthouse 9999")
+      expect {
+        post expenses_url, params: {
+          expense: {
+            amount: "100.00",
+            expense_kind: "repairs",
+            paid_on: Date.today,
+            property_id: other_property.id
+          }
+        }
+      }.not_to change(Expense, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).not_to include("Secret Penthouse 9999")
+      expect(response.body).not_to include("value=\"#{foreign_unit.id}\"")
+    end
+
+    it "preserves malformed and scientific-notation amount input on 422 create without raising ArgumentError" do
+      post expenses_url, params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "repairs",
+          amount: "garbage",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="garbage"')
+      expect(response.body).to include('id="expense-amount-error"')
+
+      post expenses_url, params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "repairs",
+          amount: "1e3",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="1e3"')
+      expect(response.body).not_to include('value="1000.00"')
     end
 
     it "rejects nested route with mismatched property_id" do
@@ -183,6 +299,47 @@ RSpec.describe "Expenses", type: :request do
           rentable_unit_id: other_unit.id
         }
       }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "maps service failure messages to specific field errors" do
+      err_struct = Struct.new(:error, :data)
+      allow(Expenses::CreateService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Paid date cannot be in future", {}))
+      )
+      post expenses_url(format: :html), params: {
+        expense: { amount: "100.00", expense_kind: "repairs", paid_on: Date.today, property_id: property.id }
+      }
+      expect(response.body).to include('id="expense-date-error"')
+
+      allow(Expenses::CreateService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Vendor name is invalid", {}))
+      )
+      post expenses_url(format: :html), params: {
+        expense: { amount: "100.00", expense_kind: "repairs", paid_on: Date.today, property_id: property.id }
+      }
+      expect(response.body).to include('id="expense-vendor-error"')
+
+      allow(Expenses::CreateService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("External reference is duplicate", {}))
+      )
+      post expenses_url(format: :html), params: {
+        expense: { amount: "100.00", expense_kind: "repairs", paid_on: Date.today, property_id: property.id }
+      }
+      expect(response.body).to include('id="expense-ref-error"')
+
+      allow(Expenses::CreateService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Generic ledger error", {}))
+      )
+      post expenses_url(format: :html), params: {
+        expense: { amount: "100.00", expense_kind: "repairs", paid_on: Date.today, property_id: property.id }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      # JSON format
+      post expenses_url, params: {
+        expense: { amount: "100.00", expense_kind: "repairs", paid_on: Date.today, property_id: property.id }
+      }, as: :json
       expect(response).to have_http_status(:unprocessable_content)
     end
 
@@ -354,14 +511,140 @@ RSpec.describe "Expenses", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
-    it "renders correction with unprocessable_content when service fails" do
+    it "does not disclose foreign property rentable units on 422 correction response (P1 isolation)" do
+      foreign_unit = create(:rentable_unit, property: other_property, name: "Secret Penthouse 9999")
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: other_property.id,
+          expense_kind: "utilities",
+          amount: "150.00",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).not_to include("Secret Penthouse 9999")
+      expect(response.body).not_to include("value=\"#{foreign_unit.id}\"")
+    end
+
+    it "preserves malformed and scientific-notation amount input on 422 correction without raising ArgumentError" do
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "repairs",
+          amount: "garbage",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="garbage"')
+      expect(response.body).to include('id="expense-correct-amount-error"')
+
+      post correct_expense_url(expense), params: {
+        expense: {
+          property_id: property.id,
+          expense_kind: "repairs",
+          amount: "1e3",
+          paid_on: Date.today
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="1e3"')
+      expect(response.body).not_to include('value="1000.00"')
+    end
+
+    it "rejects correction with blank required fields instead of silently using originals" do
+      expect {
+        post correct_expense_url(expense), params: {
+          expense: {
+            property_id: property.id,
+            expense_kind: "",
+            amount: "",
+            paid_on: ""
+          }
+        }
+      }.not_to change(Expense, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('id="expense-correct-kind-error"')
+      expect(response.body).to include('id="expense-correct-amount-error"')
+      expect(response.body).to include('id="expense-correct-date-error"')
+    end
+
+    it "renders correction with unprocessable_content and ARIA attributes when service fails, preserving submitted input" do
       post correct_expense_url(expense), params: {
         expense: {
           property_id: property.id,
           expense_kind: "utilities",
-          amount: "garbage",
-          paid_on: Date.today
+          amount: "-100.00",
+          paid_on: Date.today,
+          vendor_name: "Custom Utility Co",
+          external_reference: "REF-CORRECT-1",
+          description: "Updated notes"
         }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('aria-describedby="expense-correct-amount-error"')
+      expect(response.body).to include('id="expense-correct-amount-error"')
+      expect(response.body).to include('value="Custom Utility Co"')
+      expect(response.body).to include('value="REF-CORRECT-1"')
+      expect(response.body).to include('Updated notes')
+    end
+
+    it "maps service failure messages to specific correction field errors" do
+      err_struct = Struct.new(:error, :data)
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Category is required", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
+      }
+      expect(response.body).to include('id="expense-correct-kind-error"')
+
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Paid date cannot be in future", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
+      }
+      expect(response.body).to include('id="expense-correct-date-error"')
+
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Vendor name is invalid", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
+      }
+      expect(response.body).to include('id="expense-correct-vendor-error"')
+
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Reference is duplicate", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
+      }
+      expect(response.body).to include('id="expense-correct-ref-error"')
+
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Property is invalid", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
+      }
+      expect(response.body).to include('id="expense-correct-property-error"')
+
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Unit is invalid", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
+      }
+      expect(response.body).to include('id="expense-correct-unit-error"')
+
+      allow(Expenses::CorrectService).to receive(:call).and_return(
+        Dry::Monads::Failure(err_struct.new("Generic unmapped error", {}))
+      )
+      post correct_expense_url(expense), params: {
+        expense: { property_id: property.id, expense_kind: "repairs", paid_on: Date.today, amount: "50.00" }
       }
       expect(response).to have_http_status(:unprocessable_content)
     end

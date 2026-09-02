@@ -61,7 +61,7 @@ class PropertyTaxReviewResolutionsController < ApplicationController
           render turbo_stream: turbo_stream.replace(
             "schedule_e_review",
             partial: "properties/schedule_e/review",
-            locals: { failed_resolution: @resolution }
+            locals: { failed_resolution: @resolution, auto_focus: true }
           ), status: :unprocessable_content
         end
       end

@@ -1,4 +1,4 @@
-<p class="mt-1 text-sm text-stone-500" id="schedule_e_readiness">
+<p class="mt-1 text-sm text-stone-500" id="schedule_e_readiness" aria-live="polite" aria-atomic="true">
   <%= @property.address %> ·
   <%= @tax_profile ? @tax_profile.schedule_e_property_type.humanize : "Not configured" %>
   <% if @tax_profile&.other_description.present? %>(<%= @tax_profile.other_description %>)<% end %> ·

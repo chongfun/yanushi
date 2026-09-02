@@ -1,6 +1,8 @@
-<section id="schedule_e_review" aria-labelledby="se-review-heading">
+<section id="schedule_e_review" aria-labelledby="se-review-heading" tabindex="-1"
+         data-controller="schedule-e-review"
+         data-schedule-e-review-auto-focus-value="<%= local_assigns[:auto_focus] ? 'true' : 'false' %>">
   <% if @schedule_e_result.review_items.any? %>
-    <h2 id="se-review-heading" class="text-sm font-semibold mb-3">
+    <h2 id="se-review-heading" class="text-sm font-semibold mb-3" tabindex="-1">
       Needs review
       <% if @schedule_e_result.unresolved_review_items.any? %>
         <span class="yn-count ml-1"><%= @schedule_e_result.unresolved_review_items.size %></span>
@@ -65,6 +67,7 @@
               <%= f.hidden_field :tax_year, value: target_entry.occurred_on.year %>
 
               <div>
+                <% has_treatment_error = is_failed_entry && failed_res.errors[:treatment].any? %>
                 <%= f.label :treatment, "Treatment", class: "yn-label", for: "treatment_#{target_entry.id}" %>
                 <%
                   treatment_options = []
@@ -75,23 +78,38 @@
                 <%= f.select :treatment,
                              treatment_options,
                              { selected: selected_treatment },
-                             class: "yn-select w-64",
+                             class: "yn-select w-64 #{'yn-field-invalid' if has_treatment_error}",
                              id: "treatment_#{target_entry.id}",
+                             "aria-invalid": (has_treatment_error ? "true" : nil),
+                             "aria-describedby": (has_treatment_error ? "treatment_#{target_entry.id}_error" : nil),
                              data: {
                                schedule_e_treatment_target: "treatmentSelect",
                                action: "change->schedule-e-treatment#toggle"
                              } %>
+                <% if has_treatment_error %>
+                  <p id="treatment_<%= target_entry.id %>_error" class="yn-error-text mt-1">
+                    <%= failed_res.errors[:treatment].first %>
+                  </p>
+                <% end %>
               </div>
 
               <% if item.can_map_to_expense? %>
+                <% has_category_error = is_failed_entry && failed_res.errors[:schedule_e_category].any? %>
                 <div class="<%= 'hidden' unless show_category %>"
                      data-schedule-e-treatment-target="categoryWrapper">
                   <%= f.label :schedule_e_category, "Category", class: "yn-label", for: "category_#{target_entry.id}" %>
                   <%= f.select :schedule_e_category,
                                TaxReporting::ScheduleEAccountMap.supported_categories.map { |c| [c.to_s.titleize, c.to_s] },
                                { prompt: "Select category...", selected: selected_category },
-                               class: "yn-select w-48",
-                               id: "category_#{target_entry.id}" %>
+                               class: "yn-select w-48 #{'yn-field-invalid' if has_category_error}",
+                               id: "category_#{target_entry.id}",
+                               "aria-invalid": (has_category_error ? "true" : nil),
+                               "aria-describedby": (has_category_error ? "category_#{target_entry.id}_error" : nil) %>
+                  <% if has_category_error %>
+                    <p id="category_<%= target_entry.id %>_error" class="yn-error-text mt-1">
+                      <%= failed_res.errors[:schedule_e_category].first %>
+                    </p>
+                  <% end %>
                 </div>
               <% end %>
 

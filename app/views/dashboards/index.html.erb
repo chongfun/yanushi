@@ -137,9 +137,9 @@
                     <% end %>
                   <% end %>
                   <% if row.corrected? %>
-                    <span class="yn-badge yn-badge-warn ml-1">Corrected</span>
+                    <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
                   <% elsif row.voided? %>
-                    <span class="yn-badge yn-badge-danger ml-1">Voided</span>
+                    <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-danger"></span>Voided</span>
                   <% end %>
                 </td>
                 <td class="text-stone-500"><%= row.property&.address %></td>

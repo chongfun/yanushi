@@ -78,26 +78,25 @@ export default class extends Controller {
 
     const remainingRows = Array.from(this.element.querySelectorAll("a[id^='imported_transaction_']"))
     if (remainingRows.length === 0) {
-      // All visible rows were removed remotely while workspace is still mounted -> refresh to canonical queue
+      // Refresh if all rows were removed
       Turbo.visit(window.location.href, { action: "replace" })
       return
     }
 
-    // Check if the currently reviewed transaction is still present in the queue
+    // Check if active transaction is still present
     const currentForm = document.querySelector("#inbox_review form[id^='review_form_']")
     const currentTxnId = currentForm?.id?.replace("review_form_", "")
     const currentlyActiveRow = currentTxnId ? this.element.querySelector(`#imported_transaction_${currentTxnId}`) : null
 
     if (currentlyActiveRow) {
-      // The currently reviewed transaction is still present in the queue.
-      // If a remote replacement reset aria-current to false, restore selection styling without reloading the frame.
+      // Restore selection styling if reset by remote replacement
       if (currentlyActiveRow.getAttribute("aria-current") !== "true") {
         this.highlightRow(currentlyActiveRow)
       }
       return
     }
 
-    // The currently reviewed transaction was removed remotely -> refresh to canonical server state
+    // Active transaction was removed remotely; refresh view
     Turbo.visit(window.location.href, { action: "replace" })
   }
 

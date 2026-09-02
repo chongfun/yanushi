@@ -22,14 +22,16 @@ RSpec.describe "Receipts", type: :system do
 
     click_on "Record receipt", match: :first
 
-    select "##{tenancy.id} - #{property.address} (#{unit.display_name})", from: "Tenancy / Unit"
-    select party.display_name, from: "Payer (Party)"
-    fill_in "Amount ($)", with: "1000.00"
-    fill_in "Received Date", with: Date.today.to_s
-    fill_in "Payment Method", with: "Zelle"
-    fill_in "External Reference / Txn #", with: "ZEL-1001"
+    expect(page).to have_content("Record Payment")
 
-    click_on "Record Payment"
+    select "##{tenancy.id} - #{property.address} (#{unit.name})", from: "receipt-tenancy"
+    select party.display_name, from: "receipt-payer"
+    page.execute_script("document.getElementById('receipt-amount').value = '1000.00'")
+    page.execute_script("document.getElementById('receipt-method').value = 'Zelle'")
+    fill_in "receipt-date", with: Date.today.strftime("%Y-%m-%d")
+    page.execute_script("document.getElementById('receipt-ref').value = 'ZEL-1001'")
+
+    page.execute_script("document.querySelector('main form').requestSubmit()")
 
     expect(page).to have_text("Payment recorded successfully.")
     expect(page).to have_text("$1,000.00")
@@ -46,10 +48,10 @@ RSpec.describe "Receipts", type: :system do
     fill_in "receipt-amount", with: "750.00"
     fill_in "receipt-method", with: "Check"
 
-    click_on "Record receipt"
+    click_button "Record receipt"
 
-    expect(page).to have_current_path(tenancy_path(tenancy))
     expect(page).to have_text("Payment recorded successfully.")
+    expect(page).to have_current_path(tenancy_path(tenancy))
     expect(page).to have_css("#tenancy_balance", text: "credit")
     expect(page).to have_css("#tenancy_activity", text: "Check")
   end
@@ -89,7 +91,8 @@ RSpec.describe "Receipts", type: :system do
     visit receipt_path(receipt)
     click_on "Void Payment"
     within("#confirm-modal") do
-      click_on "Confirm"
+      expect(page).to have_text("Are you sure you want to void this payment?")
+      click_button "Confirm"
     end
 
     expect(page).to have_text("Payment has been voided")

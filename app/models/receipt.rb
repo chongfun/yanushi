@@ -55,6 +55,8 @@ class Receipt < ApplicationRecord
     !voided?
   end
 
+  attr_accessor :raw_amount
+
   def amount
     return nil if amount_cents.nil?
 
@@ -62,6 +64,7 @@ class Receipt < ApplicationRecord
   end
 
   def amount=(value)
+    @raw_amount = value.presence
     if value.blank?
       self.amount_cents = nil
       @amount_error = nil
@@ -86,6 +89,13 @@ class Receipt < ApplicationRecord
 
     @amount_error = nil
     self.amount_cents = (BigDecimal(val_str) * 100).round
+  end
+
+  def formatted_amount
+    return @raw_amount if defined?(@raw_amount) && @raw_amount.present?
+    return nil if amount.nil?
+
+    sprintf("%.2f", amount)
   end
 
   def accounting_user
@@ -114,6 +124,9 @@ class Receipt < ApplicationRecord
 
     def validate_amount_format
       errors.add(:amount, @amount_error) if @amount_error.present?
+      if amount_cents.present? && amount_cents <= 0
+        errors.add(:amount, "must be greater than 0")
+      end
     end
 
     def prevent_mutation_after_posting

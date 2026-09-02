@@ -111,7 +111,7 @@ module ImportedTransactions
 
     private
 
-      attr_reader :user, :transaction, :params
+      attr_reader :user, :transaction, :params, :requested_alias
 
       def confirm_receipt
         tenancy = user.tenancies.find_by(id: transaction.matched_tenancy_id)
@@ -158,8 +158,6 @@ module ImportedTransactions
           result
         end
       end
-
-      attr_reader :user, :transaction, :params, :requested_alias
 
       def create_party_aliases
         party = transaction.matched_party

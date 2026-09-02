@@ -1,11 +1,5 @@
 @import "tailwindcss";
 
-@source not "./plugins/daisyui{,*}.mjs";
-
-@plugin "./plugins/daisyui.mjs" {
-    themes: silk --default;
-}
-
 /*
  * Yanushi UI — first-party component layer for the UX refresh.
  *
@@ -363,6 +357,11 @@
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
 }
+.yn-alert-ok {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: var(--yn-ok);
+}
 .yn-alert-warn {
   background: var(--yn-warn-bg);
   border-color: var(--yn-warn-border);
@@ -474,3 +473,10 @@ dialog.modal-dialog::backdrop {
 .modal-close:focus-visible { outline: 2px solid var(--yn-focus); outline-offset: 2px; }
 
 .modal-body { padding: 1.25rem; overflow-y: auto; }
+
+/* Turbo Frame busy state */
+turbo-frame[busy] {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out;
+}

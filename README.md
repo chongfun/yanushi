@@ -1,6 +1,19 @@
 # Yanushi
 
-Yanushi is a modern, double-entry property management and tax reporting platform designed for landlords and property managers who value precision, auditability, and simplicity. Built with **Ruby on Rails 8**, **PostgreSQL**, **Hotwire (Turbo + Stimulus)**, and **daisyUI**, Yanushi provides an immutable ledger foundation for managing rental properties, tenancies, automated ingestion, and tax compliance.
+Yanushi is a modern, double-entry property management and tax reporting platform designed for landlords and property managers who value precision, auditability, and simplicity. Built with **Ruby on Rails 8**, **PostgreSQL**, **Hotwire (Turbo + Stimulus)**, and custom **Yanushi UI** design tokens on Tailwind CSS, Yanushi provides an immutable ledger foundation for managing rental properties, tenancies, automated ingestion, and tax compliance.
+
+---
+
+## Application Structure & Navigation
+
+Yanushi organizes property management into 5 primary top-level areas and a secondary accounting administration section:
+
+- **📊 Overview (`/`)**: High-level dashboard highlighting portfolio occupancy, monthly cash collections, pending reviews, and quick action shortcuts.
+- **🏠 Portfolio (`/portfolio`)**: Multi-unit and single-family property management with unit-level tracking, tenancy agreements, co-tenants, and tenant directories.
+- **💳 Money (`/money`)**: Centralized financial activity hub covering cash receipts, operating expenses, tenant charges, and running balances.
+- **📥 Inbox (`/inbox`)**: Automated source document ingestion for bank statements and digital receipts with live Action Cable status broadcasts, smart matching, and review queues.
+- **📑 Reports (`/reports`)**: Tax year readiness tracking and IRS Schedule E tax worksheets, review resolution workflows, and PDF exports.
+- **📒 Accounting (`/accounts`)**: Secondary administrative section for managing the chart of accounts and inspecting double-entry journal postings.
 
 ---
 

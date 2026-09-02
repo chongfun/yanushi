@@ -1,16 +1,6 @@
 <% content_for :title, "New Tenant / Payer" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Tenants & Payers", parties_path %></li>
-  <li class="font-bold">New Party</li>
-<% end %>
-
-<div class="max-w-2xl mx-auto py-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold mb-6">New Tenant / Payer</h2>
-
-      <%= render "form", party: @party %>
-    </div>
-  </div>
+<div class="max-w-2xl mx-auto py-6">
+  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">New Tenant / Payer</h1>
+  <%= render "form", party: @party %>
 </div>

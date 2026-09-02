@@ -49,7 +49,7 @@ module ImportedTransactions
         )
       end
 
-      # Serialized fallback under user row lock if optimistic retry limit is reached
+      # Fallback under row lock if retry limit reached
       User.transaction do
         user.lock!
 

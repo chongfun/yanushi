@@ -1,69 +1,61 @@
 <% content_for :title, "Add Reimbursement Charge" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Expenses", expenses_path %></li>
-  <li><%= link_to "Expense ##{@expense.id}", @expense %></li>
-  <li class="font-bold">Add Reimbursement</li>
-<% end %>
+<div class="max-w-xl mx-auto py-6">
+  <div class="bg-white border border-stone-200 rounded-lg p-6">
+    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-2">Add Reimbursement Charge</h1>
+    <p class="text-xs text-stone-500 mb-6">
+      Bill all or part of Expense #<%= @expense.id %> (<%= number_to_currency(@expense.amount) %> - <%= @expense.expense_kind&.titleize %>) to a tenancy at <%= @expense.property.address %>.<br>
+      <span class="font-semibold text-stone-700">Available to reimburse: <%= number_to_currency(@expense.remaining_reimbursable_amount) %></span>
+    </p>
 
-<div class="max-w-xl mx-auto py-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold mb-2">Add Reimbursement Charge</h2>
-      <p class="text-xs text-base-content/60 mb-6">
-        Bill all or part of Expense #<%= @expense.id %> (<%= number_to_currency(@expense.amount) %> - <%= @expense.expense_kind&.titleize %>) to a tenancy at <%= @expense.property.address %>.<br>
-        <span class="font-semibold text-primary">Available to reimburse: <%= number_to_currency(@expense.remaining_reimbursable_amount) %></span>
-      </p>
-
-      <%= form_with(model: [@expense, @charge], url: expense_reimbursements_path(@expense)) do |form| %>
-        <% if @charge.errors.any? %>
-          <div class="alert alert-error shadow-lg mb-6 text-error-content">
-            <div>
-              <h3 class="font-bold"><%= pluralize(@charge.errors.count, "error") %> prohibited this reimbursement from being saved:</h3>
-              <ul class="list-disc pl-5 mt-1 text-sm">
-                <% @charge.errors.each do |error| %>
-                  <li><%= error.full_message %></li>
-                <% end %>
-              </ul>
-            </div>
+    <%= form_with(model: [@expense, @charge], url: expense_reimbursements_path(@expense), class: "space-y-4") do |form| %>
+      <% if @charge.errors.any? %>
+        <div class="yn-alert yn-alert-danger" role="alert">
+          <div>
+            <h3 class="font-bold text-sm"><%= pluralize(@charge.errors.count, "error") %> prohibited this reimbursement from being saved:</h3>
+            <ul class="list-disc pl-5 mt-1 text-sm">
+              <% @charge.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
           </div>
-        <% end %>
-
-        <div class="form-control w-full mb-4">
-          <%= form.label :tenancy_id, "Tenancy to Charge", class: "label font-semibold" %>
-          <%= form.select :tenancy_id,
-                @tenancies.map { |t| ["#{t.rentable_unit.display_name} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
-                { include_blank: "Select a tenancy..." },
-                { class: "select select-bordered w-full", required: true } %>
-        </div>
-
-        <div class="form-control w-full mb-4">
-          <%= form.label :amount, "Reimbursement Amount ($)", class: "label font-semibold" %>
-          <%= form.number_field :amount, value: (@charge.amount_cents ? @charge.amount_cents / 100.0 : (@charge.amount || @expense.remaining_reimbursable_amount)), step: 0.01, min: 0.01, max: (@expense.remaining_reimbursable_amount if @expense.remaining_reimbursable_amount > 0), class: "input input-bordered w-full font-mono", placeholder: "100.00", required: true %>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div class="form-control w-full">
-            <%= form.label :charge_date, "Charge Date", class: "label font-semibold" %>
-            <%= form.date_field :charge_date, value: (@charge.charge_date || @expense.paid_on || Date.current), class: "input input-bordered w-full", required: true %>
-          </div>
-
-          <div class="form-control w-full">
-            <%= form.label :due_on, "Due Date", class: "label font-semibold" %>
-            <%= form.date_field :due_on, value: (@charge.due_on || @expense.paid_on || Date.current), class: "input input-bordered w-full", required: true %>
-          </div>
-        </div>
-
-        <div class="form-control w-full mb-6">
-          <%= form.label :description, "Description / Memo", class: "label font-semibold" %>
-          <%= form.text_field :description, value: (@charge.description || @expense.description), class: "input input-bordered w-full", placeholder: "e.g. Water bill share" %>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-4">
-          <%= link_to "Cancel", @expense, class: "btn btn-ghost" %>
-          <%= form.submit "Post Reimbursement Charge", class: "btn btn-primary px-8" %>
         </div>
       <% end %>
-    </div>
+
+      <div>
+        <%= form.label :tenancy_id, "Tenancy to Charge", class: "yn-label" %>
+        <%= form.select :tenancy_id,
+              @tenancies.map { |t| ["#{t.rentable_unit.display_name} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
+              { include_blank: "Select a tenancy..." },
+              { class: "yn-select", required: true } %>
+      </div>
+
+      <div>
+        <%= form.label :amount, "Reimbursement Amount ($)", class: "yn-label" %>
+        <%= form.number_field :amount, value: (@charge.amount_cents ? @charge.amount_cents / 100.0 : (@charge.amount || @expense.remaining_reimbursable_amount)), step: 0.01, min: 0.01, max: (@expense.remaining_reimbursable_amount if @expense.remaining_reimbursable_amount > 0), class: "yn-input font-mono tabular-nums", placeholder: "100.00", required: true %>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= form.label :charge_date, "Charge Date", class: "yn-label" %>
+          <%= form.date_field :charge_date, value: (@charge.charge_date || @expense.paid_on || Date.current), class: "yn-input", required: true %>
+        </div>
+
+        <div>
+          <%= form.label :due_on, "Due Date", class: "yn-label" %>
+          <%= form.date_field :due_on, value: (@charge.due_on || @expense.paid_on || Date.current), class: "yn-input", required: true %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :description, "Description / Memo", class: "yn-label" %>
+        <%= form.text_field :description, value: (@charge.description || @expense.description), class: "yn-input", placeholder: "e.g. Water bill share" %>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4">
+        <%= link_to "Cancel", @expense, class: "yn-btn yn-btn-secondary" %>
+        <%= form.submit "Post Reimbursement Charge", class: "yn-btn yn-btn-primary" %>
+      </div>
+    <% end %>
   </div>
 </div>

@@ -44,7 +44,21 @@ class ChargesController < ApplicationController
       end
     else
       @charge = result.failure.data&.dig(:charge) || @tenancy.charges.new(charge_params)
-      @charge.errors.add(:base, result.failure.error) if @charge.errors.empty?
+      if @charge.errors.empty?
+        error_msg = result.failure.error.to_s
+        err_lower = error_msg.downcase
+        if err_lower.include?("amount")
+          @charge.errors.add(:amount, error_msg)
+        elsif err_lower.include?("charge kind") || err_lower.include?("charge type")
+          @charge.errors.add(:charge_kind, error_msg)
+        elsif err_lower.include?("due")
+          @charge.errors.add(:due_on, error_msg)
+        elsif err_lower.include?("charge date")
+          @charge.errors.add(:charge_date, error_msg)
+        else
+          @charge.errors.add(:base, error_msg)
+        end
+      end
       render_charge_failure
     end
   end
@@ -55,10 +69,10 @@ class ChargesController < ApplicationController
 
     respond_to do |format|
       if result.success?
-        format.html { redirect_to @charge.tenancy, notice: "Charge ##{@charge.id} was successfully voided." }
+        format.html { redirect_to @charge.tenancy, notice: "Charge ##{@charge.id} was successfully voided.", status: :see_other }
         format.json { render json: { status: :ok, message: "Charge voided" } }
       else
-        format.html { redirect_to @charge.tenancy, alert: "Failed to void charge: #{result.failure.error}" }
+        format.html { redirect_to @charge.tenancy, alert: "Failed to void charge: #{result.failure.error}", status: :see_other }
         format.json { render json: { error: result.failure.error }, status: :unprocessable_content }
       end
     end
@@ -87,10 +101,14 @@ class ChargesController < ApplicationController
       respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.update("modal-frame",
-                   partial: "charges/form",
-                   locals: { charge: @charge, tenancy: @tenancy, form_context: :dialog }),
-                 status: :unprocessable_content
+          if params[:format] != "html"
+            render turbo_stream: turbo_stream.update("modal-frame",
+                     partial: "charges/form",
+                     locals: { charge: @charge, tenancy: @tenancy, form_context: :dialog }),
+                   status: :unprocessable_content
+          else
+            render :new, formats: [ :html ], status: :unprocessable_content
+          end
         end
       end
     end

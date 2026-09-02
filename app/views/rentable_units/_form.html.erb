@@ -1,9 +1,9 @@
-<%= form_with(model: [@property, rentable_unit]) do |form| %>
+<%= form_with(model: [@property, rentable_unit], class: "space-y-4") do |form| %>
   <% if rentable_unit.errors.any? %>
-    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+    <div class="yn-alert yn-alert-danger" role="alert">
       <div>
-        <h3 class="font-bold"><%= pluralize(rentable_unit.errors.count, "error") %> prohibited this rentable unit from being saved:</h3>
-        <ul>
+        <h3 class="font-bold text-sm"><%= pluralize(rentable_unit.errors.count, "error") %> prohibited this rentable unit from being saved:</h3>
+        <ul class="list-disc pl-5 mt-1 text-sm">
           <% rentable_unit.errors.each do |error| %>
             <li><%= error.full_message %></li>
           <% end %>
@@ -12,29 +12,27 @@
     </div>
   <% end %>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :name, "Unit Name (e.g. Unit A, Apt 1, Main House)", class: "label font-semibold" %>
-    <%= form.text_field :name, class: "input input-bordered w-full", required: true %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :unit_identifier, "Unit Identifier (Optional, e.g. 101, 2B)", class: "label font-semibold" %>
-    <%= form.text_field :unit_identifier, class: "input input-bordered w-full" %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :square_footage, class: "label font-semibold" %>
-    <%= form.number_field :square_footage, class: "input input-bordered w-full" %>
-  </div>
-
-  <div class="form-control mb-4">
-    <label class="label cursor-pointer justify-start gap-3">
-      <%= form.check_box :active, class: "checkbox checkbox-primary" %>
-      <span class="label-text font-semibold">Active Unit</span>
-    </label>
+  <div>
+    <%= form.label :name, "Unit Name (e.g. Unit A, Apt 1, Main House)", class: "yn-label" %>
+    <%= form.text_field :name, class: "yn-input", required: true %>
   </div>
 
   <div>
-    <%= form.submit class: "btn btn-primary w-full mt-4" %>
+    <%= form.label :unit_identifier, "Unit Identifier (Optional, e.g. 101, 2B)", class: "yn-label" %>
+    <%= form.text_field :unit_identifier, class: "yn-input" %>
+  </div>
+
+  <div>
+    <%= form.label :square_footage, class: "yn-label" %>
+    <%= form.number_field :square_footage, class: "yn-input" %>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <%= form.check_box :active, class: "rounded border-stone-300 text-stone-900 focus:ring-stone-400" %>
+    <%= form.label :active, "Active Unit", class: "text-sm font-medium text-stone-700 select-none cursor-pointer" %>
+  </div>
+
+  <div class="pt-2">
+    <%= form.submit class: "yn-btn yn-btn-primary w-full" %>
   </div>
 <% end %>

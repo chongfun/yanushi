@@ -1,28 +1,28 @@
 <tr id="<%= dom_id expense %>">
-  <td class="font-medium">
+  <td class="font-medium text-stone-900">
     <%= expense.property.address %>
     <% if expense.rentable_unit %>
-      <div class="text-xs text-base-content/60"><%= expense.rentable_unit.display_name %></div>
+      <div class="text-xs text-stone-500"><%= expense.rentable_unit.display_name %></div>
     <% end %>
   </td>
   <td>
-    <span class="badge badge-ghost"><%= expense.expense_kind&.titleize %></span>
+    <span class="text-xs font-mono text-stone-600"><%= expense.expense_kind&.titleize %></span>
   </td>
-  <td class="font-mono"><%= number_to_currency(expense.amount) %></td>
-  <td><%= expense.paid_on %></td>
+  <td class="font-mono tabular-nums"><%= number_to_currency(expense.amount) %></td>
+  <td class="text-stone-500 text-sm whitespace-nowrap"><%= expense.paid_on.strftime("%b %-d, %Y") %></td>
   <td>
     <% if expense.superseded? %>
-      <span class="badge badge-warning badge-sm">Corrected</span>
+      <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
     <% elsif expense.voided? %>
-      <span class="badge badge-error badge-sm">Voided</span>
+      <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Voided</span>
     <% elsif expense.posted? %>
-      <span class="badge badge-success badge-sm">Active</span>
+      <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Active</span>
     <% else %>
-      <span class="badge badge-ghost badge-sm">Pending</span>
+      <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Pending</span>
     <% end %>
   </td>
-  <td class="max-w-xs truncate text-sm text-base-content/60"><%= expense.description %></td>
-  <td class="text-right">
-    <%= link_to "View", expense, class: "btn btn-xs btn-ghost" %>
+  <td class="max-w-xs truncate text-sm text-stone-500"><%= expense.description %></td>
+  <td class="text-right whitespace-nowrap">
+    <%= link_to "View", expense, class: "yn-link text-[13px]" %>
   </td>
 </tr>

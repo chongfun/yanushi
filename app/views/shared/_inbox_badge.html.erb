@@ -1,13 +1,14 @@
 <% count = local_assigns.fetch(:count) { inbox_reviewable_count } %>
 <% id = local_assigns[:id] || local_assigns[:target_id] %>
 <% if id.present? %>
-  <span id="<%= id %>" class="inline-flex <%= 'hidden' if count.to_i <= 0 %>">
+  <span id="<%= id %>" class="inline-flex <%= 'hidden' if count.to_i <= 0 %>" aria-live="polite" aria-atomic="true">
     <% if count.to_i > 0 %>
       <span class="yn-count"><%= count %></span>
     <% end %>
   </span>
 <% else %>
   <% if count.to_i > 0 %>
-    <span class="yn-count"><%= count %></span>
+    <span class="yn-count" aria-live="polite" aria-atomic="true"><%= count %></span>
   <% end %>
 <% end %>
+

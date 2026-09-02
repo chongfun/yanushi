@@ -65,7 +65,8 @@ RSpec.describe "Charges UI", type: :system do
     click_on "Void"
     expect(page).to have_css("#confirm-modal[open]")
     within("#confirm-modal") do
-      click_on "Confirm"
+      expect(page).to have_text("Are you sure you want to void this charge?")
+      click_button "Confirm"
     end
 
     expect(page).to have_content("was successfully voided")

@@ -1,8 +1,8 @@
-<%= form_with(model: party, data: { controller: "nested-form" }) do |form| %>
+<%= form_with(model: party, data: { controller: "nested-form" }, class: "space-y-6") do |form| %>
   <% if party.errors.any? %>
-    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+    <div class="yn-alert yn-alert-danger" role="alert">
       <div>
-        <h3 class="font-bold"><%= pluralize(party.errors.count, "error") %> prohibited this party from being saved:</h3>
+        <h3 class="font-bold text-sm"><%= pluralize(party.errors.count, "error") %> prohibited this party from being saved:</h3>
         <ul class="list-disc pl-5 mt-1 text-sm">
           <% party.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -12,46 +12,46 @@
     </div>
   <% end %>
 
-  <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
-    <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-4">Contact Profile</h3>
+  <div class="bg-white border border-stone-200 rounded-lg p-6">
+    <h3 class="font-bold text-base text-stone-900 border-b border-stone-200 pb-3 mb-4">Contact Profile</h3>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="form-control w-full">
-        <%= form.label :display_name, "Legal / Display Name", class: "label font-semibold" %>
-        <%= form.text_field :display_name, placeholder: "e.g. John Doe or Acme Corp", class: "input input-bordered w-full", required: true %>
+      <div>
+        <%= form.label :display_name, "Legal / Display Name", class: "yn-label" %>
+        <%= form.text_field :display_name, placeholder: "e.g. John Doe or Acme Corp", class: "yn-input", required: true %>
       </div>
 
-      <div class="form-control w-full">
-        <%= form.label :party_type, "Party Type", class: "label font-semibold" %>
-        <%= form.select :party_type, Party::PARTY_TYPES.map { |k| [k.titleize, k] }, {}, { class: "select select-bordered w-full", required: true } %>
+      <div>
+        <%= form.label :party_type, "Party Type", class: "yn-label" %>
+        <%= form.select :party_type, Party::PARTY_TYPES.map { |k| [k.titleize, k] }, {}, { class: "yn-select", required: true } %>
       </div>
 
-      <div class="form-control w-full">
-        <%= form.label :email_address, "Email Address", class: "label font-semibold" %>
-        <%= form.email_field :email_address, placeholder: "john@example.com", class: "input input-bordered w-full" %>
+      <div>
+        <%= form.label :email_address, "Email Address", class: "yn-label" %>
+        <%= form.email_field :email_address, placeholder: "john@example.com", class: "yn-input" %>
       </div>
 
-      <div class="form-control w-full">
-        <%= form.label :phone_number, "Phone Number", class: "label font-semibold" %>
-        <%= form.text_field :phone_number, placeholder: "+15556661234", class: "input input-bordered w-full" %>
+      <div>
+        <%= form.label :phone_number, "Phone Number", class: "yn-label" %>
+        <%= form.text_field :phone_number, placeholder: "+15556661234", class: "yn-input" %>
       </div>
 
-      <div class="form-control w-full md:col-span-2">
-        <%= form.label :mailing_address, "Mailing Address", class: "label font-semibold" %>
-        <%= form.text_field :mailing_address, placeholder: "123 Main St", class: "input input-bordered w-full" %>
+      <div class="md:col-span-2">
+        <%= form.label :mailing_address, "Mailing Address", class: "yn-label" %>
+        <%= form.text_field :mailing_address, placeholder: "123 Main St", class: "yn-input" %>
       </div>
     </div>
   </div>
 
   <!-- Party Aliases (Dynamic Nested Fields) -->
-  <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
-    <div class="flex justify-between items-center border-b border-base-200 pb-3 mb-4">
+  <div class="bg-white border border-stone-200 rounded-lg p-6">
+    <div class="flex justify-between items-center border-b border-stone-200 pb-3 mb-4">
       <div>
-        <h3 class="font-bold text-lg">Payment Name Aliases</h3>
-        <p class="text-xs text-base-content/60 mt-0.5">Add other names (e.g. maiden name, abbreviations, @handles) this party might use on Zelle/Venmo payments.</p>
+        <h3 class="font-bold text-base text-stone-900">Payment Name Aliases</h3>
+        <p class="text-xs text-stone-500 mt-0.5">Add other names (e.g. maiden name, abbreviations, @handles) this party might use on Zelle/Venmo payments.</p>
       </div>
-      <button type="button" class="btn btn-outline btn-sm btn-primary" data-action="nested-form#add">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      <button type="button" class="yn-btn yn-btn-secondary yn-btn-sm" data-action="nested-form#add">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
         Add Alias
       </button>
     </div>
@@ -60,11 +60,11 @@
       <%= form.fields_for :party_aliases do |alias_form| %>
         <div class="flex items-center gap-3" data-nested-form-wrapper data-new-record="false">
           <%= alias_form.hidden_field :_destroy %>
-          <div class="form-control w-full">
-            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "input input-bordered w-full font-mono text-sm" %>
+          <div class="w-full">
+            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "yn-input font-mono text-sm" %>
           </div>
-          <button type="button" class="btn btn-error btn-outline btn-square btn-sm" data-action="nested-form#remove">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
+          <button type="button" class="yn-btn yn-btn-danger yn-btn-sm shrink-0" data-action="nested-form#remove" aria-label="Remove alias">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
           </button>
         </div>
       <% end %>
@@ -74,19 +74,19 @@
     <template data-nested-form-target="template">
       <%= form.fields_for :party_aliases, PartyAlias.new, child_index: "NEW_RECORD" do |alias_form| %>
         <div class="flex items-center gap-3 mt-3" data-nested-form-wrapper data-new-record="true">
-          <div class="form-control w-full">
-            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "input input-bordered w-full font-mono text-sm" %>
+          <div class="w-full">
+            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "yn-input font-mono text-sm" %>
           </div>
-          <button type="button" class="btn btn-error btn-outline btn-square btn-sm" data-action="nested-form#remove">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
+          <button type="button" class="yn-btn yn-btn-danger yn-btn-sm shrink-0" data-action="nested-form#remove" aria-label="Remove alias">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
           </button>
         </div>
       <% end %>
     </template>
   </div>
 
-  <div class="flex justify-end gap-3 pt-4">
-    <%= link_to "Cancel", parties_path, class: "btn btn-ghost" %>
-    <%= form.submit class: "btn btn-primary px-8" %>
+  <div class="flex justify-end gap-3 pt-2">
+    <%= link_to "Cancel", parties_path, class: "yn-btn yn-btn-secondary" %>
+    <%= form.submit class: "yn-btn yn-btn-primary" %>
   </div>
 <% end %>

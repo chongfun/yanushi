@@ -1,17 +1,9 @@
 <% content_for :title, "Add Participant" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Tenancies", tenancies_path %></li>
-  <li><%= link_to "Tenancy ##{@tenancy.id}", @tenancy %></li>
-  <li class="font-bold">Add Participant</li>
-<% end %>
+<div class="max-w-xl mx-auto py-6">
+  <div class="bg-white border border-stone-200 rounded-lg p-6">
+    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Add Participant to Tenancy #<%= @tenancy.id %></h1>
 
-<div class="max-w-xl mx-auto py-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold mb-6">Add Participant to Tenancy ##{@tenancy.id}</h2>
-
-      <%= render "form", tenancy_party: @tenancy_party %>
-    </div>
+    <%= render "form", tenancy_party: @tenancy_party %>
   </div>
 </div>

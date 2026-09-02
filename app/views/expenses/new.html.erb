@@ -1,12 +1,12 @@
 <% if @nested_property && turbo_frame_request? %>
-  <%# Dialog context: wrapped in turbo-frame for modal loading %>
+  <%# Modal frame %>
   <turbo-frame id="modal-frame" data-modal-title="Record expense">
     <div data-modal-title="Record expense">
       <%= render "expenses/form", expense: @expense, form_context: :dialog %>
     </div>
   </turbo-frame>
 <% elsif @nested_property %>
-  <%# Standalone nested property expense form (direct browser visit) %>
+  <%# Nested property form %>
   <% content_for :title, "Record expense" %>
   <div class="max-w-xl mx-auto py-8">
     <div class="mb-6">
@@ -18,7 +18,7 @@
     </div>
   </div>
 <% else %>
-  <%# Top-level new expense (no property) — standalone form with property selector %>
+  <%# Top-level form with property selector %>
   <% content_for :title, "Record expense" %>
   <div class="max-w-xl mx-auto py-8">
     <div class="mb-6">

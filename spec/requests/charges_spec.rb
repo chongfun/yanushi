@@ -213,6 +213,28 @@ RSpec.describe "Charges", type: :request do
       expect(response.body).to include("must be late_fee or other")
     end
 
+    it "maps charge date and due date errors to fields properly" do
+      allow(Charges::CreateFeeService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Charge date is invalid", code: :validation_error)
+      )
+      post tenancy_charges_path(tenancy), params: {
+        charge: { charge_kind: "late_fee", amount: "50.00" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('aria-describedby="charge-date-error"')
+      expect(response.body).to include('id="charge-date-error"')
+
+      allow(Charges::CreateFeeService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Due date cannot be before charge date", code: :validation_error)
+      )
+      post tenancy_charges_path(tenancy), params: {
+        charge: { charge_kind: "late_fee", amount: "50.00" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('aria-describedby="charge-due-error"')
+      expect(response.body).to include('id="charge-due-error"')
+    end
+
     it "rejects creating charge on another user's tenancy" do
       post tenancy_charges_path(other_tenancy), params: {
         charge: {

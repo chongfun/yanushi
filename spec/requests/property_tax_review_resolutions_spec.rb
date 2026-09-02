@@ -97,6 +97,10 @@ RSpec.describe "PropertyTaxReviewResolutions", type: :request do
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
       expect(response.body).to include('target="schedule_e_review"')
       expect(response.body).to include("Schedule e category can&#39;t be blank")
+      expect(response.body).to include("aria-invalid=\"true\"")
+      expect(response.body).to include("aria-describedby=\"category_#{expense_entry.id}_error\"")
+      expect(response.body).to include("id=\"category_#{expense_entry.id}_error\"")
+      expect(response.body).to include('data-schedule-e-review-auto-focus-value="true"')
       expect(response.body).not_to include("Tax treatment was successfully recorded")
       expect(response.body).not_to include('target="schedule_e_readiness"')
     end

@@ -204,10 +204,17 @@ RSpec.describe Receipt, type: :model do
       expect(receipt.errors[:amount]).to include("cannot have fractional cents")
     end
 
-    it "handles malformed amount strings gracefully" do
+    it "handles malformed amount strings gracefully, retaining raw_amount and formatted_amount" do
       receipt.amount = "not-a-number"
       expect(receipt).not_to be_valid
       expect(receipt.errors[:amount]).to include("is not a valid number")
+      expect(receipt.amount).to be_nil
+      expect(receipt.raw_amount).to eq("not-a-number")
+      expect(receipt.formatted_amount).to eq("not-a-number")
+
+      receipt.amount = "1e3"
+      expect(receipt.raw_amount).to eq("1e3")
+      expect(receipt.formatted_amount).to eq("1e3")
     end
   end
 

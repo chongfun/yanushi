@@ -16,8 +16,6 @@ RSpec.describe PropertiesHelper, type: :helper do
 
       expect(helper.active_tenancies_for(property)).to include(active_tenancy)
       expect(helper.active_tenancy_for(property)).to eq(active_tenancy)
-      expect(helper.active_leases_for(property)).to include(active_tenancy)
-      expect(helper.active_lease_for(property)).to eq(active_tenancy)
     end
 
     it "falls back to most recent tenancy if no tenancy is currently active" do

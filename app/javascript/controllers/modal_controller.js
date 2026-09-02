@@ -7,34 +7,40 @@ export default class extends Controller {
     this._triggerElement = null
 
     // Close when clicking outside the dialog content
-    this.dialogTarget.addEventListener('click', (e) => {
+    this._boundDialogClick = (e) => {
       if (e.target === this.dialogTarget) {
         this.close()
       }
-    })
+    }
+    this.dialogTarget.addEventListener('click', this._boundDialogClick)
 
     // Handle native dialog cancel event (e.g. Escape key)
-    this.dialogTarget.addEventListener('cancel', (e) => {
+    this._boundDialogCancel = (e) => {
       e.preventDefault()
       this.close()
-    })
+    }
+    this.dialogTarget.addEventListener('cancel', this._boundDialogCancel)
 
-    // Auto-open the modal when the turbo frame inside it loads content
-    this.element.addEventListener("turbo:frame-load", (e) => {
-      if (this._closing) return
-      const frame = (e.target && e.target.tagName === "TURBO-FRAME") ? e.target : this.contentTarget.querySelector("turbo-frame")
-      if (frame && frame.innerHTML.trim() !== "") {
-        const title = frame.dataset.modalTitle ||
-                      frame.getAttribute("data-modal-title") ||
-                      frame.querySelector("[data-modal-title]")?.getAttribute("data-modal-title") ||
-                      frame.querySelector("[data-modal-title]")?.dataset.modalTitle ||
-                      this._triggerElement?.getAttribute("data-modal-title")
-        if (title && this.hasTitleTarget) {
-          this.titleTarget.textContent = title
+    this._boundFrameLoad = (e) => {
+      const targetFrame = e.target
+      const modalFrame = this.hasContentTarget ? this.contentTarget.querySelector("turbo-frame") : document.getElementById("modal-frame")
+      if (targetFrame === modalFrame || (modalFrame && modalFrame.contains(targetFrame))) {
+        this._closing = false
+        if (modalFrame && modalFrame.innerHTML.trim() !== "") {
+          const title = modalFrame.dataset.modalTitle ||
+                        modalFrame.getAttribute("data-modal-title") ||
+                        modalFrame.querySelector("[data-modal-title]")?.getAttribute("data-modal-title") ||
+                        modalFrame.querySelector("[data-modal-title]")?.dataset.modalTitle ||
+                        this._triggerElement?.getAttribute("data-modal-title")
+          if (title && this.hasTitleTarget) {
+            this.titleTarget.textContent = title
+          }
+          this.open()
         }
-        this.open()
       }
-    })
+    }
+    document.addEventListener("turbo:frame-load", this._boundFrameLoad)
+    document.addEventListener("turbo:frame-render", this._boundFrameLoad)
 
     // Listen for custom turbo stream action "close_modal" and frame updates
     this.streamListener = (event) => {
@@ -52,7 +58,7 @@ export default class extends Controller {
     }
     document.addEventListener("turbo:before-stream-render", this.streamListener)
 
-    // Track which element triggered the modal open (for focus restoration)
+    // Track trigger element for focus restoration
     this._clickListener = (event) => {
       const trigger = event.target.closest("[data-turbo-frame='modal-frame']")
       if (trigger) {
@@ -64,6 +70,13 @@ export default class extends Controller {
 
   disconnect() {
     if (this._closeTimeout) clearTimeout(this._closeTimeout)
+    if (this._boundDialogClick) this.dialogTarget.removeEventListener('click', this._boundDialogClick)
+    if (this._boundDialogCancel) this.dialogTarget.removeEventListener('cancel', this._boundDialogCancel)
+    if (this._boundFrameLoad) {
+      document.removeEventListener("turbo:frame-load", this._boundFrameLoad)
+      document.removeEventListener("turbo:frame-render", this._boundFrameLoad)
+    }
+    if (this._trapListener) this.dialogTarget.removeEventListener("keydown", this._trapListener)
     document.removeEventListener("turbo:before-stream-render", this.streamListener)
     document.removeEventListener("click", this._clickListener, true)
   }
@@ -72,14 +85,13 @@ export default class extends Controller {
     if (!this.dialogTarget.open) {
       this.dialogTarget.showModal()
     }
-    this.element.classList.add("modal-open")
 
-    // Autofocus or focus first invalid element inside the dialog
+    // Focus invalid field or autofocus target
     requestAnimationFrame(() => {
       this._focusFirstInvalidOrAutofocus()
     })
 
-    // Trap focus inside the dialog with keydown handler
+    // Trap focus inside dialog
     if (!this._trapListener) {
       this._trapListener = (e) => this._handleKeydown(e)
       this.dialogTarget.addEventListener("keydown", this._trapListener)
@@ -101,10 +113,9 @@ export default class extends Controller {
   close(event) {
     if (event) event.preventDefault()
     this._closing = true
-    this.element.classList.remove("modal-open")
 
     if (this._trapListener) {
-      document.removeEventListener("keydown", this._trapListener)
+      this.dialogTarget.removeEventListener("keydown", this._trapListener)
       this._trapListener = null
     }
 
@@ -121,7 +132,7 @@ export default class extends Controller {
     }
     if (this.hasTitleTarget) this.titleTarget.textContent = ""
 
-    // Restore focus to the element that triggered the modal, or fallback if removed
+    // Restore focus to trigger or fallback
     const trigger = this._triggerElement
     this._triggerElement = null
 

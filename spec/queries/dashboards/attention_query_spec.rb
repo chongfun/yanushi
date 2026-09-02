@@ -128,13 +128,32 @@ RSpec.describe Dashboards::AttentionQuery do
       expect(failed_item.description).to eq("statement.pdf · Processing failed")
     end
 
-    it "handles imported transaction with nil amount_cents" do
+    it "handles imported transaction with nil amount_cents and nil occurred_on" do
       source_doc = create(:source_document, user: user, status: "success")
       create(:imported_transaction, user: user, source_document: source_doc, status: "unmatched", amount_cents: nil, occurred_on: Date.new(2026, 8, 21), payer_name: "John Doe")
 
       items = described_class.call(user: user)
       inbox_item = items.find { |i| i.kind == :inbox_review }
       expect(inbox_item.description).to eq("from John Doe, Aug 21")
+
+      create(:imported_transaction, user: user, source_document: source_doc, status: "unmatched", amount_cents: nil, occurred_on: nil, payer_name: nil, payer_username: nil)
+      items_empty = described_class.call(user: user)
+      inbox_empty = items_empty.find { |i| i.kind == :inbox_review }
+      expect(inbox_empty).not_to be_nil
+    end
+
+    it "handles past tenancy with termination_date" do
+      unit_p = create(:rentable_unit, property: property, name: "Unit Past")
+      past_t = create(:tenancy, rentable_unit: unit_p, agreement_type: "fixed_term", commencement_date: Date.current - 1.year, termination_date: Date.current - 1.month)
+      items = described_class.call(user: user, tenancies: [ past_t ], balances: { past_t.id => 10_000 })
+      expect(items.first.description).to include("Past tenancy · balance outstanding")
+    end
+
+    it "handles upcoming tenancy with commencement_date" do
+      unit_u = create(:rentable_unit, property: property, name: "Unit Up")
+      up_t = create(:tenancy, rentable_unit: unit_u, agreement_type: "fixed_term", commencement_date: Date.current + 1.month)
+      items = described_class.call(user: user, tenancies: [ up_t ], balances: { up_t.id => 10_000 })
+      expect(items.first.description).to include("Upcoming tenancy · balance outstanding")
     end
 
     it "surfaces positive balance from a terminated/past tenancy" do

@@ -394,7 +394,19 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
         source: prop_same,
         journal_entry: same_year_rev
       )
-      expect(same_year_item.cross_year_reversal?).to be false
+      # Orphan reversal without reversal_of
+      orphan_rev = build_stubbed(:journal_entry, occurred_on: Date.new(2025, 7, 15), event_type: "reversal", reversal_of: nil)
+      orphan_rev_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
+        id: 19,
+        occurred_on: Date.new(2025, 7, 15),
+        amount_cents: 10_000,
+        reason: "Orphan reversal",
+        source: prop_same,
+        journal_entry: orphan_rev
+      )
+      expect(orphan_rev_item.cross_year_reversal?).to be false
+      expect(orphan_rev_item.can_map_to_expense?).to be false
+      expect(orphan_rev_item.can_include_in_rents?).to be false
     end
   end
 end

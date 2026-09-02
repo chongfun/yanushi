@@ -19,6 +19,12 @@ RSpec.describe TaxReporting::TaxYear do
       expect(described_class.parse(nil).to_i).to eq(Date.current.year)
       expect(described_class.parse("").to_i).to eq(Date.current.year)
       expect(described_class.parse("  ").to_i).to eq(Date.current.year)
+      expect(described_class.parse(nil, default: nil)).to be_nil
+    end
+
+    it "returns the argument itself if already a TaxYear" do
+      year = described_class.new(2025)
+      expect(described_class.parse(year)).to eq(year)
     end
 
     it "returns nil for malformed non-year strings" do
@@ -49,13 +55,16 @@ RSpec.describe TaxReporting::TaxYear do
     end
   end
 
-  describe "equality" do
+  describe "equality and hashing" do
     it "equals other TaxYear with same integer value" do
       y1 = described_class.new(2025)
       y2 = described_class.new("2025")
       expect(y1).to eq(y2)
       expect(y1).to eq(2025)
       expect(y1).to eq("2025")
+      expect(y1).not_to eq(nil)
+      expect(y1).not_to eq(Object.new)
+      expect(y1.hash).to eq(y2.hash)
     end
   end
 end

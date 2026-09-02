@@ -11,9 +11,7 @@ module Reports
       new(user: user, tax_year: tax_year).call
     end
 
-    # Canonical single-property readiness calculation contract.
-    # Callers (such as Properties::TaxesController and ReportsController) should rely
-    # on this method rather than deriving readiness independently.
+    # Calculates Schedule E readiness status for a property
     def self.status_for(property:, tax_year:)
       return nil unless property
 

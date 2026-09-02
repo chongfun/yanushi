@@ -50,30 +50,34 @@
           [["Late fee", "late_fee"], ["Other fee / charge", "other"]],
           {},
           { class: "yn-select #{'yn-field-invalid' if charge.errors[:charge_kind].any?}", id: "charge-kind",
-            "aria-invalid": charge.errors[:charge_kind].any? ? "true" : nil } %>
+            "aria-invalid": charge.errors[:charge_kind].any? ? "true" : nil,
+            "aria-describedby": charge.errors[:charge_kind].any? ? "charge-kind-error" : nil } %>
     <% if charge.errors[:charge_kind].any? %>
-      <p class="yn-error-text"><%= charge.errors[:charge_kind].first %></p>
+      <p id="charge-kind-error" class="yn-error-text"><%= charge.errors[:charge_kind].first %></p>
     <% end %>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
+      <% has_amount_error = charge.errors[:amount].any? || charge.errors[:amount_cents].any? %>
       <%= form.label :amount, "Amount", class: "yn-label", for: "charge-amount" %>
       <%= form.number_field :amount, step: "0.01", min: "0.01", inputmode: "decimal", placeholder: "0.00",
             value: (charge.amount_cents ? charge.amount_cents / 100.0 : nil),
-            class: "yn-input tabular-nums #{'yn-field-invalid' if charge.errors[:amount].any?}", id: "charge-amount",
+            class: "yn-input tabular-nums #{'yn-field-invalid' if has_amount_error}", id: "charge-amount",
             autofocus: (charge.errors.empty? ? true : nil),
-            "aria-invalid": charge.errors[:amount].any? ? "true" : nil %>
-      <% if charge.errors[:amount].any? %>
-        <p class="yn-error-text"><%= charge.errors[:amount].first %></p>
+            "aria-invalid": has_amount_error ? "true" : nil,
+            "aria-describedby": has_amount_error ? "charge-amount-error" : nil %>
+      <% if has_amount_error %>
+        <p id="charge-amount-error" class="yn-error-text"><%= charge.errors[:amount].first || charge.errors[:amount_cents].first %></p>
       <% end %>
     </div>
     <div>
       <%= form.label :charge_date, "Charge date", class: "yn-label", for: "charge-date" %>
       <%= form.date_field :charge_date, class: "yn-input #{'yn-field-invalid' if charge.errors[:charge_date].any?}", id: "charge-date",
-            "aria-invalid": charge.errors[:charge_date].any? ? "true" : nil %>
+            "aria-invalid": charge.errors[:charge_date].any? ? "true" : nil,
+            "aria-describedby": charge.errors[:charge_date].any? ? "charge-date-error" : nil %>
       <% if charge.errors[:charge_date].any? %>
-        <p class="yn-error-text"><%= charge.errors[:charge_date].first %></p>
+        <p id="charge-date-error" class="yn-error-text"><%= charge.errors[:charge_date].first %></p>
       <% end %>
     </div>
   </div>
@@ -81,9 +85,10 @@
   <div>
     <%= form.label :due_on, "Due date", class: "yn-label", for: "charge-due" %>
     <%= form.date_field :due_on, class: "yn-input #{'yn-field-invalid' if charge.errors[:due_on].any?}", id: "charge-due",
-          "aria-invalid": charge.errors[:due_on].any? ? "true" : nil %>
+          "aria-invalid": charge.errors[:due_on].any? ? "true" : nil,
+          "aria-describedby": charge.errors[:due_on].any? ? "charge-due-error" : nil %>
     <% if charge.errors[:due_on].any? %>
-      <p class="yn-error-text"><%= charge.errors[:due_on].first %></p>
+      <p id="charge-due-error" class="yn-error-text"><%= charge.errors[:due_on].first %></p>
     <% end %>
   </div>
 
@@ -91,7 +96,14 @@
     <%= form.label :description, class: "yn-label", for: "charge-desc" do %>
       Description <span class="font-normal text-stone-400">(optional)</span>
     <% end %>
-    <%= form.text_field :description, class: "yn-input", id: "charge-desc", placeholder: "e.g. Late fee for August rent" %>
+    <%= form.text_field :description,
+          class: "yn-input #{'yn-field-invalid' if charge.errors[:description].any?}", id: "charge-desc",
+          placeholder: "e.g. Late fee for August rent",
+          "aria-invalid": charge.errors[:description].any? ? "true" : nil,
+          "aria-describedby": charge.errors[:description].any? ? "charge-desc-error" : nil %>
+    <% if charge.errors[:description].any? %>
+      <p id="charge-desc-error" class="yn-error-text"><%= charge.errors[:description].first %></p>
+    <% end %>
   </div>
 
   <div class="flex justify-end gap-2 pt-2">

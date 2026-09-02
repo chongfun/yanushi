@@ -1,16 +1,9 @@
 <% content_for :title, "New Tenancy" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Tenancies", tenancies_path %></li>
-  <li class="font-bold">New Tenancy</li>
-<% end %>
+<div class="max-w-2xl mx-auto py-6">
+  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Create New Tenancy</h1>
 
-<div class="max-w-2xl mx-auto py-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold mb-6">Create New Tenancy</h2>
-
-      <%= render "form", tenancy: @tenancy %>
-    </div>
+  <div class="mb-6">
+    <%= render "form", tenancy: @tenancy %>
   </div>
 </div>

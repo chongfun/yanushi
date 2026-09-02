@@ -141,6 +141,170 @@ RSpec.describe "Receipts", type: :request do
       expect(created.amount_cents).to eq(150_000)
     end
 
+    it "creates receipt via top-level route with turbo_stream format redirecting to receipt show" do
+      expect {
+        post receipts_url, params: {
+          receipt: {
+            tenancy_id: tenancy.id,
+            payer_party_id: party.id,
+            amount: "1500.00",
+            received_on: "2026-02-01",
+            payment_method: "check"
+          }
+        }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      }.to change(Receipt, :count).by(1)
+
+      created = Receipt.last
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to(receipt_path(created))
+    end
+
+    it "renders 422 for top-level creation with missing tenancy_id" do
+      post receipts_url, params: {
+        receipt: {
+          payer_party_id: party.id,
+          amount: "1500.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('aria-describedby="receipt-tenancy-error"')
+      expect(response.body).to include('id="receipt-tenancy-error"')
+
+      post receipts_url, params: {
+        receipt: {
+          payer_party_id: party.id,
+          amount: "1500.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "renders 422 for top-level creation with unknown tenancy_id" do
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: 999_999,
+          payer_party_id: party.id,
+          amount: "1500.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: 999_999,
+          payer_party_id: party.id,
+          amount: "1500.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "renders 422 for top-level creation with unknown payer_party_id" do
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: tenancy.id,
+          payer_party_id: 999_999,
+          amount: "1500.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('aria-describedby="receipt-payer-error"')
+      expect(response.body).to include('id="receipt-payer-error"')
+
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: tenancy.id,
+          payer_party_id: 999_999,
+          amount: "1500.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "renders field error and ARIA attributes when external reference is duplicate" do
+      create(:receipt, tenancy: tenancy, payer_party: party, user: user, external_reference: "REF-12345")
+      post tenancy_receipts_path(tenancy, format: :html), params: {
+        receipt: {
+          payer_party_id: party.id,
+          amount: "500.00",
+          received_on: "2026-02-01",
+          payment_method: "check",
+          external_reference: "REF-12345"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('aria-describedby="receipt-ref-error"')
+      expect(response.body).to include('id="receipt-ref-error"')
+    end
+
+    it "renders 422 for top-level creation when service fails and maps field errors" do
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: tenancy.id,
+          payer_party_id: party.id,
+          amount: "-50.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      allow(Receipts::CreateService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Payer party is required", code: :validation_error)
+      )
+      post receipts_url, params: {
+        receipt: { tenancy_id: tenancy.id, amount: "50.00", payment_method: "check" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      allow(Receipts::CreateService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Received on date is invalid", code: :validation_error)
+      )
+      post receipts_url, params: {
+        receipt: { tenancy_id: tenancy.id, amount: "50.00", payment_method: "check" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      allow(Receipts::CreateService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Payment method is required", code: :validation_error)
+      )
+      post receipts_url, params: {
+        receipt: { tenancy_id: tenancy.id, amount: "50.00" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      allow(Receipts::CreateService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Internal error", code: :validation_error)
+      )
+      post receipts_url, params: {
+        receipt: { tenancy_id: tenancy.id, amount: "50.00" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: tenancy.id,
+          payer_party_id: party.id,
+          amount: "-50.00",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "creates receipt via nested tenancy route" do
       expect {
         post tenancy_receipts_url(tenancy), params: {
@@ -319,10 +483,11 @@ RSpec.describe "Receipts", type: :request do
       expect(response.body).to include("Tenancy is required")
     end
 
-    it "rejects top-level creation with invalid or foreign tenancy_id" do
+    it "rejects top-level creation with invalid or foreign tenancy_id while preserving valid payer" do
       other_prop = create(:property, user: other_user)
       other_t = create(:tenancy, rentable_unit: create(:rentable_unit, property: other_prop))
 
+      # Foreign tenancy preserves valid payer
       post receipts_url, params: {
         receipt: {
           tenancy_id: other_t.id,
@@ -334,9 +499,39 @@ RSpec.describe "Receipts", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(flash[:alert]).to eq("Tenancy was not found")
+      expect(response.body).to include("selected=\"selected\" value=\"#{party.id}\"")
+      expect(response.body).not_to include("must belong to the receipt owner")
+
+      # Nonexistent tenancy preserves valid payer
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: 999_999,
+          payer_party_id: party.id,
+          amount: "1200.00",
+          received_on: "2026-02-01",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash[:alert]).to eq("Tenancy was not found")
+      expect(response.body).to include("selected=\"selected\" value=\"#{party.id}\"")
+
+      # Blank tenancy preserves valid payer
+      post receipts_url, params: {
+        receipt: {
+          tenancy_id: "",
+          payer_party_id: party.id,
+          amount: "1200.00",
+          received_on: "2026-02-01",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash[:alert]).to eq("Tenancy is required")
+      expect(response.body).to include("selected=\"selected\" value=\"#{party.id}\"")
     end
 
-    it "rejects creation with invalid or foreign payer_party_id" do
+    it "rejects creation with invalid or foreign payer_party_id without leaking existence" do
       other_p = create(:party, user: other_user)
 
       post receipts_url, params: {
@@ -350,6 +545,8 @@ RSpec.describe "Receipts", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(flash[:alert]).to eq("Payer party was not found")
+      expect(response.body).not_to include("selected=\"selected\" value=\"#{other_p.id}\"")
+      expect(response.body).not_to include("must belong to the receipt owner")
     end
 
     it "handles new receipt form when tenancy has no active tenants or multiple active tenants" do
@@ -506,7 +703,7 @@ RSpec.describe "Receipts", type: :request do
       expect(response).to redirect_to(receipt_path(replacement))
     end
 
-    it "rejects correction with unresolvable or foreign payer_party_id" do
+    it "rejects correction with unresolvable or foreign payer_party_id without leaking ownership mismatch" do
       other_user_party = create(:party, user: other_user)
       post correct_receipt_url(receipt), params: {
         receipt: {
@@ -516,9 +713,34 @@ RSpec.describe "Receipts", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Payer party was not found")
+      expect(response.body).not_to include("must belong to the receipt owner")
+      expect(response.body).not_to include("must exist")
+
+      post correct_receipt_url(receipt), params: {
+        receipt: {
+          payer_party_id: 999_999,
+          amount: "2100.00"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Payer party was not found")
+      expect(response.body).not_to include("must belong to the receipt owner")
+      expect(response.body).not_to include("must exist")
     end
 
-    it "rejects correction with unresolvable tenancy_id" do
+    it "rejects correction with unresolvable or foreign tenancy_id without leaking ownership mismatch" do
+      other_tenancy = create(:tenancy)
+      post correct_receipt_url(receipt), params: {
+        receipt: {
+          tenancy_id: other_tenancy.id,
+          amount: "2100.00"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Tenancy was not found")
+      expect(response.body).not_to include("must belong to the receipt owner")
+      expect(response.body).not_to include("must exist")
+
       post correct_receipt_url(receipt), params: {
         receipt: {
           tenancy_id: 999_999,
@@ -527,6 +749,8 @@ RSpec.describe "Receipts", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Tenancy was not found")
+      expect(response.body).not_to include("must belong to the receipt owner")
+      expect(response.body).not_to include("must exist")
     end
 
     it "renders unprocessable_content on invalid correction" do
@@ -534,11 +758,110 @@ RSpec.describe "Receipts", type: :request do
         receipt: {
           amount: "-100.00",
           received_on: "2026-01-10",
-          payment_method: "zelle"
+          payment_method: "zelle",
+          memo: "Updated memo note"
         }
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Amount must be greater than 0")
+      expect(response.body).to include('aria-describedby="receipt-correct-amount-error"')
+      expect(response.body).to include('id="receipt-correct-amount-error"')
+      expect(response.body).to include('Updated memo note')
+    end
+
+    it "preserves unparsable and scientific-notation submitted amount on correction failure" do
+      post correct_receipt_url(receipt), params: {
+        receipt: {
+          amount: "invalid_sum",
+          received_on: "2026-01-10",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="invalid_sum"')
+      expect(response.body).to include('id="receipt-correct-amount-error"')
+
+      post correct_receipt_url(receipt), params: {
+        receipt: {
+          amount: "1e3",
+          received_on: "2026-01-10",
+          payment_method: "zelle"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="1e3"')
+      expect(response.body).not_to include('value="1000.00"')
+    end
+
+    it "rejects correction with blank required fields instead of silently using originals" do
+      expect {
+        post correct_receipt_url(receipt), params: {
+          receipt: {
+            tenancy_id: "",
+            payer_party_id: "",
+            amount: "",
+            received_on: "",
+            payment_method: ""
+          }
+        }
+      }.not_to change(Receipt, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('id="receipt-correct-tenancy-error"')
+      expect(response.body).to include('id="receipt-correct-payer-error"')
+      expect(response.body).to include('id="receipt-correct-amount-error"')
+      expect(response.body).to include('id="receipt-correct-date-error"')
+      expect(response.body).to include('id="receipt-correct-method-error"')
+    end
+
+    it "maps service failure messages to specific receipt correction field errors" do
+      allow(Receipts::CorrectService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Payment method is invalid", code: :validation_error)
+      )
+      post correct_receipt_url(receipt), params: {
+        receipt: { amount: "100.00", received_on: "2026-01-10", payment_method: "zelle" }
+      }
+      expect(response.body).to include('id="receipt-correct-method-error"')
+
+      allow(Receipts::CorrectService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Received on date is invalid", code: :validation_error)
+      )
+      post correct_receipt_url(receipt), params: {
+        receipt: { amount: "100.00", received_on: "2026-01-10", payment_method: "zelle" }
+      }
+      expect(response.body).to include('id="receipt-correct-date-error"')
+
+      allow(Receipts::CorrectService).to receive(:call).and_return(
+        ServiceResult.failure(error: "External reference is duplicate", code: :validation_error)
+      )
+      post correct_receipt_url(receipt), params: {
+        receipt: { amount: "100.00", received_on: "2026-01-10", payment_method: "zelle" }
+      }
+      expect(response.body).to include('id="receipt-correct-ref-error"')
+
+      allow(Receipts::CorrectService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Tenancy is invalid", code: :validation_error)
+      )
+      post correct_receipt_url(receipt), params: {
+        receipt: { amount: "100.00", received_on: "2026-01-10", payment_method: "zelle" }
+      }
+      expect(response.body).to include('id="receipt-correct-tenancy-error"')
+
+      allow(Receipts::CorrectService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Payer party is invalid", code: :validation_error)
+      )
+      post correct_receipt_url(receipt), params: {
+        receipt: { amount: "100.00", received_on: "2026-01-10", payment_method: "zelle" }
+      }
+      expect(response.body).to include('id="receipt-correct-payer-error"')
+
+      allow(Receipts::CorrectService).to receive(:call).and_return(
+        ServiceResult.failure(error: "Generic unexpected error", code: :validation_error)
+      )
+      post correct_receipt_url(receipt), params: {
+        receipt: { amount: "100.00", received_on: "2026-01-10", payment_method: "zelle" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

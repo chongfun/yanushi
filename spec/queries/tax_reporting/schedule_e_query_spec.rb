@@ -1494,5 +1494,13 @@ RSpec.describe TaxReporting::ScheduleEQuery do
       item_rev = res2.review_items.find { |i| i.id == rev_2026.id }
       expect(item_rev.reason).to include("Reversal of unresolved 2025 event")
     end
+
+    it "handles nil property, default tax_year, and invalid tax_year" do
+      expect(described_class.call(property: nil).status).to eq(:tax_profile_required)
+      expect(described_class.call(property: property).tax_year).to eq(Date.current.year)
+      expect {
+        described_class.call(property: property, tax_year: "invalid")
+      }.to raise_error(ArgumentError, /Invalid tax year/)
+    end
   end
 end

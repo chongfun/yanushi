@@ -28,4 +28,5 @@ class ExpensesController < ApplicationController
   def set_nested_property: () -> untyped
   def set_form_data: () -> untyped
   def expense_params: () -> untyped
+  def render_create_failure: () -> untyped
 end

@@ -115,7 +115,7 @@ RSpec.describe "ScheduleE", type: :system do
 
     # Resolve with default "Include in rents received (Line 3)"
     within("#review_item_#{entry.id}") do
-      find("input[type='submit']").click
+      page.execute_script("document.querySelector('#review_item_#{entry.id} input[type=\"submit\"]').click()")
     end
 
     expect(page).to have_text("was successfully recorded.", wait: 10)
@@ -213,6 +213,78 @@ RSpec.describe "ScheduleE", type: :system do
     expect(page).not_to have_text("was successfully recorded.")
     within("#schedule_e_review") do
       expect(page).to have_select("Treatment", selected: "Map to a Schedule E expense category")
+
+      # ARIA field-level error association
+      category_select = find("#category_#{entry.id}")
+      expect(category_select[:'aria-invalid']).to eq("true")
+      expect(category_select[:'aria-describedby']).to eq("category_#{entry.id}_error")
+      expect(page).to have_css("#category_#{entry.id}_error.yn-error-text", text: /can't be blank/)
     end
+
+    # Post-422 focus is restored to the invalid Category select
+    expect(page.evaluate_script("document.activeElement.id")).to eq("category_#{entry.id}")
+  end
+
+  it "manages keyboard focus within the review section after resolve and undo", :js do
+    create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
+    deposit_account = user.accounts.find_by!(key: "security_deposits_held")
+    receivable_account = user.accounts.find_by!(key: "tenant_receivable")
+
+    entry1 = create(
+      :journal_entry,
+      user: user,
+      occurred_on: Date.new(2025, 5, 10),
+      description: "First deposit applied",
+      event_type: "deposit_applied",
+      source: property
+    )
+    create(:posting, journal_entry: entry1, account: deposit_account, property: property, amount_cents: 30_000)
+    create(:posting, journal_entry: entry1, account: receivable_account, property: property, amount_cents: -30_000)
+
+    unmapped_account = user.accounts.create!(name: "Custom Tree Work", key: "expense_custom_tree", account_type: "expense")
+    expense2 = create(:expense, property: property, expense_kind: "other", amount_cents: 40_000)
+    entry2 = create(
+      :journal_entry,
+      user: user,
+      occurred_on: Date.new(2025, 6, 15),
+      description: "Tree trimming",
+      event_type: "expense_posted",
+      source: expense2
+    )
+    create(:posting, journal_entry: entry2, account: unmapped_account, property: property, amount_cents: 40_000)
+
+    visit schedule_e_property_path(property, year: 2025)
+    expect(page).to have_text("Needs review")
+    expect(page).to have_text("2 items need review")
+
+    # 1. Resolve item 1 -> another unresolved item (entry2) remains
+    page.execute_script("document.querySelector('#review_item_#{entry1.id} input[type=\"submit\"]').click()")
+    expect(page).to have_text("was successfully recorded.", wait: 10)
+    expect(page).to have_text("1 item needs review")
+
+    # Focus must stay within review section, landing on the first useful control of item 2
+    expect(page.evaluate_script("document.activeElement.id")).to eq("treatment_#{entry2.id}")
+
+    # 2. Resolve item 2 -> no unresolved items remain
+    within("#review_item_#{entry2.id}") do
+      select "Repairs", from: "Category"
+    end
+    page.execute_script("document.querySelector('#review_item_#{entry2.id} input[type=\"submit\"]').click()")
+    expect(page).to have_text("Tax treatment for Journal Entry ##{entry2.id} was successfully recorded.", wait: 10)
+
+    # Focus must fall back to the tabindex="-1" review heading
+    expect(page.evaluate_script("document.activeElement.id")).to eq("se-review-heading")
+
+    # 3. Undo item 2 -> item 2 becomes unresolved again
+    expect(page).to have_button("Undo")
+    expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
+    page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
+    expect(page).to have_css("#confirm-modal[open]")
+    page.execute_script("document.querySelector('#confirm-modal [data-action*=\"turbo-confirm#confirm\"]').click()")
+
+    expect(page).to have_text("Tax treatment resolution removed; review item restored.", wait: 10)
+
+    # Focus must move back to the restored unresolved item's control
+    expect(page.evaluate_script("document.activeElement.id")).to eq("treatment_#{entry2.id}")
   end
 end

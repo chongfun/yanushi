@@ -1,13 +1,27 @@
 require "rails_helper"
 
-RSpec.describe "Dashboards", type: :system do
+RSpec.describe "Dashboards", type: :system, js: true do
   let!(:user) { create(:user) }
   let!(:property) { create(:property, user: user, address: "999 Dashboard Ave") }
-  let!(:unit) { create(:rentable_unit, property: property) }
+  let!(:unit) { create(:rentable_unit, property: property, name: "Unit A") }
   let!(:party) { create(:party, user: user, display_name: "John Tenant") }
-  let!(:tenancy) { create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.current.beginning_of_year) }
-  let!(:rent_term) { create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.current.beginning_of_year) }
-  let!(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party) }
+  let!(:tenancy) do
+    create(:tenancy,
+      property: property,
+      rentable_unit: unit,
+      commencement_date: Date.current - 2.months,
+      termination_date: Date.current + 10.months
+    )
+  end
+  let!(:tenancy_party) { create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: tenancy.commencement_date) }
+  let!(:rent_term) do
+    create(:rent_term,
+      tenancy: tenancy,
+      amount_cents: 100_000,
+      effective_from: tenancy.commencement_date,
+      due_day: 1
+    )
+  end
 
   before do
     Accounting::ChartOfAccounts.ensure_for(user)
@@ -35,8 +49,6 @@ RSpec.describe "Dashboards", type: :system do
   end
 
   it "summarizes portfolio state and renders actionable items on Overview" do
-    visit root_path
-
     expect(page).to have_button("Sign out")
     expect(page).to have_text("Overview")
     expect(page).to have_text("999 Dashboard Ave")
@@ -46,23 +58,51 @@ RSpec.describe "Dashboards", type: :system do
     expect(page).to have_text("John Tenant owes $1,000.00")
     expect(page).to have_text("Open tenancy →")
 
-    # Metrics
-    expect(page).to have_text("Properties")
-    expect(page).to have_text("Units occupied")
-    expect(page).to have_text("Outstanding balances")
-    expect(page).to have_text("Net income, YTD")
+    # Metrics (case insensitive to accommodate CSS text-transform)
+    expect(page).to have_text(/Properties/i)
+    expect(page).to have_text(/Units occupied/i)
+    expect(page).to have_text(/Outstanding balances/i)
+    expect(page).to have_text(/Net income, YTD/i)
     expect(page).to have_text("$750.00")
 
     # Recent activity
     expect(page).to have_text("Recent activity")
     expect(page).to have_text("Expense")
-    expect(page).to have_text("Rent · #{unit.name}")
+    expect(page).to have_text("Rent · Unit A")
 
     # Click property link
     within("[aria-labelledby='properties-heading']") do
-      click_on "999 Dashboard Ave"
+      find("a[href='#{property_path(property)}']").click
     end
     expect(page).to have_current_path(property_path(property))
     expect(page).to have_text("Units")
+  end
+
+  it "executes the complete daily attention journey: Overview → attention item → tenancy action", js: true do
+    expect(page).to have_text("Needs attention")
+    expect(page).to have_text("John Tenant owes $1,000.00")
+
+    # Click the attention action link to enter tenancy context
+    click_link "Open tenancy →"
+    expect(page).to have_current_path(tenancy_path(tenancy))
+    expect(page).to have_text("John Tenant")
+    # Resolve the balance by recording a receipt
+    click_on "Record receipt"
+    expect(page).to have_css("dialog#modal[open]")
+    within("dialog#modal") do
+      find("#receipt-payer").find(:option, "John Tenant").select_option
+      fill_in "receipt-method", with: "Zelle"
+      click_button "Record receipt"
+    end
+
+    expect(page).to have_text("Payment recorded successfully.")
+    expect(page).to have_text(/settled/i)
+    expect(page).to have_no_css("dialog#modal[open]")
+
+    # Return to Overview and verify attention item is cleared
+    visit root_path
+    expect(page).to have_current_path(root_path)
+    expect(page).to have_text("Nothing needs attention.")
+    expect(page).to have_no_text("John Tenant owes")
   end
 end

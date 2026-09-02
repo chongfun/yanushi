@@ -1,9 +1,9 @@
 <%= form_with(model: [@property, tax_profile], url: (tax_profile.persisted? ? property_tax_profile_path(@property, tax_profile) : property_tax_profiles_path(@property)), data: { controller: "tax-profile-form" }, class: "space-y-4") do |f| %>
   <% if tax_profile.errors.any? %>
-    <div class="alert alert-error">
+    <div class="yn-alert yn-alert-danger" role="alert">
       <div>
-        <h3 class="font-bold">Please correct the following errors:</h3>
-        <ul class="list-disc list-inside">
+        <h3 class="font-bold text-sm">Please correct the following errors:</h3>
+        <ul class="list-disc list-inside text-sm mt-1">
           <% tax_profile.errors.full_messages.each do |message| %>
             <li><%= message %></li>
           <% end %>
@@ -13,27 +13,23 @@
   <% end %>
 
   <% if tax_profile.persisted? %>
-    <div class="form-control w-full">
-      <label class="label font-semibold">Tax Year</label>
-      <div class="text-base font-bold font-mono px-3 py-2 bg-base-200 rounded-btn text-base-content/80 inline-block w-fit">
+    <div>
+      <label class="yn-label">Tax Year</label>
+      <div class="text-sm font-bold font-mono px-3 py-1.5 bg-stone-100 rounded border border-stone-200 text-stone-900 inline-block">
         <%= tax_profile.tax_year %>
       </div>
-      <label class="label">
-        <span class="label-text-alt text-base-content/60">Tax year is immutable once configured.</span>
-      </label>
+      <p class="yn-hint">Tax year is immutable once configured.</p>
     </div>
   <% else %>
-    <div class="form-control w-full">
-      <%= f.label :tax_year, "Tax Year", class: "label font-semibold" %>
-      <%= f.number_field :tax_year, class: "input input-bordered w-full", min: TaxReporting::TaxYear::MIN_YEAR, max: TaxReporting::TaxYear::MAX_YEAR, required: true %>
-      <label class="label">
-        <span class="label-text-alt text-base-content/60">Tax classifications are configured independently per calendar year.</span>
-      </label>
+    <div>
+      <%= f.label :tax_year, "Tax Year", class: "yn-label" %>
+      <%= f.number_field :tax_year, class: "yn-input font-mono", min: TaxReporting::TaxYear::MIN_YEAR, max: TaxReporting::TaxYear::MAX_YEAR, required: true %>
+      <p class="yn-hint">Tax classifications are configured independently per calendar year.</p>
     </div>
   <% end %>
 
-  <div class="form-control w-full">
-    <%= f.label :schedule_e_property_type, "IRS Schedule E Property Type (Box 1b)", class: "label font-semibold" %>
+  <div>
+    <%= f.label :schedule_e_property_type, "IRS Schedule E Property Type (Box 1b)", class: "yn-label" %>
     <%= f.select :schedule_e_property_type,
                  [
                    ["1 — Single-Family Residence", "single_family_residence"],
@@ -45,24 +41,22 @@
                    ["8 — Other", "other"]
                  ],
                  { include_blank: "Choose Schedule E property type..." },
-                 class: "select select-bordered w-full",
+                 class: "yn-select",
                  required: true,
                  data: { tax_profile_form_target: "typeSelect", action: "change->tax-profile-form#typeChanged" } %>
   </div>
 
-  <div class="form-control w-full <%= 'hidden' unless tax_profile.other? %>" data-tax-profile-form_target="otherContainer">
-    <%= f.label :other_description, "Description for Other Type", class: "label font-semibold" %>
+  <div class="<%= 'hidden' unless tax_profile.other? %>" data-tax-profile-form-target="otherContainer">
+    <%= f.label :other_description, "Description for Other Type", class: "yn-label" %>
     <%= f.text_field :other_description,
                      placeholder: "e.g. Storage units, Boat slip, Parking garage",
-                     class: "input input-bordered w-full",
+                     class: "yn-input",
                      data: { tax_profile_form_target: "otherInput" } %>
-    <label class="label">
-      <span class="label-text-alt text-base-content/60">Required when '8 — Other' is selected.</span>
-    </label>
+    <p class="yn-hint">Required when '8 — Other' is selected.</p>
   </div>
 
-  <div class="flex items-center gap-3 pt-4">
-    <%= f.submit (tax_profile.persisted? ? "Save Tax Profile" : "Create Tax Profile"), class: "btn btn-primary" %>
-    <%= link_to "Cancel", schedule_e_property_path(@property, year: tax_profile.tax_year), class: "btn btn-ghost" %>
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit (tax_profile.persisted? ? "Save Tax Profile" : "Create Tax Profile"), class: "yn-btn yn-btn-primary" %>
+    <%= link_to "Cancel", schedule_e_property_path(@property, year: tax_profile.tax_year), class: "yn-btn yn-btn-secondary" %>
   </div>
 <% end %>

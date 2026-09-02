@@ -1,8 +1,8 @@
-<%= form_with(model: tenancy) do |form| %>
+<%= form_with(model: tenancy, class: "space-y-6") do |form| %>
   <% if tenancy.errors.any? %>
-    <div class="alert alert-error shadow-lg mb-6 text-error-content">
+    <div class="yn-alert yn-alert-danger" role="alert">
       <div>
-        <h3 class="font-bold"><%= pluralize(tenancy.errors.count, "error") %> prohibited this tenancy from being saved:</h3>
+        <h3 class="font-bold text-sm"><%= pluralize(tenancy.errors.count, "error") %> prohibited this tenancy from being saved:</h3>
         <ul class="list-disc pl-5 mt-1 text-sm">
           <% tenancy.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -14,16 +14,16 @@
 
   <% if tenancy.new_record? %>
     <!-- Property & Unit Selection -->
-    <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
-      <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-4">Property & Rentable Unit</h3>
+    <div class="bg-white border border-stone-200 rounded-lg p-6">
+      <h3 class="font-bold text-base text-stone-900 border-b border-stone-200 pb-3 mb-4">Property & Rentable Unit</h3>
       
-      <div class="form-control w-full">
-        <%= form.label :rentable_unit_id, "Select Rentable Unit", class: "label font-semibold" %>
-        <select name="tenancy[rentable_unit_id]" id="tenancy_rentable_unit_id" class="select select-bordered w-full" required>
+      <div>
+        <%= form.label :rentable_unit_id, "Select Rentable Unit", class: "yn-label" %>
+        <select name="tenancy[rentable_unit_id]" id="tenancy_rentable_unit_id" class="yn-select" required>
           <option value="">-- Choose a Unit --</option>
           <% @properties.each do |property| %>
             <optgroup label="<%= property.address %>">
-              <% property.rentable_units.where(active: true).each do |unit| %>
+              <% property.rentable_units.select(&:active?).each do |unit| %>
                 <option value="<%= unit.id %>" <%= 'selected' if tenancy.rentable_unit_id == unit.id %>>
                   <%= unit.name %> <%= "(#{unit.unit_identifier})" if unit.unit_identifier.present? %>
                 </option>
@@ -35,22 +35,22 @@
     </div>
 
     <!-- Tenants & Participants Selection -->
-    <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
-      <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-4">Tenants & Payers</h3>
-      <p class="text-xs text-base-content/60 mb-4">Select at least one tenant who is financially and legally responsible for this agreement.</p>
+    <div class="bg-white border border-stone-200 rounded-lg p-6">
+      <h3 class="font-bold text-base text-stone-900 border-b border-stone-200 pb-3 mb-2">Tenants & Payers</h3>
+      <p class="text-xs text-stone-500 mb-4">Select at least one tenant who is financially and legally responsible for this agreement.</p>
 
-      <div class="space-y-2 max-h-60 overflow-y-auto p-2 bg-base-200/50 rounded-lg">
+      <div class="space-y-2 max-h-60 overflow-y-auto p-2 bg-stone-50 rounded-lg border border-stone-200">
         <% if @parties.empty? %>
-          <div class="text-sm text-base-content/50 p-2">
-            No tenants or payers registered yet. <%= link_to "Create a Party first", new_party_path, class: "link link-primary font-semibold", target: "_blank" %>.
+          <div class="text-sm text-stone-500 p-2">
+            No tenants or payers registered yet. <%= link_to "Create a Party first", new_party_path, class: "yn-link font-semibold", target: "_blank" %>.
           </div>
         <% else %>
           <% @parties.each do |party| %>
-            <label class="label cursor-pointer justify-start gap-3 bg-base-100 p-2 rounded hover:bg-base-200 transition">
-              <input type="checkbox" name="tenancy[party_ids][]" value="<%= party.id %>" class="checkbox checkbox-primary" <%= 'checked' if tenancy.parties.include?(party) %> />
+            <label class="flex items-center gap-3 bg-white p-2.5 rounded border border-stone-200 hover:bg-stone-50 cursor-pointer select-none">
+              <input type="checkbox" name="tenancy[party_ids][]" value="<%= party.id %>" class="rounded border-stone-300 text-stone-900 focus:ring-stone-400" <%= 'checked' if tenancy.parties.include?(party) %> />
               <div>
-                <span class="label-text font-bold"><%= party.display_name %></span>
-                <span class="text-xs text-base-content/50 ml-2">(<%= party.party_type.titleize %><%= " — #{party.email_address}" if party.email_address.present? %>)</span>
+                <span class="text-sm font-bold text-stone-900"><%= party.display_name %></span>
+                <span class="text-xs text-stone-500 ml-2">(<%= party.party_type.titleize %><%= " — #{party.email_address}" if party.email_address.present? %>)</span>
               </div>
             </label>
           <% end %>
@@ -60,53 +60,53 @@
   <% end %>
 
   <!-- Agreement Terms -->
-  <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
-    <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-4">Agreement Details</h3>
+  <div class="bg-white border border-stone-200 rounded-lg p-6">
+    <h3 class="font-bold text-base text-stone-900 border-b border-stone-200 pb-3 mb-4">Agreement Details</h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="form-control w-full">
-        <%= form.label :agreement_type, "Agreement Type", class: "label font-semibold" %>
-        <%= form.select :agreement_type, Tenancy::AGREEMENT_TYPES.map { |k| [k.titleize, k] }, {}, { class: "select select-bordered w-full", required: true } %>
+      <div>
+        <%= form.label :agreement_type, "Agreement Type", class: "yn-label" %>
+        <%= form.select :agreement_type, Tenancy::AGREEMENT_TYPES.map { |k| [k.titleize, k] }, {}, { class: "yn-select", required: true } %>
       </div>
 
-      <div class="form-control w-full">
-        <%= form.label :late_period_days, "Grace Period (Days)", class: "label font-semibold" %>
-        <%= form.number_field :late_period_days, class: "input input-bordered w-full", min: 0 %>
+      <div>
+        <%= form.label :late_period_days, "Grace Period (Days)", class: "yn-label" %>
+        <%= form.number_field :late_period_days, class: "yn-input font-mono", min: 0 %>
       </div>
 
       <% if tenancy.new_record? %>
-        <div class="form-control w-full">
-          <%= form.label :commencement_date, "Commencement Date", class: "label font-semibold" %>
-          <%= form.date_field :commencement_date, class: "input input-bordered w-full", required: true %>
+        <div>
+          <%= form.label :commencement_date, "Commencement Date", class: "yn-label" %>
+          <%= form.date_field :commencement_date, class: "yn-input", required: true %>
         </div>
       <% end %>
 
-      <div class="form-control w-full">
-        <%= form.label :termination_date, "Termination Date (Leave blank if Month-to-Month)", class: "label font-semibold" %>
-        <%= form.date_field :termination_date, class: "input input-bordered w-full" %>
+      <div>
+        <%= form.label :termination_date, "Termination Date (Leave blank if Month-to-Month)", class: "yn-label" %>
+        <%= form.date_field :termination_date, class: "yn-input" %>
       </div>
     </div>
   </div>
 
   <% if tenancy.new_record? %>
     <!-- Initial Rent Terms -->
-    <div class="card bg-base-100 border border-base-200 shadow-sm p-6 mb-6">
-      <h3 class="font-bold text-lg border-b border-base-200 pb-3 mb-4">Initial Rent Terms</h3>
+    <div class="bg-white border border-stone-200 rounded-lg p-6">
+      <h3 class="font-bold text-base text-stone-900 border-b border-stone-200 pb-3 mb-4">Initial Rent Terms</h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="form-control w-full">
-          <label class="label font-semibold" for="tenancy_rent_amount">Monthly Rent ($)</label>
-          <input type="number" name="tenancy[rent_amount]" id="tenancy_rent_amount" step="0.01" min="0" placeholder="2000.00" class="input input-bordered w-full font-mono" required />
+        <div>
+          <label class="yn-label" for="tenancy_rent_amount">Monthly Rent ($)</label>
+          <input type="number" name="tenancy[rent_amount]" id="tenancy_rent_amount" step="0.01" min: 0 placeholder="2000.00" class="yn-input font-mono tabular-nums" required />
         </div>
 
-        <div class="form-control w-full">
-          <label class="label font-semibold" for="tenancy_due_day">Due Day of Month</label>
-          <input type="number" name="tenancy[due_day]" id="tenancy_due_day" min="1" max="31" value="1" class="input input-bordered w-full font-mono" required />
+        <div>
+          <label class="yn-label" for="tenancy_due_day">Due Day of Month</label>
+          <input type="number" name="tenancy[due_day]" id="tenancy_due_day" min="1" max="31" value="1" class="yn-input font-mono tabular-nums" required />
         </div>
 
-        <div class="form-control w-full">
-          <label class="label font-semibold" for="tenancy_frequency">Frequency</label>
-          <select name="tenancy[frequency]" id="tenancy_frequency" class="select select-bordered w-full">
+        <div>
+          <label class="yn-label" for="tenancy_frequency">Frequency</label>
+          <select name="tenancy[frequency]" id="tenancy_frequency" class="yn-select">
             <option value="monthly" selected>Monthly</option>
           </select>
         </div>
@@ -114,8 +114,8 @@
     </div>
   <% end %>
 
-  <div class="flex justify-end gap-3 pt-4">
-    <%= link_to "Cancel", tenancies_path, class: "btn btn-ghost" %>
-    <%= form.submit class: "btn btn-primary px-8" %>
+  <div class="flex justify-end gap-3 pt-2">
+    <%= link_to "Cancel", tenancies_path, class: "yn-btn yn-btn-secondary" %>
+    <%= form.submit class: "yn-btn yn-btn-primary px-8" %>
   </div>
 <% end %>

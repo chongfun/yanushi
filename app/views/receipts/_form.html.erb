@@ -1,5 +1,5 @@
 <%
-  # form_context: :dialog renders inside modal-frame; :standalone renders full page with .html URL
+  # form_context: :dialog (modal) or :standalone (full page)
   form_context = local_assigns[:form_context] || :dialog
   tenancy = local_assigns[:tenancy] || receipt.tenancy
   balance_cents = local_assigns[:balance_cents]
@@ -21,6 +21,13 @@
         <%= flash[:alert] %>
       <% else %>
         Receipt couldn't be recorded — <%= pluralize(receipt.errors.count, "field") %> needs a fix.
+      <% end %>
+      <% if receipt.errors.any? %>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+          <% receipt.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
       <% end %>
     </div>
   <% end %>
@@ -47,29 +54,33 @@
     <%= form.collection_select :payer_party_id, parties, :id, :display_name,
           { include_blank: "Select payer" },
           { class: "yn-select #{'yn-field-invalid' if receipt.errors[:payer_party_id].any?}", id: "receipt-payer",
-            "aria-invalid": receipt.errors[:payer_party_id].any? ? "true" : nil } %>
+            "aria-invalid": receipt.errors[:payer_party_id].any? ? "true" : nil,
+            "aria-describedby": receipt.errors[:payer_party_id].any? ? "receipt-payer-error" : nil } %>
     <% if receipt.errors[:payer_party_id].any? %>
-      <p class="yn-error-text"><%= receipt.errors[:payer_party_id].first %></p>
+      <p id="receipt-payer-error" class="yn-error-text"><%= receipt.errors[:payer_party_id].first %></p>
     <% end %>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
+      <% has_amount_error = receipt.errors[:amount].any? || receipt.errors[:amount_cents].any? %>
       <%= form.label :amount, "Amount", class: "yn-label", for: "receipt-amount" %>
-      <%= form.number_field :amount, step: "0.01", min: "0.01", inputmode: "decimal", placeholder: "0.00",
-            class: "yn-input tabular-nums #{'yn-field-invalid' if receipt.errors[:amount].any?}", id: "receipt-amount",
+      <%= form.text_field :amount, value: receipt.formatted_amount, inputmode: "decimal", placeholder: "0.00",
+            class: "yn-input tabular-nums #{'yn-field-invalid' if has_amount_error}", id: "receipt-amount",
             autofocus: (receipt.errors.empty? ? true : nil),
-            "aria-invalid": receipt.errors[:amount].any? ? "true" : nil %>
-      <% if receipt.errors[:amount].any? %>
-        <p class="yn-error-text"><%= receipt.errors[:amount].first %></p>
+            "aria-invalid": has_amount_error ? "true" : nil,
+            "aria-describedby": has_amount_error ? "receipt-amount-error" : nil %>
+      <% if has_amount_error %>
+        <p id="receipt-amount-error" class="yn-error-text"><%= receipt.errors[:amount].first || receipt.errors[:amount_cents].first %></p>
       <% end %>
     </div>
     <div>
       <%= form.label :received_on, "Received on", class: "yn-label", for: "receipt-date" %>
       <%= form.date_field :received_on, class: "yn-input #{'yn-field-invalid' if receipt.errors[:received_on].any?}", id: "receipt-date",
-            "aria-invalid": receipt.errors[:received_on].any? ? "true" : nil %>
+            "aria-invalid": receipt.errors[:received_on].any? ? "true" : nil,
+            "aria-describedby": receipt.errors[:received_on].any? ? "receipt-date-error" : nil %>
       <% if receipt.errors[:received_on].any? %>
-        <p class="yn-error-text"><%= receipt.errors[:received_on].first %></p>
+        <p id="receipt-date-error" class="yn-error-text"><%= receipt.errors[:received_on].first %></p>
       <% end %>
     </div>
   </div>
@@ -77,13 +88,25 @@
   <div class="grid grid-cols-2 gap-4">
     <div>
       <%= form.label :payment_method, "Payment method", class: "yn-label", for: "receipt-method" %>
-      <%= form.text_field :payment_method, placeholder: "Zelle, check, cash…", class: "yn-input", id: "receipt-method" %>
+      <%= form.text_field :payment_method, placeholder: "Zelle, check, cash…",
+            class: "yn-input #{'yn-field-invalid' if receipt.errors[:payment_method].any?}", id: "receipt-method",
+            "aria-invalid": receipt.errors[:payment_method].any? ? "true" : nil,
+            "aria-describedby": receipt.errors[:payment_method].any? ? "receipt-method-error" : nil %>
+      <% if receipt.errors[:payment_method].any? %>
+        <p id="receipt-method-error" class="yn-error-text"><%= receipt.errors[:payment_method].first %></p>
+      <% end %>
     </div>
     <div>
       <%= form.label :external_reference, class: "yn-label", for: "receipt-ref" do %>
         Reference <span class="font-normal text-stone-400">(optional)</span>
       <% end %>
-      <%= form.text_field :external_reference, placeholder: "Check #1042", class: "yn-input", id: "receipt-ref" %>
+      <%= form.text_field :external_reference, placeholder: "Check #1042",
+            class: "yn-input #{'yn-field-invalid' if receipt.errors[:external_reference].any?}", id: "receipt-ref",
+            "aria-invalid": receipt.errors[:external_reference].any? ? "true" : nil,
+            "aria-describedby": receipt.errors[:external_reference].any? ? "receipt-ref-error" : nil %>
+      <% if receipt.errors[:external_reference].any? %>
+        <p id="receipt-ref-error" class="yn-error-text"><%= receipt.errors[:external_reference].first %></p>
+      <% end %>
     </div>
   </div>
 

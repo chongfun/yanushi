@@ -1,22 +1,14 @@
-<% content_for :title, "Editing Property" %>
+<% content_for :title, "Editing #{@property.address}" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Properties", properties_path %></li>
-  <li><%= link_to @property.address, @property %></li>
-  <li class="font-bold">Edit</li>
-<% end %>
+<div class="max-w-xl mx-auto py-6">
+  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Editing Property</h1>
 
-<div class="max-w-xl mx-auto py-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold mb-6">Editing Property</h2>
+  <div class="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+    <%= render "form", property: @property %>
+  </div>
 
-      <%= render "form", property: @property %>
-
-      <div class="mt-6 flex justify-between">
-        <%= link_to "Show Property", @property, class: "btn btn-outline" %>
-        <%= link_to "Back to Properties", properties_path, class: "btn btn-ghost" %>
-      </div>
-    </div>
+  <div class="flex justify-between">
+    <%= link_to "Show Property", @property, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+    <%= link_to "Back to Properties", properties_path, class: "yn-btn yn-btn-ghost yn-btn-sm" %>
   </div>
 </div>

@@ -27,7 +27,7 @@
     <% if document.failed? %>
       <div class="flex gap-2 shrink-0">
         <%= button_to "Retry", retry_source_document_path(document), method: :post, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-        <%= button_to "Delete…", source_document_path(document), method: :delete, form: { data: { turbo_confirm: "Are you sure you want to delete this upload record?" } }, class: "yn-btn yn-btn-ghost yn-btn-sm text-red-700" %>
+        <%= button_to "Delete…", source_document_path(document), method: :delete, data: { turbo_confirm: "Are you sure you want to delete this upload record?" }, class: "yn-btn yn-btn-ghost yn-btn-sm text-red-700" %>
       </div>
     <% end %>
   </div>

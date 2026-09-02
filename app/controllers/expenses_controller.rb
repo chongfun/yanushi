@@ -29,8 +29,10 @@ class ExpensesController < ApplicationController
     property = if (nested = @nested_property)
       if expense_params[:property_id].present? && expense_params[:property_id].to_s != nested.id.to_s
         @expense = Expense.new(expense_params)
-        @expense.errors.add(:property, "must match route property")
-        return render :new, status: :unprocessable_content
+        @expense.property = nil
+        @expense.errors.add(:property_id, "must match route property")
+        flash.now[:alert] = "Property must match route property"
+        return render_create_failure
       end
       nested
     else
@@ -39,8 +41,10 @@ class ExpensesController < ApplicationController
 
     unless property
       @expense = Expense.new(expense_params)
-      @expense.errors.add(:property, "must belong to your properties")
-      return render :new, status: :unprocessable_content
+      @expense.property = nil
+      @expense.errors.add(:property_id, "must belong to your properties")
+      flash.now[:alert] = "Property must belong to your properties"
+      return render_create_failure
     end
 
     rentable_unit = if expense_params[:rentable_unit_id].present?
@@ -49,8 +53,9 @@ class ExpensesController < ApplicationController
 
     if expense_params[:rentable_unit_id].present? && rentable_unit.nil?
       @expense = Expense.new(expense_params)
-      @expense.errors.add(:rentable_unit, "must belong to the selected property")
-      return render :new, status: :unprocessable_content
+      @expense.errors.add(:rentable_unit_id, "must belong to the selected property")
+      flash.now[:alert] = "Unit must belong to the selected property"
+      return render_create_failure
     end
 
     result = Expenses::CreateService.call(
@@ -70,48 +75,59 @@ class ExpensesController < ApplicationController
         if (nested = @nested_property)
           format.html { redirect_to property_activity_path(nested), notice: "Expense was successfully created." }
           format.turbo_stream do
-            ytd_range = Accounting::DateRange.new(
-              from: Date.current.beginning_of_year,
-              through: Date.current
-            )
-            @ytd_summary = Accounting::PropertySummaryQuery.call(property: nested, date_range: ytd_range)
-            recent_range = Accounting::DateRange.new(through: Date.current)
-            @recent_activity = Accounting::PropertyLedgerQuery.call(property: nested, date_range: recent_range, limit: 5)
-            @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: nested)
-            render "expenses/create", formats: [ :turbo_stream ]
+            if params[:format] != "html"
+              ytd_range = Accounting::DateRange.new(
+                from: Date.current.beginning_of_year,
+                through: Date.current
+              )
+              @ytd_summary = Accounting::PropertySummaryQuery.call(property: nested, date_range: ytd_range)
+              recent_range = Accounting::DateRange.new(through: Date.current)
+              @recent_activity = Accounting::PropertyLedgerQuery.call(property: nested, date_range: recent_range, limit: 5)
+              @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: nested)
+              render "expenses/create", formats: [ :turbo_stream ]
+            else
+              redirect_to property_activity_path(nested), notice: "Expense was successfully created.", status: :see_other
+            end
           end
         else
           format.html { redirect_to @expense, notice: "Expense was successfully created." }
+          format.turbo_stream { redirect_to @expense, notice: "Expense was successfully created.", status: :see_other }
         end
         format.json { render :show, status: :created, location: @expense }
       end
     else
       @expense = result.failure.data&.dig(:expense) || Expense.new(expense_params)
-      @expense.errors.add(:base, result.failure.error) if @expense.errors.empty?
-
-      respond_to do |format|
-        format.html { render :new, status: :unprocessable_content }
-        format.turbo_stream do
-          render turbo_stream: turbo_stream.update(
-            "modal-frame",
-            partial: "expenses/form",
-            locals: {
-              expense: @expense,
-              form_context: :dialog,
-              nested_property: @nested_property,
-              properties: @properties
-            }
-          ), status: :unprocessable_content
-        end
-        format.json { render json: @expense.errors, status: :unprocessable_content }
+      @expense.valid?
+      error_msg = result.failure.error.to_s
+      err_lower = error_msg.downcase
+      if err_lower.include?("amount")
+        @expense.errors.add(:amount, error_msg)
+      elsif err_lower.include?("category") || err_lower.include?("kind")
+        @expense.errors.add(:expense_kind, error_msg)
+      elsif err_lower.include?("date") || err_lower.include?("paid")
+        @expense.errors.add(:paid_on, error_msg)
+      elsif err_lower.include?("property")
+        @expense.errors.add(:property_id, error_msg)
+      elsif err_lower.include?("unit")
+        @expense.errors.add(:rentable_unit_id, error_msg)
+      elsif err_lower.include?("vendor")
+        @expense.errors.add(:vendor_name, error_msg)
+      elsif err_lower.include?("reference")
+        @expense.errors.add(:external_reference, error_msg)
+      else
+        @expense.errors.add(:base, error_msg)
       end
+      flash.now[:alert] = result.failure.error
+      render_create_failure
     end
   end
 
   def correction
     if @expense.voided? || @expense.superseded?
-      redirect_to @expense, alert: "This expense has already been corrected or voided."
+      return redirect_to @expense, alert: "This expense has already been corrected or voided."
     end
+
+    @replacement_expense = @expense
   end
 
   def correct
@@ -119,18 +135,65 @@ class ExpensesController < ApplicationController
       return redirect_to @expense, alert: "This expense has already been corrected or voided."
     end
 
-    property = authenticated_user.properties.find_by(id: expense_params[:property_id])
+    @replacement_expense = Expense.new(expense_params)
+
+    # Preserve current property if omitted
+    property = if expense_params.key?(:property_id)
+      if expense_params[:property_id].present?
+        authenticated_user.properties.find_by(id: expense_params[:property_id])
+      end
+    else
+      @expense.property
+    end
+
     unless property
-      @expense.errors.add(:property, "must belong to your properties")
+      @replacement_expense.property = nil
+      @replacement_expense.errors.add(:property_id, "must belong to your properties")
+      flash.now[:alert] = "Please fix the errors below."
       return render :correction, status: :unprocessable_content
     end
 
-    rentable_unit = if expense_params[:rentable_unit_id].present?
-      property.rentable_units.find_by(id: expense_params[:rentable_unit_id])
+    @replacement_expense.property = property
+
+    # Preserve current unit if omitted
+    rentable_unit = if expense_params.key?(:rentable_unit_id)
+      if expense_params[:rentable_unit_id].present?
+        property.rentable_units.find_by(id: expense_params[:rentable_unit_id])
+      end
+    else
+      @expense.rentable_unit
     end
 
     if expense_params[:rentable_unit_id].present? && rentable_unit.nil?
-      @expense.errors.add(:rentable_unit, "must belong to the selected property")
+      @replacement_expense.errors.add(:rentable_unit_id, "must belong to the selected property")
+      flash.now[:alert] = "Please fix the errors below."
+      return render :correction, status: :unprocessable_content
+    end
+
+    @replacement_expense.rentable_unit = rentable_unit
+
+    # Default omitted fields to current values for validation
+    @replacement_expense.expense_kind = @expense.expense_kind unless expense_params.key?(:expense_kind)
+    @replacement_expense.amount_cents = @expense.amount_cents unless expense_params.key?(:amount)
+    @replacement_expense.paid_on = @expense.paid_on unless expense_params.key?(:paid_on)
+
+    @replacement_expense.valid?
+
+    # Reject submitted blank required fields
+    if expense_params.key?(:expense_kind) && expense_params[:expense_kind].blank?
+      @replacement_expense.errors.add(:expense_kind, "can't be blank")
+    end
+
+    if expense_params.key?(:amount) && expense_params[:amount].blank?
+      @replacement_expense.errors.add(:amount, "can't be blank")
+    end
+
+    if expense_params.key?(:paid_on) && expense_params[:paid_on].blank?
+      @replacement_expense.errors.add(:paid_on, "can't be blank")
+    end
+
+    if @replacement_expense.errors.any?
+      flash.now[:alert] = "Please fix the errors below."
       return render :correction, status: :unprocessable_content
     end
 
@@ -138,12 +201,13 @@ class ExpensesController < ApplicationController
       expense: @expense,
       property: property,
       rentable_unit: rentable_unit,
-      expense_kind: expense_params[:expense_kind],
+      expense_kind: expense_params[:expense_kind] || @expense.expense_kind,
       amount: expense_params[:amount],
-      paid_on: expense_params[:paid_on],
-      vendor_name: expense_params[:vendor_name],
-      external_reference: expense_params[:external_reference],
-      description: expense_params[:description],
+      amount_cents: expense_params.key?(:amount) ? nil : @expense.amount_cents,
+      paid_on: expense_params[:paid_on] || @expense.paid_on,
+      vendor_name: expense_params.key?(:vendor_name) ? expense_params[:vendor_name] : :not_set,
+      external_reference: expense_params.key?(:external_reference) ? expense_params[:external_reference] : :not_set,
+      description: expense_params.key?(:description) ? expense_params[:description] : :not_set,
       user: authenticated_user
     )
 
@@ -151,7 +215,27 @@ class ExpensesController < ApplicationController
       replacement = result.value!.data[:replacement]
       redirect_to replacement, notice: "Expense was successfully corrected.", status: :see_other
     else
-      @expense.errors.add(:base, result.failure.error) if @expense.errors.empty?
+      @replacement_expense.valid?
+      error_msg = result.failure.error.to_s
+      err_lower = error_msg.downcase
+      if err_lower.include?("amount")
+        @replacement_expense.errors.add(:amount, error_msg)
+      elsif err_lower.include?("category") || err_lower.include?("kind")
+        @replacement_expense.errors.add(:expense_kind, error_msg)
+      elsif err_lower.include?("date") || err_lower.include?("paid")
+        @replacement_expense.errors.add(:paid_on, error_msg)
+      elsif err_lower.include?("property")
+        @replacement_expense.errors.add(:property_id, error_msg)
+      elsif err_lower.include?("unit")
+        @replacement_expense.errors.add(:rentable_unit_id, error_msg)
+      elsif err_lower.include?("vendor")
+        @replacement_expense.errors.add(:vendor_name, error_msg)
+      elsif err_lower.include?("reference")
+        @replacement_expense.errors.add(:external_reference, error_msg)
+      else
+        @replacement_expense.errors.add(:base, error_msg)
+      end
+      flash.now[:alert] = result.failure.error
       render :correction, status: :unprocessable_content
     end
   end
@@ -186,5 +270,28 @@ class ExpensesController < ApplicationController
         :property_id, :rentable_unit_id, :expense_kind, :amount,
         :paid_on, :vendor_name, :external_reference, :description
       )
+    end
+
+    def render_create_failure
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_content }
+        format.turbo_stream do
+          if @nested_property && params[:format] != "html"
+            render turbo_stream: turbo_stream.update(
+              "modal-frame",
+              partial: "expenses/form",
+              locals: {
+                expense: @expense,
+                form_context: :dialog,
+                nested_property: @nested_property,
+                properties: @properties
+              }
+            ), status: :unprocessable_content
+          else
+            render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
+          end
+        end
+        format.json { render json: @expense.errors, status: :unprocessable_content }
+      end
     end
 end

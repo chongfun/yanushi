@@ -2,13 +2,33 @@
 <% is_dialog = form_context == :dialog %>
 <% nested_prop = local_assigns[:nested_property] || @nested_property %>
 <% prop_list = local_assigns[:properties] || @properties || [] %>
+<%
+  action_url = if nested_prop
+    is_dialog ? property_expenses_path(nested_prop) : property_expenses_path(nested_prop, format: :html)
+  else
+    is_dialog ? expenses_path : expenses_path(format: :html)
+  end
+%>
 
-<%= form_with(model: nested_prop ? [nested_prop, expense] : expense,
+<%= form_with(model: expense,
+              url: action_url,
               class: "space-y-4",
+              id: "expense-form",
               data: { turbo: true }) do |form| %>
   <% if expense.errors.any? || flash[:alert].present? %>
     <div class="yn-alert yn-alert-danger" role="alert">
-      <%= flash[:alert].presence || expense.errors.full_messages.to_sentence %>
+      <% if flash[:alert].present? %>
+        <%= flash[:alert] %>
+      <% else %>
+        Expense couldn't be recorded — <%= pluralize(expense.errors.count, "field") %> needs a fix.
+      <% end %>
+      <% if expense.errors.any? %>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+          <% expense.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      <% end %>
     </div>
   <% end %>
 
@@ -20,56 +40,132 @@
         <%= nested_prop.address %>
       </div>
     </div>
-  <% else %>
+
     <div>
-      <%= form.label :property_id, "Property", class: "yn-label" %>
-      <%= form.collection_select :property_id, prop_list, :id, :address,
-            { prompt: "Select Property" },
-            { class: "yn-select w-full", required: true } %>
+      <% has_unit_error = expense.errors[:rentable_unit_id].any? || expense.errors[:rentable_unit].any? %>
+      <%= form.label :rentable_unit_id, "Unit (Optional)", class: "yn-label", for: "expense-unit" %>
+      <%= form.collection_select :rentable_unit_id, nested_prop.rentable_units, :id, :display_name,
+            { include_blank: "Entire property / No specific unit" },
+            { class: "yn-select w-full #{'yn-field-invalid' if has_unit_error}", id: "expense-unit",
+              "aria-invalid": has_unit_error ? "true" : nil,
+              "aria-describedby": has_unit_error ? "expense-unit-error" : nil } %>
+      <% if has_unit_error %>
+        <p id="expense-unit-error" class="yn-error-text"><%= expense.errors[:rentable_unit_id].first || expense.errors[:rentable_unit].first %></p>
+      <% end %>
+    </div>
+  <% else %>
+    <div data-controller="property-units"
+         data-property-units-units-value="<%= prop_list.each_with_object({}) { |p, h| h[p.id.to_s] = p.rentable_units.map { |u| { id: u.id, name: u.display_name } } }.to_json %>"
+         class="space-y-4">
+      <div>
+        <% has_prop_error = expense.errors[:property_id].any? || expense.errors[:property].any? %>
+        <%= form.label :property_id, "Property", class: "yn-label", for: "expense-property" %>
+        <%= form.collection_select :property_id, prop_list, :id, :address,
+              { prompt: "Select Property" },
+              { class: "yn-select w-full #{'yn-field-invalid' if has_prop_error}", id: "expense-property", required: true,
+                data: { property_units_target: "propertySelect", action: "change->property-units#propertyChanged" },
+                "aria-invalid": has_prop_error ? "true" : nil,
+                "aria-describedby": has_prop_error ? "expense-property-error" : nil } %>
+        <% if has_prop_error %>
+          <p id="expense-property-error" class="yn-error-text"><%= expense.errors[:property_id].first || expense.errors[:property].first %></p>
+        <% end %>
+      </div>
+
+      <div>
+        <% has_unit_error = expense.errors[:rentable_unit_id].any? || expense.errors[:rentable_unit].any? %>
+        <%= form.label :rentable_unit_id, "Unit (Optional)", class: "yn-label", for: "expense-unit" %>
+        <% eligible_units = (expense.property_id.present? ? prop_list.find { |p| p.id.to_s == expense.property_id.to_s }&.rentable_units : nil) || [] %>
+        <%= form.collection_select :rentable_unit_id, eligible_units, :id, :display_name,
+              { include_blank: "Entire property / No specific unit" },
+              { class: "yn-select w-full #{'yn-field-invalid' if has_unit_error}", id: "expense-unit",
+                data: { property_units_target: "unitSelect", current_unit_id: expense.rentable_unit_id },
+                "aria-invalid": has_unit_error ? "true" : nil,
+                "aria-describedby": has_unit_error ? "expense-unit-error" : nil } %>
+        <% if has_unit_error %>
+          <p id="expense-unit-error" class="yn-error-text"><%= expense.errors[:rentable_unit_id].first || expense.errors[:rentable_unit].first %></p>
+        <% end %>
+      </div>
     </div>
   <% end %>
 
   <div>
-    <%= form.label :rentable_unit_id, "Unit (Optional)", class: "yn-label" %>
-    <% eligible_units = nested_prop ? nested_prop.rentable_units : prop_list.flat_map(&:rentable_units) %>
-    <%= form.collection_select :rentable_unit_id, eligible_units, :id, :display_name,
-          { include_blank: "Entire property / No specific unit" },
-          { class: "yn-select w-full" } %>
-  </div>
-
-  <div>
-    <%= form.label :expense_kind, "Category", class: "yn-label" %>
+    <% has_kind_error = expense.errors[:expense_kind].any? %>
+    <%= form.label :expense_kind, "Category", class: "yn-label", for: "expense-kind" %>
     <%= form.select :expense_kind,
           Expense::EXPENSE_KINDS.map { |k| [k.titleize, k] },
           { prompt: "Select Category" },
-          { class: "yn-select w-full", required: true } %>
+          { class: "yn-select w-full #{'yn-field-invalid' if has_kind_error}", id: "expense-kind", required: true,
+            "aria-invalid": has_kind_error ? "true" : nil,
+            "aria-describedby": has_kind_error ? "expense-kind-error" : nil } %>
+    <% if has_kind_error %>
+      <p id="expense-kind-error" class="yn-error-text"><%= expense.errors[:expense_kind].first %></p>
+    <% end %>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= form.label :amount, "Amount ($)", class: "yn-label" %>
-      <%= form.number_field :amount, step: "0.01", min: "0.01", class: "yn-input tabular-nums w-full", placeholder: "0.00", required: true %>
+      <% has_amount_error = expense.errors[:amount].any? || expense.errors[:amount_cents].any? %>
+      <%= form.label :amount, "Amount ($)", class: "yn-label", for: "expense-amount" %>
+      <%= form.text_field :amount, value: expense.formatted_amount, inputmode: "decimal",
+            class: "yn-input tabular-nums w-full #{'yn-field-invalid' if has_amount_error}", id: "expense-amount",
+            placeholder: "0.00", required: true,
+            "aria-invalid": has_amount_error ? "true" : nil,
+            "aria-describedby": has_amount_error ? "expense-amount-error" : nil %>
+      <% if has_amount_error %>
+        <p id="expense-amount-error" class="yn-error-text"><%= expense.errors[:amount].first || expense.errors[:amount_cents].first %></p>
+      <% end %>
     </div>
     <div>
-      <%= form.label :paid_on, "Date Paid", class: "yn-label" %>
-      <%= form.date_field :paid_on, value: (expense.paid_on || Date.current), class: "yn-input w-full", required: true %>
+      <% has_date_error = expense.errors[:paid_on].any? %>
+      <%= form.label :paid_on, "Date Paid", class: "yn-label", for: "expense-date" %>
+      <%= form.date_field :paid_on, value: expense.paid_on,
+            class: "yn-input w-full #{'yn-field-invalid' if has_date_error}", id: "expense-date", required: true,
+            "aria-invalid": has_date_error ? "true" : nil,
+            "aria-describedby": has_date_error ? "expense-date-error" : nil %>
+      <% if has_date_error %>
+        <p id="expense-date-error" class="yn-error-text"><%= expense.errors[:paid_on].first %></p>
+      <% end %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= form.label :vendor_name, "Vendor / Payee", class: "yn-label" %>
-      <%= form.text_field :vendor_name, class: "yn-input w-full", placeholder: "e.g. City Power, Home Depot" %>
+      <% has_vendor_error = expense.errors[:vendor_name].any? %>
+      <%= form.label :vendor_name, "Vendor / Payee", class: "yn-label", for: "expense-vendor" %>
+      <%= form.text_field :vendor_name,
+            class: "yn-input w-full #{'yn-field-invalid' if has_vendor_error}", id: "expense-vendor",
+            placeholder: "e.g. City Power, Home Depot",
+            "aria-invalid": has_vendor_error ? "true" : nil,
+            "aria-describedby": has_vendor_error ? "expense-vendor-error" : nil %>
+      <% if has_vendor_error %>
+        <p id="expense-vendor-error" class="yn-error-text"><%= expense.errors[:vendor_name].first %></p>
+      <% end %>
     </div>
     <div>
-      <%= form.label :external_reference, "Invoice / Receipt #", class: "yn-label" %>
-      <%= form.text_field :external_reference, class: "yn-input w-full", placeholder: "e.g. INV-1002" %>
+      <% has_ref_error = expense.errors[:external_reference].any? %>
+      <%= form.label :external_reference, "Invoice / Receipt #", class: "yn-label", for: "expense-ref" %>
+      <%= form.text_field :external_reference,
+            class: "yn-input w-full #{'yn-field-invalid' if has_ref_error}", id: "expense-ref",
+            placeholder: "e.g. INV-1002",
+            "aria-invalid": has_ref_error ? "true" : nil,
+            "aria-describedby": has_ref_error ? "expense-ref-error" : nil %>
+      <% if has_ref_error %>
+        <p id="expense-ref-error" class="yn-error-text"><%= expense.errors[:external_reference].first %></p>
+      <% end %>
     </div>
   </div>
 
   <div>
-    <%= form.label :description, "Description", class: "yn-label" %>
-    <%= form.text_area :description, rows: 2, class: "yn-textarea w-full", placeholder: "Notes or description of the expense..." %>
+    <% has_desc_error = expense.errors[:description].any? %>
+    <%= form.label :description, "Description", class: "yn-label", for: "expense-desc" %>
+    <%= form.text_area :description, rows: 2,
+          class: "yn-textarea w-full #{'yn-field-invalid' if has_desc_error}", id: "expense-desc",
+          placeholder: "Notes or description of the expense...",
+          "aria-invalid": has_desc_error ? "true" : nil,
+          "aria-describedby": has_desc_error ? "expense-desc-error" : nil %>
+    <% if has_desc_error %>
+      <p id="expense-desc-error" class="yn-error-text"><%= expense.errors[:description].first %></p>
+    <% end %>
   </div>
 
   <div class="flex justify-end gap-2 pt-2">

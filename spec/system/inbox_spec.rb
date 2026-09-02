@@ -774,7 +774,7 @@ RSpec.describe "Inbox", type: :system do
       expect(page).to have_no_content("Import Failed")
     end
 
-    it "retains /inbox?view=processing and Processing tab selection when clicking Retry or Delete on a document" do
+    it "retains /inbox?view=processing and Processing tab selection when clicking Retry or Delete on a document", :js do
       failed_doc = create(:source_document, user: user, status: "failed", error_message: "Unreadable format", attachment_filename: "bad_upload.pdf")
       delete_doc = create(:source_document, user: user, status: "failed", error_message: "Corrupted PDF", attachment_filename: "corrupt.pdf")
 
@@ -795,10 +795,11 @@ RSpec.describe "Inbox", type: :system do
 
       # Click Delete… on corrupt.pdf
       within("#source_document_#{delete_doc.id}") do
-        click_button "Delete…"
+        find("button", text: "Delete…").click
       end
 
       # Confirm deletion in turbo-confirm modal
+      expect(page).to have_css("#confirm-modal[open]", visible: true)
       within("#confirm-modal") do
         expect(page).to have_content("Are you sure you want to delete this upload record?")
         click_button "Confirm"
@@ -1602,7 +1603,7 @@ RSpec.describe "Inbox", type: :system do
       select "Zelle", from: "payment_method"
       click_button "Filter"
 
-      # Finding 3 / P2 Fix: Tab badge retains total count (25) while text shows filtered count (22)
+      # Tab badge retains total count while text shows filtered count
       expect(page).to have_css("#tab_history_count", text: "25")
       expect(page).to have_content("Showing 1–20 of 22")
       expect(page).to have_link("Next")

@@ -52,20 +52,32 @@ class Expense < ApplicationRecord
   scope :voided, -> { where.not(voided_at: nil) }
   scope :posted, -> { where.not(posted_at: nil) }
 
+  attr_accessor :raw_amount
+
   def amount
-    amount_cents ? (BigDecimal(amount_cents.to_s) / 100) : BigDecimal("0")
+    return nil if amount_cents.nil? || amount_cents.zero?
+
+    BigDecimal(amount_cents.to_s) / 100
   end
 
   def amount=(val)
+    @raw_amount = val.presence
     if val.present? && val.to_s.strip.present?
       begin
         self.amount_cents = (BigDecimal(val.to_s) * 100).round
       rescue StandardError
-        self.amount_cents = 0
+        self.amount_cents = nil
       end
     else
-      self.amount_cents = 0
+      self.amount_cents = nil
     end
+  end
+
+  def formatted_amount
+    return @raw_amount if defined?(@raw_amount) && @raw_amount.present?
+    return nil if amount.nil?
+
+    sprintf("%.2f", amount)
   end
 
   def posted?
