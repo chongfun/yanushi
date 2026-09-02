@@ -7,44 +7,78 @@
       <%= link_to "Add property", new_property_path, class: "yn-btn yn-btn-primary" %>
     </div>
     <nav class="yn-tabs mt-4" aria-label="Portfolio sections">
-      <%= link_to "Properties", properties_path, class: "yn-tab", "aria-current": "page" %>
+      <%= link_to "Properties", portfolio_path, class: "yn-tab", "aria-current": "page" %>
       <%= link_to "Tenancies", tenancies_path, class: "yn-tab" %>
       <%= link_to "Parties", parties_path, class: "yn-tab" %>
     </nav>
   </header>
 
-  <div class="space-y-4">
-    <div class="flex flex-wrap gap-3">
-      <%= link_to "View all properties", properties_path, class: "yn-btn yn-btn-secondary" %>
-      <%= link_to "View all tenancies", tenancies_path, class: "yn-btn yn-btn-secondary" %>
-      <%= link_to "View all parties", parties_path, class: "yn-btn yn-btn-secondary" %>
-    </div>
-
-    <% if @properties.any? %>
+  <% if @properties.any? %>
+    <div class="overflow-x-auto">
       <table class="yn-table">
         <thead>
           <tr>
             <th scope="col">Property</th>
-            <th scope="col">Asset Type</th>
             <th scope="col">Units</th>
+            <th scope="col">Occupancy</th>
+            <th scope="col" class="text-right tabular-nums">Balance</th>
           </tr>
         </thead>
         <tbody>
           <% @properties.each do |property| %>
+            <%
+              units = property.rentable_units.select(&:active?)
+              total_units = units.size
+              active_units = units.count { |u| u.tenancies.any?(&:active?) }
+              prop_all_tenancies = property.rentable_units.flat_map(&:tenancies)
+              prop_balances = prop_all_tenancies.map { |t| @balances[t.id] || 0 }
+              due_cents = prop_balances.select(&:positive?).sum
+              credit_cents = prop_balances.select(&:negative?).sum
+              balance_cents = if due_cents.positive?
+                due_cents
+              elsif credit_cents.negative?
+                credit_cents
+              else
+                0
+              end
+
+              occupancy_text = if total_units == 1
+                active_units == 1 ? "Occupied" : "Vacant"
+              else
+                "#{active_units} of #{total_units} occupied"
+              end
+
+              is_all_occupied = total_units > 0 && active_units == total_units
+              dot_class = is_all_occupied ? "yn-dot-ok" : "yn-dot-warn"
+            %>
             <tr>
-              <td><%= link_to property.address, property_path(property), class: "yn-row-link" %></td>
-              <td><%= property.asset_type.humanize %></td>
-              <td class="tabular-nums"><%= property.rentable_units.count %></td>
+              <td>
+                <%= link_to property.address, property_path(property), class: "yn-row-link" %>
+                <span class="block text-[13px] text-stone-500"><%= property.asset_type.humanize %></span>
+              </td>
+              <td class="tabular-nums"><%= total_units %></td>
+              <td>
+                <span class="yn-status yn-status-sm">
+                  <span class="yn-dot <%= dot_class %>"></span><%= occupancy_text %>
+                </span>
+              </td>
+              <td class="text-right tabular-nums whitespace-nowrap <%= balance_cents.positive? ? 'text-stone-900 font-medium' : 'text-stone-500' %>">
+                <% if balance_cents.zero? %>
+                  <span class="text-stone-400">—</span>
+                <% else %>
+                  <%= balance_phrase_cents(balance_cents) %>
+                <% end %>
+              </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-    <% else %>
-      <div class="yn-empty">
-        <p class="yn-empty-title">Add your first property</p>
-        <p class="yn-empty-body">Yanushi tracks units, tenancies, and finances per property.</p>
-        <%= link_to "Add property", new_property_path, class: "yn-btn yn-btn-primary" %>
-      </div>
-    <% end %>
-  </div>
+    </div>
+  <% else %>
+    <div class="yn-empty">
+      <p class="yn-empty-title">Add your first property</p>
+      <p class="yn-empty-body">Yanushi tracks units, tenancies, and finances per property.</p>
+      <%= link_to "Add property", new_property_path, class: "yn-btn yn-btn-primary" %>
+    </div>
+  <% end %>
 </div>

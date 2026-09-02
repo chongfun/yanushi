@@ -52,11 +52,13 @@ RSpec.describe "Properties", type: :request do
       expect(response).to be_successful
     end
 
-    it "displays property security deposits held balance" do
+    it "displays property security deposits held balance and units" do
       Accounting::ChartOfAccounts.ensure_for(user)
-      unit = create(:rentable_unit, property: property)
+      unit = create(:rentable_unit, property: property, name: "Unit 1")
       tenancy = create(:tenancy, rentable_unit: unit)
-      party = create(:party, user: user)
+      party = create(:party, user: user, display_name: "Jane Smith")
+      create(:tenancy_party, tenancy: tenancy, party: party)
+      create(:rent_term, tenancy: tenancy, amount_cents: 200_000, effective_from: Date.current)
       deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
       SecurityDepositTransactions::ReceiveService.call(
         security_deposit: deposit,
@@ -65,55 +67,78 @@ RSpec.describe "Properties", type: :request do
         occurred_on: Date.current
       )
 
-      get property_url(property)
-      expect(response).to be_successful
-      expect(response.body).to include("Security Deposits Held")
-      expect(response.body).to include("$1,500.00")
-      expect(response.body).to include("Current refundable liability")
-
-      # Viewing past year (2025) still shows current liability in quick-stat, while 2025 ledger has $0
-      get property_url(property, year: 2025)
-      expect(response).to be_successful
-      expect(response.body).to include("Current refundable liability")
-      expect(response.body).to include("$1,500.00")
-    end
-
-    it "handles invalid date range by showing flash alert and suppressing summary cards" do
-      Accounting::ChartOfAccounts.ensure_for(user)
-      unit = create(:rentable_unit, property: property)
-      tenancy = create(:tenancy, rentable_unit: unit)
+      # Create charge and activity
       Charges::CreateService.call(
         tenancy: tenancy,
-        charge_kind: "rent",
+        charge_kind: "late_fee",
         amount_cents: 200_000,
         charge_date: Date.current
       )
 
-      get property_url(property, from: "2026-12-31", through: "2026-01-01")
+      get property_url(property)
       expect(response).to be_successful
-      expect(response.body).to include("From date cannot be after through date")
-      expect(response.body).to include("Unable to calculate financial summary")
-      # Summary cards and balance claims are suppressed
-      expect(response.body).not_to include("Cash Movement (Period)")
-      expect(response.body).not_to include("Operating Activity (Accrual)")
-      expect(response.body).not_to include("Tenant Receivable:")
+      expect(response.body).to include("Deposits held")
+      expect(response.body).to include("$1,500.00")
+      expect(response.body).to include("Unit 1")
+      expect(response.body).to include("Jane Smith")
+      expect(response.body).to include("Recent activity")
+      expect(response.body).to include("$2,000.00 due")
     end
 
-    it "links Schedule E and formats empty state accurately for single-year and multi-year custom ranges" do
-      Accounting::ChartOfAccounts.ensure_for(user)
-
-      # 1. Custom range within single calendar year 2025
-      get property_url(property, from: "2025-03-01", through: "2025-03-31")
+    it "ignores ledger parameters without error and renders overview" do
+      get property_url(property, from: "2026-12-31", through: "2026-01-01", year: 2025)
       expect(response).to be_successful
-      expect(response.body).to include("schedule_e?year=2025")
-      expect(response.body).to include("No financial activity found for the selected period.")
+      expect(response.body).to include("Overview")
+      expect(response.body).to include("Deposits held")
+      expect(response.body).to include("Recent activity")
+    end
 
-      # 2. Custom multi-year range 2024-2025: Schedule E is disabled with tooltip
-      get property_url(property, from: "2024-11-01", through: "2025-03-31")
+    it "renders a dash for unit rent when active tenancy is in a legal gap between rent terms" do
+      unit_gap = create(:rentable_unit, property: property, name: "Unit Gap")
+      gap_tenancy = create(:tenancy, :month_to_month, rentable_unit: unit_gap, commencement_date: Date.current - 6.months)
+      create(:tenancy_party, tenancy: gap_tenancy, party: create(:party, user: user, display_name: "Gap Tenant"))
+      create(:rent_term, tenancy: gap_tenancy, amount_cents: 200_000, effective_from: Date.current - 6.months, effective_until: Date.current - 1.month)
+      create(:rent_term, tenancy: gap_tenancy, amount_cents: 220_000, effective_from: Date.current + 1.month, effective_until: nil)
+
+      get property_url(property)
       expect(response).to be_successful
-      expect(response.body).not_to include("schedule_e_property_path")
-      expect(response.body).to include("Choose a single tax year to view Schedule E")
-      expect(response.body).to include("No financial activity found for the selected period.")
+      expect(response.body).to include("Gap Tenant")
+      expect(response.body).not_to include("$2,200.00/mo")
+    end
+
+    it "renders active tenant and excludes former tenants and guarantors from unit occupancy" do
+      unit_turn = create(:rentable_unit, property: property, name: "Unit Turn")
+      turn_tenancy = create(:tenancy, :fixed_term, rentable_unit: unit_turn, commencement_date: Date.current - 6.months, termination_date: Date.current + 6.months)
+      create(:rent_term, tenancy: turn_tenancy, amount_cents: 180_000, effective_from: Date.current - 6.months)
+
+      alice = create(:party, user: user, display_name: "Alice Past")
+      bob = create(:party, user: user, display_name: "Bob Present")
+      gary = create(:party, user: user, display_name: "Gary Guarantor")
+
+      create(:tenancy_party, tenancy: turn_tenancy, party: alice, role: "tenant", effective_from: Date.current - 6.months, effective_until: Date.current - 3.months)
+      create(:tenancy_party, tenancy: turn_tenancy, party: bob, role: "tenant", effective_from: Date.current - 3.months, effective_until: Date.current + 6.months)
+      create(:tenancy_party, tenancy: turn_tenancy, party: gary, role: "guarantor", effective_from: Date.current - 6.months, effective_until: Date.current + 6.months)
+
+      get property_url(property)
+      expect(response).to be_successful
+      expect(response.body).to include("Bob Present")
+      expect(response.body).not_to include("Alice Past")
+      expect(response.body).not_to include("Gary Guarantor")
+    end
+
+    it "renders Vacant badge and Create tenancy link for vacant units" do
+      vacant_unit = create(:rentable_unit, property: property, name: "Unit 3")
+
+      get property_url(property)
+      expect(response).to be_successful
+      expect(response.body).to include("Vacant")
+      expect(response.body).to include("href=\"#{new_tenancy_path(rentable_unit_id: vacant_unit.id)}\"")
+    end
+
+    it "renders Record expense as primary button on Overview" do
+      get property_url(property)
+      expect(response).to be_successful
+      expect(response.body).to match(/class="yn-btn yn-btn-primary"[^>]*>Record expense/)
     end
   end
 

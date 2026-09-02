@@ -1,0 +1,46 @@
+module Dashboards
+  class OverviewQuery
+    class PropertyRow
+      attr_reader property: Property
+      attr_reader occupied_units_count: Integer
+      attr_reader total_units_count: Integer
+      attr_reader balance_cents: Integer
+
+      def initialize: (
+        property: Property,
+        occupied_units_count: Integer,
+        total_units_count: Integer,
+        balance_cents: Integer
+      ) -> void
+
+      def balance: () -> BigDecimal
+    end
+
+    class OverviewResult
+      attr_reader attention_items: Array[Dashboards::AttentionQuery::AttentionItem]
+      attr_reader portfolio_summary: Dashboards::PortfolioSummaryQuery::PortfolioSummary
+      attr_reader properties: Array[PropertyRow]
+      attr_reader recent_activity: Array[Accounting::ActivityRow]
+
+      def initialize: (
+        attention_items: Array[Dashboards::AttentionQuery::AttentionItem],
+        portfolio_summary: Dashboards::PortfolioSummaryQuery::PortfolioSummary,
+        properties: Array[PropertyRow],
+        recent_activity: Array[Accounting::ActivityRow]
+      ) -> void
+    end
+
+    @user: User?
+
+    def self.call: (user: User?) -> OverviewResult
+    def initialize: (user: User?) -> void
+    def call: () -> OverviewResult
+
+    private
+
+    def user: () -> User?
+    def ytd_range: () -> Accounting::DateRange
+    def properties_summary: (props: Array[Property], balances: Hash[Integer, Integer]) -> Array[PropertyRow]
+    def empty_result: () -> OverviewResult
+  end
+end

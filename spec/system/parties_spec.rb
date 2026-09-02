@@ -12,7 +12,7 @@ RSpec.describe "Parties", type: :system do
 
   it "creates a party successfully" do
     visit parties_path
-    click_on "New Tenant / Payer"
+    click_on "New party"
 
     fill_in "Legal / Display Name", with: "Jane Doe"
     select "Individual", from: "Party Type"

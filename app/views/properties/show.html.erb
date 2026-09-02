@@ -1,140 +1,137 @@
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Properties", properties_path %></li>
-  <li class="font-bold"><%= @property.address %></li>
-<% end %>
+<div class="max-w-5xl">
+  <%= render "properties/header", current_tab: :overview %>
 
-<div class="max-w-6xl mx-auto py-8">
-  <div class="flex justify-between items-center mb-8">
-    <div>
-      <h1 class="text-3xl font-bold text-base-content"><%= @property.address %></h1>
-      <div class="flex gap-2 mt-2">
-        <span class="badge badge-primary"><%= @property.asset_type.titleize %></span>
-        <% if @property.square_footage.present? %>
-          <span class="badge badge-outline"><%= @property.square_footage %> sqft</span>
-        <% end %>
-      </div>
-    </div>
-    <div class="flex gap-2">
-      <%= link_to "Back to List", properties_path, class: "btn btn-ghost" %>
-      <%= link_to "Edit Property", edit_property_path(@property), class: "btn btn-outline" %>
-      <%= button_to "Delete", @property, method: :delete, 
-          class: "btn btn-error btn-ghost", 
-          form: { data: { turbo_confirm: "Are you sure? This will delete this property and its units." } } %>
-    </div>
-  </div>
-
-  <!-- Units Section -->
-  <div class="card bg-base-100 shadow border border-base-200 mb-8">
-    <div class="card-body">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h2 class="card-title text-xl font-bold">Rentable Units</h2>
-          <p class="text-sm text-base-content/60">Manage units and tenancies for this property</p>
-        </div>
-        <%= link_to "＋ Add Unit", new_property_rentable_unit_path(@property), class: "btn btn-sm btn-primary" %>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
-          <thead>
-            <tr>
-              <th>Unit Name</th>
-              <th>Identifier</th>
-              <th>Size</th>
-              <th>Status</th>
-              <th>Active Tenancy</th>
-              <th class="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @property.rentable_units.each do |unit| %>
-              <% active_tenancy = unit.tenancies.find(&:active?) %>
+  <div class="space-y-10">
+    <!-- Units & current occupancy -->
+    <section aria-labelledby="units-heading">
+      <h2 id="units-heading" class="text-sm font-semibold mb-3">Units</h2>
+      <% active_units = @property.rentable_units.select(&:active?) %>
+      <% if active_units.any? %>
+        <div class="overflow-x-auto">
+          <table class="yn-table">
+            <thead>
               <tr>
-                <td class="font-bold"><%= unit.name %></td>
-                <td><%= unit.unit_identifier.presence || "—" %></td>
-                <td><%= unit.square_footage.present? ? "#{unit.square_footage} sqft" : "—" %></td>
-                <td>
-                  <% if unit.active? %>
-                    <span class="badge badge-success badge-sm">Active</span>
-                  <% else %>
-                    <span class="badge badge-ghost badge-sm">Inactive</span>
-                  <% end %>
-                </td>
-                <td>
-                  <% if active_tenancy %>
-                    <%= link_to "Tenancy ##{active_tenancy.id} (#{active_tenancy.parties.map(&:display_name).join(', ')})", active_tenancy, class: "link link-primary font-medium" %>
-                  <% else %>
-                    <span class="text-base-content/40 text-sm">Vacant</span>
-                  <% end %>
-                </td>
-                <td class="text-right space-x-1">
-                  <%= link_to "Edit", edit_property_rentable_unit_path(@property, unit), class: "btn btn-ghost btn-xs" %>
-                </td>
+                <th scope="col">Unit</th>
+                <th scope="col">Occupant</th>
+                <th scope="col" class="text-right tabular-nums">Rent</th>
+                <th scope="col" class="text-right tabular-nums">Balance</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Quick Stats -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-    <div class="stats shadow bg-base-100 border border-base-200">
-      <div class="stat">
-        <div class="stat-title text-base-content/60">Active Tenancies</div>
-        <div class="stat-value text-primary"><%= @property.tenancies.select(&:active?).count %></div>
-        <div class="stat-desc text-base-content/40">Current active agreements</div>
-      </div>
-    </div>
-    
-    <div class="stats shadow bg-base-100 border border-base-200">
-      <div class="stat">
-        <div class="stat-title text-base-content/60">Active Residents</div>
-        <div class="stat-value text-secondary"><%= @property.tenancies.select(&:active?).flat_map(&:parties).uniq.count %></div>
-        <div class="stat-desc text-base-content/40">Total active parties</div>
-      </div>
-    </div>
-
-    <div class="stats shadow bg-base-100 border border-base-200">
-      <div class="stat">
-        <div class="stat-title text-base-content/60">Total Units</div>
-        <div class="stat-value text-accent font-mono text-2xl">
-          <%= @property.rentable_units.count %>
+            </thead>
+            <tbody>
+              <% active_units.each do |unit| %>
+                <%
+                  active_tenancy = unit.tenancies.find(&:active?)
+                  tenant_parties = active_tenancy&.tenant_parties_as_of(Date.current)&.presence || active_tenancy&.all_tenant_parties
+                  tenant_name = tenant_parties&.map(&:display_name)&.presence
+                  rent_term = active_tenancy&.current_rent_term(Date.current)
+                  balance_cents = active_tenancy ? (@balances[active_tenancy.id] || 0) : nil
+                %>
+                <tr>
+                  <td class="font-medium"><%= unit.name %></td>
+                  <td>
+                    <% if active_tenancy %>
+                      <%= link_to tenancy_path(active_tenancy), class: "yn-row-link" do %>
+                        <%= tenant_name ? tenant_name.to_sentence : "Active tenancy" %>
+                      <% end %>
+                      <% if active_tenancy.commencement_date %>
+                        <span class="text-stone-400 text-[13px]">&middot; since <%= active_tenancy.commencement_date.strftime("%b %Y") %></span>
+                      <% end %>
+                    <% else %>
+                      <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Vacant</span>
+                      <%= link_to "Create tenancy", new_tenancy_path(rentable_unit_id: unit.id), class: "yn-link text-[13px] ml-2" %>
+                    <% end %>
+                  </td>
+                  <td class="text-right tabular-nums whitespace-nowrap">
+                    <%= rent_term ? "#{format_money_cents(rent_term.amount_cents)}/mo" : "—" %>
+                  </td>
+                  <td class="text-right tabular-nums whitespace-nowrap <%= balance_cents && balance_cents.positive? ? 'text-stone-900 font-medium' : 'text-stone-500' %>">
+                    <% if balance_cents.nil? || balance_cents.zero? %>
+                      <span class="text-stone-400">—</span>
+                    <% else %>
+                      <%= balance_phrase_cents(balance_cents) %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
-        <div class="stat-desc text-base-content/40">Rentable units</div>
-      </div>
-    </div>
+      <% else %>
+        <p class="text-sm text-stone-500 m-0">No units added yet.</p>
+      <% end %>
+    </section>
 
-    <div class="stats shadow bg-base-100 border border-base-200" id="property_security_deposits_held">
-      <div class="stat">
-        <div class="stat-title text-base-content/60">Security Deposits Held</div>
-        <div class="stat-value text-info font-mono text-2xl">
-          <%= number_to_currency((@security_deposits_held_cents || 0) / 100.0) %>
+    <!-- Financial summary (YTD) -->
+    <section aria-labelledby="financials-heading">
+      <h2 id="financials-heading" class="sr-only">Financial summary</h2>
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4">
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Deposits held</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@security_deposits_held_cents) %></dd>
         </div>
-        <div class="stat-desc text-base-content/40">Current refundable liability</div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income, YTD</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@ytd_summary.net_income_cents) %></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income, YTD</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@ytd_summary.income_recognized_cents) %></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses, YTD</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@ytd_summary.total_expenses_cents) %></dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Recent activity -->
+    <section aria-labelledby="recent-heading">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 id="recent-heading" class="text-sm font-semibold">Recent activity</h2>
+        <%= link_to "All activity →", property_activity_path(@property), class: "yn-link text-sm" %>
       </div>
-    </div>
-  </div>
 
-  <!-- Lease / Tenancy Balances -->
-  <div id="active_lease_balances">
-    <%= render "properties/lease_balances", property: @property %>
-  </div>
-
-  <div class="divider mb-8"></div>
-
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-black tracking-tight">Financial Ledger</h2>
-    </div>
-
-    <%= render "properties/financials",
-               property: @property,
-               financial_activity: @financial_activity,
-               financial_summary: @financial_summary,
-               date_range: @date_range,
-               year: @year,
-               active_years: @active_years %>
+      <% if @recent_activity.any? %>
+        <div class="overflow-x-auto">
+          <table class="yn-table">
+            <thead class="sr-only">
+              <tr>
+                <th>Date</th>
+                <th>Event</th>
+                <th>Unit</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @recent_activity.each do |row| %>
+                <tr>
+                  <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
+                  <td>
+                    <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
+                    <%= link_to target_path, class: "yn-row-link" do %>
+                      <%= row.label %>
+                      <% if row.description.present? && row.description != row.label %>
+                        <span class="text-stone-400">&middot; <%= row.description %></span>
+                      <% end %>
+                    <% end %>
+                    <% if row.corrected? %>
+                      <span class="yn-badge yn-badge-warn ml-1">Corrected</span>
+                    <% elsif row.voided? %>
+                      <span class="yn-badge yn-badge-danger ml-1">Voided</span>
+                    <% end %>
+                  </td>
+                  <td class="text-stone-500 whitespace-nowrap"><%= row.rentable_unit&.name || "—" %></td>
+                  <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
+                    <%= signed_money_cents(row.amount_cents) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-sm text-stone-500 m-0">No recent activity recorded.</p>
+      <% end %>
+    </section>
   </div>
 </div>

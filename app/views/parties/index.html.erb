@@ -1,34 +1,48 @@
-<% content_for :title, "Tenants & Payers" %>
+<% content_for :title, "Parties" %>
 
-<% content_for :breadcrumbs do %>
-  <li>Tenants & Payers</li>
-<% end %>
+<div class="max-w-5xl">
+  <header class="mb-6">
+    <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Portfolio</h1>
+      <%= link_to "New party", new_party_path, class: "yn-btn yn-btn-primary" %>
+    </div>
+    <nav class="yn-tabs mt-4" aria-label="Portfolio sections">
+      <%= link_to "Properties", portfolio_path, class: "yn-tab" %>
+      <%= link_to "Tenancies", tenancies_path, class: "yn-tab" %>
+      <%= link_to "Parties", parties_path, class: "yn-tab", "aria-current": "page" %>
+    </nav>
+  </header>
 
-<div class="flex justify-between items-center mb-6">
-  <div>
-    <h1 class="text-3xl font-bold">Tenants & Payers</h1>
-    <p class="text-sm text-base-content/60">People and organizations who participate in tenancies or make payments</p>
-  </div>
-  <%= link_to "New Tenant / Payer", new_party_path, class: "btn btn-primary" %>
-</div>
-
-<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Aliases</th>
-        <th>Tenancies</th>
-        <th class="text-right">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="parties">
-      <% @parties.each do |party| %>
-        <%= render party %>
-      <% end %>
-    </tbody>
-  </table>
+  <% if @parties.any? %>
+    <table class="yn-table">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Type</th>
+          <th scope="col">Contact</th>
+          <th scope="col">Tenancies</th>
+        </tr>
+      </thead>
+      <tbody id="parties">
+        <% @parties.each do |party| %>
+          <tr id="<%= dom_id party %>">
+            <td>
+              <%= link_to party.display_name, party_path(party), class: "yn-row-link" %>
+              <% if party.party_aliases.any? %>
+                <span class="block text-[13px] text-stone-500">aka <%= party.party_aliases.map(&:alias_name).join(", ") %></span>
+              <% end %>
+            </td>
+            <td><%= party.party_type.humanize %></td>
+            <td class="text-stone-500 text-sm">
+              <% contact_parts = [party.email_address, party.phone_number].compact.reject(&:blank?) %>
+              <%= contact_parts.any? ? contact_parts.join(" · ") : "—" %>
+            </td>
+            <td class="tabular-nums"><%= party.tenancies.count %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="text-sm text-stone-500 m-0">No parties found.</p>
+  <% end %>
 </div>

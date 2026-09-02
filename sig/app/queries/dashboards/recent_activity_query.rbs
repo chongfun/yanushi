@@ -1,0 +1,18 @@
+module Dashboards
+  class RecentActivityQuery
+    @user: User?
+    @through: Date
+    @limit: Integer
+
+    def self.call: (user: User?, ?through: (Date | String | Time | untyped), ?limit: Integer) -> Array[Accounting::ActivityRow]
+    def initialize: (user: User?, ?through: (Date | String | Time | untyped), ?limit: Integer) -> void
+    def call: () -> Array[Accounting::ActivityRow]
+
+    private
+
+    def user: () -> User?
+    def through: () -> Date
+    def limit: () -> Integer
+    def parse_through: (untyped val) -> Date?
+  end
+end

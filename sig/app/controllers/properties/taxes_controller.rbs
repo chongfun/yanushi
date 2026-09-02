@@ -1,0 +1,16 @@
+module Properties
+  class TaxesController < ApplicationController
+    @property: Property
+    @year: Integer
+    @tax_profile: PropertyTaxProfile?
+    @schedule_e_result: TaxReporting::ScheduleEResult
+    @active_years: Array[Integer]
+    @pdf_available: bool
+
+    def show: () -> void
+
+    private
+
+    def set_property: () -> void
+  end
+end

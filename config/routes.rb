@@ -7,6 +7,11 @@ Rails.application.routes.draw do
   get "reports", to: "reports#show", as: :reports
 
   resources :properties do
+    scope module: :properties do
+      resources :tenancies, only: :index
+      resource :activity, only: :show
+      resource :tax, only: :show
+    end
     resources :rentable_units
     resources :expenses, only: %i[new create]
     resources :tax_profiles, controller: "property_tax_profiles", only: %i[new create edit update]

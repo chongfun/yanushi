@@ -1,0 +1,17 @@
+module Properties
+  class ActivitiesController < ApplicationController
+    @property: Property
+    @date_range: Accounting::DateRange
+    @year: Integer
+    @financial_activity: Array[Accounting::ActivityRow]
+    @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
+    @security_deposits_held_cents: Integer
+    @active_years: Array[Integer]
+
+    def show: () -> void
+
+    private
+
+    def set_property: () -> void
+  end
+end

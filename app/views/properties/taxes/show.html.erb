@@ -1,0 +1,69 @@
+<div class="max-w-5xl">
+  <%= render "properties/header", current_tab: :tax %>
+
+  <!-- Year selector: GET form -->
+  <%= form_with url: property_tax_path(@property), method: :get, class: "mb-6" do |f| %>
+    <%= f.label :year, "Tax year", class: "yn-label", for: "tax-year" %>
+    <%= f.select :year,
+          options_for_select(@active_years, @year),
+          {},
+          class: "yn-select w-32",
+          id: "tax-year",
+          onchange: "this.form.submit()" %>
+  <% end %>
+
+  <% if @tax_profile&.persisted? %>
+    <div class="yn-surface divide-y divide-stone-200 max-w-2xl">
+      <!-- Profile row -->
+      <div class="flex items-center gap-4 px-4 py-3.5">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium m-0">Tax profile</p>
+          <p class="text-sm text-stone-500 m-0">
+            <%= @tax_profile.schedule_e_property_type.humanize %>
+            <% if @tax_profile.other_description.present? %>
+              (<%= @tax_profile.other_description %>)
+            <% end %>
+            &middot; Tax year <%= @year %>
+          </p>
+        </div>
+        <%= link_to "Edit profile", edit_property_tax_profile_path(@property, @tax_profile, year: @year), class: "yn-link text-sm whitespace-nowrap" %>
+      </div>
+
+      <!-- Readiness row -->
+      <div class="flex items-center gap-4 px-4 py-3.5">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium m-0">Schedule E, <%= @year %></p>
+          <p class="text-sm m-0">
+            <% if @schedule_e_result.unresolved_review_items.any? %>
+              <span class="yn-status yn-status-sm">
+                <span class="yn-dot yn-dot-warn"></span>
+                <%= pluralize(@schedule_e_result.unresolved_review_items.size, "item") %> need review
+              </span>
+            <% else %>
+              <span class="yn-status yn-status-sm">
+                <span class="yn-dot yn-dot-ok"></span>
+                Ready &middot; <%= signed_money_cents(@schedule_e_result.net_income_cents) %>
+              </span>
+            <% end %>
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <% if @schedule_e_result.unresolved_review_items.any? %>
+            <%= link_to "Review Schedule E", schedule_e_property_path(@property, year: @year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+          <% elsif @pdf_available %>
+            <%= link_to "View Schedule E", schedule_e_property_path(@property, year: @year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
+            <%= link_to "Download PDF", schedule_e_pdf_property_path(@property, year: @year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+          <% else %>
+            <span class="text-xs text-stone-500 whitespace-nowrap">PDF export isn’t available for <%= @year %>.</span>
+            <%= link_to "View Schedule E", schedule_e_property_path(@property, year: @year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="yn-alert yn-alert-warn max-w-2xl flex flex-wrap items-center justify-between gap-3">
+      <span>No tax profile exists for <%= @year %>, so Schedule E can’t be prepared.</span>
+      <%= link_to "Set up #{@year} tax profile", new_property_tax_profile_path(@property, tax_year: @year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+    </div>
+  <% end %>
+</div>

@@ -1,19 +1,15 @@
 <% content_for :title, "New expense" %>
 
-<% if @property %>
-  <%# Turbo Frame response for modal %>
-  <turbo-frame id="modal-frame" data-modal-title="Record Expense">
-    <%= render "expenses/modal_form", expense: @expense, property: @property %>
-  </turbo-frame>
-<% else %>
-  <%# Standalone full-page form %>
-  <div class="max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6">New expense</h1>
-    <div class="bg-base-100 p-6 rounded-box shadow-lg border border-base-200">
-      <%= render "form", expense: @expense %>
-    </div>
-    <div class="mt-6">
-      <%= link_to "Back to expenses", expenses_path, class: "btn btn-ghost" %>
-    </div>
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-3xl font-bold mb-6">New expense</h1>
+  <div class="bg-base-100 p-6 rounded-box shadow-lg border border-base-200">
+    <%= render "form", expense: @expense %>
   </div>
-<% end %>
+  <div class="mt-6">
+    <% if @nested_property %>
+      <%= link_to "Back to activity", property_activity_path(@nested_property), class: "btn btn-ghost" %>
+    <% else %>
+      <%= link_to "Back to expenses", expenses_path, class: "btn btn-ghost" %>
+    <% end %>
+  </div>
+</div>

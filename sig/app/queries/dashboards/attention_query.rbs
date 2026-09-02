@@ -1,0 +1,36 @@
+module Dashboards
+  class AttentionQuery
+    class AttentionItem
+      attr_reader kind: Symbol
+      attr_reader title: String
+      attr_reader description: String
+      attr_reader path: String
+      attr_reader severity: Symbol
+
+      def initialize: (
+        kind: Symbol,
+        title: String,
+        description: String,
+        path: String,
+        severity: Symbol
+      ) -> void
+    end
+
+    @user: User?
+    @tenancies: untyped
+    @balances: untyped
+
+    def self.call: (user: User?, ?tenancies: untyped, ?balances: untyped) -> Array[AttentionItem]
+    def initialize: (user: User?, ?tenancies: untyped, ?balances: untyped) -> void
+    def call: () -> Array[AttentionItem]
+
+    private
+
+    def user: () -> User?
+    def tenancies: () -> untyped
+    def balances: () -> untyped
+    def inbox_review_items: () -> Array[AttentionItem]
+    def import_failed_items: () -> Array[AttentionItem]
+    def balance_due_items: () -> Array[AttentionItem]
+  end
+end

@@ -33,6 +33,14 @@ class Tenancy < ApplicationRecord
       .where("termination_date IS NULL OR termination_date >= ?", date)
   }
 
+  scope :upcoming, ->(date = Date.current) {
+    where("commencement_date > ?", date)
+  }
+
+  scope :past, ->(date = Date.current) {
+    where("termination_date IS NOT NULL AND termination_date < ?", date)
+  }
+
   def active?(date = Date.current, as_of: nil)
     target_date = as_of || date
     target_date = Date.current if target_date.is_a?(Hash)
@@ -41,6 +49,24 @@ class Tenancy < ApplicationRecord
     return false unless starts_on
 
     starts_on <= target_date && (ends_on.nil? || ends_on >= target_date)
+  end
+
+  def upcoming?(date = Date.current, as_of: nil)
+    target_date = as_of || date
+    target_date = Date.current if target_date.is_a?(Hash)
+    starts_on = commencement_date
+    return false unless starts_on
+
+    starts_on > target_date
+  end
+
+  def past?(date = Date.current, as_of: nil)
+    target_date = as_of || date
+    target_date = Date.current if target_date.is_a?(Hash)
+    ends_on = termination_date
+    return false unless ends_on
+
+    ends_on < target_date
   end
 
   def continuous_tenant_coverage?(candidate_parties = nil)
@@ -86,6 +112,23 @@ class Tenancy < ApplicationRecord
     target_date = as_of || date
     target_date = Date.current if target_date.is_a?(Hash)
     rent_terms.find { |term| term.active?(target_date) }
+  end
+
+  def tenant_parties_as_of(date = Date.current, as_of: nil)
+    target_date = as_of || date
+    target_date = Date.current if target_date.is_a?(Hash) || target_date.nil?
+    tenancy_parties.select { |tp| tp.tenant? && tp.active?(target_date) }.map(&:party).compact.uniq
+  end
+
+  def all_tenant_parties
+    tenancy_parties.select(&:tenant?).map(&:party).compact.uniq
+  end
+
+  def non_tenant_parties_as_of(date = Date.current, as_of: nil)
+    target_date = as_of || date
+    target_date = Date.current if target_date.is_a?(Hash) || target_date.nil?
+    active_non_tenants = tenancy_parties.select { |tp| !tp.tenant? && tp.active?(target_date) }.map(&:party).compact.uniq
+    active_non_tenants - tenant_parties_as_of(target_date)
   end
 
   def most_recent_rent_term

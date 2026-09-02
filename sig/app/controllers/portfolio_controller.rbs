@@ -1,5 +1,6 @@
 class PortfolioController < ApplicationController
   @properties: Property::ActiveRecord_Relation
+  @balances: Hash[Integer, Integer]
 
-  def show: () -> untyped
+  def show: () -> void
 end

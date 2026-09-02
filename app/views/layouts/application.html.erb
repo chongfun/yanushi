@@ -25,7 +25,7 @@
 
   <body class="yn-body">
     <%= render "shared/skip_link" %>
-    <div class="min-h-screen lg:flex" data-controller="navigation-drawer">
+    <div class="min-h-screen lg:flex" data-controller="navigation-drawer" data-action="keydown@window->navigation-drawer#handleKeydown">
       <%= render "shared/sidebar" %>
       <div class="flex-1 min-w-0">
         <%= render "shared/mobile_topbar" %>

@@ -1,4 +1,4 @@
-<%= form_with(model: expense, local: true) do |form| %>
+<%= form_with(model: @nested_property ? [@nested_property, expense] : expense, local: true) do |form| %>
   <% if expense.errors.any? %>
     <div class="alert alert-error shadow-lg mb-6 text-error-content">
       <div>

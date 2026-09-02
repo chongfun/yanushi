@@ -34,7 +34,14 @@ class TenanciesController < ApplicationController
   end
 
   def new
+    rentable_unit = if params[:rentable_unit_id].present?
+      RentableUnit.joins(:property)
+                  .where(properties: { user_id: authenticated_user.id }, id: params[:rentable_unit_id])
+                  .first
+    end
+
     @tenancy = Tenancy.new(
+      rentable_unit: rentable_unit,
       commencement_date: Date.current,
       agreement_type: "fixed_term",
       late_period_days: 0

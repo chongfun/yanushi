@@ -16,7 +16,7 @@ RSpec.describe "Tenancies", type: :system do
   it "creates a month-to-month tenancy and displays its details" do
     visit tenancies_path
 
-    click_on "New Tenancy"
+    click_on "New tenancy"
 
     select unit.name, from: "Select Rentable Unit"
     check party.display_name

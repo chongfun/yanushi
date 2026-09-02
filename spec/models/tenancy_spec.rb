@@ -282,5 +282,109 @@ RSpec.describe Tenancy, type: :model do
         expect(orphan.accounting_user).to be_nil
       end
     end
+
+    describe "lifecycle predicates and scopes" do
+      let(:active_tenancy) do
+        create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.current - 1.month, termination_date: nil)
+      end
+      let(:upcoming_tenancy) do
+        unit2 = create(:rentable_unit, property: unit.property, name: "Unit 2")
+        create(:tenancy, rentable_unit: unit2, agreement_type: "month_to_month", commencement_date: Date.current + 1.month, termination_date: nil)
+      end
+      let(:past_tenancy) do
+        unit3 = create(:rentable_unit, property: unit.property, name: "Unit 3")
+        create(:tenancy, rentable_unit: unit3, commencement_date: Date.current - 1.year, termination_date: Date.current - 1.month)
+      end
+
+      it "correctly identifies active, upcoming, and past tenancies" do
+        expect(active_tenancy.active?).to be true
+        expect(active_tenancy.upcoming?).to be false
+        expect(active_tenancy.past?).to be false
+
+        expect(upcoming_tenancy.active?).to be false
+        expect(upcoming_tenancy.upcoming?).to be true
+        expect(upcoming_tenancy.past?).to be false
+
+        expect(past_tenancy.active?).to be false
+        expect(past_tenancy.upcoming?).to be false
+        expect(past_tenancy.past?).to be true
+
+        # Scopes
+        expect(Tenancy.active).to include(active_tenancy)
+        expect(Tenancy.active).not_to include(upcoming_tenancy, past_tenancy)
+
+        expect(Tenancy.upcoming).to include(upcoming_tenancy)
+        expect(Tenancy.upcoming).not_to include(active_tenancy, past_tenancy)
+
+        expect(Tenancy.past).to include(past_tenancy)
+        expect(Tenancy.past).not_to include(active_tenancy, upcoming_tenancy)
+      end
+
+      it "handles nil commencement/termination and as_of argument" do
+        unstarted = build(:tenancy, commencement_date: nil)
+        expect(unstarted.upcoming?).to be false
+        expect(unstarted.active?).to be false
+
+        unterminated = build(:tenancy, termination_date: nil)
+        expect(unterminated.past?).to be false
+
+        expect(active_tenancy.upcoming?(as_of: Date.current - 2.months)).to be true
+        expect(active_tenancy.past?(as_of: Date.current + 2.months)).to be false
+      end
+    end
+
+    describe "participant projection methods" do
+      let(:user) { unit.property.user }
+      let(:tenancy) do
+        create(:tenancy, rentable_unit: unit, agreement_type: "fixed_term", commencement_date: Date.new(2026, 1, 1), termination_date: Date.new(2026, 12, 31))
+      end
+      let(:alice) { create(:party, user: user, display_name: "Alice") }
+      let(:bob) { create(:party, user: user, display_name: "Bob") }
+      let(:guarantor_gary) { create(:party, user: user, display_name: "Gary Guarantor") }
+      let(:occupant_olivia) { create(:party, user: user, display_name: "Olivia Occupant") }
+
+      before do
+        # Alice was tenant Jan 1 - Jun 30
+        create(:tenancy_party, tenancy: tenancy, party: alice, role: "tenant", effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 6, 30))
+        # Bob replaced Alice as tenant Jul 1 - Dec 31
+        create(:tenancy_party, tenancy: tenancy, party: bob, role: "tenant", effective_from: Date.new(2026, 7, 1), effective_until: Date.new(2026, 12, 31))
+        # Gary is guarantor for entire year
+        create(:tenancy_party, tenancy: tenancy, party: guarantor_gary, role: "guarantor", effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+        # Olivia is occupant for entire year
+        create(:tenancy_party, tenancy: tenancy, party: occupant_olivia, role: "occupant", effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+      end
+
+      describe "#tenant_parties_as_of" do
+        it "resolves only active tenants as of a given date and excludes guarantors and occupants" do
+          # On March 1, Alice is tenant
+          mar_tenants = tenancy.tenant_parties_as_of(Date.new(2026, 3, 1))
+          expect(mar_tenants).to eq([ alice ])
+
+          # On August 24, Bob is tenant
+          aug_tenants = tenancy.tenant_parties_as_of(Date.new(2026, 8, 24))
+          expect(aug_tenants).to eq([ bob ])
+
+          # Outside tenancy bounds
+          expect(tenancy.tenant_parties_as_of(Date.new(2025, 12, 31))).to be_empty
+          expect(tenancy.tenant_parties_as_of(Date.new(2027, 1, 1))).to be_empty
+        end
+      end
+
+      describe "#all_tenant_parties" do
+        it "returns all historical tenants across the tenancy and excludes guarantors and occupants" do
+          all_tenants = tenancy.all_tenant_parties
+          expect(all_tenants).to contain_exactly(alice, bob)
+          expect(all_tenants).not_to include(guarantor_gary, occupant_olivia)
+        end
+      end
+
+      describe "#non_tenant_parties_as_of" do
+        it "returns active non-tenant parties as of a given date" do
+          non_tenants = tenancy.non_tenant_parties_as_of(Date.new(2026, 8, 24))
+          expect(non_tenants).to contain_exactly(guarantor_gary, occupant_olivia)
+          expect(non_tenants).not_to include(bob, alice)
+        end
+      end
+    end
   end
 end

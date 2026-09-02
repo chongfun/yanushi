@@ -1,4 +1,6 @@
 module FormattingHelper
+  extend self
+
   def format_money_cents(cents)
     return "$0.00" if cents.nil?
 

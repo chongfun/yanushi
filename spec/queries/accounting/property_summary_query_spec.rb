@@ -239,25 +239,44 @@ RSpec.describe Accounting::PropertySummaryQuery do
         amount_cents: 100_000
       )
 
+      # 4. Other interest (financing expense): $200
+      Expenses::CreateService.call(
+        property: property,
+        expense_kind: "other_interest",
+        paid_on: Date.new(2026, 1, 16),
+        amount_cents: 20_000
+      )
+
       summary = described_class.call(property: property, year: 2026)
 
       # NOI before financing: $2,000 - $300 = $1,700
       expect(summary.income_recognized_cents).to eq(200_000)
       expect(summary.operating_expenses_cents).to eq(30_000)
-      expect(summary.interest_expenses_cents).to eq(100_000)
+      expect(summary.interest_expenses_cents).to eq(120_000)
       expect(summary.net_operating_income_cents).to eq(170_000)
-      expect(summary.total_expenses_cents).to eq(130_000)
-      expect(summary.net_income_cents).to eq(70_000)
+      expect(summary.total_expenses_cents).to eq(150_000)
+      expect(summary.net_income_cents).to eq(50_000)
 
       expect(summary.income_recognized).to eq(BigDecimal("2000.00"))
       expect(summary.operating_expenses).to eq(BigDecimal("300.00"))
-      expect(summary.interest_expenses).to eq(BigDecimal("1000.00"))
+      expect(summary.interest_expenses).to eq(BigDecimal("1200.00"))
       expect(summary.net_operating_income).to eq(BigDecimal("1700.00"))
-      expect(summary.total_expenses).to eq(BigDecimal("1300.00"))
-      expect(summary.net_income).to eq(BigDecimal("700.00"))
+      expect(summary.total_expenses).to eq(BigDecimal("1500.00"))
+      expect(summary.net_income).to eq(BigDecimal("500.00"))
     end
 
-    it "returns empty summary when property is nil or date range is invalid" do
+    it "handles other asset/liability account keys, missing accounts, and empty summaries safely" do
+      entry = create(:journal_entry, user: user, occurred_on: Date.new(2026, 3, 1), event_type: "manual")
+      other_asset = create(:account, user: user, key: "other_asset", account_type: "asset")
+      other_liability = create(:account, user: user, key: "other_liability", account_type: "liability")
+      create(:posting, journal_entry: entry, property: property, amount_cents: 10_000, account: other_asset)
+      create(:posting, journal_entry: entry, property: property, amount_cents: -10_000, account: other_liability)
+
+      summary = described_class.call(property: property, year: 2026)
+      expect(summary.net_cash_movement_cents).to eq(0)
+      expect(summary.tenant_receivable_change_cents).to eq(0)
+      expect(summary.security_deposit_liability_change_cents).to eq(0)
+
       summary_nil_prop = described_class.call(property: nil, year: 2026)
       expect(summary_nil_prop.net_cash_movement_cents).to eq(0)
       expect(summary_nil_prop.net_operating_income_cents).to eq(0)

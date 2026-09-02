@@ -5,5 +5,6 @@ RSpec.configure do |config|
 
   config.before(:each, type: :system, js: true) do
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
+    page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
   end
 end

@@ -54,6 +54,20 @@ RSpec.describe "Tenancies", type: :request do
       expect(response.body).not_to include(other_property.address)
       expect(response.body).not_to include("Other Party")
     end
+
+    it "preselects the rentable unit when a valid unit belonging to the user is passed" do
+      vacant_unit = create(:rentable_unit, property: property, name: "Unit 101")
+
+      get new_tenancy_url(rentable_unit_id: vacant_unit.id)
+      expect(response).to be_successful
+      expect(response.body).to include("value=\"#{vacant_unit.id}\" selected")
+    end
+
+    it "ignores rentable_unit_id belonging to another user" do
+      get new_tenancy_url(rentable_unit_id: other_unit.id)
+      expect(response).to be_successful
+      expect(response.body).not_to include("value=\"#{other_unit.id}\"")
+    end
   end
 
   describe "POST /tenancies" do

@@ -122,31 +122,7 @@ class ReceiptsController < ApplicationController
       created_receipt = result.value!.data[:receipt]
       respond_to do |format|
         format.html { redirect_to receipt_path(created_receipt), notice: "Payment recorded successfully." }
-        format.turbo_stream do
-          if (property = target_tenancy.property)
-            receipt_year = created_receipt.received_on.year
-            date_range = Accounting::DateRange.parse(year: receipt_year)
-            financial_activity = Accounting::PropertyLedgerQuery.call(property: property, date_range: date_range)
-            financial_summary = Accounting::PropertySummaryQuery.call(property: property, date_range: date_range)
-            render turbo_stream: [
-              turbo_stream.replace("property_financials",
-                                   partial: "properties/financials",
-                                   locals: {
-                                     property: property,
-                                     year: receipt_year,
-                                     date_range: date_range,
-                                     financial_activity: financial_activity,
-                                     financial_summary: financial_summary,
-                                     active_years: property.active_years
-                                   }),
-              turbo_stream.update("flash",
-                                  partial: "shared/flash",
-                                  locals: { notice: "Payment recorded successfully." })
-            ]
-          else
-            redirect_to receipt_path(created_receipt), notice: "Payment recorded successfully."
-          end
-        end
+        format.turbo_stream { redirect_to receipt_path(created_receipt), notice: "Payment recorded successfully." }
       end
     else
       @receipt = Receipt.new(receipt_params)

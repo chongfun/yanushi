@@ -62,27 +62,7 @@ class ExpensesController < ApplicationController
       @expense = result.value!.data[:expense]
       respond_to do |format|
         if (nested = @nested_property)
-          year = @expense.paid_on&.year || Date.current.year
-          date_range = Accounting::DateRange.parse(year: year)
-          @financial_activity = Accounting::PropertyLedgerQuery.call(property: nested, date_range: date_range)
-          @financial_summary = Accounting::PropertySummaryQuery.call(property: nested, date_range: date_range)
-          @year = year
-
-          format.turbo_stream {
-            render turbo_stream: [
-              turbo_stream.action(:close_modal, "modal-container"),
-              turbo_stream.update("property_financials", partial: "properties/financials",
-                                  locals: {
-                                    property: nested,
-                                    financial_activity: @financial_activity,
-                                    financial_summary: @financial_summary,
-                                    date_range: date_range,
-                                    year: @year
-                                  }),
-              turbo_stream.append("flash-messages", partial: "shared/toast", locals: { type: :notice, message: "Expense recorded successfully." })
-            ]
-          }
-          format.html { redirect_to nested, notice: "Expense was successfully created." }
+          format.html { redirect_to property_activity_path(nested), notice: "Expense was successfully created." }
         else
           format.html { redirect_to @expense, notice: "Expense was successfully created." }
         end
@@ -95,11 +75,6 @@ class ExpensesController < ApplicationController
       respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
         format.json { render json: @expense.errors, status: :unprocessable_content }
-        format.turbo_stream {
-          render turbo_stream: turbo_stream.update("modal-frame",
-                                                   partial: "expenses/modal_form",
-                                                   locals: { expense: @expense, property: @nested_property })
-        }
       end
     end
   end

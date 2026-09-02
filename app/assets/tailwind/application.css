@@ -430,6 +430,10 @@
  * Dialog — class names load-bearing for modal_controller.js. Restyled only.
  * ------------------------------------------------------------------------ */
 
+dialog:not([open]) {
+  display: none !important;
+}
+
 dialog.modal-dialog {
   padding: 0;
   border: 1px solid var(--yn-border);

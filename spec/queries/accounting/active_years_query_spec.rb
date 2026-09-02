@@ -61,8 +61,11 @@ RSpec.describe Accounting::ActiveYearsQuery do
     end
 
     it "includes additional requested years" do
+      non_to_i = Object.new
+      def non_to_i.respond_to?(m, *) = m == :to_i ? false : super
+
       query = described_class.new(property: property)
-      years = query.call(additional_years: [ 2020, "2021", nil, "invalid" ])
+      years = query.call(additional_years: [ 2020, "2021", nil, "invalid", 0, "0", non_to_i ])
       expect(years).to include(2020, 2021)
     end
 

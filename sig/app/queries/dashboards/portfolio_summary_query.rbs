@@ -1,0 +1,51 @@
+module Dashboards
+  class PortfolioSummaryQuery
+    class PortfolioSummary
+      attr_reader properties_count: Integer
+      attr_reader occupied_units_count: Integer
+      attr_reader total_units_count: Integer
+      attr_reader vacant_units_count: Integer
+      attr_reader outstanding_balances_cents: Integer
+      attr_reader net_income_cents: Integer
+      attr_reader income_cents: Integer
+      attr_reader expenses_cents: Integer
+
+      def initialize: (
+        properties_count: Integer,
+        occupied_units_count: Integer,
+        total_units_count: Integer,
+        vacant_units_count: Integer,
+        outstanding_balances_cents: Integer,
+        net_income_cents: Integer,
+        income_cents: Integer,
+        expenses_cents: Integer
+      ) -> void
+
+      def outstanding_balances: () -> BigDecimal
+      def net_income: () -> BigDecimal
+      def income: () -> BigDecimal
+      def expenses: () -> BigDecimal
+    end
+
+    @user: User?
+    @date_range: Accounting::DateRange
+    @properties: untyped
+    @tenancies: untyped
+    @balances: untyped
+
+    def self.call: (user: User?, ?date_range: Accounting::DateRange?, ?properties: untyped, ?tenancies: untyped, ?balances: untyped) -> PortfolioSummary
+    def initialize: (user: User?, ?date_range: Accounting::DateRange?, ?properties: untyped, ?tenancies: untyped, ?balances: untyped) -> void
+    def call: () -> PortfolioSummary
+
+    private
+
+    def user: () -> User?
+    def date_range: () -> Accounting::DateRange
+    def properties: () -> untyped
+    def tenancies: () -> untyped
+    def balances: () -> untyped
+    def default_date_range: () -> Accounting::DateRange
+    def compute_financials: () -> { income_cents: Integer, expenses_cents: Integer, net_income_cents: Integer }
+    def empty_summary: () -> PortfolioSummary
+  end
+end

@@ -3,12 +3,23 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["dialog"]
 
+  connect() {
+    this.closeOnNavigate = () => {
+      if (this.hasDialogTarget && this.dialogTarget.open) {
+        this.dialogTarget.close()
+      }
+      document.body.style.overflow = ""
+    }
+    document.addEventListener("turbo:before-render", this.closeOnNavigate)
+    document.addEventListener("turbo:visit", this.closeOnNavigate)
+  }
+
   open(event) {
     if (event) {
       event.preventDefault()
       event.stopPropagation()
     }
-    this.triggerElement = event?.currentTarget || document.activeElement
+    this.triggerElement = event?.currentTarget || document.querySelector("header.lg\\:hidden button[aria-label='Open navigation']") || document.activeElement
     if (this.hasDialogTarget) {
       this.dialogTarget.showModal()
       document.body.style.overflow = "hidden"
@@ -20,7 +31,7 @@ export default class extends Controller {
       event.preventDefault()
       event.stopPropagation()
     }
-    if (this.hasDialogTarget) {
+    if (this.hasDialogTarget && this.dialogTarget.open) {
       this.dialogTarget.close()
     }
     document.body.style.overflow = ""
@@ -32,7 +43,7 @@ export default class extends Controller {
   }
 
   handleKeydown(event) {
-    if (event.key === "Escape") {
+    if (event.key === "Escape" && this.hasDialogTarget && this.dialogTarget.open) {
       event.preventDefault()
       this.close()
     }
@@ -46,5 +57,9 @@ export default class extends Controller {
 
   disconnect() {
     document.body.style.overflow = ""
+    if (this.closeOnNavigate) {
+      document.removeEventListener("turbo:before-render", this.closeOnNavigate)
+      document.removeEventListener("turbo:visit", this.closeOnNavigate)
+    }
   }
 }

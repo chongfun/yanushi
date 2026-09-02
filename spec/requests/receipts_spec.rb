@@ -195,8 +195,7 @@ RSpec.describe "Receipts", type: :request do
           payment_method: "zelle"
         }
       }
-      expect(response).to be_successful
-      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response).to redirect_to(receipt_path(Receipt.last))
     end
 
     it "rejects top-level creation with blank tenancy_id" do

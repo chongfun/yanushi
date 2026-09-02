@@ -1,0 +1,104 @@
+<div class="max-w-5xl">
+  <%= render "properties/header", current_tab: :activity %>
+
+  <!-- Filter bar (GET form) -->
+  <%= form_with url: property_activity_path(@property), method: :get, data: { controller: "date-range-filter" }, class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
+    <div>
+      <%= f.label :year, "Year", class: "yn-label", for: "pa-year" %>
+      <%= f.select :year,
+            options_for_select(@active_years, @date_range.year),
+            { include_blank: @date_range.year.nil? ? "Custom Range" : false },
+            class: "yn-select w-32",
+            id: "pa-year",
+            data: { date_range_filter_target: "yearSelect", action: "change->date-range-filter#yearChanged" } %>
+    </div>
+    <div>
+      <%= f.label :from, "From", class: "yn-label", for: "pa-from" %>
+      <%= f.date_field :from, value: (@date_range.year ? nil : @date_range.from), class: "yn-input w-40", id: "pa-from", data: { date_range_filter_target: "fromInput", action: "input->date-range-filter#dateChanged" } %>
+    </div>
+    <div>
+      <%= f.label :through, "Through", class: "yn-label", for: "pa-through" %>
+      <%= f.date_field :through, value: (@date_range.year ? nil : @date_range.through), class: "yn-input w-40", id: "pa-through", data: { date_range_filter_target: "throughInput", action: "input->date-range-filter#dateChanged" } %>
+    </div>
+    <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
+  <% end %>
+
+  <% if @date_range.valid? %>
+    <!-- Compact period totals -->
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6">
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@financial_summary.income_recognized_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@financial_summary.total_expenses_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@financial_summary.net_income_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net cash movement</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@financial_summary.net_cash_movement_cents) %></dd>
+      </div>
+    </dl>
+
+    <!-- Chronological ledger -->
+    <% if @financial_activity.any? %>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Event</th>
+              <th scope="col">Context</th>
+              <th scope="col" class="text-right tabular-nums">Amount</th>
+              <th scope="col"><span class="sr-only">Audit</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @financial_activity.each do |row| %>
+              <tr>
+                <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
+                <td>
+                  <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
+                  <%= link_to target_path, class: "yn-row-link" do %>
+                    <%= row.label %>
+                    <% if row.description.present? && row.description != row.label %>
+                      <span class="text-stone-400">&middot; <%= row.description %></span>
+                    <% end %>
+                  <% end %>
+                  <% if row.corrected? %>
+                    <span class="yn-badge yn-badge-warn ml-1">Corrected</span>
+                  <% elsif row.voided? %>
+                    <span class="yn-badge yn-badge-danger ml-1">Voided</span>
+                  <% end %>
+                </td>
+                <td class="text-stone-500 whitespace-nowrap">
+                  <% if row.tenancy %>
+                    <%= link_to tenancy_path(row.tenancy), class: "yn-link text-[13px]" do %>
+                      <%= row.rentable_unit&.name || "Tenancy" %>
+                    <% end %>
+                  <% elsif row.rentable_unit %>
+                    <%= row.rentable_unit.name %>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+                <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
+                  <%= signed_money_cents(row.amount_cents) %>
+                </td>
+                <td class="text-right whitespace-nowrap">
+                  <%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-stone-500 m-0">No financial activity found for this period.</p>
+    <% end %>
+  <% end %>
+</div>

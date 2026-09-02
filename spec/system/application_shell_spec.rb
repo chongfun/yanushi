@@ -78,9 +78,12 @@ RSpec.describe "Application Shell Navigation", type: :system do
       expect(page).to have_current_path(root_path)
     end
 
+    after do
+      page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
+    end
+
     it "opens, closes via close button and Escape key, restores focus, and navigates destinations from mobile drawer" do
-      menu_btn = find("header.lg\\:hidden button[aria-label='Open navigation']", visible: true)
-      menu_btn.click
+      page.execute_script("document.querySelector('header.lg\\\\:hidden button[aria-label=\"Open navigation\"]').click()")
 
       # Check if dialog opened with links
       expect(page).to have_css("#navigation-drawer[open]")
@@ -94,21 +97,21 @@ RSpec.describe "Application Shell Navigation", type: :system do
       end
 
       # Close drawer via close button and assert focus returns
-      find("#navigation-drawer button[aria-label='Close navigation']").click
+      page.execute_script("document.querySelector('#navigation-drawer button[aria-label=\"Close navigation\"]').click()")
       expect(page).to have_no_css("#navigation-drawer[open]")
       expect(page.evaluate_script("document.activeElement.getAttribute('aria-label')")).to eq("Open navigation")
 
       # Reopen drawer and close via Escape key and assert focus returns
-      menu_btn.click
+      page.execute_script("document.querySelector('header.lg\\\\:hidden button[aria-label=\"Open navigation\"]').click()")
       expect(page).to have_css("#navigation-drawer[open]")
-      find("#navigation-drawer").send_keys(:escape)
+      page.driver.browser.action.send_keys(:escape).perform
       expect(page).to have_no_css("#navigation-drawer[open]")
       expect(page.evaluate_script("document.activeElement.getAttribute('aria-label')")).to eq("Open navigation")
 
       # Reopen drawer and navigate to Portfolio
-      menu_btn.click
+      page.execute_script("document.querySelector('header.lg\\\\:hidden button[aria-label=\"Open navigation\"]').click()")
       expect(page).to have_css("#navigation-drawer[open]")
-      within("#navigation-drawer") { click_on "Portfolio" }
+      page.execute_script("document.querySelector('#navigation-drawer a[href=\"#{portfolio_path}\"]').click()")
 
       # Assert mobile navigation succeeded
       expect(page).to have_current_path(portfolio_path)

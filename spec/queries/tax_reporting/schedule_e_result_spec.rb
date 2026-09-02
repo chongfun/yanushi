@@ -106,15 +106,16 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
       expect(exp_item.can_include_in_rents?).to be false
 
       # Cash income entry
-      income_entry = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "custom_income", source: property)
-      create(:posting, journal_entry: income_entry, property: property, amount_cents: 20_000, account: user.accounts.find_by!(key: "cash"))
-      create(:posting, journal_entry: income_entry, property: property, amount_cents: -20_000, account: user.accounts.find_by!(key: "rental_income"))
+      income_prop = create(:property, user: user)
+      income_entry = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "custom_income_single", source: income_prop)
+      create(:posting, journal_entry: income_entry, property: income_prop, amount_cents: 20_000, account: user.accounts.find_by!(key: "cash"))
+      create(:posting, journal_entry: income_entry, property: income_prop, amount_cents: -20_000, account: user.accounts.find_by!(key: "rental_income"))
       inc_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
         id: 5,
         occurred_on: Date.new(2025, 5, 1),
         amount_cents: 20_000,
         reason: "Income",
-        source: property,
+        source: income_prop,
         journal_entry: income_entry
       )
       expect(inc_item.can_map_to_expense?).to be false
@@ -178,6 +179,22 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
         journal_entry: exp_module_entry
       )
       expect(exp_module_item.can_include_in_rents?).to be false
+
+      # Cross-year reversal
+      expect(item_unresolved.cross_year_reversal?).to be false
+      expect(nil_entry_item.cross_year_reversal?).to be false
+      cross_year_prop = create(:property, user: user)
+      cross_year_orig = create(:journal_entry, user: user, occurred_on: Date.new(2025, 12, 1), event_type: "orig_event", source: cross_year_prop)
+      cross_year_rev = create(:journal_entry, user: user, occurred_on: Date.new(2026, 1, 5), event_type: "reversal", reversal_of: cross_year_orig, source: cross_year_prop)
+      cross_year_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
+        id: 99,
+        occurred_on: Date.new(2026, 1, 5),
+        amount_cents: 20_000,
+        reason: "Cross Year",
+        source: cross_year_prop,
+        journal_entry: cross_year_rev
+      )
+      expect(cross_year_item.cross_year_reversal?).to be true
 
       # Pure liability entry
       liab_prop = create(:property, user: user)

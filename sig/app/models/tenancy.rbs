@@ -2,8 +2,13 @@ class Tenancy < ApplicationRecord
   AGREEMENT_TYPES: Array[String]
 
   def active?: (?Date date, ?as_of: untyped) -> bool
+  def upcoming?: (?Date date, ?as_of: untyped) -> bool
+  def past?: (?Date date, ?as_of: untyped) -> bool
   def continuous_tenant_coverage?: (?untyped candidate_parties) -> bool
   def current_rent_term: (?Date date, ?as_of: untyped) -> RentTerm?
+  def tenant_parties_as_of: (?Date date, ?as_of: untyped) -> Array[Party]
+  def all_tenant_parties: () -> Array[Party]
+  def non_tenant_parties_as_of: (?Date date, ?as_of: untyped) -> Array[Party]
   def most_recent_rent_term: () -> RentTerm?
   def financial_history?: () -> bool
   def balance_cents: (?as_of: Date) -> Integer

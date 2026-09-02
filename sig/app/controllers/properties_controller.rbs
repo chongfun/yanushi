@@ -1,11 +1,13 @@
 class PropertiesController < ApplicationController
   @properties: Property::ActiveRecord_Relation
   @property: Property
+  @tenancies: Array[Tenancy]
+  @balances: Hash[Integer, Integer]
+  @ytd_summary: Accounting::PropertySummaryQuery::SummaryResult
+  @recent_activity: Array[Accounting::ActivityRow]
+  @security_deposits_held_cents: Integer
   @date_range: Accounting::DateRange
   @year: Integer
-  @financial_activity: Array[Accounting::ActivityRow]
-  @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
-  @security_deposits_held_cents: Integer
   @active_years: Array[Integer]
   @schedule_e_result: TaxReporting::ScheduleEResult
   @tax_profile: PropertyTaxProfile?

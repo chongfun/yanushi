@@ -65,15 +65,15 @@
           </div>
           <div class="flex items-center gap-2">
             <details class="relative">
-              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer" aria-haspopup="menu">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
                 More
                 <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
               </summary>
-              <div class="yn-menu" role="menu">
-                <a href="#" class="yn-menu-item" role="menuitem">Edit property</a>
-                <a href="#" class="yn-menu-item" role="menuitem">Add unit</a>
+              <div class="yn-menu">
+                <a href="#" class="yn-menu-item">Edit property</a>
+                <a href="#" class="yn-menu-item">Add unit</a>
                 <hr class="yn-menu-separator">
-                <button class="yn-menu-item yn-menu-item-danger" role="menuitem">Delete property…</button>
+                <button class="yn-menu-item yn-menu-item-danger">Delete property…</button>
               </div>
             </details>
             <a href="#" class="yn-btn yn-btn-primary">Record expense</a>
@@ -92,39 +92,41 @@
         <!-- ============================== Units & current occupancy -->
         <section aria-labelledby="units-heading">
           <h2 id="units-heading" class="text-sm font-semibold mb-3">Units</h2>
-          <table class="yn-table">
-            <thead>
-              <tr>
-                <th scope="col">Unit</th>
-                <th scope="col">Occupant</th>
-                <th scope="col" class="text-right tabular-nums">Rent</th>
-                <th scope="col" class="text-right tabular-nums">Balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="font-medium">Unit 1</td>
-                <td><a href="#" class="yn-row-link">Marge Bouvier</a> <span class="text-stone-400 text-[13px]">· since Jan 2025</span></td>
-                <td class="text-right tabular-nums whitespace-nowrap">$1,850.00/mo</td>
-                <td class="text-right tabular-nums whitespace-nowrap text-stone-400">—</td>
-              </tr>
-              <tr>
-                <td class="font-medium">Unit 2</td>
-                <td><a href="#" class="yn-row-link">Jane Smith</a> <span class="text-stone-400 text-[13px]">· since Mar 2026</span></td>
-                <td class="text-right tabular-nums whitespace-nowrap">$2,400.00/mo</td>
-                <td class="text-right tabular-nums whitespace-nowrap">$350.00 due</td>
-              </tr>
-              <tr>
-                <td class="font-medium">Unit 3</td>
-                <td>
-                  <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Vacant</span>
-                  <a href="#" class="yn-link text-[13px] ml-2">Create tenancy</a>
-                </td>
-                <td class="text-right tabular-nums text-stone-400">—</td>
-                <td class="text-right tabular-nums text-stone-400">—</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="overflow-x-auto">
+            <table class="yn-table">
+              <thead>
+                <tr>
+                  <th scope="col">Unit</th>
+                  <th scope="col">Occupant</th>
+                  <th scope="col" class="text-right tabular-nums">Rent</th>
+                  <th scope="col" class="text-right tabular-nums">Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-medium">Unit 1</td>
+                  <td><a href="#" class="yn-row-link">Marge Bouvier</a> <span class="text-stone-400 text-[13px]">· since Jan 2025</span></td>
+                  <td class="text-right tabular-nums whitespace-nowrap">$1,850.00/mo</td>
+                  <td class="text-right tabular-nums whitespace-nowrap text-stone-400">—</td>
+                </tr>
+                <tr>
+                  <td class="font-medium">Unit 2</td>
+                  <td><a href="#" class="yn-row-link">Jane Smith</a> <span class="text-stone-400 text-[13px]">· since Mar 2026</span></td>
+                  <td class="text-right tabular-nums whitespace-nowrap">$2,400.00/mo</td>
+                  <td class="text-right tabular-nums whitespace-nowrap">$350.00 due</td>
+                </tr>
+                <tr>
+                  <td class="font-medium">Unit 3</td>
+                  <td>
+                    <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Vacant</span>
+                    <a href="#" class="yn-link text-[13px] ml-2">Create tenancy</a>
+                  </td>
+                  <td class="text-right tabular-nums text-stone-400">—</td>
+                  <td class="text-right tabular-nums text-stone-400">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <!-- ============================== Compact summary (period = current year) -->
@@ -156,26 +158,28 @@
             <h2 id="pactivity-heading" class="text-sm font-semibold">Recent activity</h2>
             <a href="#" class="yn-link text-sm">All activity →</a>
           </div>
-          <table class="yn-table">
-            <thead class="sr-only"><tr><th>Date</th><th>Event</th><th class="text-right">Amount</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="whitespace-nowrap text-stone-500 w-20">Aug 18</td>
-                <td><a href="#" class="yn-row-link">Plumbing repair — Ace Plumbing</a> <span class="text-stone-400">· Unit 2</span></td>
-                <td class="text-right tabular-nums whitespace-nowrap">$480.00</td>
-              </tr>
-              <tr>
-                <td class="whitespace-nowrap text-stone-500">Aug 3</td>
-                <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a> <span class="text-stone-400">· Unit 2</span></td>
-                <td class="text-right tabular-nums whitespace-nowrap">$2,000.00</td>
-              </tr>
-              <tr>
-                <td class="whitespace-nowrap text-stone-500">Aug 1</td>
-                <td><a href="#" class="yn-row-link">August rent charged</a> <span class="text-stone-400">· Units 1–2</span></td>
-                <td class="text-right tabular-nums whitespace-nowrap">$4,250.00</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="overflow-x-auto">
+            <table class="yn-table">
+              <thead class="sr-only"><tr><th>Date</th><th>Event</th><th class="text-right">Amount</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="whitespace-nowrap text-stone-500 w-20">Aug 18</td>
+                  <td><a href="#" class="yn-row-link">Plumbing repair — Ace Plumbing</a> <span class="text-stone-400">· Unit 2</span></td>
+                  <td class="text-right tabular-nums whitespace-nowrap">$480.00</td>
+                </tr>
+                <tr>
+                  <td class="whitespace-nowrap text-stone-500">Aug 3</td>
+                  <td><a href="#" class="yn-row-link">Receipt from Jane Smith</a> <span class="text-stone-400">· Unit 2</span></td>
+                  <td class="text-right tabular-nums whitespace-nowrap">$2,000.00</td>
+                </tr>
+                <tr>
+                  <td class="whitespace-nowrap text-stone-500">Aug 1</td>
+                  <td><a href="#" class="yn-row-link">August rent charged</a> <span class="text-stone-400">· Units 1–2</span></td>
+                  <td class="text-right tabular-nums whitespace-nowrap">$4,250.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
       </div>

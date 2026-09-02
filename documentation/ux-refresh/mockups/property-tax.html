@@ -59,7 +59,7 @@
           </div>
           <div class="flex items-center gap-2">
             <button class="yn-btn yn-btn-secondary">More</button>
-            <a href="#" class="yn-btn yn-btn-primary">Record expense</a>
+            <a href="#" class="yn-btn yn-btn-secondary">Record expense</a>
           </div>
         </div>
         <nav class="yn-tabs mt-4" aria-label="Property sections">
@@ -102,16 +102,19 @@
           <a href="#" class="yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap">Review Schedule E</a>
         </div>
 
-        <!-- When ready, the readiness row reads:
+        <!-- When ready with PDF template available:
              status: dot-ok "Ready" + net income figure
              action: secondary "View Schedule E" + primary "Download PDF"
+             When ready without PDF template available:
+             status: dot-ok "Ready" + net income figure
+             action: quiet "PDF export isn't available for <year>" + primary "View Schedule E"
         -->
       </div>
 
       <!-- "Needs profile" variant replaces the surface body:
-      <div class="yn-alert yn-alert-warn max-w-2xl">
-        <span>No tax profile exists for 2025, so Schedule E can’t be prepared.
-        <a href="#" class="yn-link">Set up the 2025 tax profile</a></span>
+      <div class="yn-alert yn-alert-warn max-w-2xl flex flex-wrap items-center justify-between gap-3">
+        <span>No tax profile exists for 2025, so Schedule E can’t be prepared.</span>
+        <a href="#" class="yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap">Set up 2025 tax profile</a>
       </div>
       -->
 

@@ -1,24 +1,24 @@
 class PropertiesController < ApplicationController
-  before_action :set_property, only: %i[show edit update destroy schedule_e schedule_e_pdf]
+  before_action :set_property, only: %i[edit update destroy schedule_e schedule_e_pdf]
 
   def index
     @properties = authenticated_user.properties.includes(:rentable_units)
   end
 
   def show
-    @date_range = Accounting::DateRange.parse(params)
-    unless @date_range.valid?
-      flash.now[:alert] = @date_range.errors.to_sentence
-    end
-    @year = @date_range.year || Date.current.year
     @property = authenticated_user.properties.includes(
-      :rentable_units,
-      tenancies: :parties
+      rentable_units: { tenancies: [ :parties, :tenancy_parties, :rent_terms ] }
     ).find(params.expect(:id))
-    @financial_activity = Accounting::PropertyLedgerQuery.call(property: @property, date_range: @date_range)
-    @financial_summary = Accounting::PropertySummaryQuery.call(property: @property, date_range: @date_range)
+    @tenancies = @property.rentable_units.flat_map(&:tenancies)
+    @balances = Accounting::TenancyBalancesQuery.call(tenancies: @tenancies)
     @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: @property)
-    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
+    ytd_range = Accounting::DateRange.new(
+      from: Date.current.beginning_of_year,
+      through: Date.current
+    )
+    @ytd_summary = Accounting::PropertySummaryQuery.call(property: @property, date_range: ytd_range)
+    recent_range = Accounting::DateRange.new(through: Date.current)
+    @recent_activity = Accounting::PropertyLedgerQuery.call(property: @property, date_range: recent_range, limit: 5)
   end
 
   def schedule_e

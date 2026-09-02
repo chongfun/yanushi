@@ -31,5 +31,10 @@ RSpec.describe PropertiesHelper, type: :helper do
       expect(helper.active_tenancies_for(property)).to be_empty
       expect(helper.active_tenancy_for(property)).to eq(past_tenancy)
     end
+
+    it "returns nil when property has no tenancies" do
+      expect(helper.active_tenancies_for(property)).to be_empty
+      expect(helper.active_tenancy_for(property)).to be_nil
+    end
   end
 end

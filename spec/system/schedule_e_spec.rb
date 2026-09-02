@@ -58,8 +58,8 @@ RSpec.describe "ScheduleE", type: :system do
       )
     end
 
-    visit property_path(property, year: year)
-    click_on "📋 Schedule E"
+    visit property_tax_path(property, year: year)
+    click_on "View Schedule E"
 
     expect(page).to have_text("Rents received")
     expect(page).to have_text("$5,150.00")
@@ -86,8 +86,8 @@ RSpec.describe "ScheduleE", type: :system do
 
     # When viewing 2025 (template available): PDF button is enabled as a download link
     create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
-    visit property_path(property, year: 2025)
-    click_on "📋 Schedule E"
+    visit property_tax_path(property, year: 2025)
+    click_on "View Schedule E"
     expect(page).to have_link("Download Worksheet (PDF)")
   end
 

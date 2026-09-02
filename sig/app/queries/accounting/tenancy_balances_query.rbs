@@ -1,0 +1,16 @@
+module Accounting
+  class TenancyBalancesQuery
+    @tenancies: Array[Tenancy]
+    @as_of: Date
+
+    def self.call: (tenancies: (Array[Tenancy] | ActiveRecord::Relation | Enumerable[Tenancy])?, ?as_of: (Date | String | Time | untyped)?) -> Hash[Integer, Integer]
+    def initialize: (tenancies: (Array[Tenancy] | ActiveRecord::Relation | Enumerable[Tenancy])?, ?as_of: (Date | String | Time | untyped)?) -> void
+    def call: () -> Hash[Integer, Integer]
+
+    private
+
+    def tenancies: () -> Array[Tenancy]
+    def as_of: () -> Date
+    def parse_as_of: (untyped val) -> Date?
+  end
+end

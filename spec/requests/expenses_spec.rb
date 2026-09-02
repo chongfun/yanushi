@@ -40,6 +40,7 @@ RSpec.describe "Expenses", type: :request do
       get new_property_expense_url(property)
       expect(response).to be_successful
       expect(response.body).to include(property.address)
+      expect(response.body).to include("action=\"#{property_expenses_path(property)}\"")
     end
   end
 
@@ -96,7 +97,7 @@ RSpec.describe "Expenses", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
-    it "handles modal-submit success with turbo_stream" do
+    it "creates nested expense and redirects to property activity path" do
       expect {
         post property_expenses_url(property), params: {
           expense: {
@@ -105,13 +106,13 @@ RSpec.describe "Expenses", type: :request do
             description: "Faucet",
             paid_on: Date.today
           }
-        }, as: :turbo_stream
+        }
       }.to change(Expense, :count).by(1)
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to redirect_to(property_activity_path(property))
     end
 
-    it "handles modal-submit validation failure with turbo_stream" do
+    it "handles nested expense validation failure with unprocessable content" do
       expect {
         post property_expenses_url(property), params: {
           expense: {
@@ -120,11 +121,10 @@ RSpec.describe "Expenses", type: :request do
             description: "Faucet",
             paid_on: Date.today
           }
-        }, as: :turbo_stream
+        }
       }.not_to change(Expense, :count)
 
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("turbo-stream")
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "should not create expense with other user's property" do
@@ -191,7 +191,7 @@ RSpec.describe "Expenses", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
-    it "redirects to nested property on non-turbo success" do
+    it "redirects to nested property activity on non-turbo success" do
       post property_expenses_url(property), params: {
         expense: {
           amount: "100.00",
@@ -199,7 +199,7 @@ RSpec.describe "Expenses", type: :request do
           paid_on: Date.today
         }
       }
-      expect(response).to redirect_to(property_url(property))
+      expect(response).to redirect_to(property_activity_path(property))
     end
   end
 

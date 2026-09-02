@@ -54,45 +54,47 @@
         </nav>
       </header>
 
-      <table class="yn-table">
-        <thead>
-          <tr>
-            <th scope="col">Property</th>
-            <th scope="col">Units</th>
-            <th scope="col">Occupancy</th>
-            <th scope="col" class="text-right tabular-nums">Outstanding</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <a href="#" class="yn-row-link">123 Main St</a>
-              <span class="block text-[13px] text-stone-500">Multifamily</span>
-            </td>
-            <td class="tabular-nums">3</td>
-            <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 of 3 occupied</span></td>
-            <td class="text-right tabular-nums whitespace-nowrap">$350.00</td>
-          </tr>
-          <tr>
-            <td>
-              <a href="#" class="yn-row-link">456 Oak Ave</a>
-              <span class="block text-[13px] text-stone-500">Single family</span>
-            </td>
-            <td class="tabular-nums">1</td>
-            <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span></td>
-            <td class="text-right tabular-nums whitespace-nowrap text-stone-400">—</td>
-          </tr>
-          <tr>
-            <td>
-              <a href="#" class="yn-row-link">742 Evergreen Terrace</a>
-              <span class="block text-[13px] text-stone-500">Single family</span>
-            </td>
-            <td class="tabular-nums">1</td>
-            <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span></td>
-            <td class="text-right tabular-nums whitespace-nowrap">$8,860.00 credit</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col">Property</th>
+              <th scope="col">Units</th>
+              <th scope="col">Occupancy</th>
+              <th scope="col" class="text-right tabular-nums">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a href="#" class="yn-row-link">123 Main St</a>
+                <span class="block text-[13px] text-stone-500">Multifamily</span>
+              </td>
+              <td class="tabular-nums">3</td>
+              <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 of 3 occupied</span></td>
+              <td class="text-right tabular-nums whitespace-nowrap">$350.00</td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="yn-row-link">456 Oak Ave</a>
+                <span class="block text-[13px] text-stone-500">Single family</span>
+              </td>
+              <td class="tabular-nums">1</td>
+              <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span></td>
+              <td class="text-right tabular-nums whitespace-nowrap text-stone-400">—</td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="yn-row-link">742 Evergreen Terrace</a>
+                <span class="block text-[13px] text-stone-500">Single family</span>
+              </td>
+              <td class="tabular-nums">1</td>
+              <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Occupied</span></td>
+              <td class="text-right tabular-nums whitespace-nowrap">$8,860.00 credit</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- Narrow screens: this table collapses to stacked rows — the plan’s
            per-table mobile strategy. Address + occupancy stay; “Units”

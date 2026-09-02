@@ -4,6 +4,9 @@ class RentableUnit < ApplicationRecord
   has_many :expenses, dependent: :restrict_with_error
   has_many :accounting_postings, class_name: "Posting", dependent: :restrict_with_error
 
+  scope :active, -> { where(active: true) }
+  scope :inactive, -> { where(active: false) }
+
   validates :name, presence: true, uniqueness: { scope: :property_id, case_sensitive: false }
   validates :square_footage, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :unit_identifier, uniqueness: { scope: :property_id, case_sensitive: false }, allow_nil: true

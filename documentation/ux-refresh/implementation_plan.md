@@ -566,10 +566,15 @@ Sources, all cheap single queries:
 - `:inbox_review`: `ImportedTransaction.reviewable` count (+ newest row
   for the description), path `inbox_path`;
 - `:import_failed`: `SourceDocument.failed` rows, path
-  `inbox_path(view: "processing")` (plain `inbox_path` until M4 adds the
-  view param);
-- `:balance_due`: active tenancies with positive balance via
-  `Accounting::TenancyBalancesQuery`.
+  `inbox_path(view: "processing")`. M2's current Inbox ignores the view parameter
+  but still presents processing/failed uploads at the top; M4 makes `processing` a
+  distinct server-addressable Inbox state.
+- `:balance_due`: any tenancy with a positive receivable balance as of today,
+  including active, upcoming, and past tenancies via `Accounting::TenancyBalancesQuery`.
+  Non-active tenancies carry explicit lifecycle labels (`"Upcoming tenancy · balance outstanding"`,
+  `"Past tenancy · balance outstanding"`). Receivables accounting lifecycle is independent of
+  lease occupancy lifecycle: unpaid debt remains actionable and must not disappear upon lease
+  termination, while charges created prior to commencement are surfaced.
 
 Do NOT add Schedule E attention items in M2: computing
 `TaxReporting::ScheduleEQuery` per property on every dashboard load is too
@@ -717,8 +722,8 @@ region here (its content is superseded by the units table balance column).
 
 ## 7. Property Tenancies and Activity
 
-`Properties::TenanciesController#index`: current + past sections per
-`property-tenancies.html`, balances batched, `includes(:parties,
+`Properties::TenanciesController#index`: current + upcoming + past sections per
+`property-tenancies.html`, balances batched, `includes(:parties, :tenancy_parties,
 :rentable_unit, :rent_terms)`.
 
 `Properties::ActivitiesController#show` owns what `show` gave up:
@@ -1437,9 +1442,9 @@ and close the modal on success.
 
 Explicit `.html` create URL → HTML redirect/render.
 
-The same domain service and server validations execute in both paths.
-
-The resulting dialog should materially follow the normative Add Charge mockup.
+The resulting dialog should materially follow the normative shared short-form
+dialog shell in `dialog-record-receipt.html`, substituting the Add Charge fields
+defined above.
 
 ---
 
