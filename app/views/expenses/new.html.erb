@@ -1,15 +1,31 @@
-<% content_for :title, "New expense" %>
-
-<div class="max-w-2xl mx-auto">
-  <h1 class="text-3xl font-bold mb-6">New expense</h1>
-  <div class="bg-base-100 p-6 rounded-box shadow-lg border border-base-200">
-    <%= render "form", expense: @expense %>
+<% if @nested_property && turbo_frame_request? %>
+  <%# Dialog context: wrapped in turbo-frame for modal loading %>
+  <turbo-frame id="modal-frame" data-modal-title="Record expense">
+    <div data-modal-title="Record expense">
+      <%= render "expenses/form", expense: @expense, form_context: :dialog %>
+    </div>
+  </turbo-frame>
+<% elsif @nested_property %>
+  <%# Standalone nested property expense form (direct browser visit) %>
+  <% content_for :title, "Record expense" %>
+  <div class="max-w-xl mx-auto py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight">Record expense</h1>
+      <p class="text-sm text-stone-500 mt-1"><%= @nested_property.address %></p>
+    </div>
+    <div class="yn-surface p-6">
+      <%= render "expenses/form", expense: @expense, form_context: :standalone %>
+    </div>
   </div>
-  <div class="mt-6">
-    <% if @nested_property %>
-      <%= link_to "Back to activity", property_activity_path(@nested_property), class: "btn btn-ghost" %>
-    <% else %>
-      <%= link_to "Back to expenses", expenses_path, class: "btn btn-ghost" %>
-    <% end %>
+<% else %>
+  <%# Top-level new expense (no property) — standalone form with property selector %>
+  <% content_for :title, "Record expense" %>
+  <div class="max-w-xl mx-auto py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight">Record expense</h1>
+    </div>
+    <div class="yn-surface p-6">
+      <%= render "expenses/form", expense: @expense, form_context: :standalone %>
+    </div>
   </div>
-</div>
+<% end %>

@@ -104,7 +104,7 @@
         <div class="space-y-6 flex-1">
           <div>
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-1">Property</div>
-            <div class="text-lg font-bold leading-tight"><%= @expense.property.address %></div>
+            <div class="text-lg font-bold leading-tight"><%= link_to @expense.property.address, property_path(@expense.property), class: "link link-hover text-base-content" %></div>
             <div class="text-sm text-base-content/60 mt-1">
               Type: <%= @expense.property.asset_type.titleize %>
             </div>

@@ -1,0 +1,28 @@
+module Reports
+  class ScheduleEStatusesQuery
+    class ScheduleEStatus
+      attr_reader property: Property
+      attr_reader state: :needs_profile | :needs_review | :ready
+      attr_reader unresolved_review_count: Integer
+      attr_reader net_income_cents: Integer
+
+      def initialize: (
+        property: Property,
+        state: :needs_profile | :needs_review | :ready,
+        unresolved_review_count: Integer,
+        net_income_cents: Integer
+      ) -> void
+    end
+
+    def self.call: (user: User, tax_year: Integer | String) -> Array[ScheduleEStatus]
+    def self.status_for: (property: Property?, tax_year: Integer | String) -> ScheduleEStatus?
+    def self.build_status: (property: Property, schedule_e_result: TaxReporting::ScheduleEResult) -> ScheduleEStatus
+    def initialize: (user: User, tax_year: Integer | String) -> void
+    def call: () -> Array[ScheduleEStatus]
+
+    private
+
+    attr_reader user: User
+    attr_reader tax_year: Integer
+  end
+end

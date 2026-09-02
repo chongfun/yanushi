@@ -3,7 +3,7 @@ module Properties
     @property: Property
     @year: Integer
     @tax_profile: PropertyTaxProfile?
-    @schedule_e_result: TaxReporting::ScheduleEResult
+    @status: Reports::ScheduleEStatusesQuery::ScheduleEStatus
     @active_years: Array[Integer]
     @pdf_available: bool
 

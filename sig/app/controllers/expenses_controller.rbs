@@ -5,7 +5,14 @@ class ExpensesController < ApplicationController
   @properties: Property::ActiveRecord_Relation
   @financial_activity: Array[Accounting::ActivityRow]
   @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
+  @ytd_summary: Accounting::PropertySummaryQuery::SummaryResult
+  @recent_activity: Array[Accounting::ActivityRow]
+  @security_deposits_held_cents: Integer
   @year: Integer
+  @page: Integer
+  @per_page: Integer
+  @total_count: Integer
+  @total_pages: Integer
 
   def index: () -> untyped
   def show: () -> untyped

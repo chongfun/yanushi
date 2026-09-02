@@ -14,13 +14,13 @@ RSpec.describe "Receipts", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
-    expect(page).to have_text("Overview")
+    expect(page).to have_button("Sign out")
   end
 
   it "records a payment and verifies details and PDF download link", :js do
     visit receipts_path
 
-    click_on "＋ Record Payment"
+    click_on "Record receipt", match: :first
 
     select "##{tenancy.id} - #{property.address} (#{unit.display_name})", from: "Tenancy / Unit"
     select party.display_name, from: "Payer (Party)"

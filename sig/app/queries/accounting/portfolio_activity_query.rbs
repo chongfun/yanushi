@@ -1,0 +1,57 @@
+module Accounting
+  class PortfolioActivityQuery
+    class PortfolioActivityResult
+      attr_reader rows: Array[ActivityRow]
+      attr_reader page: Integer
+      attr_reader per_page: Integer
+      attr_reader total_pages: Integer
+      attr_reader total_count: Integer
+      attr_reader date_range: DateRange
+      attr_reader property_id: (Integer | String)?
+
+      def initialize: (
+        rows: Array[ActivityRow],
+        page: Integer,
+        per_page: Integer,
+        total_pages: Integer,
+        total_count: Integer,
+        date_range: DateRange,
+        property_id: (Integer | String)?
+      ) -> void
+    end
+
+    def self.call: (
+      user: User,
+      ?date_range: DateRange?,
+      ?from: (Date | String)?,
+      ?through: (Date | String)?,
+      ?year: (Integer | String)?,
+      ?property_id: (Integer | String)?,
+      ?page: (Integer | String),
+      ?per_page: (Integer | String)
+    ) -> PortfolioActivityResult
+
+    def initialize: (
+      user: User,
+      ?date_range: DateRange?,
+      ?from: (Date | String)?,
+      ?through: (Date | String)?,
+      ?year: (Integer | String)?,
+      ?property_id: (Integer | String)?,
+      ?page: (Integer | String),
+      ?per_page: (Integer | String)
+    ) -> void
+
+    def call: () -> PortfolioActivityResult
+
+    private
+
+    attr_reader user: User
+    attr_reader date_range: DateRange
+    attr_reader property_id: (Integer | String)?
+    attr_reader page: Integer
+    attr_reader per_page: Integer
+
+    def empty_result: () -> PortfolioActivityResult
+  end
+end

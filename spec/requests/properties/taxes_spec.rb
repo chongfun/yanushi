@@ -53,6 +53,26 @@ RSpec.describe "Properties::Taxes", type: :request do
         expect(response.body).not_to include("PDF export isn’t available")
       end
 
+      it "renders Review Schedule E when profile exists and items need review" do
+        create(
+          :property_tax_profile,
+          property: property,
+          tax_year: 2025,
+          schedule_e_property_type: "single_family_residence"
+        )
+        unmapped_account = user.accounts.create!(name: "Custom Roof", key: "expense_custom_roof_tax_tab", account_type: "expense")
+        expense = create(:expense, property: property)
+        expense_entry = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "expense_posted", source: expense)
+        create(:posting, journal_entry: expense_entry, property: property, amount_cents: 300_000, account: unmapped_account)
+
+        get property_tax_path(property, year: 2025)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Single family residence")
+        expect(response.body).to include("1 item needs review")
+        expect(response.body).to include("Review Schedule E")
+        expect(response.body).to include(schedule_e_property_path(property, year: 2025))
+      end
+
       it "renders 200 OK with View Schedule E and unavailable export notice when PDF template is missing" do
         create(
           :property_tax_profile,

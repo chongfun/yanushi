@@ -215,6 +215,12 @@ RSpec.describe "ImportedTransactions", type: :request do
       expect(response).to redirect_to(imported_transaction_path(txn2))
     end
 
+    it "redirects to inbox_path when requested transaction ID is deleted and inbox has no remaining transactions in HTML request" do
+      get imported_transaction_path(999_999)
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to(inbox_path)
+    end
+
     it "renders accurate Item X of Y position using SQL counting with deterministic order" do
       t1 = create(:imported_transaction, :unmatched, user: user, source_document: source_document, created_at: 3.hours.ago)
       t2 = create(:imported_transaction, :unmatched, user: user, source_document: source_document, created_at: 2.hours.ago)
@@ -414,6 +420,30 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include("Transaction requires classification before confirmation")
         expect(response.body).to include(%(id="rev-kind-#{unclassified_txn.id}"))
+      end
+
+      it "confirms in HTML format and redirects to next transaction or inbox" do
+        txn2 = create(:imported_transaction, :tenant_receipt, :matched, user: user, source_document: source_document, matched_party: party, matched_tenancy: tenancy)
+        post confirm_imported_transaction_path(txn1, format: :html)
+        expect(response).to have_http_status(:see_other)
+        expect(response).to redirect_to(imported_transaction_path(txn2))
+
+        # When last transaction confirmed
+        post confirm_imported_transaction_path(txn2, format: :html)
+        expect(response).to have_http_status(:see_other)
+        expect(response).to redirect_to(inbox_path)
+      end
+
+      it "handles gone failure in HTML format on confirm" do
+        allow(ImportedTransactions::ConfirmService).to receive(:call).and_wrap_original do |original, **kwargs|
+          txn1.destroy!
+          user.increment_inbox_revision!
+          original.call(**kwargs)
+        end
+
+        post confirm_imported_transaction_path(txn1, format: :html)
+        expect(response).to have_http_status(:see_other)
+        expect(response).to redirect_to(inbox_path)
       end
     end
   end
@@ -619,6 +649,20 @@ RSpec.describe "ImportedTransactions", type: :request do
 
         expect(response).to have_http_status(:see_other)
         expect(response).to redirect_to(imported_transaction_path(txn2))
+        expect(flash[:notice]).to eq("The transaction was deleted in another session.")
+      end
+
+      it "redirects to inbox when transaction is deleted before lock acquisition and no items remain" do
+        allow(ImportedTransactions::DestroyService).to receive(:call).and_wrap_original do |original, **kwargs|
+          txn1.destroy!
+          user.increment_inbox_revision!
+          original.call(**kwargs)
+        end
+
+        delete imported_transaction_path(txn1, format: :html)
+
+        expect(response).to have_http_status(:see_other)
+        expect(response).to redirect_to(inbox_path)
         expect(flash[:notice]).to eq("The transaction was deleted in another session.")
       end
     end

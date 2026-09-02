@@ -7,4 +7,8 @@ RSpec.configure do |config|
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
     page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
   end
+
+  config.after(:each, type: :system) do
+    Capybara.reset_sessions!
+  end
 end

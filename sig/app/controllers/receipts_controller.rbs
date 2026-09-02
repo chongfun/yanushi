@@ -5,6 +5,10 @@ class ReceiptsController < ApplicationController
   @tenancy: Tenancy?
   @tenancies: ActiveRecord::Relation
   @parties: ActiveRecord::Relation
+  @page: Integer
+  @per_page: Integer
+  @total_count: Integer
+  @total_pages: Integer
 
   def index: () -> void
   def show: () -> void

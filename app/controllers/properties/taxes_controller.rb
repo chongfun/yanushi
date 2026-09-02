@@ -7,7 +7,7 @@ module Properties
       tax_year_obj = TaxReporting::TaxYear.parse(params[:year], default: default_year) || TaxReporting::TaxYear.new(default_year)
       @year = tax_year_obj.to_i
       @tax_profile = @property.tax_profile_for(@year)
-      @schedule_e_result = TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
+      @status = Reports::ScheduleEStatusesQuery.status_for(property: @property, tax_year: @year)
       @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
       @pdf_available = ScheduleEGenerator.template_available?(@year)
     end

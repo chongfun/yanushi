@@ -1,0 +1,82 @@
+<section id="schedule_e_projection" aria-labelledby="se-proj-heading">
+  <h2 id="se-proj-heading" class="text-sm font-semibold mb-3">Projected Schedule E</h2>
+  <p class="text-sm text-stone-500 mb-3">Values update as review items are resolved. Lines follow the <%= @year %> IRS form.</p>
+
+  <table class="yn-table max-w-2xl">
+    <thead>
+      <tr>
+        <th scope="col" class="w-16">Line</th>
+        <th scope="col">Category</th>
+        <th scope="col" class="text-right tabular-nums">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="text-stone-500">3</td>
+        <td class="font-medium">
+          Rents received
+          <% if @schedule_e_result.rents_received_drilldown.any? %>
+            <details class="mt-1 text-xs text-stone-500 font-normal">
+              <summary class="yn-link cursor-pointer text-[13px]">detail</summary>
+              <ul class="mt-1 pl-3 border-l-2 border-stone-200 space-y-0.5">
+                <% @schedule_e_result.rents_received_drilldown.each do |detail| %>
+                  <li class="flex justify-between gap-4 py-0.5">
+                    <span><%= detail.occurred_on.strftime("%b %-d") %>: <%= detail.label %></span>
+                    <span class="tabular-nums font-mono"><%= format_money_cents(detail.amount_cents) %></span>
+                  </li>
+                <% end %>
+              </ul>
+            </details>
+          <% end %>
+        </td>
+        <td class="text-right tabular-nums whitespace-nowrap font-medium"><%= format_money_cents(@schedule_e_result.rents_received_cents) %></td>
+      </tr>
+
+      <% @form_definition.expense_lines.each do |line| %>
+        <% if line.line_number == 19 %>
+          <tr>
+            <td class="text-stone-500">18</td>
+            <td>
+              Depreciation expense or depletion
+              <span class="block text-[13px] text-stone-400 italic">Not tracked by Yanushi (enter on tax return)</span>
+            </td>
+            <td class="text-right tabular-nums whitespace-nowrap text-stone-400 italic">—</td>
+          </tr>
+        <% end %>
+
+        <% amount_cents = @schedule_e_result.expenses_by_category_cents[line.category] || 0 %>
+        <tr>
+          <td class="text-stone-500"><%= line.line_number %></td>
+          <td>
+            <%= line.label %>
+            <% if line.category == :other && @schedule_e_result.other_expense_details.any? %>
+              <details class="mt-1 text-xs text-stone-500 font-normal">
+                <summary class="yn-link cursor-pointer text-[13px]">itemized statement</summary>
+                <ul class="mt-1 pl-3 border-l-2 border-stone-200 space-y-0.5">
+                  <% @schedule_e_result.other_expense_details.each do |detail| %>
+                    <li class="flex justify-between gap-4 py-0.5">
+                      <span><%= detail.occurred_on.strftime("%b %-d") %>: <%= detail.description %></span>
+                      <span class="tabular-nums font-mono"><%= format_money_cents(detail.amount_cents) %></span>
+                    </li>
+                  <% end %>
+                </ul>
+              </details>
+            <% end %>
+          </td>
+          <td class="text-right tabular-nums whitespace-nowrap"><%= format_money_cents(amount_cents) %></td>
+        </tr>
+      <% end %>
+
+      <tr class="border-t-2 border-stone-300">
+        <td></td>
+        <td class="font-medium">Total expenses</td>
+        <td class="text-right tabular-nums whitespace-nowrap font-medium"><%= format_money_cents(@schedule_e_result.total_expenses_cents) %></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td class="font-semibold">Net income</td>
+        <td class="text-right tabular-nums whitespace-nowrap font-semibold"><%= signed_money_cents(@schedule_e_result.net_income_cents) %></td>
+      </tr>
+    </tbody>
+  </table>
+</section>

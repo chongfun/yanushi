@@ -1,11 +1,12 @@
 module Accounting
   class ActiveYearsQuery
-    def self.call(property:, additional_years: [])
-      new(property: property).call(additional_years: additional_years)
+    def self.call(property: nil, user: nil, additional_years: [])
+      new(property: property, user: user).call(additional_years: additional_years)
     end
 
-    def initialize(property:)
+    def initialize(property: nil, user: nil)
       @property = property
+      @user = user
     end
 
     def call(additional_years: [])
@@ -16,6 +17,14 @@ module Accounting
         db_years = JournalEntry
           .joins(:postings)
           .where(postings: { property_id: property.id })
+          .pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM journal_entries.occurred_on)::integer"))
+          .compact
+
+        years.merge(db_years)
+      elsif user
+        db_years = JournalEntry
+          .joins(:postings)
+          .where(postings: { property_id: user.properties.select(:id) })
           .pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM journal_entries.occurred_on)::integer"))
           .compact
 
@@ -34,6 +43,6 @@ module Accounting
 
     private
 
-      attr_reader :property
+      attr_reader :property, :user
   end
 end

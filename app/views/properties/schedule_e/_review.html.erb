@@ -1,0 +1,105 @@
+<section id="schedule_e_review" aria-labelledby="se-review-heading">
+  <% if @schedule_e_result.review_items.any? %>
+    <h2 id="se-review-heading" class="text-sm font-semibold mb-3">
+      Needs review
+      <% if @schedule_e_result.unresolved_review_items.any? %>
+        <span class="yn-count ml-1"><%= @schedule_e_result.unresolved_review_items.size %></span>
+      <% end %>
+    </h2>
+
+    <div class="yn-surface divide-y divide-stone-200">
+      <% @schedule_e_result.review_items.each do |item| %>
+        <% target_entry = item.resolution_target %>
+        <% if item.resolved? %>
+          <div class="flex items-center justify-between gap-4 px-4 py-3 bg-stone-50" id="<%= dom_id(item.resolution) %>">
+            <p class="text-sm text-stone-500 m-0">
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Resolved</span>
+              “<%= item.reason %>” &middot;
+              <% if item.treatment == "include_in_rents" %>
+                included in Line 3 Rents
+              <% elsif item.treatment == "map_to_schedule_e_category" %>
+                mapped to <%= item.resolution&.schedule_e_category.to_s.titleize %>
+              <% else %>
+                excluded from Schedule E
+              <% end %>
+            </p>
+            <%= button_to "Undo",
+                          property_tax_review_resolution_path(@property, item.resolution, return_to_year: @year),
+                          method: :delete,
+                          class: "yn-link text-[13px]",
+                          data: { turbo_confirm: "Remove tax treatment resolution for Journal Entry ##{target_entry.id}?" } %>
+          </div>
+        <% else %>
+          <%
+            failed_res = local_assigns[:failed_resolution] || @resolution
+            is_failed_entry = failed_res&.errors&.any? && failed_res.journal_entry_id == target_entry.id
+            selected_treatment = is_failed_entry ? failed_res.treatment : (item.can_include_in_rents? ? "include_in_rents" : (item.can_map_to_expense? ? "map_to_schedule_e_category" : "exclude"))
+            selected_category = is_failed_entry ? failed_res.schedule_e_category : nil
+            show_category = selected_treatment == "map_to_schedule_e_category"
+          %>
+          <div class="px-4 py-4" id="review_item_<%= target_entry.id %>">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-sm font-medium m-0"><%= item.reason %></p>
+                <p class="text-[13px] text-stone-500 m-0 mt-0.5">
+                  <%= item.occurred_on.strftime("%b %-d, %Y") %> &middot;
+                  <%= link_to "Journal entry ##{item.journal_entry.id}", journal_entry_path(item.journal_entry), class: "yn-link" %>
+                </p>
+              </div>
+              <p class="text-sm font-semibold tabular-nums whitespace-nowrap m-0"><%= format_money_cents(item.amount_cents) %></p>
+            </div>
+
+            <% if is_failed_entry %>
+              <div class="yn-alert yn-alert-danger text-sm mt-3" role="alert">
+                <%= failed_res.errors.full_messages.to_sentence %>
+              </div>
+            <% end %>
+
+            <%= form_with url: property_tax_review_resolutions_path(@property),
+                          scope: :property_tax_review_resolution,
+                          method: :post,
+                          data: { controller: "schedule-e-treatment" },
+                          class: "flex flex-wrap items-end gap-3 mt-3" do |f| %>
+              <%= hidden_field_tag :return_to_year, @year %>
+              <%= f.hidden_field :journal_entry_id, value: target_entry.id %>
+              <%= f.hidden_field :tax_year, value: target_entry.occurred_on.year %>
+
+              <div>
+                <%= f.label :treatment, "Treatment", class: "yn-label", for: "treatment_#{target_entry.id}" %>
+                <%
+                  treatment_options = []
+                  treatment_options << ["Include in rents received (Line 3)", "include_in_rents"] if item.can_include_in_rents?
+                  treatment_options << ["Map to a Schedule E expense category", "map_to_schedule_e_category"] if item.can_map_to_expense?
+                  treatment_options << ["Exclude from Schedule E", "exclude"]
+                %>
+                <%= f.select :treatment,
+                             treatment_options,
+                             { selected: selected_treatment },
+                             class: "yn-select w-64",
+                             id: "treatment_#{target_entry.id}",
+                             data: {
+                               schedule_e_treatment_target: "treatmentSelect",
+                               action: "change->schedule-e-treatment#toggle"
+                             } %>
+              </div>
+
+              <% if item.can_map_to_expense? %>
+                <div class="<%= 'hidden' unless show_category %>"
+                     data-schedule-e-treatment-target="categoryWrapper">
+                  <%= f.label :schedule_e_category, "Category", class: "yn-label", for: "category_#{target_entry.id}" %>
+                  <%= f.select :schedule_e_category,
+                               TaxReporting::ScheduleEAccountMap.supported_categories.map { |c| [c.to_s.titleize, c.to_s] },
+                               { prompt: "Select category...", selected: selected_category },
+                               class: "yn-select w-48",
+                               id: "category_#{target_entry.id}" %>
+                </div>
+              <% end %>
+
+              <%= f.submit "Resolve", class: "yn-btn yn-btn-secondary" %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</section>

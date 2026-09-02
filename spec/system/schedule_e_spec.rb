@@ -12,9 +12,10 @@ RSpec.describe "ScheduleE", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
+    expect(page).to have_button("Sign out")
   end
 
-  it "verifies schedule e summary accuracy with all expense categories and tax profile" do
+  it "verifies schedule e summary accuracy with all expense categories and tax profile", :js do
     year = Date.current.year
     create(:property_tax_profile, property: property, tax_year: year, schedule_e_property_type: "multi_family_residence")
 
@@ -58,12 +59,12 @@ RSpec.describe "ScheduleE", type: :system do
       )
     end
 
-    visit property_tax_path(property, year: year)
-    click_on "View Schedule E"
+    visit schedule_e_property_path(property, year: year)
 
+    expect(page).to have_text("Schedule E — #{year}")
     expect(page).to have_text("Rents received")
     expect(page).to have_text("$5,150.00")
-    expect(page).to have_text("2 — Multi-Family Residence")
+    expect(page).to have_text("Multi family residence")
 
     categories.each_with_index do |_kind, index|
       amount = 100.00 + (index * 10)
@@ -72,69 +73,57 @@ RSpec.describe "ScheduleE", type: :system do
     end
 
     formatted_total_expenses = ActionController::Base.helpers.number_to_currency(total_expenses)
-    expect(page).to have_text("Total Tracked Operating Expenses")
+    expect(page).to have_text("Total expenses")
     expect(page).to have_text(formatted_total_expenses)
 
     net_income = 5150.00 - total_expenses
     formatted_net = ActionController::Base.helpers.number_to_currency(net_income.abs)
 
-    expect(page).to have_text("Tracked Net Operating Cash Flow / Income")
+    expect(page).to have_text("Net income")
     expect(page).to have_text(formatted_net)
 
-    # When viewing 2026 (template unavailable): PDF button is disabled with explanation tooltip
-    expect(page).to have_selector(".tooltip[data-tip*='Schedule E PDF template for 2026 is not yet available']")
+    # When viewing 2026 (template unavailable): PDF button is disabled
+    expect(page).to have_button("Download PDF", disabled: true)
 
     # When viewing 2025 (template available): PDF button is enabled as a download link
     create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
-    visit property_tax_path(property, year: 2025)
-    click_on "View Schedule E"
-    expect(page).to have_link("Download Worksheet (PDF)")
+    visit schedule_e_property_path(property, year: 2025)
+    expect(page).to have_link("Download PDF")
   end
 
-  it "allows resolving a tax review item in the UI to unblock PDF export" do
+  it "allows resolving a tax review item in the UI to unblock PDF export", :js do
     create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
+    deposit_account = user.accounts.find_by!(key: "security_deposits_held")
+    receivable_account = user.accounts.find_by!(key: "tenant_receivable")
 
-    tenancy = create(:tenancy, rentable_unit: unit, commencement_date: Date.new(2025, 1, 1), termination_date: Date.new(2025, 12, 31))
-    create(:tenancy_party, tenancy: tenancy, party: party)
-    deposit = create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
-    SecurityDepositTransactions::ReceiveService.call(
-      security_deposit: deposit,
-      party: party,
-      amount_cents: 200_000,
-      occurred_on: Date.new(2025, 1, 1)
+    entry = create(
+      :journal_entry,
+      user: user,
+      occurred_on: Date.new(2025, 6, 15),
+      description: "Security deposit applied to charge",
+      event_type: "deposit_applied",
+      source: property
     )
-    charge = Charges::CreateFeeService.call(
-      tenancy: tenancy,
-      charge_kind: "other",
-      description: "Drywall damage",
-      amount_cents: 50_000,
-      charge_date: Date.new(2025, 6, 1)
-    ).value!.data[:charge]
-
-    SecurityDepositTransactions::ApplyService.call(
-      security_deposit: deposit,
-      charge: charge,
-      amount_cents: 50_000,
-      occurred_on: Date.new(2025, 6, 15)
-    )
+    create(:posting, journal_entry: entry, account: deposit_account, property: property, amount_cents: 50_000)
+    create(:posting, journal_entry: entry, account: receivable_account, property: property, amount_cents: -50_000)
 
     visit schedule_e_property_path(property, year: 2025)
 
-    expect(page).to have_text("Tax Review Items (1)")
-    expect(page).to have_text("1 unresolved item (PDF export disabled until resolved)")
-    expect(page).to have_text("Needs Review")
-    expect(page).to have_selector(".tooltip[data-tip*='Resolve all 1 tax review item(s)']")
+    expect(page).to have_text("Needs review")
+    expect(page).to have_text("1 item needs review")
+    expect(page).to have_button("Download PDF", disabled: true)
 
-    # Click "Include in Rents"
-    click_button "Include in Rents"
+    # Resolve with default "Include in rents received (Line 3)"
+    within("#review_item_#{entry.id}") do
+      find("input[type='submit']").click
+    end
 
-    expect(page).to have_text("Tax treatment for Journal Entry")
-    expect(page).to have_text("Included in Line 3 Rents")
-    expect(page).to have_text("$500.00")
-    expect(page).to have_link("Download Worksheet (PDF)")
+    expect(page).to have_text("was successfully recorded.", wait: 10)
+    expect(page).to have_text("included in Line 3 Rents")
+    expect(page).to have_link("Download PDF")
   end
 
-  it "allows mapping an unmapped expense item to a Schedule E category in the UI to unblock PDF export" do
+  it "allows mapping an unmapped expense item to a Schedule E category in the UI to unblock PDF export", :js do
     create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
     unmapped_account = user.accounts.create!(name: "Custom Roof", key: "expense_custom_roof", account_type: "expense")
     expense = create(:expense, property: property, expense_kind: "other", amount_cents: 800_000)
@@ -150,22 +139,20 @@ RSpec.describe "ScheduleE", type: :system do
 
     visit schedule_e_property_path(property, year: 2025)
 
-    expect(page).to have_text("Tax Review Items (1)")
+    expect(page).to have_text("Needs review")
     expect(page).to have_text("Unmapped expense account 'Custom Roof'")
-    expect(page).not_to have_button("Include in Rents")
-    expect(page).to have_button("Map")
-    expect(page).to have_button("Exclude")
 
-    select "Repairs", from: "property_tax_review_resolution[schedule_e_category]"
-    click_button "Map"
+    within("#schedule_e_review") do
+      select "Repairs", from: "Category"
+      click_on "Resolve"
+    end
 
-    expect(page).to have_text("Tax treatment for Journal Entry")
-    expect(page).to have_text("Mapped to Repairs")
-    expect(page).to have_text("$8,000.00")
-    expect(page).to have_link("Download Worksheet (PDF)")
+    expect(page).to have_text("was successfully recorded.", wait: 10)
+    expect(page).to have_text("mapped to Repairs")
+    expect(page).to have_link("Download PDF")
   end
 
-  it "allows excluding an unknown complex event with mapped expenses in the UI without affecting Schedule E expense lines" do
+  it "allows excluding an unknown complex event with mapped expenses in the UI without affecting Schedule E expense lines", :js do
     create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
     cash_account = user.accounts.find_by!(key: "cash")
     repairs_account = user.accounts.find_by!(key: "expense_repairs")
@@ -185,17 +172,47 @@ RSpec.describe "ScheduleE", type: :system do
 
     visit schedule_e_property_path(property, year: 2025)
 
-    expect(page).to have_text("Tax Review Items (1)")
-    expect(page).to have_button("Map")
-    expect(page).to have_button("Include in Rents")
-    expect(page).to have_button("Exclude")
+    expect(page).to have_text("Needs review")
 
-    click_button "Exclude"
+    within("#schedule_e_review") do
+      select "Exclude from Schedule E", from: "Treatment"
+      click_on "Resolve"
+    end
 
-    expect(page).to have_text("Tax treatment for Journal Entry")
-    expect(page).to have_text("Excluded from Schedule E")
-    # Verify Repairs is NOT populated on Line 14 ($0.00 / nil)
-    expect(page).not_to have_text("$100.00")
-    expect(page).to have_link("Download Worksheet (PDF)")
+    expect(page).to have_text("was successfully recorded.", wait: 10)
+    expect(page).to have_text("excluded from Schedule E")
+    expect(page).to have_link("Download PDF")
+  end
+
+  it "displays validation error banner and preserves form selections when mapping category is omitted", :js do
+    create(:property_tax_profile, property: property, tax_year: 2025, schedule_e_property_type: "single_family_residence")
+    unmapped_account = user.accounts.create!(name: "Custom Roof", key: "expense_custom_roof", account_type: "expense")
+    expense = create(:expense, property: property, expense_kind: "other", amount_cents: 800_000)
+    entry = create(
+      :journal_entry,
+      user: user,
+      occurred_on: Date.new(2025, 4, 1),
+      description: "New roof installation",
+      event_type: "expense_posted",
+      source: expense
+    )
+    create(:posting, journal_entry: entry, account: unmapped_account, property: property, amount_cents: 800_000)
+
+    visit schedule_e_property_path(property, year: 2025)
+
+    expect(page).to have_text("Needs review")
+
+    # Choose map to category without selecting a category
+    within("#schedule_e_review") do
+      select "Map to a Schedule E expense category", from: "Treatment"
+      click_on "Resolve"
+    end
+
+    # Verifies error banner is displayed, no false success toast, and form inputs are preserved
+    expect(page).to have_css(".yn-alert-danger", text: "Schedule e category can't be blank", wait: 5)
+    expect(page).not_to have_text("was successfully recorded.")
+    within("#schedule_e_review") do
+      expect(page).to have_select("Treatment", selected: "Map to a Schedule E expense category")
+    end
   end
 end

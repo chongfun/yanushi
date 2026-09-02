@@ -13,12 +13,13 @@ RSpec.describe "Expenses", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
+    expect(page).to have_button("Sign out")
   end
 
   it "creates an expense and adds tenant reimbursement charges" do
     visit expenses_path
 
-    click_on "New expense"
+    click_on "Record expense", match: :first
 
     select property.address, from: "Property"
     select "Repairs", from: "Category"

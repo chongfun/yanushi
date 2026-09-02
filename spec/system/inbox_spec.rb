@@ -18,7 +18,7 @@ RSpec.describe "Inbox", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
-    expect(page).to have_text("Overview")
+    expect(page).to have_button("Sign out")
   end
 
   after do

@@ -9,7 +9,7 @@ RSpec.describe "Properties", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
-    expect(page).to have_text("Overview")
+    expect(page).to have_button("Sign out")
   end
 
   let!(:property) { create(:property, user: user, address: "123 Main St") }
@@ -20,37 +20,38 @@ RSpec.describe "Properties", type: :system do
     expect(page).to have_text("Units")
 
     # Navigate via tabs
-    page.execute_script("document.querySelector('nav[aria-label=\"Property sections\"] a[href=\"#{property_tenancies_path(property)}\"]').click()")
+    click_on "Tenancies"
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Tenancies", wait: 5)
     expect(page).to have_current_path(property_tenancies_path(property))
-    expect(page).to have_text("Current")
 
-    page.execute_script("document.querySelector('nav[aria-label=\"Property sections\"] a[href=\"#{property_activity_path(property)}\"]').click()")
+    click_on "Activity"
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Activity", wait: 5)
     expect(page).to have_current_path(property_activity_path(property))
-    expect(page).to have_button("Apply")
 
-    page.execute_script("document.querySelector('nav[aria-label=\"Property sections\"] a[href=\"#{property_tax_path(property)}\"]').click()")
+    click_on "Tax"
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Tax", wait: 5)
     expect(page).to have_current_path(property_tax_path(property))
-    expect(page).to have_text("Tax year")
 
     # Test browser Back navigation
     page.go_back
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Activity", wait: 5)
     expect(page).to have_current_path(property_activity_path(property))
-    expect(page).to have_button("Apply")
 
     page.go_back
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Tenancies", wait: 5)
     expect(page).to have_current_path(property_tenancies_path(property))
-    expect(page).to have_text("Current")
 
     page.go_back
-    expect(page).to have_text("123 Main St")
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Overview", wait: 5)
     expect(page).to have_current_path(property_path(property))
 
     # Test browser Forward navigation
     page.go_forward
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Tenancies", wait: 5)
     expect(page).to have_current_path(property_tenancies_path(property))
-    expect(page).to have_text("Current")
 
     page.go_forward
+    expect(page).to have_css(".yn-tab[aria-current='page']", text: "Activity", wait: 5)
     expect(page).to have_current_path(property_activity_path(property))
     expect(page).to have_button("Apply")
 

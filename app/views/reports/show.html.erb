@@ -2,35 +2,31 @@
 
 <div class="max-w-5xl">
   <header class="mb-6">
-    <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-      <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Reports</h1>
-    </div>
+    <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Reports</h1>
+    <p class="mt-1 text-sm text-stone-500">Schedule E preparation by property and tax year.</p>
   </header>
 
-  <div class="space-y-4">
-    <h2 class="text-sm font-semibold border-b border-stone-200 pb-2">Schedule E tax reporting by property</h2>
-    <% if @properties.any? %>
-      <table class="yn-table">
-        <thead>
-          <tr>
-            <th scope="col">Property</th>
-            <th scope="col">Schedule E</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @properties.each do |property| %>
-            <tr>
-              <td><%= property.address %></td>
-              <td><%= link_to "View Schedule E", schedule_e_property_path(property), class: "yn-link" %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <div class="yn-empty">
-        <p class="yn-empty-title">No properties found</p>
-        <p class="yn-empty-body">Add a property to generate Schedule E tax reports.</p>
-      </div>
-    <% end %>
-  </div>
+  <%= form_with url: reports_path, method: :get, data: { controller: "autosubmit" }, class: "mb-6" do |f| %>
+    <%= f.label :year, "Tax year", class: "yn-label", for: "rep-year" %>
+    <%= f.select :year,
+          options_for_select(@active_years, @year),
+          {},
+          class: "yn-select w-32",
+          id: "rep-year",
+          data: { action: "change->autosubmit#submit" } %>
+  <% end %>
+
+  <% if @statuses.any? %>
+    <div class="yn-surface divide-y divide-stone-200 max-w-3xl">
+      <% @statuses.each do |status| %>
+        <%= render "reports/property_status", status: status, year: @year %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="yn-empty">
+      <p class="yn-empty-title">No properties found</p>
+      <p class="yn-empty-body">Add a property to your portfolio to generate Schedule E tax reports.</p>
+      <%= link_to "Add property", new_property_path, class: "yn-btn yn-btn-primary yn-btn-sm mt-3" %>
+    </div>
+  <% end %>
 </div>

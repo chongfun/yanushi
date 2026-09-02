@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
   allow_unauthenticated_access only: %i[ new create ]
-  rate_limit to: 10, within: 3.minutes, only: :create, with: -> {
+  rate_limit to: 10, within: 3.minutes, only: :create, unless: -> { Rails.env.test? }, with: -> {
     # @type self: ApplicationController
     redirect_to new_session_path, alert: "Try again later."
   }

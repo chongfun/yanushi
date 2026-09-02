@@ -1,21 +1,97 @@
 <% content_for :title, "Money" %>
 
 <div class="max-w-5xl">
-  <header class="mb-6">
-    <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-      <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Money</h1>
-    </div>
-    <nav class="yn-tabs mt-4" aria-label="Money sections">
-      <%= link_to "Receipts", receipts_path, class: "yn-tab" %>
-      <%= link_to "Expenses", expenses_path, class: "yn-tab" %>
-    </nav>
-  </header>
+  <%= render "money/header", current_tab: :activity %>
 
-  <div class="space-y-4">
-    <p class="text-sm text-stone-500">Track and manage financial activity across your portfolio.</p>
-    <div class="flex flex-wrap gap-3">
-      <%= link_to "View Receipts", receipts_path, class: "yn-btn yn-btn-primary" %>
-      <%= link_to "View Expenses", expenses_path, class: "yn-btn yn-btn-secondary" %>
+  <!-- GET filters -->
+  <%= form_with url: money_path, method: :get, class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
+    <div>
+      <%= f.label :property_id, "Property", class: "yn-label", for: "ma-property" %>
+      <%= f.select :property_id,
+            options_from_collection_for_select(@properties, :id, :address, @selected_property_id),
+            { include_blank: "All properties" },
+            class: "yn-select w-52",
+            id: "ma-property" %>
     </div>
-  </div>
+    <div>
+      <%= f.label :year, "Year", class: "yn-label", for: "ma-year" %>
+      <%= f.select :year,
+            options_for_select(@active_years, @activity_result.date_range.year),
+            {},
+            class: "yn-select w-32",
+            id: "ma-year" %>
+    </div>
+    <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
+    <% if @selected_property_id.present? || params[:year].present? || params[:from].present? || params[:through].present? %>
+      <%= link_to "Clear filters", money_path, class: "yn-btn yn-btn-ghost text-sm" %>
+    <% end %>
+  <% end %>
+
+  <% if @activity_result.rows.any? %>
+    <table class="yn-table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Event</th>
+          <th scope="col">Property</th>
+          <th scope="col" class="text-right tabular-nums">Amount</th>
+          <th scope="col"><span class="sr-only">Audit</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @activity_result.rows.each do |row| %>
+          <tr>
+            <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
+            <td>
+              <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
+              <%= link_to target_path, class: "yn-row-link" do %>
+                <%= row.label %>
+                <% if row.description.present? && row.description != row.label %>
+                  <span class="text-stone-400">&middot; <%= row.description %></span>
+                <% end %>
+              <% end %>
+              <% if row.corrected? %>
+                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
+              <% elsif row.voided? %>
+                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-danger"></span>Voided</span>
+              <% end %>
+            </td>
+            <td class="text-stone-500 whitespace-nowrap"><%= row.property&.address || "—" %></td>
+            <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
+              <%= signed_money_cents(row.amount_cents) %>
+            </td>
+            <td class="text-right whitespace-nowrap">
+              <%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @activity_result.total_pages > 1 %>
+      <% start_idx = ((@activity_result.page - 1) * @activity_result.per_page) + 1 %>
+      <% end_idx = [@activity_result.page * @activity_result.per_page, @activity_result.total_count].min %>
+      <nav class="flex items-center justify-between mt-4 max-w-5xl" aria-label="Pagination">
+        <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @activity_result.total_count %></span></p>
+        <div class="flex gap-2">
+          <% if @activity_result.page > 1 %>
+            <%= link_to "Previous", money_path(page: @activity_result.page - 1, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <% end %>
+          <% if @activity_result.page < @activity_result.total_pages %>
+            <%= link_to "Next", money_path(page: @activity_result.page + 1, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <% end %>
+        </div>
+      </nav>
+    <% end %>
+  <% else %>
+    <div class="yn-empty">
+      <p class="yn-empty-title">No financial activity found</p>
+      <% if @selected_property_id.present? || params[:year].present? %>
+        <p class="yn-empty-body">No transactions match the selected filters.</p>
+        <%= link_to "Clear filters", money_path, class: "yn-btn yn-btn-secondary yn-btn-sm mt-3" %>
+      <% else %>
+        <p class="yn-empty-body">Financial events will appear here as payments and expenses are recorded.</p>
+      <% end %>
+    </div>
+  <% end %>
 </div>

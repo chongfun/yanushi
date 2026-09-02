@@ -3,9 +3,15 @@ class ReceiptsController < ApplicationController
   before_action :set_receipt, only: %i[show correction correct void]
 
   def index
-    @receipts = authenticated_user.receipts
-                                  .includes(:payer_party, tenancy: { rentable_unit: :property })
-                                  .order(received_on: :desc, created_at: :desc)
+    page = [ params[:page].to_i, 1 ].max
+    @per_page = 25
+    scope = authenticated_user.receipts
+                              .includes(:payer_party, :superseded_by, :superseded_receipt, :imported_transaction, tenancy: { rentable_unit: :property })
+                              .order(received_on: :desc, created_at: :desc)
+    @total_count = scope.count
+    @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
+    @page = @total_pages > 0 ? [ page, @total_pages ].min : page
+    @receipts = scope.limit(@per_page).offset((@page - 1) * @per_page)
   end
 
   def show

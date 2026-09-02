@@ -1427,5 +1427,72 @@ RSpec.describe TaxReporting::ScheduleEQuery do
       expect(res.total_expenses_cents).to eq(8_000)
       expect(res.review_items.first.resolved?).to be true
     end
+
+    it "handles nil property and default tax year" do
+      expect(described_class.call(property: nil).status).to eq(:tax_profile_required)
+      expect(described_class.call(property: property).tax_year).to eq(Date.current.year)
+    end
+
+    it "flags multiple unmapped expense accounts in a single journal entry" do
+      expense = create(:expense, property: property, expense_kind: "other", amount_cents: 12_000)
+      entry = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(2026, 9, 1),
+        description: "Multi-unmapped expense",
+        event_type: "expense_posted",
+        source: expense
+      )
+      unmapped1 = create(:account, user: user, name: "Misc A", key: "expense_misc_a", account_type: "expense")
+      unmapped2 = create(:account, user: user, name: "Misc B", key: "expense_misc_b", account_type: "expense")
+      create(:posting, journal_entry: entry, account: unmapped1, property: property, amount_cents: 6_000)
+      create(:posting, journal_entry: entry, account: unmapped2, property: property, amount_cents: 6_000)
+
+      res = described_class.call(property: property, tax_year: 2026)
+      expect(res.review_items.size).to eq(2)
+      expect(res.review_items.first.reason).to include("multiple unmapped expense accounts")
+    end
+
+    it "handles receipt_posted with non-Receipt source and cross-year reversal of unresolved event" do
+      entry = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(2026, 4, 1),
+        description: "Direct receipt posted",
+        event_type: "receipt_posted",
+        source: property
+      )
+      create(:posting, journal_entry: entry, account: user.accounts.find_by!(key: "cash"), property: property, amount_cents: 10_000)
+
+      res = described_class.call(property: property, tax_year: 2026)
+      item = res.review_items.find { |i| i.id == entry.id }
+      expect(item.reason).to include("Unrecognized source type 'Property' for receipt event")
+
+      # Cross-year reversal of unresolved 2025 event
+      orig_2025 = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(2025, 11, 1),
+        description: "2025 unclassified event",
+        event_type: "custom_unclassified_2025",
+        source: property
+      )
+      create(:posting, journal_entry: orig_2025, account: user.accounts.find_by!(key: "cash"), property: property, amount_cents: 5_000)
+
+      rev_2026 = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(2026, 2, 1),
+        description: "Reversal of 2025 event",
+        event_type: "reversal",
+        reversal_of: orig_2025,
+        source: property
+      )
+      create(:posting, journal_entry: rev_2026, account: user.accounts.find_by!(key: "cash"), property: property, amount_cents: -5_000)
+
+      res2 = described_class.call(property: property, tax_year: 2026)
+      item_rev = res2.review_items.find { |i| i.id == rev_2026.id }
+      expect(item_rev.reason).to include("Reversal of unresolved 2025 event")
+    end
   end
 end

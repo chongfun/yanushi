@@ -48,6 +48,6 @@
             <%= button_to "Delete property…", property_path(@property), method: :delete, data: { turbo_confirm: "Are you sure you want to delete this property?" }, class: "yn-menu-item yn-menu-item-danger" %>
           </div>
         </details>
-        <%= link_to "Record expense", new_property_expense_path(@property), class: (current_tab == :tax ? "yn-btn yn-btn-secondary" : "yn-btn yn-btn-primary") %>
+        <%= link_to "Record expense", new_property_expense_path(@property), data: { turbo_frame: "modal-frame" }, class: (current_tab == :tax ? "yn-btn yn-btn-secondary" : "yn-btn yn-btn-primary") %>
       <% },
       tabs: render("shared/tabs", items: tab_items, aria_label: "Property sections") %>

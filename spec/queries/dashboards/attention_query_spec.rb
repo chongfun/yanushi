@@ -128,6 +128,15 @@ RSpec.describe Dashboards::AttentionQuery do
       expect(failed_item.description).to eq("statement.pdf · Processing failed")
     end
 
+    it "handles imported transaction with nil amount_cents" do
+      source_doc = create(:source_document, user: user, status: "success")
+      create(:imported_transaction, user: user, source_document: source_doc, status: "unmatched", amount_cents: nil, occurred_on: Date.new(2026, 8, 21), payer_name: "John Doe")
+
+      items = described_class.call(user: user)
+      inbox_item = items.find { |i| i.kind == :inbox_review }
+      expect(inbox_item.description).to eq("from John Doe, Aug 21")
+    end
+
     it "surfaces positive balance from a terminated/past tenancy" do
       Charges::CreateService.call(
         tenancy: tenancy,

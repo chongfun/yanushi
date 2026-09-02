@@ -31,11 +31,13 @@ RSpec.describe "Dashboards", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
+    expect(page).to have_button("Sign out")
   end
 
   it "summarizes portfolio state and renders actionable items on Overview" do
     visit root_path
 
+    expect(page).to have_button("Sign out")
     expect(page).to have_text("Overview")
     expect(page).to have_text("999 Dashboard Ave")
 

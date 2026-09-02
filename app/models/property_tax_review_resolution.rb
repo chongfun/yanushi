@@ -10,6 +10,8 @@ class PropertyTaxReviewResolution < ApplicationRecord
 
   enum :treatment, TREATMENTS.index_by(&:itself), prefix: false, validate: true
 
+  normalizes :schedule_e_category, with: ->(c) { c.presence }
+
   validates :tax_year, presence: true,
                        numericality: {
                          only_integer: true,

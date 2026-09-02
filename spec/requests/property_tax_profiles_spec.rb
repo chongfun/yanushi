@@ -18,6 +18,10 @@ RSpec.describe "PropertyTaxProfiles", type: :request do
       expect(response.body).to include("Choose Schedule E property type...")
       # Must not preselect multi_family_residence or any type from physical property type
       expect(response.body).not_to include('selected="selected"')
+
+      # When no tax_year param provided, defaults to current year
+      get new_property_tax_profile_path(property)
+      expect(response).to have_http_status(:ok)
     end
 
     it "returns 404 for unowned property" do
@@ -87,6 +91,20 @@ RSpec.describe "PropertyTaxProfiles", type: :request do
       create(:property_tax_profile, property: property, tax_year: 2026)
 
       # Simulate race condition where validation passed but database unique constraint triggered
+      allow_any_instance_of(PropertyTaxProfile).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
+
+      post property_tax_profiles_path(property), params: {
+        property_tax_profile: {
+          tax_year: 2026,
+          schedule_e_property_type: "single_family_residence"
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Tax year has already been taken")
+    end
+
+    it "handles RecordNotUnique when existing is nil" do
       allow_any_instance_of(PropertyTaxProfile).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
 
       post property_tax_profiles_path(property), params: {

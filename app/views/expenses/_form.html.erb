@@ -1,73 +1,83 @@
-<%= form_with(model: @nested_property ? [@nested_property, expense] : expense, local: true) do |form| %>
-  <% if expense.errors.any? %>
-    <div class="alert alert-error shadow-lg mb-6 text-error-content">
-      <div>
-        <h3 class="font-bold"><%= pluralize(expense.errors.count, "error") %> prohibited this expense from being saved:</h3>
-        <ul class="list-disc list-inside mt-2 text-sm">
-          <% expense.errors.each do |error| %>
-            <li><%= error.full_message %></li>
-          <% end %>
-        </ul>
-      </div>
+<% form_context = local_assigns[:form_context] || :standalone %>
+<% is_dialog = form_context == :dialog %>
+<% nested_prop = local_assigns[:nested_property] || @nested_property %>
+<% prop_list = local_assigns[:properties] || @properties || [] %>
+
+<%= form_with(model: nested_prop ? [nested_prop, expense] : expense,
+              class: "space-y-4",
+              data: { turbo: true }) do |form| %>
+  <% if expense.errors.any? || flash[:alert].present? %>
+    <div class="yn-alert yn-alert-danger" role="alert">
+      <%= flash[:alert].presence || expense.errors.full_messages.to_sentence %>
     </div>
   <% end %>
 
-  <% if @nested_property %>
-    <%= form.hidden_field :property_id, value: @nested_property.id %>
-    <div class="form-control w-full mb-4">
-      <label class="label font-semibold">Property</label>
-      <div class="input input-bordered w-full bg-base-200 flex items-center font-medium">
-        <%= @nested_property.address %>
+  <% if nested_prop %>
+    <%= form.hidden_field :property_id, value: nested_prop.id %>
+    <div>
+      <label class="yn-label">Property</label>
+      <div class="yn-input bg-stone-100 text-stone-700 flex items-center font-medium">
+        <%= nested_prop.address %>
       </div>
     </div>
   <% else %>
-    <div class="form-control w-full mb-4">
-      <%= form.label :property_id, "Property", class: "label font-semibold" %>
-      <%= form.collection_select :property_id, @properties, :id, :address, { prompt: "Select Property" }, { class: "select select-bordered w-full", required: true } %>
+    <div>
+      <%= form.label :property_id, "Property", class: "yn-label" %>
+      <%= form.collection_select :property_id, prop_list, :id, :address,
+            { prompt: "Select Property" },
+            { class: "yn-select w-full", required: true } %>
     </div>
   <% end %>
 
-  <div class="form-control w-full mb-4">
-    <%= form.label :rentable_unit_id, "Unit (Optional)", class: "label font-semibold" %>
-    <% eligible_units = @nested_property ? @nested_property.rentable_units : @properties.flat_map(&:rentable_units) %>
-    <%= form.collection_select :rentable_unit_id, eligible_units, :id, :display_name, { include_blank: "Entire property / No specific unit" }, { class: "select select-bordered w-full" } %>
-  </div>
-
-  <div class="form-control w-full mb-4">
-    <%= form.label :expense_kind, "Category", class: "label font-semibold" %>
-    <%= form.select :expense_kind, Expense::EXPENSE_KINDS.map { |k| [k.titleize, k] }, { prompt: "Select Category" }, { class: "select select-bordered w-full", required: true } %>
-  </div>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-    <div class="form-control w-full">
-      <%= form.label :amount, "Amount ($)", class: "label font-semibold" %>
-      <%= form.number_field :amount, step: "0.01", min: "0.01", class: "input input-bordered w-full", placeholder: "0.00", required: true %>
-    </div>
-
-    <div class="form-control w-full">
-      <%= form.label :paid_on, "Date Paid", class: "label font-semibold" %>
-      <%= form.date_field :paid_on, value: (expense.paid_on || Date.current), class: "input input-bordered w-full", required: true %>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-    <div class="form-control w-full">
-      <%= form.label :vendor_name, "Vendor / Payee", class: "label font-semibold" %>
-      <%= form.text_field :vendor_name, class: "input input-bordered w-full", placeholder: "e.g. City Power, Home Depot" %>
-    </div>
-
-    <div class="form-control w-full">
-      <%= form.label :external_reference, "Invoice / Receipt #", class: "label font-semibold" %>
-      <%= form.text_field :external_reference, class: "input input-bordered w-full", placeholder: "e.g. INV-1002" %>
-    </div>
-  </div>
-
-  <div class="form-control w-full mb-6">
-    <%= form.label :description, class: "label font-semibold" %>
-    <%= form.text_area :description, rows: 3, class: "textarea textarea-bordered w-full", placeholder: "Notes or description of the expense..." %>
+  <div>
+    <%= form.label :rentable_unit_id, "Unit (Optional)", class: "yn-label" %>
+    <% eligible_units = nested_prop ? nested_prop.rentable_units : prop_list.flat_map(&:rentable_units) %>
+    <%= form.collection_select :rentable_unit_id, eligible_units, :id, :display_name,
+          { include_blank: "Entire property / No specific unit" },
+          { class: "yn-select w-full" } %>
   </div>
 
   <div>
-    <%= form.submit "Record Expense", class: "btn btn-primary w-full" %>
+    <%= form.label :expense_kind, "Category", class: "yn-label" %>
+    <%= form.select :expense_kind,
+          Expense::EXPENSE_KINDS.map { |k| [k.titleize, k] },
+          { prompt: "Select Category" },
+          { class: "yn-select w-full", required: true } %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= form.label :amount, "Amount ($)", class: "yn-label" %>
+      <%= form.number_field :amount, step: "0.01", min: "0.01", class: "yn-input tabular-nums w-full", placeholder: "0.00", required: true %>
+    </div>
+    <div>
+      <%= form.label :paid_on, "Date Paid", class: "yn-label" %>
+      <%= form.date_field :paid_on, value: (expense.paid_on || Date.current), class: "yn-input w-full", required: true %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= form.label :vendor_name, "Vendor / Payee", class: "yn-label" %>
+      <%= form.text_field :vendor_name, class: "yn-input w-full", placeholder: "e.g. City Power, Home Depot" %>
+    </div>
+    <div>
+      <%= form.label :external_reference, "Invoice / Receipt #", class: "yn-label" %>
+      <%= form.text_field :external_reference, class: "yn-input w-full", placeholder: "e.g. INV-1002" %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :description, "Description", class: "yn-label" %>
+    <%= form.text_area :description, rows: 2, class: "yn-textarea w-full", placeholder: "Notes or description of the expense..." %>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-2">
+    <% if is_dialog %>
+      <button type="button" class="yn-btn yn-btn-ghost" data-action="click->modal#close">Cancel</button>
+    <% else %>
+      <%= link_to "Cancel", (@nested_property ? property_activity_path(@nested_property) : expenses_path), class: "yn-btn yn-btn-ghost" %>
+    <% end %>
+    <%= form.submit "Record Expense", class: "yn-btn yn-btn-primary" %>
   </div>
 <% end %>

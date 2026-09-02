@@ -1,39 +1,75 @@
-<% content_for :title, "Payments & Receipts" %>
+<% content_for :title, "Money" %>
 
-<div class="flex justify-between items-center mb-6">
-  <div>
-    <h1 class="text-3xl font-bold">Payments & Receipts</h1>
-    <p class="text-xs text-base-content/60">Historical record of all payments and ledger credits</p>
-  </div>
-  <%= link_to "＋ Record Payment", new_receipt_path, class: "btn btn-primary" %>
-</div>
+<div class="max-w-5xl">
+  <%= render "money/header", current_tab: :receipts %>
 
-<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>Tenancy / Property</th>
-        <th>Payer</th>
-        <th>Payment Date</th>
-        <th>Amount</th>
-        <th>Method</th>
-        <th>Reference</th>
-        <th>Status</th>
-        <th class="text-right">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="receipts">
-      <% if @receipts.any? %>
-        <% @receipts.each do |receipt| %>
-          <%= render receipt %>
-        <% end %>
-      <% else %>
+  <% if @receipts.any? %>
+    <table class="yn-table">
+      <thead>
         <tr>
-          <td colspan="8" class="text-center py-8 text-base-content/60">
-            No payment receipts recorded yet.
-          </td>
+          <th scope="col">Date</th>
+          <th scope="col">Payer</th>
+          <th scope="col">Tenancy</th>
+          <th scope="col">Method</th>
+          <th scope="col" class="text-right tabular-nums">Amount</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @receipts.each do |receipt| %>
+          <tr id="<%= dom_id(receipt) %>">
+            <td class="whitespace-nowrap text-stone-500 w-20"><%= receipt.received_on.strftime("%b %-d") %></td>
+            <td>
+              <% if receipt.voided? %>
+                <span class="text-stone-500 line-through"><%= receipt.payer_party&.display_name || "—" %></span>
+                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span>
+                <% if receipt.superseded_by.present? %>
+                  <span class="block text-[13px] text-stone-500">
+                    <%= link_to "Corrected #{receipt.superseded_by.received_on.strftime('%b %-d')}", receipt_path(receipt.superseded_by), class: "yn-link" %><% if receipt.void_reason.present? %> — <%= receipt.void_reason %><% end %>
+                  </span>
+                <% elsif receipt.void_reason.present? %>
+                  <span class="block text-[13px] text-stone-500"><%= receipt.void_reason %></span>
+                <% end %>
+              <% else %>
+                <%= link_to (receipt.payer_party&.display_name || "—"), receipt_path(receipt), class: "yn-row-link" %>
+              <% end %>
+            </td>
+            <td class="text-stone-500">
+              <%= receipt.tenancy.property.address %> — <%= receipt.tenancy.rentable_unit&.name || "Tenancy" %>
+            </td>
+            <td class="text-stone-500">
+              <%= receipt.payment_method.titleize %>
+              <% if receipt.imported_transaction.present? %>
+                <span class="text-stone-400">· imported</span>
+              <% end %>
+            </td>
+            <td class="text-right tabular-nums whitespace-nowrap <%= receipt.voided? ? 'text-stone-400 line-through' : '' %>">
+              <%= format_money_cents(receipt.amount_cents) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @total_pages > 1 %>
+      <% start_idx = ((@page - 1) * @per_page) + 1 %>
+      <% end_idx = [@page * @per_page, @total_count].min %>
+      <nav class="flex items-center justify-between mt-4 max-w-5xl" aria-label="Pagination">
+        <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @total_count %></span></p>
+        <div class="flex gap-2">
+          <% if @page > 1 %>
+            <%= link_to "Previous", receipts_path(page: @page - 1), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <% end %>
+          <% if @page < @total_pages %>
+            <%= link_to "Next", receipts_path(page: @page + 1), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <% end %>
+        </div>
+      </nav>
+    <% end %>
+  <% else %>
+    <div class="yn-empty">
+      <p class="yn-empty-title">No receipts recorded yet</p>
+      <p class="yn-empty-body">Record payment receipts from your tenants to track income.</p>
+      <%= link_to "Record receipt", new_receipt_path, class: "yn-btn yn-btn-primary yn-btn-sm mt-3" %>
+    </div>
+  <% end %>
 </div>

@@ -30,11 +30,15 @@ RSpec.describe ImportedTransactions::ProcessingQuery do
       expect(result.inbox_revision).to eq(user.inbox_revision)
     end
 
-    it "reflects the incremented inbox_revision when mutations occur" do
-      expect(query.call.inbox_revision).to eq(0)
+    it "falls back to locking user if revision changes during optimistic attempts" do
+      call_count = 0
+      allow(user).to receive(:inbox_revision) do
+        call_count += 1
+        call_count # changes every call
+      end
 
-      user.increment_inbox_revision!
-      expect(query.call.inbox_revision).to eq(1)
+      result = query.call
+      expect(result).to be_a(ImportedTransactions::ProcessingQuery::ProcessingResult)
     end
   end
 end

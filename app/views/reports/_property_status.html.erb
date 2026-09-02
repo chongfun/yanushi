@@ -1,0 +1,76 @@
+<%
+  property = status.property
+  year = local_assigns[:year] || @year
+  variant = local_assigns[:variant] || :reports_row
+  pdf_available = local_assigns.key?(:pdf_available) ? local_assigns[:pdf_available] : ScheduleEGenerator.template_available?(year)
+%>
+
+<% if variant == :property_tax_row %>
+  <div class="flex items-center gap-4 px-4 py-3.5" id="property_<%= property.id %>_schedule_e_status">
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-medium m-0">Schedule E, <%= year %></p>
+      <p class="text-sm m-0">
+        <% case status.state %>
+        <% when :needs_review %>
+          <span class="yn-status yn-status-sm">
+            <span class="yn-dot yn-dot-warn"></span>
+            <%= status.unresolved_review_count == 1 ? "1 item needs review" : "#{status.unresolved_review_count} items need review" %>
+          </span>
+        <% when :ready %>
+          <span class="yn-status yn-status-sm">
+            <span class="yn-dot yn-dot-ok"></span>
+            Ready &middot; <%= signed_money_cents(status.net_income_cents) %>
+          </span>
+        <% end %>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <% case status.state %>
+      <% when :needs_review %>
+        <%= link_to "Review Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+      <% when :ready %>
+        <% if pdf_available %>
+          <%= link_to "View Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
+          <%= link_to "Download PDF", schedule_e_pdf_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap", data: { turbo: false } %>
+        <% else %>
+          <span class="text-xs text-stone-500 whitespace-nowrap">PDF export isn’t available for <%= year %>.</span>
+          <%= link_to "View Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="flex items-center gap-4 px-4 py-4" id="property_<%= property.id %>_schedule_e_status">
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-medium m-0"><%= property.address %></p>
+      <p class="text-sm m-0 mt-0.5">
+        <% case status.state %>
+        <% when :needs_review %>
+          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span><%= status.unresolved_review_count == 1 ? "1 item needs review" : "#{status.unresolved_review_count} items need review" %></span>
+          <span class="text-stone-400"> · profile configured</span>
+        <% when :needs_profile %>
+          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Needs tax profile</span>
+          <span class="text-stone-400"> · Schedule E can’t be prepared yet</span>
+        <% when :ready %>
+          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Ready</span>
+          <span class="text-stone-400"> · net income </span>
+          <span class="tabular-nums text-stone-500"><%= signed_money_cents(status.net_income_cents) %></span>
+        <% end %>
+      </p>
+    </div>
+
+    <% case status.state %>
+    <% when :needs_review %>
+      <%= link_to "Review Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+    <% when :needs_profile %>
+      <%= link_to "Set up profile", new_property_tax_profile_path(property, tax_year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
+    <% when :ready %>
+      <div class="flex gap-2 shrink-0">
+        <%= link_to "View", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
+        <% if pdf_available %>
+          <%= link_to "Download PDF", schedule_e_pdf_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap", data: { turbo: false } %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -18,7 +18,7 @@ RSpec.describe "Receipts", type: :request do
       create(:receipt, tenancy: tenancy, payer_party: party, user: user, amount_cents: 100_000)
       get receipts_url
       expect(response).to be_successful
-      expect(response.body).to include("Payments &amp; Receipts")
+      expect(response.body).to include("Receipts")
       expect(response.body).to include("Alice Walker")
     end
 

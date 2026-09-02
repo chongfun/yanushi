@@ -11,14 +11,24 @@ RSpec.describe "Reports", type: :request do
       end
 
       it "returns a successful response and lists properties for Schedule E" do
-        property = create(:property, user: user, address: "777 Tax Way")
+        property_unconfigured = create(:property, user: user, address: "777 Tax Way")
+        property_configured = create(:property, user: user, address: "999 Ready Way")
+        create(
+          :property_tax_profile,
+          property: property_configured,
+          tax_year: Date.current.year - 1,
+          schedule_e_property_type: "single_family_residence"
+        )
         other_property = create(:property, user: other_user, address: "888 Other Way")
 
         get reports_url
         expect(response).to be_successful
         expect(response.body).to include("Reports")
         expect(response.body).to include("777 Tax Way")
-        expect(response.body).to include(schedule_e_property_path(property))
+        expect(response.body).to include("Needs tax profile")
+        expect(response.body).to include(new_property_tax_profile_path(property_unconfigured, tax_year: Date.current.year - 1))
+        expect(response.body).to include("999 Ready Way")
+        expect(response.body).to include(schedule_e_property_path(property_configured, year: Date.current.year - 1))
         expect(response.body).not_to include("888 Other Way")
       end
 
@@ -26,6 +36,37 @@ RSpec.describe "Reports", type: :request do
         get reports_url
         expect(response).to be_successful
         expect(response.body).to include("No properties found")
+      end
+
+      it "falls back gracefully to previous year when given an invalid year parameter" do
+        create(:property, user: user, address: "101 Maple St")
+        previous_year = Date.current.year - 1
+
+        # Non-numeric string
+        get reports_url, params: { year: "invalid" }
+        expect(response).to be_successful
+        expect(response.body).to include("selected=\"selected\" value=\"#{previous_year}\"")
+
+        # Out-of-range year
+        get reports_url, params: { year: "99999" }
+        expect(response).to be_successful
+        expect(response.body).to include("selected=\"selected\" value=\"#{previous_year}\"")
+
+        # Distant past
+        get reports_url, params: { year: "1800" }
+        expect(response).to be_successful
+        expect(response.body).to include("selected=\"selected\" value=\"#{previous_year}\"")
+      end
+
+      it "renders status rows for a valid explicit year parameter" do
+        property = create(:property, user: user, address: "202 Pine St")
+        create(:property_tax_profile, property: property, tax_year: 2024, schedule_e_property_type: "single_family_residence")
+
+        get reports_url, params: { year: 2024 }
+        expect(response).to be_successful
+        expect(response.body).to include("selected=\"selected\" value=\"2024\"")
+        expect(response.body).to include("202 Pine St")
+        expect(response.body).to include("Ready")
       end
     end
 

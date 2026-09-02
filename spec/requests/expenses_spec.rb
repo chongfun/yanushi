@@ -112,6 +112,25 @@ RSpec.describe "Expenses", type: :request do
       expect(response).to redirect_to(property_activity_path(property))
     end
 
+    it "creates nested expense via Turbo Stream and updates property summary/activity" do
+      expect {
+        post property_expenses_url(property, format: :turbo_stream), params: {
+          expense: {
+            amount: "100.00",
+            expense_kind: "repairs",
+            description: "Faucet",
+            paid_on: Date.today
+          }
+        }
+      }.to change(Expense, :count).by(1)
+
+      expect(response).to be_successful
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include('action="close_modal"')
+      expect(response.body).to include('target="property_summary"')
+      expect(response.body).to include('target="property_recent_activity"')
+    end
+
     it "handles nested expense validation failure with unprocessable content" do
       expect {
         post property_expenses_url(property), params: {

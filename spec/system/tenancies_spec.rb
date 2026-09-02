@@ -36,7 +36,7 @@ RSpec.describe "Tenancies", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password"
     click_on "Sign in"
-    expect(page).to have_text("Overview")
+    expect(page).to have_button("Sign out")
   end
 
   it "creates a month-to-month tenancy and displays its details" do
@@ -345,7 +345,7 @@ RSpec.describe "Tenancies", type: :system do
     page.execute_script("document.querySelector('form#receipt-form').requestSubmit()")
 
     expect(page).to have_no_css("dialog#modal[open]")
-    expect(page.evaluate_script("document.activeElement.id")).to eq("tenancy_balance")
+    expect(page).to have_css("#tenancy_balance:focus")
     within("#tenancy_balance") do
       expect(page).to have_content("$0.00")
       expect(page).to have_content("settled")

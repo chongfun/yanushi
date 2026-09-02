@@ -1,0 +1,35 @@
+<%
+  template_available = ScheduleEGenerator.template_available?(@year)
+  unresolved_count = @schedule_e_result.unresolved_review_items.size
+  is_ready = @tax_profile.present? && unresolved_count.zero? && template_available
+%>
+
+<div id="schedule_e_export_block">
+  <div class="flex items-center gap-2" id="schedule_e_export">
+    <% if @tax_profile.present? %>
+      <%= link_to "Edit tax profile", edit_property_tax_profile_path(@property, @tax_profile, year: @year), class: "yn-btn yn-btn-secondary" %>
+    <% else %>
+      <%= link_to "Set up tax profile", new_property_tax_profile_path(@property, tax_year: @year), class: "yn-btn yn-btn-secondary" %>
+    <% end %>
+
+    <% if is_ready %>
+      <%= link_to "Download PDF", schedule_e_pdf_property_path(@property, year: @year), class: "yn-btn yn-btn-primary", data: { turbo: false } %>
+    <% else %>
+      <button type="button" class="yn-btn yn-btn-primary opacity-50 cursor-not-allowed" disabled aria-disabled="true">Download PDF</button>
+    <% end %>
+  </div>
+
+  <% unless is_ready %>
+    <div class="yn-alert yn-alert-warn mt-4 mb-8" role="status">
+      <% if @tax_profile.blank? %>
+        <span>PDF export is unavailable — <strong>tax profile</strong> must be configured for <%= @year %> before exporting.</span>
+      <% elsif unresolved_count.positive? %>
+        <span>PDF export is unavailable — <strong><%= pluralize(unresolved_count, "review item") %></strong> below still need decisions.</span>
+      <% elsif !template_available %>
+        <span>PDF export is unavailable — Schedule E PDF template for <%= @year %> is not yet available; view the projected worksheet below.</span>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="mb-8"></div>
+  <% end %>
+</div>

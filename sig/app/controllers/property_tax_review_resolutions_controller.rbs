@@ -1,6 +1,11 @@
 class PropertyTaxReviewResolutionsController < ApplicationController
   @property: Property
   @resolution: PropertyTaxReviewResolution
+  @year: Integer
+  @schedule_e_result: TaxReporting::ScheduleEResult
+  @tax_profile: PropertyTaxProfile?
+  @form_definition: TaxReporting::ScheduleEFormDefinition
+  @active_years: Array[Integer]
 
   def create: () -> void
   def destroy: () -> void
@@ -8,5 +13,6 @@ class PropertyTaxReviewResolutionsController < ApplicationController
   private
 
   def set_property: () -> Property
+  def parse_return_to_year: (default_year: Integer | String) -> Integer
   def resolution_params: () -> ActionController::Parameters
 end

@@ -262,18 +262,18 @@ RSpec.describe "Properties", type: :request do
       create(:property_tax_profile, property: property, tax_year: 2026, schedule_e_property_type: "multi_family_residence")
       get schedule_e_property_url(property, year: 2026)
       expect(response).to be_successful
-      expect(response.body).to include("Schedule E Worksheet")
-      expect(response.body).to include("2 — Multi-Family Residence")
-      expect(response.body).to include("Part I — Income")
-      expect(response.body).to include("Part I — Expenses")
+      expect(response.body).to include("Schedule E — 2026")
+      expect(response.body).to include("Multi family residence")
+      expect(response.body).to include("Projected Schedule E")
+      expect(response.body).to include("Rents received")
       expect(response.body).to include("Not tracked or computed by Yanushi")
     end
 
     it "shows prompt to configure tax profile when not configured for requested year" do
       get schedule_e_property_url(property, year: 2024)
       expect(response).to be_successful
-      expect(response.body).to include("Tax Profile Required")
-      expect(response.body).to include("Configure tax classification now")
+      expect(response.body).to include("Needs tax profile")
+      expect(response.body).to include(new_property_tax_profile_path(property, tax_year: 2024))
     end
 
     it "redirects with alert on malformed year=garbage without mixing year labels and accounting data" do
@@ -334,10 +334,11 @@ RSpec.describe "Properties", type: :request do
 
       get schedule_e_property_url(property, year: 2026)
       expect(response).to be_successful
-      expect(response.body).to include("Reversal ##{rev_entry.id}")
-      expect(response.body).to include("Reversing")
-      expect(response.body).to include("journal_entry_id%5D=#{orig_entry.id}")
-      expect(response.body).to include("tax_year%5D=2025")
+      expect(response.body).to include("Reversal of unresolved 2025 event")
+      expect(response.body).to include("name=\"property_tax_review_resolution[journal_entry_id]\"")
+      expect(response.body).to include("value=\"#{orig_entry.id}\"")
+      expect(response.body).to include("name=\"property_tax_review_resolution[tax_year]\"")
+      expect(response.body).to include("value=\"2025\"")
 
       # Click "Include in Rents" from the 2026 worksheet
       post property_tax_review_resolutions_path(property), params: {
@@ -353,10 +354,9 @@ RSpec.describe "Properties", type: :request do
       # Follow redirect and verify 2026 worksheet is now resolved with -$500 on Line 3 and retained review item
       follow_redirect!
       expect(response.body).to include("-$500.00")
-      expect(response.body).to include("All items resolved")
-      expect(response.body).to include("Included in Line 3 Rents")
-      expect(response.body).to include("Remove")
-      expect(response.body).not_to include("Needs Review")
+      expect(response.body).to include("Resolved")
+      expect(response.body).to include("included in Line 3 Rents")
+      expect(response.body).to include("Undo")
     end
 
     it "returns 404 for unowned property" do

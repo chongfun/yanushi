@@ -100,19 +100,7 @@ class ImportedTransactionsController < ApplicationController
 
     if turbo_frame_request? && turbo_frame_request_id == "inbox_review"
       render partial: "imported_transactions/review_detail",
-             locals: {
-               transaction: @transaction,
-               review_context: :inbox,
-               parties: @parties,
-               tenancies: @tenancies,
-               party_tenancies_map: @party_tenancies_map,
-               tenancy_parties_map: @tenancy_parties_map,
-               processing_count: @processing_count,
-               failed_count: @failed_count,
-               review_count: @review_count,
-               inbox_revision: @inbox_revision,
-               focus_on_connect: true
-             }
+             locals: review_detail_locals(@transaction, focus_on_connect: true)
       return
     end
 
@@ -162,19 +150,7 @@ class ImportedTransactionsController < ApplicationController
           render turbo_stream: turbo_stream.replace(
             "inbox_review",
             partial: "imported_transactions/review_detail",
-            locals: {
-              transaction: txn,
-              review_context: :inbox,
-              parties: @parties,
-              tenancies: @tenancies,
-              party_tenancies_map: @party_tenancies_map,
-              tenancy_parties_map: @tenancy_parties_map,
-              processing_count: @processing_count,
-              failed_count: @failed_count,
-              review_count: @review_count,
-              inbox_revision: @inbox_revision,
-              focus_on_connect: true
-            }
+            locals: review_detail_locals(txn, focus_on_connect: true)
           ), status: :unprocessable_content
         end
       end
@@ -227,19 +203,7 @@ class ImportedTransactionsController < ApplicationController
           render turbo_stream: turbo_stream.replace(
             "inbox_review",
             partial: "imported_transactions/review_detail",
-            locals: {
-              transaction: txn,
-              review_context: :inbox,
-              parties: @parties,
-              tenancies: @tenancies,
-              party_tenancies_map: @party_tenancies_map,
-              tenancy_parties_map: @tenancy_parties_map,
-              processing_count: @processing_count,
-              failed_count: @failed_count,
-              review_count: @review_count,
-              inbox_revision: @inbox_revision,
-              focus_on_connect: true
-            }
+            locals: review_detail_locals(txn, focus_on_connect: true)
           ), status: :unprocessable_content
         end
       end
@@ -286,19 +250,7 @@ class ImportedTransactionsController < ApplicationController
           render turbo_stream: turbo_stream.replace(
             "inbox_review",
             partial: "imported_transactions/review_detail",
-            locals: {
-              transaction: txn,
-              review_context: :inbox,
-              parties: @parties,
-              tenancies: @tenancies,
-              party_tenancies_map: @party_tenancies_map,
-              tenancy_parties_map: @tenancy_parties_map,
-              processing_count: @processing_count,
-              failed_count: @failed_count,
-              review_count: @review_count,
-              inbox_revision: @inbox_revision,
-              focus_on_connect: true
-            }
+            locals: review_detail_locals(txn, focus_on_connect: true)
           ), status: :unprocessable_content
         end
       end
@@ -306,6 +258,22 @@ class ImportedTransactionsController < ApplicationController
   end
 
   private
+
+    def review_detail_locals(txn, focus_on_connect: true)
+      {
+        transaction: txn,
+        review_context: :inbox,
+        parties: @parties,
+        tenancies: @tenancies,
+        party_tenancies_map: @party_tenancies_map,
+        tenancy_parties_map: @tenancy_parties_map,
+        processing_count: @processing_count,
+        failed_count: @failed_count,
+        review_count: @review_count,
+        inbox_revision: @inbox_revision,
+        focus_on_connect: focus_on_connect
+      }
+    end
 
     def set_transaction
       @transaction = authenticated_user.imported_transactions.find(params[:id])

@@ -4,9 +4,15 @@ class ExpensesController < ApplicationController
   before_action :set_form_data, only: %i[new create correction correct]
 
   def index
-    @expenses = authenticated_user.expenses
-      .includes(:property, :rentable_unit, :superseded_by, :reimbursement_charges)
-      .order(paid_on: :desc, created_at: :desc)
+    page = [ params[:page].to_i, 1 ].max
+    @per_page = 25
+    scope = authenticated_user.expenses
+                              .includes(:property, :rentable_unit, :superseded_by, :superseded_expense, :reimbursement_charges)
+                              .order(paid_on: :desc, created_at: :desc)
+    @total_count = scope.count
+    @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
+    @page = @total_pages > 0 ? [ page, @total_pages ].min : page
+    @expenses = scope.limit(@per_page).offset((@page - 1) * @per_page)
   end
 
   def show
@@ -63,6 +69,17 @@ class ExpensesController < ApplicationController
       respond_to do |format|
         if (nested = @nested_property)
           format.html { redirect_to property_activity_path(nested), notice: "Expense was successfully created." }
+          format.turbo_stream do
+            ytd_range = Accounting::DateRange.new(
+              from: Date.current.beginning_of_year,
+              through: Date.current
+            )
+            @ytd_summary = Accounting::PropertySummaryQuery.call(property: nested, date_range: ytd_range)
+            recent_range = Accounting::DateRange.new(through: Date.current)
+            @recent_activity = Accounting::PropertyLedgerQuery.call(property: nested, date_range: recent_range, limit: 5)
+            @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: nested)
+            render "expenses/create", formats: [ :turbo_stream ]
+          end
         else
           format.html { redirect_to @expense, notice: "Expense was successfully created." }
         end
@@ -74,6 +91,18 @@ class ExpensesController < ApplicationController
 
       respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.update(
+            "modal-frame",
+            partial: "expenses/form",
+            locals: {
+              expense: @expense,
+              form_context: :dialog,
+              nested_property: @nested_property,
+              properties: @properties
+            }
+          ), status: :unprocessable_content
+        end
         format.json { render json: @expense.errors, status: :unprocessable_content }
       end
     end

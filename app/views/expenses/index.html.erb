@@ -1,29 +1,80 @@
+<% content_for :title, "Money" %>
 
-<% content_for :title, "Expenses" %>
+<div class="max-w-5xl">
+  <%= render "money/header", current_tab: :expenses %>
 
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-bold">Expenses</h1>
-  <%= link_to "New expense", new_expense_path, class: "btn btn-primary" %>
+  <% if @expenses.any? %>
+    <table class="yn-table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Property</th>
+          <th scope="col">Expense</th>
+          <th scope="col">Category</th>
+          <th scope="col" class="text-right tabular-nums">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @expenses.each do |expense| %>
+          <tr id="<%= dom_id(expense) %>">
+            <td class="whitespace-nowrap text-stone-500 w-20"><%= expense.paid_on.strftime("%b %-d") %></td>
+            <td class="whitespace-nowrap">
+              <%= expense.property.address %>
+              <% if expense.rentable_unit %>
+                <span class="text-stone-400 text-[13px]">· <%= expense.rentable_unit.name %></span>
+              <% end %>
+            </td>
+            <td>
+              <% if expense.voided? || expense.superseded? %>
+                <span class="text-stone-500 line-through"><%= expense.vendor_name.presence || expense.expense_kind.titleize %></span>
+                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span>
+                <% if expense.superseded_by.present? %>
+                  <span class="block text-[13px] text-stone-500">
+                    <%= link_to "Corrected #{expense.superseded_by.paid_on.strftime('%b %-d')}", expense_path(expense.superseded_by), class: "yn-link" %>
+                  </span>
+                <% end %>
+              <% else %>
+                <%= link_to (expense.vendor_name.presence || expense.expense_kind.titleize), expense_path(expense), class: "yn-row-link" %>
+                <% if expense.reimbursement_charges.any? %>
+                  <span class="block text-[13px] text-stone-500">
+                    <%= link_to "#{format_money_cents(expense.reimbursement_charges.first.amount_cents)} billed to tenant", charge_path(expense.reimbursement_charges.first), class: "yn-link" %>
+                  </span>
+                <% elsif expense.external_reference.present? %>
+                  <span class="block text-[13px] text-stone-500"><%= expense.external_reference %></span>
+                <% elsif expense.description.present? && expense.description != expense.vendor_name %>
+                  <span class="block text-[13px] text-stone-500"><%= expense.description %></span>
+                <% end %>
+              <% end %>
+            </td>
+            <td class="text-stone-500"><%= expense.expense_kind.titleize %></td>
+            <td class="text-right tabular-nums whitespace-nowrap <%= (expense.voided? || expense.superseded?) ? 'text-stone-400 line-through' : '' %>">
+              <%= format_money_cents(expense.amount_cents) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @total_pages > 1 %>
+      <% start_idx = ((@page - 1) * @per_page) + 1 %>
+      <% end_idx = [@page * @per_page, @total_count].min %>
+      <nav class="flex items-center justify-between mt-4 max-w-5xl" aria-label="Pagination">
+        <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @total_count %></span></p>
+        <div class="flex gap-2">
+          <% if @page > 1 %>
+            <%= link_to "Previous", expenses_path(page: @page - 1), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <% end %>
+          <% if @page < @total_pages %>
+            <%= link_to "Next", expenses_path(page: @page + 1), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <% end %>
+        </div>
+      </nav>
+    <% end %>
+  <% else %>
+    <div class="yn-empty">
+      <p class="yn-empty-title">No expenses recorded yet</p>
+      <p class="yn-empty-body">Record property operating expenses to track cash outflows.</p>
+      <%= link_to "Record expense", new_expense_path, class: "yn-btn yn-btn-primary yn-btn-sm mt-3" %>
+    </div>
+  <% end %>
 </div>
-
-<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>Property</th>
-        <th>Category</th>
-        <th>Amount</th>
-        <th>Date</th>
-        <th>Description</th>
-        <th class="text-right">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="expenses">
-      <% @expenses.each do |expense| %>
-        <%= render expense %>
-      <% end %>
-    </tbody>
-  </table>
-</div>
-
-

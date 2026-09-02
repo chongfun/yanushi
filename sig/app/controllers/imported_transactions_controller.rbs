@@ -36,4 +36,5 @@ class ImportedTransactionsController < ApplicationController
   def history_filter_params: () -> Hash[Symbol, untyped]
   def set_form_data: () -> void
   def set_counts_and_form_data: (?load_records: bool, ?updated_transaction_id: Integer?) -> void
+  def review_detail_locals: (ImportedTransaction?, ?focus_on_connect: bool) -> Hash[Symbol, untyped]
 end

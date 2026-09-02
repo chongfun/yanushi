@@ -149,5 +149,27 @@ RSpec.describe ImportedTransactions::HistoryQuery do
       expect(result.total_confirmed_count).to eq(0)
       expect(result.total_pages).to eq(0)
     end
+
+    it "handles search matching payer_username and non-hash filters" do
+      source_doc = create(:source_document, user: user, status: "success")
+      txn = create(:imported_transaction, :confirmed_receipt, user: user, source_document: source_doc, payer_username: "user_handle")
+
+      res = query.call(filters: { search: "user_handle" })
+      expect(res.confirmed_transactions).to eq([ txn ])
+
+      res_nil = query.call(filters: nil)
+      expect(res_nil.filters).to eq({})
+    end
+
+    it "falls back to user lock if revision changes during optimistic attempts" do
+      call_count = 0
+      allow(user).to receive(:inbox_revision) do
+        call_count += 1
+        call_count
+      end
+
+      res = query.call
+      expect(res).to be_a(ImportedTransactions::HistoryQuery::HistoryResult)
+    end
   end
 end

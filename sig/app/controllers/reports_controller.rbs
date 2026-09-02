@@ -1,5 +1,7 @@
 class ReportsController < ApplicationController
-  @properties: Property::ActiveRecord_Relation
+  @year: Integer
+  @active_years: Array[Integer]
+  @statuses: Array[Reports::ScheduleEStatusesQuery::ScheduleEStatus]
 
   def show: () -> untyped
 end
