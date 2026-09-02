@@ -30,12 +30,36 @@ RSpec.describe ImportedTransactions::DestroyService do
       expect(result.failure.code).to eq(:not_found)
     end
 
+    it "rejects deletion when submitted lock_version is stale" do
+      txn = create(:imported_transaction, user: user, source_document: source_document, status: "pending", amount_cents: 100_000)
+      txn.update!(amount_cents: 150_000)
+      expect(txn.lock_version).to eq(1)
+
+      expect {
+        result = described_class.call(user: user, transaction: txn, lock_version: 0)
+        expect(result).to be_failure
+        expect(result.failure.code).to eq(:conflict)
+        expect(result.failure.error).to include("updated in another session")
+      }.not_to change(ImportedTransaction, :count)
+    end
+
     it "handles ActiveRecord::RecordNotDestroyed" do
       txn = create(:imported_transaction, user: user, source_document: source_document, status: "pending")
       allow(txn).to receive(:destroy!).and_raise(ActiveRecord::RecordNotDestroyed.new("Destroy error", txn))
       result = described_class.call(user: user, transaction: txn)
       expect(result).to be_failure
       expect(result.failure.code).to eq(:destroy_failed)
+    end
+
+    it "returns :gone failure when record is deleted from DB before lock acquisition" do
+      txn = create(:imported_transaction, user: user, source_document: source_document, status: "pending")
+      txn_id = txn.id
+      ImportedTransaction.where(id: txn_id).delete_all
+
+      result = described_class.call(user: user, transaction: txn)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:gone)
+      expect(result.failure.error).to include("not found")
     end
   end
 end

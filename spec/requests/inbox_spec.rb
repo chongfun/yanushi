@@ -12,7 +12,7 @@ RSpec.describe "Inbox", type: :request do
       it "routes to imported_transactions#index and returns 200" do
         get inbox_url
         expect(response).to be_successful
-        expect(response.body).to include("Transaction Ingestion")
+        expect(response.body).to include("Inbox")
       end
     end
 

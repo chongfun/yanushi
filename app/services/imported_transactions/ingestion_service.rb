@@ -36,7 +36,10 @@ module ImportedTransactions
 
           if source_document.new_record?
             begin
-              source_document.save!
+              user.source_documents.transaction do
+                source_document.save!
+                user.increment_inbox_revision!
+              end
             rescue ActiveRecord::RecordNotUnique
               source_document = user.source_documents.find_by!(attachment_sha256: Digest::SHA256.hexdigest(pdf_bytes))
             rescue ActiveRecord::RecordInvalid => e
@@ -72,6 +75,7 @@ module ImportedTransactions
           source_document.status = "failed"
           source_document.error_message = "Unrecognized document format"
           source_document.save!
+          user.increment_inbox_revision!
           return ServiceResult.failure(error: "Unrecognized document format", code: :unrecognized_format)
         end
 
@@ -79,6 +83,7 @@ module ImportedTransactions
           source_document.status = "failed"
           source_document.error_message = "Multi-page statement PDFs are not supported"
           source_document.save!
+          user.increment_inbox_revision!
           return ServiceResult.failure(error: "Multi-page statement PDFs are not supported", code: :unsupported_pages)
         end
 
@@ -104,6 +109,7 @@ module ImportedTransactions
           source_document.status = "failed"
           source_document.error_message = "No matching tenant transactions found"
           source_document.save!
+          user.increment_inbox_revision!
           return ServiceResult.failure(error: "No matching tenant transactions found", code: :no_transactions_found)
         end
 
@@ -128,6 +134,7 @@ module ImportedTransactions
 
         source_document.status = "success"
         source_document.save!
+        user.increment_inbox_revision!
 
         ServiceResult.success(source_document: source_document, imported_transactions: persisted_transactions)
       end

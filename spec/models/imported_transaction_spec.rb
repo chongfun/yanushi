@@ -204,6 +204,18 @@ RSpec.describe ImportedTransaction, type: :model do
       txn.amount = 125.50
       expect(txn.amount_cents).to eq(12550)
     end
+
+    it "derives proposed alias prioritizing payer_name over payer_username" do
+      party = create(:party, user: user, display_name: "Jane Doe")
+      txn1 = build(:imported_transaction, user: user, matched_party: party, payer_name: "Jane D Doe", payer_username: "@janeddoe")
+      expect(txn1.proposed_alias_for).to eq("Jane D Doe")
+
+      txn2 = build(:imported_transaction, user: user, matched_party: party, payer_name: "Jane Doe", payer_username: "@janedoe")
+      expect(txn2.proposed_alias_for).to eq("@janedoe")
+
+      txn3 = build(:imported_transaction, user: user, matched_party: party, payer_name: "Jane Doe", payer_username: nil)
+      expect(txn3.proposed_alias_for).to be_nil
+    end
   end
 
   describe "confirmed_source consistency validation" do

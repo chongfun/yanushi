@@ -63,6 +63,7 @@ RSpec.describe "Charges UI", type: :system do
     expect(page).to have_content("$50.00")
 
     click_on "Void"
+    expect(page).to have_css("#confirm-modal[open]")
     within("#confirm-modal") do
       click_on "Confirm"
     end

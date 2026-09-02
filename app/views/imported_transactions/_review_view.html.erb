@@ -1,0 +1,22 @@
+<% if transactions.any? %>
+  <div class="lg:flex lg:gap-6 lg:items-start" id="inbox_review_workspace">
+    <div id="inbox_review_queue">
+      <%= render "imported_transactions/review_list", transactions: transactions, selected_transaction: selected_transaction %>
+    </div>
+    <div class="flex-1 min-w-0 mt-6 lg:mt-0" id="inbox_review_container">
+      <%= render "imported_transactions/review_detail",
+                 transaction: selected_transaction,
+                 review_context: :inbox,
+                 parties: parties,
+                 tenancies: tenancies,
+                 party_tenancies_map: party_tenancies_map,
+                 tenancy_parties_map: tenancy_parties_map,
+                 processing_count: local_assigns[:processing_count],
+                 failed_count: local_assigns[:failed_count] %>
+    </div>
+  </div>
+<% else %>
+  <%= render "imported_transactions/caught_up",
+             processing_count: local_assigns[:processing_count],
+             failed_count: local_assigns[:failed_count] %>
+<% end %>

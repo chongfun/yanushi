@@ -3,7 +3,7 @@
 This plan is written to be executed step by step, including by an agent
 with no prior knowledge of this codebase. Every class, route, partial, and
 helper named here has been verified against the repository as of branch
-`ux-refresh`. Section 0 records what exists today; if the code and this
+`ux-refresh`. Section 0 records the baseline before the UX refresh; if the code and this
 document disagree, re-verify before proceeding and update the document.
 
 Read together with:
@@ -27,9 +27,7 @@ Across all milestones:
 - use Turbo Frames only where preserving surrounding context materially
   improves the workflow;
 - use Turbo Streams for mutation consequences;
-- use Stimulus only for browser behavior;
-- preserve existing URLs or redirect them;
-- avoid database migrations (no UX requirement here needs persisted state);
+- avoid persisted UI state; database migrations require a domain correctness or synchronization invariant justification (such as Milestone 4's `users.inbox_revision` generation used for cross-session snapshot coherence);
 - follow mockup visual hierarchy and component recipes rather than inventing
   new styling, adapting structure where needed for semantic HTML, Rails form
   builders, Hotwire mechanics, and accessibility.
@@ -49,7 +47,9 @@ a daisyUI class. New and redesigned views must not use daisyUI classes.
 
 ---
 
-# 0. Ground truth: what exists today (verified)
+# 0. Baseline before UX refresh: historical starting state (verified)
+
+> *Note: This section records the architectural inventory and baseline state immediately prior to the UX refresh branch. Items replaced or removed during milestone execution (such as `hello_controller.js` or superseded queries) reflect this starting baseline.*
 
 ## 0.1 Stack
 
@@ -128,7 +128,7 @@ immutable (update/destroy blocked at the model).
 only). `document_type`: `unknown, zelle, venmo, chase_statement`.
 Uploads enqueue `IngestSourceDocumentJob`; failures write `error_message`
 onto the document. `SourceDocuments::RetryService` re-opens failed docs.
-There is no Turbo Stream broadcasting anywhere in the app today; Action
+There is no Turbo Stream broadcasting anywhere in the app at baseline; Action
 Cable is wired (solid_cable in production, async in dev) but unused.
 
 ## 0.4 Existing frontend infrastructure
@@ -2204,7 +2204,7 @@ On successful confirmation:
    - `sidebar_inbox_badge`
    - `drawer_inbox_badge`
    - `mobile_inbox_badge`
-4. replace `inbox_tab_counts`;
+4. replace individual tab count targets: `tab_review_count`, `tab_processing_count`, `tab_history_count`;
 5. replace `inbox_review` with the next reviewable transaction;
 6. if no reviewable transaction remains, replace it with the caught-up state;
 7. append/update the normal flash/toast target.
@@ -2434,7 +2434,9 @@ A broadcast may replace:
 
 ```text
 source_document_<id>
-inbox_tab_counts
+tab_review_count
+tab_processing_count
+tab_history_count
 sidebar_inbox_badge
 drawer_inbox_badge
 mobile_inbox_badge
@@ -2539,7 +2541,7 @@ Submit as Turbo Stream and assert:
 - mutation succeeds;
 - confirmed-row removal stream exists;
 - `inbox_review` replacement exists;
-- `inbox_tab_counts` replacement exists;
+- individual tab count replacements (`tab_review_count`, `tab_processing_count`, `tab_history_count`) exist;
 - all three global badge replacements exist;
 - next-item or caught-up rendering is selected server-side.
 
@@ -3121,9 +3123,13 @@ Ruby and ERB.
 | `sidebar_inbox_badge` | desktop sidebar nav | Inbox confirm stream, broadcast service |
 | `drawer_inbox_badge` | mobile drawer nav | Inbox confirm stream, broadcast service |
 | `mobile_inbox_badge` | mobile topbar | Inbox confirm stream, broadcast service |
-| `inbox_tab_counts` | Inbox | confirm stream |
+| `tab_review_count`, `tab_processing_count`, `tab_history_count` | Inbox tabs | confirm stream, broadcast service |
 | `inbox_review` | Inbox | row selection frame, confirm stream |
-| `imported_transaction_<id>` | Inbox review list | confirm/destroy remove |
+| `inbox_review_workspace`, `inbox_review_container`, `inbox_review_empty` | Inbox review view | review workspace boundary, broadcast service |
+| `inbox_review_queue_list` | Inbox review list | review queue list, broadcast service |
+| `inbox_sync` | Inbox (all views) | confirm/destroy streams, broadcast service (maintains monotonic revision generation for cross-tab coherence and stale response detection) |
+| `inbox_processing_view` | Inbox processing view | broadcast service |
+| `imported_transaction_<id>` | Inbox review list | confirm/destroy remove, queue stream replace |
 | `source_document_<id>` | Inbox processing view | broadcast service |
 | `tenancy_balance` | tenancy show | receipt/charge streams |
 | `tenancy_activity` | tenancy show | receipt/charge streams |

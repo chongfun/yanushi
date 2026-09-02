@@ -183,7 +183,7 @@ FactoryBot.define do
       payment_method { "zelle" }
       amount_cents { 100_000 }
       occurred_on { Date.current }
-      external_reference { "ZEL-12345" }
+      sequence(:external_reference) { |n| "ZEL-CONF-#{n}" }
       matched_party { association :party, user: user }
       matched_tenancy do
         property = association(:property, user: user)
@@ -208,7 +208,7 @@ FactoryBot.define do
       payment_method { "zelle" }
       amount_cents { 100_000 }
       occurred_on { Date.current }
-      external_reference { "DEP-12345" }
+      sequence(:external_reference) { |n| "DEP-CONF-#{n}" }
       matched_party { association :party, user: user }
       matched_tenancy do
         property = association(:property, user: user)

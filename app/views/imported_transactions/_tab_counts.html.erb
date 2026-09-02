@@ -1,0 +1,17 @@
+<%# Tab navigation partial for Inbox %>
+<nav class="yn-tabs mt-4" aria-label="Inbox views" id="inbox_tab_counts">
+  <%= link_to inbox_path(view: "review"), class: "yn-tab", "aria-current": (view == "review" ? "page" : nil), id: "inbox_tab_review" do %>
+    Needs review
+    <%= render "imported_transactions/tab_badge", target_id: "tab_review_count", count: review_count %>
+  <% end %>
+
+  <%= link_to inbox_path(view: "processing"), class: "yn-tab", "aria-current": (view == "processing" ? "page" : nil), id: "inbox_tab_processing" do %>
+    Processing &amp; failed
+    <%= render "imported_transactions/tab_badge", target_id: "tab_processing_count", count: processing_count %>
+  <% end %>
+
+  <%= link_to inbox_path(view: "history"), class: "yn-tab", "aria-current": (view == "history" ? "page" : nil), id: "inbox_tab_history" do %>
+    History
+    <%= render "imported_transactions/tab_badge", target_id: "tab_history_count", count: history_count, neutral: true %>
+  <% end %>
+</nav>

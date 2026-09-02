@@ -69,8 +69,18 @@ RSpec.describe "Tenancies", type: :system do
     expect(page).to have_button("Delete tenancy…")
     find("summary", text: "More").click
 
-    # 1. Open Record Receipt dialog
+    # 0. Test close button restores focus to trigger without mutating state
     click_on "Record receipt"
+    expect(page).to have_css("dialog#modal[open]")
+    expect(page).to have_css("#modal-title", text: "Record receipt")
+    expect(page).to have_select("Payer")
+    page.execute_script("document.querySelector('button.modal-close').click()")
+    expect(page).to have_no_css("dialog#modal[open]")
+    expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Record receipt")
+    expect(page).to have_current_path(tenancy_path(tenancy))
+
+    # 1. Open Record Receipt dialog
+    page.execute_script("document.querySelector('a[href=\"#{new_tenancy_receipt_path(tenancy)}\"]').click()")
     expect(page).to have_css("dialog#modal[open]")
     expect(page).to have_css("#modal-title", text: "Record receipt")
 
@@ -102,6 +112,7 @@ RSpec.describe "Tenancies", type: :system do
     expect(page).to have_css("#tenancy_activity", text: "Payment received")
     expect(page).to have_css("#flash-messages", text: "Payment recorded successfully.")
     expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Record receipt")
+    expect(page).to have_current_path(tenancy_path(tenancy))
 
     find("summary", text: "More").click
     expect(page).not_to have_button("Delete tenancy…")
@@ -126,12 +137,27 @@ RSpec.describe "Tenancies", type: :system do
     expect(page).to have_css("#tenancy_activity", text: "Late fee")
     expect(page).to have_css("#flash-messages", text: "Charge posted successfully.")
     expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Add charge")
+    expect(page).to have_current_path(tenancy_path(tenancy))
 
-    # 9. Refresh page and verify persisted balance and activity are identical
+    # 9. Verify URL remains Tenancy Activity, then refresh page and verify persisted balance and activity are identical
+    pre_balance = find("#tenancy_balance").text
+    pre_activity = find("#tenancy_activity").text
+
     page.refresh
-    expect(page).to have_css("#tenancy_balance", text: "credit")
-    expect(page).to have_css("#tenancy_activity", text: "Payment received")
-    expect(page).to have_css("#tenancy_activity", text: "Late fee")
+
+    expect(page).to have_current_path(tenancy_path(tenancy))
+    expect(find("#tenancy_balance").text).to eq(pre_balance)
+    expect(find("#tenancy_activity").text).to eq(pre_activity)
+    within("#tenancy_balance") do
+      expect(page).to have_content("$450.00")
+      expect(page).to have_content("credit")
+    end
+    within("#tenancy_activity") do
+      expect(page).to have_content("Payment received")
+      expect(page).to have_content("−$500.00")
+      expect(page).to have_content("Late fee")
+      expect(page).to have_content("$50.00")
+    end
   end
 
   it "comprehends tenancy status, balance, and activity, and navigates between workspaces with browser history", js: true do

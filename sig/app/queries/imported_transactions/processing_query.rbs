@@ -1,0 +1,30 @@
+module ImportedTransactions
+  class ProcessingQuery
+    class ProcessingResult < Data
+      attr_reader processing_documents: Array[SourceDocument]
+      attr_reader failed_documents: Array[SourceDocument]
+      attr_reader processing_count: Integer
+      attr_reader failed_count: Integer
+      attr_reader review_count: Integer
+      attr_reader history_count: Integer
+      attr_reader inbox_revision: Integer
+
+      def self.new: (
+        processing_documents: Array[SourceDocument],
+        failed_documents: Array[SourceDocument],
+        processing_count: Integer,
+        failed_count: Integer,
+        review_count: Integer,
+        history_count: Integer,
+        inbox_revision: Integer
+      ) -> ProcessingResult
+    end
+
+    def initialize: (user: User) -> void
+    def call: () -> ProcessingResult
+
+    private
+
+    attr_reader user: User
+  end
+end

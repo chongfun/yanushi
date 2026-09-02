@@ -42,8 +42,8 @@ RSpec.describe "Properties", type: :system do
     expect(page).to have_text("Current")
 
     page.go_back
-    expect(page).to have_current_path(property_path(property))
     expect(page).to have_text("123 Main St")
+    expect(page).to have_current_path(property_path(property))
 
     # Test browser Forward navigation
     page.go_forward

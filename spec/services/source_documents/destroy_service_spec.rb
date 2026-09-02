@@ -7,7 +7,14 @@ RSpec.describe SourceDocuments::DestroyService do
 
   describe "#call" do
     it "destroys document and cascades unconfirmed imported transactions" do
-      create(:imported_transaction, user: user, source_document: source_document, status: "pending")
+      txn = create(:imported_transaction, user: user, source_document: source_document, status: "pending")
+
+      expect(ImportedTransactions::InboxBroadcastService).to receive(:call).with(
+        user: user,
+        deleted_document_id: source_document.id,
+        deleted_transaction_ids: [ txn.id ]
+      )
+
       expect {
         result = described_class.call(user: user, document: source_document)
         expect(result).to be_success

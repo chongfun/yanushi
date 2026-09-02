@@ -13,8 +13,15 @@ export default class extends Controller {
       }
     })
 
+    // Handle native dialog cancel event (e.g. Escape key)
+    this.dialogTarget.addEventListener('cancel', (e) => {
+      e.preventDefault()
+      this.close()
+    })
+
     // Auto-open the modal when the turbo frame inside it loads content
     this.element.addEventListener("turbo:frame-load", (e) => {
+      if (this._closing) return
       const frame = (e.target && e.target.tagName === "TURBO-FRAME") ? e.target : this.contentTarget.querySelector("turbo-frame")
       if (frame && frame.innerHTML.trim() !== "") {
         const title = frame.dataset.modalTitle ||
@@ -91,11 +98,13 @@ export default class extends Controller {
     if (firstFocusable) firstFocusable.focus()
   }
 
-  close() {
+  close(event) {
+    if (event) event.preventDefault()
+    this._closing = true
     this.element.classList.remove("modal-open")
 
     if (this._trapListener) {
-      this.dialogTarget.removeEventListener("keydown", this._trapListener)
+      document.removeEventListener("keydown", this._trapListener)
       this._trapListener = null
     }
 
@@ -106,7 +115,9 @@ export default class extends Controller {
     const frame = this.contentTarget.querySelector("turbo-frame")
     if (frame) {
       frame.innerHTML = ""
+      frame.src = ""
       frame.removeAttribute("src")
+      frame.removeAttribute("complete")
     }
     if (this.hasTitleTarget) this.titleTarget.textContent = ""
 
@@ -115,6 +126,7 @@ export default class extends Controller {
     this._triggerElement = null
 
     requestAnimationFrame(() => {
+      this._closing = false
       if (trigger && document.body.contains(trigger)) {
         trigger.focus()
       } else {

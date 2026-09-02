@@ -1,0 +1,47 @@
+module ImportedTransactions
+  class InboxQuery
+    class InboxResult < Data
+      attr_reader reviewable_transactions: Array[ImportedTransaction]
+      attr_reader review_count: Integer
+      attr_reader processing_documents: Array[SourceDocument]
+      attr_reader failed_documents: Array[SourceDocument]
+      attr_reader processing_count: Integer
+      attr_reader failed_count: Integer
+      attr_reader history_count: Integer
+      attr_reader updated_transaction: ImportedTransaction?
+      attr_reader updated_transaction_position: Integer?
+      attr_reader next_transaction: ImportedTransaction?
+      attr_reader inbox_revision: Integer
+
+      def self.new: (
+        reviewable_transactions: Array[ImportedTransaction],
+        review_count: Integer,
+        processing_documents: Array[SourceDocument],
+        failed_documents: Array[SourceDocument],
+        processing_count: Integer,
+        failed_count: Integer,
+        history_count: Integer,
+        updated_transaction: ImportedTransaction?,
+        updated_transaction_position: Integer?,
+        next_transaction: ImportedTransaction?,
+        inbox_revision: Integer
+      ) -> InboxResult
+    end
+
+    def initialize: (user: User, ?load_records: bool, ?updated_transaction_id: Integer?) -> void
+    def call: () -> InboxResult
+
+    private
+
+    attr_reader user: User
+    attr_reader load_records: bool
+    attr_reader updated_transaction_id: Integer?
+
+    def fetch_reviewables: () -> [ Array[ImportedTransaction], Integer, ImportedTransaction? ]
+    def fetch_updated_transaction: () -> ImportedTransaction?
+    def fetch_updated_transaction_position: (ImportedTransaction?) -> Integer?
+    def processing_count: () -> Integer
+    def failed_count: () -> Integer
+    def history_count: () -> Integer
+  end
+end

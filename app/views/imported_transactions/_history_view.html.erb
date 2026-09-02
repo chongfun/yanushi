@@ -1,0 +1,90 @@
+<% filters = local_assigns[:filters] || {} %>
+
+<div class="mb-4 max-w-4xl">
+  <%= form_with url: inbox_path, method: :get, class: "flex flex-wrap items-center gap-3" do |f| %>
+    <%= f.hidden_field :view, value: "history" %>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.text_field :search,
+                       value: filters[:search],
+                       placeholder: "Search payer or reference…",
+                       class: "yn-input w-full",
+                       "aria-label": "Search payer or reference" %>
+    </div>
+    <div class="w-48">
+      <%= f.select :payment_method,
+                   options_for_select(ImportedTransaction::PAYMENT_METHOD_OPTIONS, filters[:payment_method]),
+                   {},
+                   class: "yn-select w-full",
+                   "aria-label": "Filter by payment method" %>
+    </div>
+    <%= f.submit "Filter", class: "yn-btn yn-btn-secondary" %>
+    <% if filters.present? && filters.values.any?(&:present?) %>
+      <%= link_to "Clear", inbox_path(view: "history"), class: "yn-btn yn-btn-ghost text-sm" %>
+    <% end %>
+  <% end %>
+</div>
+
+<% if confirmed_transactions.empty? %>
+  <p class="text-sm text-stone-500 mt-2">
+    <span class="yn-status"><span class="yn-dot yn-dot-neutral"></span>No confirmed transactions found.</span>
+  </p>
+<% else %>
+  <table class="yn-table max-w-4xl">
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Payer</th>
+        <th scope="col">Source</th>
+        <th scope="col">Recorded as</th>
+        <th scope="col" class="text-right tabular-nums">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% confirmed_transactions.each do |txn| %>
+        <tr>
+          <td class="whitespace-nowrap text-stone-500 w-20">
+            <%= txn.occurred_on&.strftime("%b %d") || "—" %>
+          </td>
+          <td>
+            <%= txn.matched_party&.display_name || txn.payer_name || "—" %>
+          </td>
+          <td class="text-stone-500">
+            <%= [txn.payment_method&.titleize, txn.source_document&.attachment_filename].compact.join(" · ") %>
+          </td>
+          <td>
+            <% if txn.confirmed_source.is_a?(Receipt) %>
+              <%= link_to receipt_path(txn.confirmed_source), class: "yn-link" do %>
+                Receipt — <%= txn.confirmed_source.tenancy.property.address %>
+              <% end %>
+            <% elsif txn.confirmed_source.is_a?(SecurityDepositTransaction) %>
+              <%= link_to security_deposit_transaction_path(txn.confirmed_source), class: "yn-link" do %>
+                Security deposit — <%= txn.confirmed_source.security_deposit.tenancy.property.address %>
+              <% end %>
+            <% else %>
+              <span class="text-stone-400">Confirmed</span>
+            <% end %>
+          </td>
+          <td class="text-right tabular-nums whitespace-nowrap font-medium">
+            <%= format_money_cents(txn.amount_cents) %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% if total_pages > 1 %>
+    <% start_idx = ((page - 1) * per_page) + 1 %>
+    <% end_idx = [page * per_page, total_confirmed_count].min %>
+    <nav class="flex items-center justify-between mt-4 max-w-4xl" aria-label="Pagination">
+      <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= total_confirmed_count %></span></p>
+      <div class="flex gap-2">
+        <% if page > 1 %>
+          <%= link_to "Previous", inbox_path(view: "history", page: page - 1, search: filters[:search], payment_method: filters[:payment_method]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+        <% end %>
+        <% if page < total_pages %>
+          <%= link_to "Next", inbox_path(view: "history", page: page + 1, search: filters[:search], payment_method: filters[:payment_method]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+        <% end %>
+      </div>
+    </nav>
+  <% end %>
+<% end %>

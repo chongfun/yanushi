@@ -1,0 +1,8 @@
+module Turbo
+  module StreamsChannel
+    def self.broadcast_replace_to: (*untyped streamables, ?target: String, ?partial: String, ?locals: Hash[Symbol, untyped]) -> void
+    def self.broadcast_prepend_to: (*untyped streamables, ?target: String, ?partial: String, ?locals: Hash[Symbol, untyped]) -> void
+    def self.broadcast_remove_to: (*untyped streamables, target: String) -> void
+    def self.broadcast_render_to: (*untyped streamables, ?partial: String, ?locals: Hash[Symbol, untyped]) -> void
+  end
+end

@@ -1,13 +1,23 @@
 class ImportedTransactionsController < ApplicationController
-  @transaction: ImportedTransaction
-  @reviewable_transactions: untyped
-  @confirmed_transactions: untyped
-  @processing_documents: untyped
-  @failed_documents: untyped
+  @transaction: ImportedTransaction?
+  @reviewable_transactions: Array[ImportedTransaction]
+  @confirmed_transactions: Array[ImportedTransaction]
+  @processing_documents: Array[SourceDocument]
+  @failed_documents: Array[SourceDocument]
+  @review_count: Integer
+  @processing_count: Integer
+  @failed_count: Integer
+  @history_count: Integer
+  @history_filters: Hash[Symbol, untyped]
   @per_page: Integer
   @page: Integer
   @total_confirmed_count: Integer
   @total_pages: Integer
+  @selected_transaction: ImportedTransaction?
+  @next_transaction: ImportedTransaction?
+  @reviewable_count: Integer?
+  @item_index: Integer?
+  @view: String
   @parties: untyped
   @tenancies: untyped
   @party_tenancies_map: Hash[Integer, Array[Integer]]
@@ -20,7 +30,10 @@ class ImportedTransactionsController < ApplicationController
   def destroy: () -> void
 
   private
+
   def set_transaction: () -> void
   def imported_transaction_params: () -> untyped
+  def history_filter_params: () -> Hash[Symbol, untyped]
   def set_form_data: () -> void
+  def set_counts_and_form_data: (?load_records: bool, ?updated_transaction_id: Integer?) -> void
 end

@@ -50,6 +50,27 @@
         </nav>
       </header>
 
+      <div class="mb-4 max-w-4xl">
+        <form class="flex flex-wrap items-center gap-3">
+          <div class="flex-1 min-w-[200px]">
+            <input type="text" placeholder="Search payer or reference…" class="yn-input w-full" aria-label="Search payer or reference">
+          </div>
+          <div class="w-48">
+            <select class="yn-select w-full" aria-label="Filter by payment method">
+              <option selected>All payment methods</option>
+              <option>Zelle</option>
+              <option>Venmo</option>
+              <option>P2P</option>
+              <option>Check</option>
+              <option>Cash</option>
+              <option>Bank transfer</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <button type="submit" class="yn-btn yn-btn-secondary">Filter</button>
+        </form>
+      </div>
+
       <table class="yn-table max-w-4xl">
         <thead>
           <tr>

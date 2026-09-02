@@ -1,0 +1,5 @@
+<div class="lg:w-96 lg:shrink-0 yn-surface divide-y divide-stone-200 overflow-hidden" data-controller="responsive-frame" id="inbox_review_queue_list">
+  <% transactions.each do |txn| %>
+    <%= render "imported_transactions/review_row", transaction: txn, selected: (txn.id == selected_transaction&.id) %>
+  <% end %>
+</div>

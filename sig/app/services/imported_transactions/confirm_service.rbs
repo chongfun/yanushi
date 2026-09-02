@@ -2,15 +2,19 @@ module ImportedTransactions
   class ConfirmService
     @user: User
     @transaction: ImportedTransaction
+    @params: Hash[Symbol, untyped]
     @create_aliases: bool
+    @requested_alias: String?
 
-    def self.call: (user: User, transaction: ImportedTransaction, ?create_alias: bool) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
-    def initialize: (user: User, transaction: ImportedTransaction, ?create_alias: bool) -> void
+    def self.call: (user: User, transaction: ImportedTransaction, ?params: Hash[Symbol, untyped], ?create_alias: bool, ?requested_alias: String?) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, transaction: ImportedTransaction, ?params: Hash[Symbol, untyped], ?create_alias: bool, ?requested_alias: String?) -> void
     def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
 
     private
     attr_reader user: User
     attr_reader transaction: ImportedTransaction
+    attr_reader params: Hash[Symbol, untyped]
+    attr_reader requested_alias: String?
 
     def confirm_receipt: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
     def confirm_security_deposit: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)

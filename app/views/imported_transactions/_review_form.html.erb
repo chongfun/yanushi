@@ -1,0 +1,168 @@
+<% confirm_url = review_context == :standalone ? confirm_imported_transaction_path(transaction, format: :html) : confirm_imported_transaction_path(transaction) %>
+<% save_url = review_context == :standalone ? imported_transaction_path(transaction, format: :html) : imported_transaction_path(transaction) %>
+<% delete_url = review_context == :standalone ? imported_transaction_path(transaction, format: :html) : imported_transaction_path(transaction) %>
+
+<% if flash.now[:alert].present? || flash[:alert].present? || transaction.errors.any? %>
+  <div class="yn-alert yn-alert-danger mb-4" role="alert" id="form_error_alert" tabindex="-1">
+    <%= flash.now[:alert] || flash[:alert] || "Transaction couldn’t be confirmed — #{pluralize(transaction.errors.count, 'field')} needs a fix." %>
+  </div>
+<% end %>
+
+<% proposed_alias = imported_transaction_alias_proposal(transaction) %>
+<% create_alias_checked = params[:imported_transaction].present? ? (params[:create_alias] == "1") : true %>
+<% current_party_name = transaction.matched_party&.display_name || parties.find { |p| p.id == transaction.matched_party_id }&.display_name %>
+<%
+  party_alias_proposals_map = parties.each_with_object({}) do |p, h|
+    prop = transaction.proposed_alias_for(p)
+    h[p.id.to_s] = prop if prop.present?
+  end
+  has_any_alias_candidates = party_alias_proposals_map.any?
+%>
+
+<%= form_with model: transaction,
+              url: confirm_url,
+              method: :post,
+              id: "review_form_#{transaction.id}",
+              class: "space-y-4 max-w-lg",
+              data: {
+                controller: "imported-transaction-form",
+                imported_transaction_form_party_tenancies_value: party_tenancies_map.to_json,
+                imported_transaction_form_tenancy_parties_value: tenancy_parties_map.to_json,
+                imported_transaction_form_party_alias_proposals_value: party_alias_proposals_map.to_json,
+                imported_transaction_form_proposed_alias_value: proposed_alias.to_s
+              } do |f| %>
+
+  <%= f.hidden_field :lock_version %>
+
+  <div>
+    <%= f.label :transaction_kind, "Record as", class: "yn-label", for: "rev-kind-#{transaction.id}" %>
+    <%= f.select :transaction_kind,
+                 [
+                   ["Tenant receipt", "tenant_receipt"],
+                   ["Security deposit", "security_deposit"],
+                   ["Needs classification", "unknown"]
+                 ],
+                 {},
+                 class: "yn-select #{'yn-field-invalid' if transaction.errors[:transaction_kind].any?}",
+                 id: "rev-kind-#{transaction.id}",
+                 "aria-invalid": transaction.errors[:transaction_kind].any? ? "true" : nil,
+                 "aria-describedby": transaction.errors[:transaction_kind].any? ? "rev-kind-#{transaction.id}-error" : nil,
+                 data: { imported_transaction_form_target: "kindSelect", action: "change->imported-transaction-form#kindChanged" } %>
+    <% if transaction.errors[:transaction_kind].any? %>
+      <p id="rev-kind-<%= transaction.id %>-error" class="yn-error-text"><%= transaction.errors[:transaction_kind].first %></p>
+    <% end %>
+  </div>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :matched_party_id, "Payer", class: "yn-label", for: "rev-party-#{transaction.id}" %>
+      <%= f.collection_select :matched_party_id,
+                              parties,
+                              :id,
+                              :display_name,
+                              { include_blank: "Select payer" },
+                              {
+                                class: "yn-select #{'yn-field-invalid' if transaction.errors[:matched_party_id].any?}",
+                                id: "rev-party-#{transaction.id}",
+                                "aria-invalid": transaction.errors[:matched_party_id].any? ? "true" : nil,
+                                "aria-describedby": transaction.errors[:matched_party_id].any? ? "rev-party-#{transaction.id}-error" : nil,
+                                data: { imported_transaction_form_target: "partySelect", action: "change->imported-transaction-form#partyChanged" }
+                              } %>
+      <% if transaction.errors[:matched_party_id].any? %>
+        <p id="rev-party-<%= transaction.id %>-error" class="yn-error-text"><%= transaction.errors[:matched_party_id].first %></p>
+      <% end %>
+    </div>
+    <div>
+      <%= f.label :matched_tenancy_id, "Tenancy", class: "yn-label", for: "rev-tenancy-#{transaction.id}" %>
+      <%= f.select :matched_tenancy_id,
+                   tenancies.map { |t| ["#{t.property.address} — #{t.rentable_unit&.unit_identifier || t.agreement_type.titleize}", t.id] },
+                   { include_blank: "Select tenancy" },
+                   {
+                     class: "yn-select #{'yn-field-invalid' if transaction.errors[:matched_tenancy_id].any?}",
+                     id: "rev-tenancy-#{transaction.id}",
+                     "aria-invalid": transaction.errors[:matched_tenancy_id].any? ? "true" : nil,
+                     "aria-describedby": transaction.errors[:matched_tenancy_id].any? ? "rev-tenancy-#{transaction.id}-error" : nil,
+                     data: { imported_transaction_form_target: "tenancySelect", action: "change->imported-transaction-form#tenancyChanged" }
+                   } %>
+      <% if transaction.errors[:matched_tenancy_id].any? %>
+        <p id="rev-tenancy-<%= transaction.id %>-error" class="yn-error-text"><%= transaction.errors[:matched_tenancy_id].first %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :payment_method, "Payment method", class: "yn-label", for: "rev-method-#{transaction.id}" %>
+      <%= f.text_field :payment_method,
+                       class: "yn-input #{'yn-field-invalid' if transaction.errors[:payment_method].any?}",
+                       id: "rev-method-#{transaction.id}",
+                       "aria-invalid": transaction.errors[:payment_method].any? ? "true" : nil,
+                       "aria-describedby": transaction.errors[:payment_method].any? ? "rev-method-#{transaction.id}-error" : nil %>
+      <% if transaction.errors[:payment_method].any? %>
+        <p id="rev-method-<%= transaction.id %>-error" class="yn-error-text"><%= transaction.errors[:payment_method].first %></p>
+      <% end %>
+    </div>
+    <div>
+      <%= f.label :external_reference, "Reference", class: "yn-label", for: "rev-ref-#{transaction.id}" %>
+      <%= f.text_field :external_reference,
+                       class: "yn-input #{'yn-field-invalid' if transaction.errors[:external_reference].any?}",
+                       id: "rev-ref-#{transaction.id}",
+                       "aria-invalid": transaction.errors[:external_reference].any? ? "true" : nil,
+                       "aria-describedby": transaction.errors[:external_reference].any? ? "rev-ref-#{transaction.id}-error" : nil %>
+      <% if transaction.errors[:external_reference].any? %>
+        <p id="rev-ref-<%= transaction.id %>-error" class="yn-error-text"><%= transaction.errors[:external_reference].first %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <% if has_any_alias_candidates %>
+    <div data-imported-transaction-form-target="aliasContainer"
+         class="<%= 'hidden' if proposed_alias.blank? || current_party_name.blank? %>">
+      <%= hidden_field_tag :proposed_alias, proposed_alias, id: "rev_proposed_alias_#{transaction.id}", data: { imported_transaction_form_target: "proposedAliasInput" } %>
+      <label class="flex items-start gap-2.5 text-sm text-stone-600">
+        <%= check_box_tag :create_alias, "1", create_alias_checked, class: "mt-0.5 accent-stone-900", data: { imported_transaction_form_target: "aliasCheckbox" } %>
+        <span data-imported-transaction-form-target="aliasLabel">
+          <% if proposed_alias.present? && current_party_name.present? %>
+            Remember “<%= proposed_alias %>” as <%= current_party_name %> for future imports
+          <% end %>
+        </span>
+      </label>
+    </div>
+  <% end %>
+
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+    <button type="submit"
+            formaction="<%= delete_url %>"
+            formmethod="post"
+            name="_method"
+            value="delete"
+            data-turbo-confirm="Are you sure you want to delete this imported transaction?"
+            class="yn-btn yn-btn-ghost text-red-700">Delete…</button>
+    <div class="flex flex-col sm:flex-row gap-2">
+      <%= f.button "Save without confirming",
+                   type: :submit,
+                   formaction: save_url,
+                   formmethod: :post,
+                   name: "_method",
+                   value: "patch",
+                   class: "yn-btn yn-btn-secondary" %>
+      <%
+        btn_text = if transaction.unknown?
+          "Choose classification"
+        elsif transaction.security_deposit?
+          "Confirm deposit"
+        else
+          "Confirm receipt"
+        end
+      %>
+      <%= f.button btn_text,
+                   type: :submit,
+                   id: "confirm_btn_#{transaction.id}",
+                   data: {
+                     inbox_focus_target: "primary",
+                     imported_transaction_form_target: "confirmButton"
+                   },
+                   class: "yn-btn yn-btn-primary" %>
+    </div>
+  </div>
+<% end %>

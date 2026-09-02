@@ -97,7 +97,7 @@ RSpec.describe "SourceDocuments", type: :request do
       doc.update_column(:attachment_file, nil)
 
       get download_source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Document attachment data is missing.")
     end
@@ -108,7 +108,7 @@ RSpec.describe "SourceDocuments", type: :request do
       doc = create(:source_document, user: user)
 
       delete source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Upload record was removed.")
     end
@@ -118,7 +118,7 @@ RSpec.describe "SourceDocuments", type: :request do
       create(:imported_transaction, :confirmed_receipt, user: user, source_document: doc)
 
       delete source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Cannot delete document with confirmed transactions")
     end
@@ -132,7 +132,7 @@ RSpec.describe "SourceDocuments", type: :request do
         post retry_source_document_path(doc)
       }.to have_enqueued_job(IngestSourceDocumentJob).with(doc.id)
 
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Document processing has been re-queued in the background.")
       expect(doc.reload.status).to eq("processing")
@@ -142,7 +142,7 @@ RSpec.describe "SourceDocuments", type: :request do
       doc = create(:source_document, user: user, status: "success")
 
       post retry_source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Document has already been processed successfully.")
     end

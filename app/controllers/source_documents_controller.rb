@@ -29,9 +29,9 @@ class SourceDocumentsController < ApplicationController
   def retry
     result = SourceDocuments::RetryService.call(user: authenticated_user, document: @source_document)
     if result.success?
-      redirect_to imported_transactions_path, notice: "Document processing has been re-queued in the background."
+      redirect_to inbox_path(view: "processing"), notice: "Document processing has been re-queued in the background.", status: :see_other
     else
-      redirect_to imported_transactions_path, alert: result.failure.error
+      redirect_to inbox_path(view: "processing"), alert: result.failure.error, status: :see_other
     end
   end
 
@@ -42,16 +42,16 @@ class SourceDocumentsController < ApplicationController
                 disposition: "inline",
                 filename: @source_document.attachment_filename
     else
-      redirect_to imported_transactions_path, alert: "Document attachment data is missing."
+      redirect_to inbox_path(view: "processing"), alert: "Document attachment data is missing.", status: :see_other
     end
   end
 
   def destroy
     result = SourceDocuments::DestroyService.call(user: authenticated_user, document: @source_document)
     if result.success?
-      redirect_to imported_transactions_path, notice: "Upload record was removed.", status: :see_other
+      redirect_to inbox_path(view: "processing"), notice: "Upload record was removed.", status: :see_other
     else
-      redirect_to imported_transactions_path, alert: result.failure.error, status: :see_other
+      redirect_to inbox_path(view: "processing"), alert: result.failure.error, status: :see_other
     end
   end
 

@@ -1,0 +1,16 @@
+<div class="max-w-3xl" id="inbox_processing_view">
+  <% if processing_documents.empty? && failed_documents.empty? %>
+    <p class="text-sm text-stone-500 mt-2">
+      <span class="yn-status"><span class="yn-dot yn-dot-ok"></span>No uploads in flight and no failures.</span>
+    </p>
+  <% else %>
+    <div class="yn-surface divide-y divide-stone-200">
+      <% failed_documents.each do |doc| %>
+        <%= render "imported_transactions/document_row", document: doc %>
+      <% end %>
+      <% processing_documents.each do |doc| %>
+        <%= render "imported_transactions/document_row", document: doc %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

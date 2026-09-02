@@ -1,0 +1,146 @@
+<% deleted_transaction_ids.each do |txn_id| %>
+  <%= turbo_stream.remove "imported_transaction_#{txn_id}" %>
+<% end %>
+
+<% if deleted_document_id %>
+  <%= turbo_stream.remove "source_document_#{deleted_document_id}" %>
+
+  <% if processing_count.zero? && failed_count.zero? %>
+    <%= turbo_stream.replace "inbox_processing_view",
+                             partial: "imported_transactions/processing_view",
+                             locals: { processing_documents: [], failed_documents: [] } %>
+  <% end %>
+
+  <% if review_count.zero? %>
+    <%= turbo_stream.replace "inbox_review_workspace",
+                             partial: "imported_transactions/empty_workspace",
+                             locals: {
+                               processing_count: processing_count,
+                               failed_count: failed_count,
+                               focus_on_connect: false
+                             } %>
+    <%= turbo_stream.replace "inbox_review_empty",
+                             partial: "imported_transactions/caught_up",
+                             locals: {
+                               processing_count: processing_count,
+                               failed_count: failed_count,
+                               focus_on_connect: false
+                             } %>
+  <% end %>
+<% elsif document %>
+  <% if document.status == "success" %>
+    <% if processing_count.zero? && failed_count.zero? %>
+      <%= turbo_stream.replace "inbox_processing_view",
+                               partial: "imported_transactions/processing_view",
+                               locals: { processing_documents: [], failed_documents: [] } %>
+    <% else %>
+      <%= turbo_stream.remove "source_document_#{document.id}" %>
+    <% end %>
+
+    <% if review_count.positive? %>
+      <%= turbo_stream.replace "inbox_review_empty",
+                               partial: "imported_transactions/review_view",
+                               locals: {
+                                 transactions: reviewable_transactions,
+                                 selected_transaction: reviewable_transactions.first,
+                                 parties: form_data.parties,
+                                 tenancies: form_data.tenancies,
+                                 party_tenancies_map: form_data.party_tenancies_map,
+                                 tenancy_parties_map: form_data.tenancy_parties_map,
+                                 processing_count: processing_count,
+                                 failed_count: failed_count,
+                                 focus_on_connect: false
+                               } %>
+    <% else %>
+      <%= turbo_stream.replace "inbox_review_workspace",
+                               partial: "imported_transactions/empty_workspace",
+                               locals: {
+                                 processing_count: processing_count,
+                                 failed_count: failed_count,
+                                 focus_on_connect: false
+                               } %>
+      <%= turbo_stream.replace "inbox_review_empty",
+                               partial: "imported_transactions/caught_up",
+                               locals: {
+                                 processing_count: processing_count,
+                                 failed_count: failed_count,
+                                 focus_on_connect: false
+                               } %>
+    <% end %>
+  <% else %>
+    <%= turbo_stream.replace "inbox_processing_view",
+                             partial: "imported_transactions/processing_view",
+                             locals: {
+                               processing_documents: processing_documents,
+                               failed_documents: failed_documents
+                             } %>
+
+    <% if review_count.zero? %>
+      <%= turbo_stream.replace "inbox_review_workspace",
+                               partial: "imported_transactions/empty_workspace",
+                               locals: {
+                                 processing_count: processing_count,
+                                 failed_count: failed_count,
+                                 focus_on_connect: false
+                               } %>
+      <%= turbo_stream.replace "inbox_review_empty",
+                               partial: "imported_transactions/caught_up",
+                               locals: {
+                                 processing_count: processing_count,
+                                 failed_count: failed_count,
+                                 focus_on_connect: false
+                               } %>
+    <% end %>
+  <% end %>
+<% else %>
+  <% if review_count.zero? %>
+    <%= turbo_stream.replace "inbox_review_workspace",
+                             partial: "imported_transactions/empty_workspace",
+                             locals: {
+                               processing_count: processing_count,
+                               failed_count: failed_count,
+                               focus_on_connect: false
+                             } %>
+    <%= turbo_stream.replace "inbox_review_empty",
+                             partial: "imported_transactions/caught_up",
+                             locals: {
+                               processing_count: processing_count,
+                               failed_count: failed_count,
+                               focus_on_connect: false
+                             } %>
+  <% end %>
+<% end %>
+
+<% if local_assigns[:updated_transaction].present? %>
+  <%= turbo_stream.replace "imported_transaction_#{updated_transaction.id}",
+                           partial: "imported_transactions/review_row",
+                           locals: { transaction: updated_transaction, selected: false } %>
+<% end %>
+
+<%= turbo_stream.replace "sidebar_inbox_badge",
+                         partial: "shared/inbox_badge",
+                         locals: { count: review_count, id: "sidebar_inbox_badge", target_id: "sidebar_inbox_badge" } %>
+
+<%= turbo_stream.replace "drawer_inbox_badge",
+                         partial: "shared/inbox_badge",
+                         locals: { count: review_count, id: "drawer_inbox_badge", target_id: "drawer_inbox_badge" } %>
+
+<%= turbo_stream.replace "mobile_inbox_badge",
+                         partial: "shared/mobile_inbox_badge",
+                         locals: { count: review_count, target_id: "mobile_inbox_badge" } %>
+
+<%= turbo_stream.replace "tab_review_count",
+                         partial: "imported_transactions/tab_badge",
+                         locals: { target_id: "tab_review_count", count: review_count } %>
+
+<%= turbo_stream.replace "tab_processing_count",
+                         partial: "imported_transactions/tab_badge",
+                         locals: { target_id: "tab_processing_count", count: processing_count + failed_count } %>
+
+<%= turbo_stream.replace "tab_history_count",
+                         partial: "imported_transactions/tab_badge",
+                         locals: { target_id: "tab_history_count", count: history_count, neutral: true } %>
+
+<%= turbo_stream.replace "inbox_sync",
+                         partial: "imported_transactions/sync_target",
+                         locals: { revision: inbox_revision, review_count: review_count } %>

@@ -1,13 +1,15 @@
 module ImportedTransactions
   class ConfirmService
-    def self.call(user:, transaction:, create_alias: false)
-      new(user: user, transaction: transaction, create_alias: create_alias).call
+    def self.call(user:, transaction:, params: {}, create_alias: false, requested_alias: nil)
+      new(user: user, transaction: transaction, params: params, create_alias: create_alias, requested_alias: requested_alias).call
     end
 
-    def initialize(user:, transaction:, create_alias: false)
+    def initialize(user:, transaction:, params: {}, create_alias: false, requested_alias: nil)
       @user = user
       @transaction = transaction
+      @params = params || {}
       @create_aliases = create_alias
+      @requested_alias = requested_alias.presence
     end
 
     def call
@@ -18,8 +20,13 @@ module ImportedTransactions
 
       transaction.transaction do
         transaction.source_document&.lock!
-        transaction.lock!
-        transaction.reload
+        begin
+          transaction.lock!
+          transaction.reload
+        rescue ActiveRecord::RecordNotFound
+          failure_result = failure("Imported transaction was not found.", :gone)
+          raise ActiveRecord::Rollback
+        end
 
         if transaction.confirmed?
           if transaction.confirmed_source.present?
@@ -29,6 +36,24 @@ module ImportedTransactions
             failure_result = failure("Already confirmed but confirmed source record is missing", :confirmation_error)
             raise ActiveRecord::Rollback
           end
+        end
+
+        submitted_lock_version = params[:lock_version] || params["lock_version"]
+        if submitted_lock_version.present? && transaction.lock_version.to_s != submitted_lock_version.to_s
+          failure_result = failure("This transaction was updated in another session. Please reload to review the latest changes.", :conflict)
+          raise ActiveRecord::Rollback
+        end
+
+        if params.present?
+          transaction.assign_attributes(params)
+          if transaction.matched_party_id.present? && transaction.matched_tenancy_id.present?
+            transaction.status = "matched"
+          end
+        end
+
+        unless transaction.valid?
+          failure_result = failure(transaction.errors.full_messages.to_sentence, :validation_error)
+          raise ActiveRecord::Rollback
         end
 
         if transaction.unknown?
@@ -58,29 +83,43 @@ module ImportedTransactions
         created_source = dispatch_result.value!.data[:source]
         create_party_aliases if create_aliases?
 
-        transaction.update!(status: "confirmed", confirmed_source: created_source)
+        transaction.status = "confirmed"
+        transaction.confirmed_source = created_source
+        transaction.save!
+        user.increment_inbox_revision!
         confirmed_source = created_source
       end
 
       return failure_result if failure_result
 
+      Turbo::StreamsChannel.broadcast_remove_to(
+        [ user, :inbox ],
+        target: "imported_transaction_#{transaction.id}"
+      )
+      ImportedTransactions::InboxBroadcastService.call(user: user)
+
       success(confirmed_source)
+    rescue ActiveRecord::StaleObjectError
+      failure("This transaction was updated in another session. Please reload to review the latest changes.", :conflict)
     rescue ActiveRecord::RecordNotUnique
       failure("This transaction has already been recorded in another confirmed source.", :duplicate)
-    rescue ActiveRecord::RecordNotFound
-      failure("Imported transaction was not found.", :not_found)
+    rescue ActiveRecord::RecordNotFound => e
+      failure(e.message.presence || "Required record was not found.", :not_found)
     rescue ActiveRecord::RecordInvalid => e
       failure(e.record.errors.full_messages.to_sentence, :validation_error)
     end
 
     private
 
-      attr_reader :user, :transaction
+      attr_reader :user, :transaction, :params
 
       def confirm_receipt
+        tenancy = user.tenancies.find_by(id: transaction.matched_tenancy_id)
+        payer_party = user.parties.find_by(id: transaction.matched_party_id)
+
         result = Receipts::CreateService.call(
-          tenancy: transaction.matched_tenancy,
-          payer_party: transaction.matched_party,
+          tenancy: tenancy,
+          payer_party: payer_party,
           amount_cents: transaction.amount_cents,
           received_on: transaction.occurred_on,
           payment_method: transaction.payment_method,
@@ -95,7 +134,7 @@ module ImportedTransactions
       end
 
       def confirm_security_deposit
-        tenancy = transaction.matched_tenancy
+        tenancy = user.tenancies.find_by(id: transaction.matched_tenancy_id)
         deposit = tenancy&.security_deposit
         unless deposit
           return failure(
@@ -104,9 +143,10 @@ module ImportedTransactions
           )
         end
 
+        payer_party = user.parties.find_by(id: transaction.matched_party_id)
         result = SecurityDepositTransactions::ReceiveService.call(
           security_deposit: deposit,
-          party: transaction.matched_party,
+          party: payer_party,
           amount_cents: transaction.amount_cents,
           occurred_on: transaction.occurred_on,
           external_reference: transaction.external_reference
@@ -119,9 +159,20 @@ module ImportedTransactions
         end
       end
 
+      attr_reader :user, :transaction, :params, :requested_alias
+
       def create_party_aliases
-        create_party_alias(transaction.payer_name)
-        create_party_alias(transaction.payer_username)
+        party = transaction.matched_party
+        return unless party
+
+        proposed = transaction.proposed_alias_for(party)
+        return unless proposed
+
+        if requested_alias.present? && requested_alias != proposed
+          return
+        end
+
+        create_party_alias(proposed)
       end
 
       def create_aliases?

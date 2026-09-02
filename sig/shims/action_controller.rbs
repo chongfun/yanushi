@@ -12,5 +12,7 @@ module ActionController
     def self.helper_method: (*untyped args) -> untyped
 
     def turbo_stream: () -> untyped
+    def turbo_frame_request?: () -> bool
+    def turbo_frame_request_id: () -> String?
   end
 end
