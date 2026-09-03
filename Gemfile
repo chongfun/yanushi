@@ -62,7 +62,7 @@ group :development, :test do
   gem "ruby-lsp-rspec", "~> 0.1.29", require: false
   gem "rbs", "~> 4.2.0", require: false
   gem "rbs_rails", require: false
-  gem "steep", "~> 2.0.0", require: false
+  gem "steep", "~> 2.1.0", require: false
 end
 
 group :development do
