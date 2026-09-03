@@ -1043,10 +1043,12 @@ RSpec.describe "Inbox", type: :system do
       expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
       expect(page).to have_css("#review_form_#{txn_a.id}")
 
+      # Dispatch on the form itself: `target` is not an event-init option, and the
+      # controller reads the transaction id from event.target's form.
       page.execute_script(<<~JS)
         const form = document.querySelector("#review_form_#{txn_a.id}");
-        document.dispatchEvent(new CustomEvent("turbo:submit-start", { bubbles: true, target: form }));
-        document.dispatchEvent(new CustomEvent("turbo:submit-end", { bubbles: true, target: form, detail: { success: false } }));
+        form.dispatchEvent(new CustomEvent("turbo:submit-start", { bubbles: true }));
+        form.dispatchEvent(new CustomEvent("turbo:submit-end", { bubbles: true, detail: { success: false } }));
       JS
 
       SourceDocuments::DestroyService.call(user: user, document: doc_a)

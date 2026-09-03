@@ -77,10 +77,10 @@ Upload bank checking statements (e.g. Chase) or digital receipts (Venmo, Zelle).
 
 ---
 
-### 3. Direct Receipt & Payment Recording
-Record manual receipts for cash, checks, or direct transfers. Payments immediately debit operating Cash and credit Tenant Receivable on the double-entry ledger.
+### 3. Recording Receipts
+Record receipts for cash, checks, or direct transfers from the tenancy page. Each receipt immediately debits operating Cash and credits Tenant Receivable on the double-entry ledger.
 
-![Record Payment](public/screenshots/record_payment_modal.png)
+![Record receipt](public/screenshots/record_payment_modal.png)
 
 ---
 
