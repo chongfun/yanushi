@@ -6,15 +6,18 @@
 
   Locals:
     receipt       : Receipt
-    tenancy       : Tenancy or nil
+    fixed_tenancy : Tenancy when the page belongs to one tenancy; nil when the
+                    user picks the tenancy in the form. Required, so an explicit
+                    nil is honored even after a failed submit has attached a
+                    tenancy to the receipt.
     form_context  : :dialog | :standalone
     parties       : payer choices (loaded by the controller)
-    tenancies     : tenancy choices, only when tenancy is nil
-    balance_cents : current balance for the context strip, only when tenancy is present
+    tenancies     : tenancy choices, only when fixed_tenancy is nil
+    balance_cents : current balance for the context strip, only with a fixed tenancy
 %>
 <%
   form_context = local_assigns.fetch(:form_context, :dialog)
-  tenancy = local_assigns[:tenancy] || receipt.tenancy
+  tenancy = local_assigns.fetch(:fixed_tenancy)
   parties = local_assigns.fetch(:parties)
   balance_cents = local_assigns[:balance_cents]
 

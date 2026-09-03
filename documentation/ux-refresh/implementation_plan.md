@@ -3127,8 +3127,10 @@ and `rbs validate` green.
   - `tenancies/_page_header` is the header for standalone pages that belong
     to one tenancy (receipt form, rent change, participants, deposit): eyebrow
     Portfolio / property / unit, meta "tenants · unit · property".
-  - `receipts/_form` is the only receipt form; with `tenancy: nil` it renders
-    a tenancy select for the Money entry point. The controller passes
+  - `receipts/_form` is the only receipt form. Its `fixed_tenancy` local is
+    required: a Tenancy pins the form to that tenancy, an explicit nil renders
+    the tenancy select for the Money entry point (and stays that way after a
+    422, whatever tenancy the failed receipt carries). The controller passes
     `parties`, `tenancies`, and `balance_cents`; the partial runs no queries.
   - Receipt, expense, and charge detail pages use the shared page header with
     infrequent and destructive actions (correct, void) in a More menu and the
@@ -3136,6 +3138,12 @@ and `rbs validate` green.
     Vocabulary is "receipt", sentence case, no record ids in titles.
   - The Inbox confirm button is always enabled; JavaScript only relabels it.
     An unclassified confirm is rejected by the server with a focused 422.
+  - Every Inbox mutation response (confirm, update, destroy, and their 422s)
+    ends with `<turbo-stream action="inbox_settle" target="imported_transaction_ID">`,
+    a custom action registered in `application.js`. It runs in stream order,
+    after the response's DOM changes, and tells `responsive_frame` that the
+    id it marked pending at submit-start is no longer this tab's own in-flight
+    mutation. Remote removals of that id reconcile again from then on.
   - Deposit receive/refund/apply failures re-render the deposit page (422)
     with the submitted values and the reason inline.
 

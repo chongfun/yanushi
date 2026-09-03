@@ -20,13 +20,20 @@ export default class extends Controller {
 
     // Transaction ids this tab has submitted a mutation for. Their rows may
     // disappear (own broadcast) before the response streams render; that is
-    // not a remote change and must not trigger a reload.
+    // not a remote change and must not trigger a reload. An id stays pending
+    // only until the response's trailing `inbox_settle` stream has rendered
+    // (see application.js); after that, remote changes to it reconcile again.
     this._pendingIds = new Set()
     this._submitStartListener = (event) => {
       const id = this.transactionIdFromForm(event.target)
       if (id) this._pendingIds.add(id)
     }
     document.addEventListener("turbo:submit-start", this._submitStartListener)
+    this._settledListener = (event) => {
+      const id = event.detail && event.detail.transactionId
+      if (id) this._pendingIds.delete(String(id))
+    }
+    document.addEventListener("inbox:settled", this._settledListener)
 
     this._frameListener = (event) => {
       if (event.target.id === "inbox_review") this.syncSelectionWithFrame()
@@ -43,6 +50,7 @@ export default class extends Controller {
     document.removeEventListener("turbo:frame-load", this._frameListener)
     document.removeEventListener("turbo:frame-render", this._frameListener)
     document.removeEventListener("turbo:submit-start", this._submitStartListener)
+    document.removeEventListener("inbox:settled", this._settledListener)
     if (this._mediaListener && this.mediaQuery) {
       this.mediaQuery.removeEventListener("change", this._mediaListener)
     }

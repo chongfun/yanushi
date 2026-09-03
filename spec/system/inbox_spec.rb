@@ -901,6 +901,59 @@ RSpec.describe "Inbox", type: :system do
       expect(page).to have_content("No uploads in flight and no failures.")
     end
 
+    it "reconciles a remote removal of an item this tab saved earlier, once the save response has settled" do
+      doc_a = create(:source_document, user: user, status: "success", attachment_filename: "doc_a.pdf")
+      doc_b = create(:source_document, user: user, status: "success", attachment_filename: "doc_b.pdf")
+
+      txn_b = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_b,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 8, 19),
+        created_at: 2.hours.ago,
+        payment_method: "zelle"
+      )
+      txn_a = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_a,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 8, 20),
+        created_at: 1.hour.ago,
+        payment_method: "zelle"
+      )
+
+      visit inbox_path
+      expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+
+      # An ordinary local save; A stays reviewable and the response settles
+      fill_in "rev-ref-#{txn_a.id}", with: "REF-A"
+      click_button "Save without confirming"
+      expect(page).to have_content("Transaction record updated successfully.", wait: 10)
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+      expect(page).to have_field("rev-ref-#{txn_a.id}", with: "REF-A")
+
+      # Later, another session removes A. This tab must still converge on B.
+      SourceDocuments::DestroyService.call(user: user, document: doc_a)
+
+      expect(page).to have_no_css("#imported_transaction_#{txn_a.id}", wait: 10)
+      expect(page).to have_css("#imported_transaction_#{txn_b.id}[aria-current='true']", wait: 10)
+      within("#inbox_review") do
+        expect(page).to have_css("#review_form_#{txn_b.id}")
+        expect(page).to have_content("$500.00")
+      end
+    end
+
     it "automatically selects the next transaction or transitions to caught-up when the actively reviewed item is destroyed remotely" do
       doc1 = create(:source_document, user: user, status: "success", attachment_filename: "doc1.pdf")
       doc2 = create(:source_document, user: user, status: "success", attachment_filename: "doc2.pdf")

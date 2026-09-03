@@ -363,6 +363,12 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       expect(amount_field[:'aria-describedby']).to eq("receipt-amount-error")
       expect(amount_field.value).to eq("")
       expect(page).to have_css("#receipt-amount-error.yn-error-text")
+
+      # Still the Money entry form: the tenancy stays a choice (with the submitted
+      # value kept) and the form still posts to the top-level endpoint
+      expect(find("#receipt-tenancy").value).to eq(tenancy.id.to_s)
+      expect(find("#receipt-form")[:action]).to end_with(receipts_path(format: :html))
+      expect(page).to have_link("Cancel", href: receipts_path)
       expect(page).to have_no_css("dialog#modal[open]")
     end
 

@@ -183,6 +183,23 @@ RSpec.describe "Receipts", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
+    it "keeps the tenancy selector and top-level action when a top-level receipt fails validation" do
+      post receipts_url(format: :html), params: {
+        receipt: {
+          tenancy_id: tenancy.id,
+          payer_party_id: party.id,
+          amount: "abc",
+          received_on: "2026-02-01",
+          payment_method: "check"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('id="receipt-tenancy"')
+      expect(response.body).to include(%(<option selected="selected" value="#{tenancy.id}">))
+      expect(response.body).to include(%(action="#{receipts_path(format: :html)}"))
+      expect(response.body).not_to include(tenancy_receipts_path(tenancy, format: :html))
+    end
+
     it "renders 422 for top-level creation with unknown tenancy_id" do
       post receipts_url, params: {
         receipt: {

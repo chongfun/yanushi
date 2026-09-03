@@ -12,3 +12,15 @@ if (Turbo.config?.forms) {
   Turbo.config.forms.confirm = confirmMethod
 }
 Turbo.setConfirmMethod(confirmMethod)
+
+// <turbo-stream action="inbox_settle" target="imported_transaction_ID">
+// Sent last in every Inbox mutation response so the originating tab knows its
+// own request has fully rendered. Runs in stream order, after the DOM changes
+// that precede it, and announces the settled transaction to interested
+// controllers (responsive_frame stops treating the id as pending).
+Turbo.StreamActions.inbox_settle = function () {
+  const id = (this.getAttribute("target") || "").replace("imported_transaction_", "")
+  if (id) {
+    document.dispatchEvent(new CustomEvent("inbox:settled", { detail: { transactionId: id } }))
+  }
+}

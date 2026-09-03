@@ -346,7 +346,7 @@ class ReceiptsController < ApplicationController
           if (t = @tenancy)
             render turbo_stream: turbo_stream.update("modal-frame",
                      partial: "receipts/form",
-                     locals: { receipt: @receipt, tenancy: t, form_context: :dialog, parties: @parties, balance_cents: @balance_cents }),
+                     locals: { receipt: @receipt, fixed_tenancy: t, form_context: :dialog, parties: @parties, balance_cents: @balance_cents }),
                    status: :unprocessable_content
           else
             render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content

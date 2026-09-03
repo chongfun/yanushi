@@ -5,7 +5,7 @@
   <turbo-frame id="modal-frame">
     <%# Turbo swaps the frame's children, not its attributes, so the dialog title rides on this wrapper %>
     <div data-modal-title="Record receipt">
-      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy, form_context: :dialog,
+      <%= render "receipts/form", receipt: @receipt, fixed_tenancy: @tenancy, form_context: :dialog,
                  parties: @parties, balance_cents: @balance_cents %>
     </div>
   </turbo-frame>
@@ -14,7 +14,7 @@
   <div class="max-w-xl">
     <%= render "tenancies/page_header", tenancy: @tenancy, title: "Record receipt" %>
     <div class="yn-surface p-6">
-      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy, form_context: :standalone,
+      <%= render "receipts/form", receipt: @receipt, fixed_tenancy: @tenancy, form_context: :standalone,
                  parties: @parties, balance_cents: @balance_cents %>
     </div>
   </div>
@@ -30,7 +30,7 @@
           title: "Record receipt",
           meta: "Money received from a tenant, posted to that tenancy's running account." %>
     <div class="yn-surface p-6">
-      <%= render "receipts/form", receipt: @receipt, tenancy: nil, form_context: :standalone,
+      <%= render "receipts/form", receipt: @receipt, fixed_tenancy: nil, form_context: :standalone,
                  parties: @parties, tenancies: @tenancies %>
     </div>
   </div>

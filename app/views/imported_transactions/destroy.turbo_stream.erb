@@ -32,3 +32,6 @@
 <%= turbo_stream.append "flash-messages",
                         partial: "shared/toast",
                         locals: { type: :notice, message: (@notice_message || "Imported transaction was deleted.") } %>
+
+<%# Last on purpose: tells the originating tab this mutation has fully rendered %>
+<%= turbo_stream.action "inbox_settle", "imported_transaction_#{@settled_transaction_id}" %>

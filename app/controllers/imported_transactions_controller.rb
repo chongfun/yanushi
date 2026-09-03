@@ -112,6 +112,8 @@ class ImportedTransactionsController < ApplicationController
     txn = @transaction
     return unless txn
 
+    @settled_transaction_id = txn.id
+
     result = ImportedTransactions::UpdateService.call(
       user: authenticated_user,
       transaction: txn,
@@ -147,11 +149,14 @@ class ImportedTransactionsController < ApplicationController
         @transaction = txn
         format.html { render :show, status: :unprocessable_content }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "inbox_review",
-            partial: "imported_transactions/review_detail",
-            locals: review_detail_locals(txn, focus_on_connect: true)
-          ), status: :unprocessable_content
+          render turbo_stream: [
+            turbo_stream.replace(
+              "inbox_review",
+              partial: "imported_transactions/review_detail",
+              locals: review_detail_locals(txn, focus_on_connect: true)
+            ),
+            turbo_stream.action("inbox_settle", "imported_transaction_#{txn.id}")
+          ], status: :unprocessable_content
         end
       end
     end
@@ -160,6 +165,8 @@ class ImportedTransactionsController < ApplicationController
   def confirm
     txn = @transaction
     return unless txn
+
+    @settled_transaction_id = txn.id
 
     create_alias = params[:create_alias] == "1"
     empty_params = {} # : Hash[Symbol, untyped]
@@ -200,11 +207,14 @@ class ImportedTransactionsController < ApplicationController
         flash.now[:alert] = result.failure.error
         format.html { render :show, status: :unprocessable_content }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "inbox_review",
-            partial: "imported_transactions/review_detail",
-            locals: review_detail_locals(txn, focus_on_connect: true)
-          ), status: :unprocessable_content
+          render turbo_stream: [
+            turbo_stream.replace(
+              "inbox_review",
+              partial: "imported_transactions/review_detail",
+              locals: review_detail_locals(txn, focus_on_connect: true)
+            ),
+            turbo_stream.action("inbox_settle", "imported_transaction_#{txn.id}")
+          ], status: :unprocessable_content
         end
       end
     end
@@ -213,6 +223,8 @@ class ImportedTransactionsController < ApplicationController
   def destroy
     txn = @transaction
     return unless txn
+
+    @settled_transaction_id = txn.id
 
     submitted_lock_version = params[:lock_version] || params.dig(:imported_transaction, :lock_version)
     result = ImportedTransactions::DestroyService.call(
@@ -247,11 +259,14 @@ class ImportedTransactionsController < ApplicationController
         flash.now[:alert] = result.failure.error
         format.html { render :show, status: :unprocessable_content }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "inbox_review",
-            partial: "imported_transactions/review_detail",
-            locals: review_detail_locals(txn, focus_on_connect: true)
-          ), status: :unprocessable_content
+          render turbo_stream: [
+            turbo_stream.replace(
+              "inbox_review",
+              partial: "imported_transactions/review_detail",
+              locals: review_detail_locals(txn, focus_on_connect: true)
+            ),
+            turbo_stream.action("inbox_settle", "imported_transaction_#{txn.id}")
+          ], status: :unprocessable_content
         end
       end
     end

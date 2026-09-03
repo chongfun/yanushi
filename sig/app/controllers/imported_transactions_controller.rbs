@@ -1,4 +1,5 @@
 class ImportedTransactionsController < ApplicationController
+  @settled_transaction_id: Integer
   @transaction: ImportedTransaction?
   @reviewable_transactions: Array[ImportedTransaction]
   @confirmed_transactions: Array[ImportedTransaction]
