@@ -134,15 +134,7 @@ class ImportedTransactionsController < ApplicationController
         end
         format.turbo_stream { render :update }
       elsif result.failure.code == :gone
-        @notice_message = "The transaction was deleted in another session."
-        format.html do
-          if @next_transaction
-            redirect_to imported_transaction_path(@next_transaction), notice: @notice_message, status: :see_other
-          else
-            redirect_to inbox_path, notice: @notice_message, status: :see_other
-          end
-        end
-        format.turbo_stream { render :update }
+        return handle_stale_mutation(:update)
       else
         flash.now[:alert] = result.failure.error
         txn.assign_attributes(imported_transaction_params) if params[:imported_transaction].present?
@@ -192,15 +184,7 @@ class ImportedTransactionsController < ApplicationController
         end
         format.turbo_stream { render :confirm }
       elsif result.failure.code == :gone
-        @notice_message = "The transaction was deleted in another session."
-        format.html do
-          if @next_transaction
-            redirect_to imported_transaction_path(@next_transaction), notice: @notice_message, status: :see_other
-          else
-            redirect_to inbox_path, notice: @notice_message, status: :see_other
-          end
-        end
-        format.turbo_stream { render :confirm }
+        return handle_stale_mutation(:confirm)
       else
         txn.assign_attributes(submitted_params) if submitted_params.present?
         @transaction = txn
@@ -245,15 +229,7 @@ class ImportedTransactionsController < ApplicationController
         end
         format.turbo_stream { render :destroy }
       elsif result.failure.code == :gone
-        @notice_message = "The transaction was deleted in another session."
-        format.html do
-          if @next_transaction
-            redirect_to imported_transaction_path(@next_transaction), notice: @notice_message, status: :see_other
-          else
-            redirect_to inbox_path, notice: @notice_message, status: :see_other
-          end
-        end
-        format.turbo_stream { render :destroy }
+        return handle_stale_mutation(:destroy)
       else
         @transaction = txn
         flash.now[:alert] = result.failure.error
@@ -291,7 +267,31 @@ class ImportedTransactionsController < ApplicationController
     end
 
     def set_transaction
-      @transaction = authenticated_user.imported_transactions.find(params[:id])
+      @transaction = authenticated_user.imported_transactions.find_by(id: params[:id])
+      return if @transaction
+
+      if request.format.turbo_stream?
+        handle_stale_mutation
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+    end
+
+    def handle_stale_mutation(template = action_name)
+      @settled_transaction_id = Integer(params[:id], exception: false) || 0
+      @notice_message = "The transaction was deleted in another session."
+      set_counts_and_form_data
+
+      respond_to do |format|
+        format.html do
+          if @next_transaction
+            redirect_to imported_transaction_path(@next_transaction), notice: @notice_message, status: :see_other
+          else
+            redirect_to inbox_path, notice: @notice_message, status: :see_other
+          end
+        end
+        format.turbo_stream { render template }
+      end
     end
 
     def imported_transaction_params

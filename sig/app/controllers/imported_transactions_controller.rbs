@@ -1,5 +1,6 @@
 class ImportedTransactionsController < ApplicationController
   @settled_transaction_id: Integer
+  @notice_message: String?
   @transaction: ImportedTransaction?
   @reviewable_transactions: Array[ImportedTransaction]
   @confirmed_transactions: Array[ImportedTransaction]
@@ -33,6 +34,7 @@ class ImportedTransactionsController < ApplicationController
   private
 
   def set_transaction: () -> void
+  def handle_stale_mutation: (?Symbol | String) -> void
   def imported_transaction_params: () -> untyped
   def history_filter_params: () -> Hash[Symbol, untyped]
   def set_form_data: () -> void

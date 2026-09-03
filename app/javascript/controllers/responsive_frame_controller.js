@@ -35,6 +35,27 @@ export default class extends Controller {
     }
     document.addEventListener("inbox:settled", this._settledListener)
 
+    // Clear pending id if submission failed before a response could settle it
+    this._submitEndListener = (event) => {
+      if (event.detail && !event.detail.success) {
+        const id = this.transactionIdFromForm(event.target)
+        if (id && this._pendingIds.has(id)) {
+          this._pendingIds.delete(id)
+          this.reconcileQueue()
+        }
+      }
+    }
+    document.addEventListener("turbo:submit-end", this._submitEndListener)
+
+    this._fetchErrorListener = (event) => {
+      const id = this.transactionIdFromForm(event.target)
+      if (id && this._pendingIds.has(id)) {
+        this._pendingIds.delete(id)
+        this.reconcileQueue()
+      }
+    }
+    document.addEventListener("turbo:fetch-request-error", this._fetchErrorListener)
+
     this._frameListener = (event) => {
       if (event.target.id === "inbox_review") this.syncSelectionWithFrame()
     }
@@ -50,6 +71,8 @@ export default class extends Controller {
     document.removeEventListener("turbo:frame-load", this._frameListener)
     document.removeEventListener("turbo:frame-render", this._frameListener)
     document.removeEventListener("turbo:submit-start", this._submitStartListener)
+    document.removeEventListener("turbo:submit-end", this._submitEndListener)
+    document.removeEventListener("turbo:fetch-request-error", this._fetchErrorListener)
     document.removeEventListener("inbox:settled", this._settledListener)
     if (this._mediaListener && this.mediaQuery) {
       this.mediaQuery.removeEventListener("change", this._mediaListener)
@@ -135,7 +158,9 @@ export default class extends Controller {
     })
   }
 
-  transactionIdFromForm(form) {
+  transactionIdFromForm(element) {
+    if (!element) return null
+    const form = element.tagName === "FORM" ? element : element.closest?.("form")
     if (!form || !form.id) return null
     if (!form.id.startsWith("review_form_") && !form.closest("#inbox_review")) return null
     return form.id.replace("review_form_", "") || null

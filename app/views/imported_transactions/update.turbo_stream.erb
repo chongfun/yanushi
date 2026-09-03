@@ -21,7 +21,8 @@
                              tenancy_parties_map: @tenancy_parties_map,
                              processing_count: @processing_count,
                              failed_count: @failed_count,
-                             inbox_revision: @inbox_revision
+                             inbox_revision: @inbox_revision,
+                             review_count: @review_count
                            } %>
 <% elsif @next_transaction.present? %>
   <%= turbo_stream.replace "inbox_review_queue_list",
@@ -40,6 +41,7 @@
                              processing_count: @processing_count,
                              failed_count: @failed_count,
                              inbox_revision: @inbox_revision,
+                             review_count: @review_count,
                              focus_on_connect: true
                            } %>
 <% else %>

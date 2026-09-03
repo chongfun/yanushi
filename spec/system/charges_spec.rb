@@ -61,6 +61,7 @@ RSpec.describe "Charges UI", type: :system do
 
     visit charge_path(charge)
     expect(page).to have_content("$50.00")
+    expect(page).to have_css("html[data-turbo-confirm-ready='true']", visible: :all)
 
     find("summary", text: "More").click
     click_on "Void charge…"

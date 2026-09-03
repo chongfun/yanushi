@@ -12,6 +12,7 @@ if (Turbo.config?.forms) {
   Turbo.config.forms.confirm = confirmMethod
 }
 Turbo.setConfirmMethod(confirmMethod)
+document.documentElement.dataset.turboConfirmReady = "true"
 
 // <turbo-stream action="inbox_settle" target="imported_transaction_ID">
 // Sent last in every Inbox mutation response so the originating tab knows its

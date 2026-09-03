@@ -954,6 +954,111 @@ RSpec.describe "Inbox", type: :system do
       end
     end
 
+    it "reconciles and lands on the next transaction when an item is deleted after submit-start but before lookup" do
+      doc_a = create(:source_document, user: user, status: "success", attachment_filename: "doc_a.pdf")
+      doc_b = create(:source_document, user: user, status: "success", attachment_filename: "doc_b.pdf")
+
+      txn_b = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_b,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 8, 19),
+        created_at: 2.hours.ago,
+        payment_method: "zelle"
+      )
+      txn_a = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_a,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 8, 20),
+        created_at: 1.hour.ago,
+        payment_method: "zelle"
+      )
+
+      visit inbox_path
+      expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+
+      original_set_transaction = ImportedTransactionsController.instance_method(:set_transaction)
+      allow_any_instance_of(ImportedTransactionsController).to receive(:set_transaction) do |controller|
+        if controller.params[:id] == txn_a.id.to_s
+          SourceDocuments::DestroyService.call(user: user, document: doc_a)
+        end
+        original_set_transaction.bind(controller).call
+      end
+
+      click_button "Save without confirming"
+
+      expect(page).to have_content("The transaction was deleted in another session.", wait: 10)
+      expect(page).to have_no_css("#imported_transaction_#{txn_a.id}")
+      expect(page).to have_css("#imported_transaction_#{txn_b.id}[aria-current='true']")
+      within("#inbox_review") do
+        expect(page).to have_css("#review_form_#{txn_b.id}")
+        expect(page).to have_content("$500.00")
+      end
+    end
+
+    it "releases pending id and reconciles queue when submission encounters a transport error" do
+      doc_a = create(:source_document, user: user, status: "success", attachment_filename: "doc_a.pdf")
+      doc_b = create(:source_document, user: user, status: "success", attachment_filename: "doc_b.pdf")
+
+      txn_b = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_b,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 8, 19),
+        created_at: 2.hours.ago,
+        payment_method: "zelle"
+      )
+      txn_a = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_a,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 8, 20),
+        created_at: 1.hour.ago,
+        payment_method: "zelle"
+      )
+
+      visit inbox_path
+      expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+
+      page.execute_script(<<~JS)
+        const form = document.querySelector("#review_form_#{txn_a.id}");
+        document.dispatchEvent(new CustomEvent("turbo:submit-start", { bubbles: true, target: form }));
+        document.dispatchEvent(new CustomEvent("turbo:submit-end", { bubbles: true, target: form, detail: { success: false } }));
+      JS
+
+      SourceDocuments::DestroyService.call(user: user, document: doc_a)
+
+      expect(page).to have_no_css("#imported_transaction_#{txn_a.id}", wait: 10)
+      expect(page).to have_css("#imported_transaction_#{txn_b.id}[aria-current='true']", wait: 10)
+      within("#inbox_review") do
+        expect(page).to have_css("#review_form_#{txn_b.id}")
+        expect(page).to have_content("$500.00")
+      end
+    end
+
     it "automatically selects the next transaction or transitions to caught-up when the actively reviewed item is destroyed remotely" do
       doc1 = create(:source_document, user: user, status: "success", attachment_filename: "doc1.pdf")
       doc2 = create(:source_document, user: user, status: "success", attachment_filename: "doc2.pdf")
