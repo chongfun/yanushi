@@ -4,51 +4,53 @@
   <%= render "money/header", current_tab: :receipts %>
 
   <% if @receipts.any? %>
-    <table class="yn-table">
-      <thead>
-        <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Payer</th>
-          <th scope="col">Tenancy</th>
-          <th scope="col">Method</th>
-          <th scope="col" class="text-right tabular-nums">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @receipts.each do |receipt| %>
-          <tr id="<%= dom_id(receipt) %>">
-            <td class="whitespace-nowrap text-stone-500 w-20"><%= receipt.received_on.strftime("%b %-d") %></td>
-            <td>
-              <% if receipt.voided? %>
-                <span class="text-stone-500 line-through"><%= receipt.payer_party&.display_name || "—" %></span>
-                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span>
-                <% if receipt.superseded_by.present? %>
-                  <span class="block text-[13px] text-stone-500">
-                    <%= link_to "Corrected #{receipt.superseded_by.received_on.strftime('%b %-d')}", receipt_path(receipt.superseded_by), class: "yn-link" %><% if receipt.void_reason.present? %> — <%= receipt.void_reason %><% end %>
-                  </span>
-                <% elsif receipt.void_reason.present? %>
-                  <span class="block text-[13px] text-stone-500"><%= receipt.void_reason %></span>
-                <% end %>
-              <% else %>
-                <%= link_to (receipt.payer_party&.display_name || "—"), receipt_path(receipt), class: "yn-row-link" %>
-              <% end %>
-            </td>
-            <td class="text-stone-500">
-              <%= receipt.tenancy.property.address %> — <%= receipt.tenancy.rentable_unit&.name || "Tenancy" %>
-            </td>
-            <td class="text-stone-500">
-              <%= receipt.payment_method.titleize %>
-              <% if receipt.imported_transaction.present? %>
-                <span class="text-stone-400">· imported</span>
-              <% end %>
-            </td>
-            <td class="text-right tabular-nums whitespace-nowrap <%= receipt.voided? ? 'text-stone-400 line-through' : '' %>">
-              <%= format_money_cents(receipt.amount_cents) %>
-            </td>
+    <div class="overflow-x-auto">
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Payer</th>
+            <th scope="col">Tenancy</th>
+            <th scope="col">Method</th>
+            <th scope="col" class="text-right tabular-nums">Amount</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @receipts.each do |receipt| %>
+            <tr id="<%= dom_id(receipt) %>">
+              <td class="whitespace-nowrap text-stone-500 w-20"><%= receipt.received_on.strftime("%b %-d") %></td>
+              <td>
+                <% if receipt.voided? %>
+                  <%= link_to (receipt.payer_party&.display_name || "Receipt"), receipt_path(receipt), class: "yn-row-link text-stone-500 line-through" %>
+                  <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span>
+                  <% if receipt.superseded_by.present? %>
+                    <span class="block text-[13px] text-stone-500">
+                      <%= link_to "Corrected #{receipt.superseded_by.received_on.strftime('%b %-d')}", receipt_path(receipt.superseded_by), class: "yn-link" %><% if receipt.void_reason.present? %> — <%= receipt.void_reason %><% end %>
+                    </span>
+                  <% elsif receipt.void_reason.present? %>
+                    <span class="block text-[13px] text-stone-500"><%= receipt.void_reason %></span>
+                  <% end %>
+                <% else %>
+                  <%= link_to (receipt.payer_party&.display_name || "—"), receipt_path(receipt), class: "yn-row-link" %>
+                <% end %>
+              </td>
+              <td class="text-stone-500">
+                <%= receipt.tenancy.property.address %> — <%= receipt.tenancy.rentable_unit&.name || "Tenancy" %>
+              </td>
+              <td class="text-stone-500">
+                <%= receipt.payment_method.titleize %>
+                <% if receipt.imported_transaction.present? %>
+                  <span class="text-stone-400">· imported</span>
+                <% end %>
+              </td>
+              <td class="text-right tabular-nums whitespace-nowrap <%= receipt.voided? ? 'text-stone-400 line-through' : '' %>">
+                <%= format_money_cents(receipt.amount_cents) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
 
     <% if @total_pages > 1 %>
       <% start_idx = ((@page - 1) * @per_page) + 1 %>

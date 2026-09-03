@@ -100,16 +100,16 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
 
       visit receipt_path(receipt)
       expect(page).to have_current_path(receipt_path(receipt))
-      expect(page).to have_text("Receipt ID: ##{receipt.id}")
-      expect(page).to have_button("Void Payment")
+      expect(page).to have_css("h1", text: "Receipt from")
+      expect(page).to have_button("Void receipt…", visible: :all)
       expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
       page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
       expect(page).to have_css("#confirm-modal[open]")
-      expect(page).to have_text("Are you sure you want to void this payment?")
+      expect(page).to have_text("Void this receipt?")
       page.execute_script("document.querySelector('#confirm-modal [data-action*=\"turbo-confirm#confirm\"]').click()")
 
       expect(page).to have_text("Payment has been voided")
-      expect(page).to have_text("This payment was voided.")
+      expect(page).to have_text("This receipt was voided.")
       expect(receipt.reload).to be_voided
     end
 
@@ -135,8 +135,8 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       # 1. Visit receipt 1, trigger Void, backdrop cancel
       visit receipt_path(receipt1)
       expect(page).to have_current_path(receipt_path(receipt1))
-      expect(page).to have_text("Receipt ID: ##{receipt1.id}")
-      expect(page).to have_button("Void Payment")
+      expect(page).to have_css("h1", text: "Receipt from")
+      expect(page).to have_button("Void receipt…", visible: :all)
       expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
       page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
       expect(page).to have_css("#confirm-modal[open]")
@@ -149,8 +149,8 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       # 2. Visit receipt 2, trigger Void and Confirm
       visit receipt_path(receipt2)
       expect(page).to have_current_path(receipt_path(receipt2))
-      expect(page).to have_text("Receipt ID: ##{receipt2.id}")
-      expect(page).to have_button("Void Payment")
+      expect(page).to have_css("h1", text: "Receipt from")
+      expect(page).to have_button("Void receipt…", visible: :all)
       expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
       page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
       expect(page).to have_css("#confirm-modal[open]")
@@ -344,18 +344,18 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       visit new_receipt_path
 
       expect(page).to have_current_path(new_receipt_path)
-      expect(page).to have_css("h1", text: "Record Payment")
+      expect(page).to have_css("h1", text: "Record receipt")
 
       # Select tenancy, fill method, clear amount and submit
-      select "##{tenancy.id} - #{property.address} (#{unit.name})", from: "receipt-tenancy"
+      find("#receipt-tenancy").find(:option, text: property.address).select_option
       select "Alice Tenant", from: "receipt-payer"
       fill_in "receipt-method", with: "Zelle"
       page.execute_script("document.getElementById('receipt-amount').value = ''")
       page.execute_script("document.getElementById('receipt-form').noValidate = true")
-      click_button "Record Payment"
+      click_button "Record receipt"
 
       # Verify full page remains on standalone form and displays error alert + field ARIA error
-      expect(page).to have_css("h1", text: "Record Payment")
+      expect(page).to have_css("h1", text: "Record receipt")
       expect(page).to have_css(".yn-alert-danger", text: "Amount is required")
 
       amount_field = find("#receipt-amount")

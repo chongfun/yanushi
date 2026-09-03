@@ -1,134 +1,149 @@
-<div class="max-w-3xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Payment Details</h1>
-      <p class="text-sm text-stone-500">Receipt ID: #<%= @receipt.id %></p>
-    </div>
-    <div class="flex gap-2">
-      <%= link_to "Back to Payments", receipts_path, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-    </div>
-  </div>
+<%
+  receipt = @receipt
+  tenancy = receipt.tenancy
+  payer_name = receipt.payer_party&.display_name || "Unknown payer"
+  tenant_names = tenancy&.all_tenant_parties&.map(&:display_name)&.to_sentence.presence
+  status_text, status_tone = if receipt.voided? && receipt.superseded?
+    [ "Corrected", :neutral ]
+  elsif receipt.voided?
+    [ "Voided", :neutral ]
+  elsif receipt.posted?
+    [ "Posted", :ok ]
+  else
+    [ "Pending posting", :warn ]
+  end
+%>
+<% content_for :title, "Receipt from #{payer_name}" %>
 
-  <% if @receipt.voided? && @receipt.superseded? %>
+<div class="max-w-3xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Receipts", receipts_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "Receipt from #{payer_name}",
+        meta: capture { %>
+          <span class="tabular-nums <%= 'line-through' if receipt.voided? %>"><%= format_money_cents(receipt.amount_cents) %></span> &middot;
+          <%= receipt.received_on.strftime("%b %-d, %Y") %> &middot;
+          <%= receipt.payment_method.titleize %> &middot;
+          <%= render "shared/status", text: status_text, tone: status_tone, size: :sm %>
+        <% },
+        actions: capture { %>
+          <% if receipt.active? %>
+            <details class="relative" data-controller="menu">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
+                More
+                <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+              </summary>
+              <div class="yn-menu">
+                <%= link_to "Correct receipt", correction_receipt_path(receipt), class: "yn-menu-item" %>
+                <hr class="yn-menu-separator">
+                <%= button_to "Void receipt…", void_receipt_path(receipt), method: :post, class: "yn-menu-item yn-menu-item-danger",
+                      data: { turbo_confirm: "Void this receipt? Its ledger entries will be reversed and the receipt cannot be reinstated." } %>
+              </div>
+            </details>
+          <% end %>
+          <%= link_to "Download PDF", receipt_path(receipt, format: :pdf), target: "_blank", class: "yn-btn yn-btn-primary" %>
+        <% } %>
+
+  <% if receipt.voided? && receipt.superseded? %>
     <div class="yn-alert yn-alert-warn mb-6" role="status">
-      <div>
-        <div class="font-bold text-sm">This payment was corrected and reversed.</div>
-        <div class="text-xs">Replaced by <%= link_to "Receipt ##{@receipt.superseded_by_id}", receipt_path(@receipt.superseded_by), class: "yn-link font-semibold" %></div>
-      </div>
+      <span>This receipt was corrected and reversed. Replaced by <%= link_to "the corrected receipt", receipt_path(receipt.superseded_by), class: "yn-link font-medium" %> for <%= format_money_cents(receipt.superseded_by.amount_cents) %>.</span>
     </div>
-  <% elsif @receipt.voided? %>
+  <% elsif receipt.voided? %>
     <div class="yn-alert yn-alert-danger mb-6" role="status">
-      <div>
-        <div class="font-bold text-sm">This payment was voided.</div>
-        <div class="text-xs">Accounting postings for this receipt have been completely reversed on the ledger.</div>
-      </div>
+      <span>This receipt was voided. Its ledger postings have been reversed.</span>
     </div>
-  <% elsif @receipt.superseded_receipt.present? %>
+  <% elsif receipt.superseded_receipt.present? %>
     <div class="yn-alert mb-6" role="status">
-      <div>
-        <div class="font-bold text-sm">Replacement Payment</div>
-        <div class="text-xs">This receipt replaces corrected <%= link_to "Receipt ##{@receipt.superseded_receipt.id}", receipt_path(@receipt.superseded_receipt), class: "yn-link font-semibold" %></div>
-      </div>
+      <span>This receipt replaces <%= link_to "a corrected receipt", receipt_path(receipt.superseded_receipt), class: "yn-link font-medium" %> for <%= format_money_cents(receipt.superseded_receipt.amount_cents) %>.</span>
     </div>
   <% end %>
 
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <div class="flex flex-col md:flex-row justify-between gap-8">
-      <!-- Payment Summary -->
-      <div class="space-y-6 flex-1">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Amount Paid</div>
-          <div class="text-3xl font-bold font-mono tabular-nums <%= @receipt.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
-            <%= number_to_currency(@receipt.amount) %>
-          </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+    <section aria-labelledby="receipt-details-heading">
+      <h2 id="receipt-details-heading" class="text-sm font-semibold mb-3">Receipt</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Amount</dt>
+          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-400' if receipt.voided? %>"><%= format_money_cents(receipt.amount_cents) %></dd>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Payment Date</div>
-            <div class="text-sm font-medium text-stone-900"><%= @receipt.received_on.strftime("%B %d, %Y") %></div>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Payment Method</div>
-            <div class="text-sm font-mono uppercase text-stone-700"><%= @receipt.payment_method.titleize %></div>
-          </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Received on</dt>
+          <dd class="m-0"><%= receipt.received_on.strftime("%B %-d, %Y") %></dd>
         </div>
-
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Payer</div>
-          <div class="text-base font-bold text-stone-900"><%= @receipt.payer_party&.display_name %></div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Payment method</dt>
+          <dd class="m-0"><%= receipt.payment_method.titleize %></dd>
         </div>
-
-        <% if @receipt.external_reference.present? %>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">External Reference / Txn #</div>
-            <div class="font-mono text-xs bg-stone-100 px-3 py-1.5 rounded w-fit border border-stone-200 text-stone-700">
-              <%= @receipt.external_reference %>
-            </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Payer</dt>
+          <dd class="m-0"><%= receipt.payer_party ? link_to(receipt.payer_party.display_name, party_path(receipt.payer_party), class: "yn-link") : "—" %></dd>
+        </div>
+        <% if receipt.external_reference.present? %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Reference</dt>
+            <dd class="m-0 tabular-nums"><%= receipt.external_reference %></dd>
           </div>
         <% end %>
-
-        <% if @receipt.memo.present? %>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Memo</div>
-            <div class="text-sm bg-stone-50 p-3 rounded-lg border border-stone-200 text-stone-700">
-              <%= @receipt.memo %>
-            </div>
+        <% if receipt.imported_transaction.present? %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Source</dt>
+            <dd class="m-0">Imported from a bank statement</dd>
           </div>
         <% end %>
-      </div>
-
-      <!-- Property & Tenancy Details -->
-      <div class="border-t md:border-t-0 md:border-l border-stone-200 pt-6 md:pt-0 md:pl-8 space-y-6 flex-1">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Property Address</div>
-          <div class="text-base font-bold leading-tight text-stone-900"><%= @receipt.tenancy&.property&.address %></div>
-          <div class="text-xs text-stone-500 mt-0.5"><%= @receipt.tenancy&.rentable_unit&.display_name %></div>
-        </div>
-
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Tenancy</div>
-          <div class="font-medium">
-            <%= link_to "Tenancy ##{@receipt.tenancy_id}", tenancy_path(@receipt.tenancy), class: "yn-link" %>
+        <% if receipt.memo.present? %>
+          <div class="py-2.5">
+            <dt class="text-stone-500 mb-1">Memo</dt>
+            <dd class="m-0 text-stone-700"><%= receipt.memo %></dd>
           </div>
-          <div class="text-xs text-stone-500 mt-1">
-            <%= @receipt.tenancy&.commencement_date&.strftime("%b %d, %Y") %> – <%= @receipt.tenancy&.termination_date ? @receipt.tenancy.termination_date.strftime("%b %d, %Y") : "Month-to-Month" %>
-          </div>
-        </div>
+        <% end %>
+      </dl>
+    </section>
 
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Tenants on Lease</div>
-          <div class="flex flex-wrap gap-1.5">
-            <% @receipt.tenancy&.parties&.each do |party| %>
-              <span class="text-xs text-stone-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200"><%= party.display_name %></span>
-            <% end %>
+    <section aria-labelledby="receipt-context-heading">
+      <h2 id="receipt-context-heading" class="text-sm font-semibold mb-3">Tenancy</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <% if tenancy %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Property</dt>
+            <dd class="m-0 text-right"><%= link_to tenancy.property.address, property_path(tenancy.property), class: "yn-link" %></dd>
           </div>
-        </div>
-
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Ledger Status</div>
-          <div class="text-xs text-stone-500">
-            <% if @receipt.posted? %>
-              Posted on <%= @receipt.posted_at.strftime("%b %d, %Y at %l:%M %p") %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Unit</dt>
+            <dd class="m-0 text-right"><%= link_to tenancy.rentable_unit.display_name, tenancy_path(tenancy), class: "yn-link" %></dd>
+          </div>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Tenants</dt>
+            <dd class="m-0 text-right"><%= tenant_names || "—" %></dd>
+          </div>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Term</dt>
+            <dd class="m-0 text-right">
+              <%= tenancy.commencement_date&.strftime("%b %-d, %Y") %> –
+              <%= tenancy.termination_date ? tenancy.termination_date.strftime("%b %-d, %Y") : "present" %>
+            </dd>
+          </div>
+        <% end %>
+        <div class="py-2.5">
+          <dt class="text-stone-500 mb-1">Accounting</dt>
+          <dd class="m-0">
+            <% ledger_entries = receipt.journal_entries.order(:occurred_on, :id).to_a %>
+            <% if ledger_entries.any? %>
+              <ul class="list-none m-0 p-0 space-y-0.5">
+                <% ledger_entries.each do |entry| %>
+                  <li><%= link_to "#{entry.event_type.humanize} · #{entry.occurred_on.strftime('%b %-d, %Y')}", journal_entry_path(entry), class: "yn-link" %></li>
+                <% end %>
+              </ul>
+            <% elsif receipt.posted? %>
+              Posted on <%= receipt.posted_at.strftime("%b %-d, %Y") %>
             <% else %>
-              Pending posting
+              Not yet posted to the ledger.
             <% end %>
-          </div>
+          </dd>
         </div>
-      </div>
-    </div>
-
-    <div class="flex flex-wrap justify-between items-center mt-8 border-t border-stone-200 pt-6 gap-3">
-      <div class="flex flex-wrap gap-2">
-        <%= link_to "Download PDF Receipt", receipt_path(@receipt, format: :pdf), target: "_blank", class: "yn-btn yn-btn-primary yn-btn-sm" %>
-        <% if @receipt.active? %>
-          <%= link_to "Correct Payment", correction_receipt_path(@receipt), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-          <%= button_to "Void Payment", void_receipt_path(@receipt), method: :post, class: "yn-btn yn-btn-danger yn-btn-sm", data: { turbo_confirm: "Are you sure you want to void this payment? This will reverse all ledger entries and cannot be undone." } %>
-        <% end %>
-      </div>
-      <div class="text-xs text-stone-400">
-        Posted to ledger • Double-entry verified
-      </div>
-    </div>
+      </dl>
+    </section>
   </div>
 </div>

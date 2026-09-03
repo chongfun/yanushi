@@ -25,7 +25,7 @@ class TenancyPartiesController < ApplicationController
     if result.success?
       @tenancy_party = result.value!.data[:tenancy_party]
       respond_to do |format|
-        format.html { redirect_to @tenancy, notice: "Participant was successfully added." }
+        format.html { redirect_to tenancy_agreement_path(@tenancy), notice: "Participant was successfully added." }
         format.json { render json: @tenancy_party, status: :created }
       end
     else
@@ -47,7 +47,7 @@ class TenancyPartiesController < ApplicationController
     if result.success?
       @tenancy_party = result.value!.data[:tenancy_party]
       respond_to do |format|
-        format.html { redirect_to @tenancy, notice: "Participant was successfully updated.", status: :see_other }
+        format.html { redirect_to tenancy_agreement_path(@tenancy), notice: "Participant was successfully updated.", status: :see_other }
         format.json { render json: @tenancy_party, status: :ok }
       end
     else
@@ -64,12 +64,12 @@ class TenancyPartiesController < ApplicationController
 
     if result.success?
       respond_to do |format|
-        format.html { redirect_to @tenancy, notice: "Participant was successfully removed.", status: :see_other }
+        format.html { redirect_to tenancy_agreement_path(@tenancy), notice: "Participant was successfully removed.", status: :see_other }
         format.json { head :no_content }
       end
     else
       respond_to do |format|
-        format.html { redirect_to @tenancy, alert: result.failure.error, status: :see_other }
+        format.html { redirect_to tenancy_agreement_path(@tenancy), alert: result.failure.error, status: :see_other }
         format.json { render json: { error: result.failure.error }, status: :unprocessable_content }
       end
     end

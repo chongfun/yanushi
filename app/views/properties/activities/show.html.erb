@@ -45,7 +45,7 @@
     </dl>
 
     <!-- Chronological ledger -->
-    <% if @financial_activity.any? %>
+    <% if @activity_result.rows.any? %>
       <div class="overflow-x-auto">
         <table class="yn-table">
           <thead>
@@ -58,45 +58,27 @@
             </tr>
           </thead>
           <tbody>
-            <% @financial_activity.each do |row| %>
-              <tr>
-                <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
-                <td>
-                  <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
-                  <%= link_to target_path, class: "yn-row-link" do %>
-                    <%= row.label %>
-                    <% if row.description.present? && row.description != row.label %>
-                      <span class="text-stone-400">&middot; <%= row.description %></span>
-                    <% end %>
-                  <% end %>
-                  <% if row.corrected? %>
-                    <span class="yn-badge yn-badge-warn ml-1">Corrected</span>
-                  <% elsif row.voided? %>
-                    <span class="yn-badge yn-badge-danger ml-1">Voided</span>
-                  <% end %>
-                </td>
-                <td class="text-stone-500 whitespace-nowrap">
-                  <% if row.tenancy %>
-                    <%= link_to tenancy_path(row.tenancy), class: "yn-link text-[13px]" do %>
-                      <%= row.rentable_unit&.name || "Tenancy" %>
-                    <% end %>
-                  <% elsif row.rentable_unit %>
-                    <%= row.rentable_unit.name %>
-                  <% else %>
-                    —
-                  <% end %>
-                </td>
-                <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
-                  <%= signed_money_cents(row.amount_cents) %>
-                </td>
-                <td class="text-right whitespace-nowrap">
-                  <%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
-                </td>
-              </tr>
-            <% end %>
+            <%= render partial: "accounting/activity_row", collection: @activity_result.rows, as: :row, locals: { context: :tenancy_or_unit, audit: true } %>
           </tbody>
         </table>
       </div>
+
+      <% if @activity_result.total_pages > 1 %>
+        <% start_idx = ((@activity_result.page - 1) * @activity_result.per_page) + 1 %>
+        <% end_idx = [@activity_result.page * @activity_result.per_page, @activity_result.total_count].min %>
+        <% filter_params = { year: params[:year], from: params[:from], through: params[:through] }.compact_blank %>
+        <nav class="flex items-center justify-between mt-4" aria-label="Pagination">
+          <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @activity_result.total_count %></span></p>
+          <div class="flex gap-2">
+            <% if @activity_result.page > 1 %>
+              <%= link_to "Previous", property_activity_path(@property, filter_params.merge(page: @activity_result.page - 1)), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+            <% end %>
+            <% if @activity_result.page < @activity_result.total_pages %>
+              <%= link_to "Next", property_activity_path(@property, filter_params.merge(page: @activity_result.page + 1)), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+            <% end %>
+          </div>
+        </nav>
+      <% end %>
     <% else %>
       <p class="text-sm text-stone-500 m-0">No financial activity found for this period.</p>
     <% end %>

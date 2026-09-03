@@ -1,0 +1,22 @@
+<%# Page header for standalone pages that belong to one tenancy (forms, the
+    deposit page). Eyebrow leads back through Portfolio and the property;
+    meta names the people, unit, and property so the page reads in context.
+    Locals: tenancy, title, actions (optional), meta (optional override) %>
+<%
+  property = tenancy.property
+  unit = tenancy.rentable_unit
+  tenant_names = tenancy.primary_tenant_parties.map(&:display_name).to_sentence.presence ||
+                 tenancy.all_tenant_parties.map(&:display_name).to_sentence.presence
+  default_meta = [ tenant_names, unit.display_name, property.address ].compact.join(" · ")
+%>
+<%= render "shared/page_header",
+      eyebrow: capture { %>
+        <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <span class="mx-1 text-stone-300">/</span>
+        <%= link_to property.address, property_path(property), class: "hover:text-stone-700 no-underline text-inherit" %>
+        <span class="mx-1 text-stone-300">/</span>
+        <%= link_to unit.display_name, tenancy_path(tenancy), class: "hover:text-stone-700 no-underline text-inherit" %>
+      <% },
+      title: title,
+      meta: local_assigns.fetch(:meta, default_meta),
+      actions: local_assigns[:actions] %>

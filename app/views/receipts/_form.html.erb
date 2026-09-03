@@ -1,23 +1,40 @@
-<%
-  # form_context: :dialog (modal) or :standalone (full page)
-  form_context = local_assigns[:form_context] || :dialog
-  tenancy = local_assigns[:tenancy] || receipt.tenancy
-  balance_cents = local_assigns[:balance_cents]
-  balance_cents ||= Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: tenancy, as_of: Date.current) if tenancy
+<%#
+  The one receipt form, used in three places:
+    dialog     : inside #modal-frame over the tenancy page (tenancy known)
+    standalone : /tenancies/:id/receipts/new (tenancy known)
+    standalone : /receipts/new (tenancy chosen in the form)
 
-  action_url = if form_context == :standalone
+  Locals:
+    receipt       : Receipt
+    tenancy       : Tenancy or nil
+    form_context  : :dialog | :standalone
+    parties       : payer choices (loaded by the controller)
+    tenancies     : tenancy choices, only when tenancy is nil
+    balance_cents : current balance for the context strip, only when tenancy is present
+%>
+<%
+  form_context = local_assigns.fetch(:form_context, :dialog)
+  tenancy = local_assigns[:tenancy] || receipt.tenancy
+  parties = local_assigns.fetch(:parties)
+  balance_cents = local_assigns[:balance_cents]
+
+  action_url = if tenancy.nil?
+    receipts_path(format: :html)
+  elsif form_context == :standalone
     tenancy_receipts_path(tenancy, format: :html)
   else
     tenancy_receipts_path(tenancy)
   end
 
-  parties = tenancy.property.user.parties.order(:display_name)
+  cancel_path = tenancy ? tenancy_path(tenancy) : receipts_path
+  field_error = ->(*attrs) { attrs.flat_map { |a| receipt.errors[a] }.first }
 %>
 
 <%= form_with(model: receipt, url: action_url, class: "space-y-4", id: "receipt-form") do |form| %>
-  <% if receipt.errors.any? || flash[:alert].present? %>
+  <% show_flash_inline = form_context == :dialog && flash[:alert].present? %>
+  <% if receipt.errors.any? || show_flash_inline %>
     <div class="yn-alert yn-alert-danger" role="alert">
-      <% if flash[:alert].present? %>
+      <% if show_flash_inline %>
         <%= flash[:alert] %>
       <% else %>
         Receipt couldn't be recorded — <%= pluralize(receipt.errors.count, "field") %> needs a fix.
@@ -32,96 +49,124 @@
     </div>
   <% end %>
 
-  <!-- Read-only context strip -->
-  <div class="rounded-lg bg-stone-50 border border-stone-200 px-3.5 py-2.5 text-sm">
-    <div class="flex justify-between gap-4">
-      <span class="text-stone-500">Tenancy</span>
-      <span class="font-medium text-right">
-        <% primary = tenancy.primary_tenant_parties.map(&:display_name).to_sentence %>
-        <%= primary.presence || "Tenancy ##{tenancy.id}" %> · <%= tenancy.rentable_unit.display_name %>, <%= tenancy.property.address %>
-      </span>
+  <% if tenancy %>
+    <!-- Read-only context strip -->
+    <div class="rounded-lg bg-stone-50 border border-stone-200 px-3.5 py-2.5 text-sm">
+      <div class="flex justify-between gap-4">
+        <span class="text-stone-500">Tenancy</span>
+        <span class="font-medium text-right">
+          <% primary = tenancy.primary_tenant_parties.map(&:display_name).to_sentence %>
+          <%= primary.presence || tenancy.rentable_unit.display_name %> · <%= tenancy.rentable_unit.display_name %>, <%= tenancy.property.address %>
+        </span>
+      </div>
+      <% unless balance_cents.nil? %>
+        <div class="flex justify-between gap-4 mt-1">
+          <span class="text-stone-500">Current balance</span>
+          <span class="font-medium tabular-nums"><%= balance_phrase_cents(balance_cents) %></span>
+        </div>
+      <% end %>
     </div>
-    <div class="flex justify-between gap-4 mt-1">
-      <span class="text-stone-500">Current balance</span>
-      <span class="font-medium tabular-nums"><%= balance_phrase_cents(balance_cents) %></span>
+    <%= form.hidden_field :tenancy_id, value: tenancy.id %>
+  <% else %>
+    <div>
+      <% tenancy_error = field_error.call(:tenancy_id, :tenancy) %>
+      <%= form.label :tenancy_id, "Tenancy", class: "yn-label", for: "receipt-tenancy" %>
+      <%= form.collection_select :tenancy_id, local_assigns.fetch(:tenancies, []), :id,
+            ->(t) { [ t.property.address, t.rentable_unit&.display_name, t.all_tenant_parties.map(&:display_name).to_sentence.presence ].compact.join(" · ") },
+            { include_blank: "Select tenancy" },
+            { class: "yn-select #{'yn-field-invalid' if tenancy_error}", id: "receipt-tenancy",
+              autofocus: (receipt.errors.empty? ? true : nil),
+              "aria-invalid": tenancy_error ? "true" : nil,
+              "aria-describedby": tenancy_error ? "receipt-tenancy-error" : nil } %>
+      <% if tenancy_error %>
+        <p id="receipt-tenancy-error" class="yn-error-text"><%= tenancy_error %></p>
+      <% end %>
     </div>
-  </div>
-
-  <%= form.hidden_field :tenancy_id, value: tenancy.id %>
+  <% end %>
 
   <div>
+    <% payer_error = field_error.call(:payer_party_id, :payer_party) %>
     <%= form.label :payer_party_id, "Payer", class: "yn-label", for: "receipt-payer" %>
     <%= form.collection_select :payer_party_id, parties, :id, :display_name,
           { include_blank: "Select payer" },
-          { class: "yn-select #{'yn-field-invalid' if receipt.errors[:payer_party_id].any?}", id: "receipt-payer",
-            "aria-invalid": receipt.errors[:payer_party_id].any? ? "true" : nil,
-            "aria-describedby": receipt.errors[:payer_party_id].any? ? "receipt-payer-error" : nil } %>
-    <% if receipt.errors[:payer_party_id].any? %>
-      <p id="receipt-payer-error" class="yn-error-text"><%= receipt.errors[:payer_party_id].first %></p>
+          { class: "yn-select #{'yn-field-invalid' if payer_error}", id: "receipt-payer",
+            "aria-invalid": payer_error ? "true" : nil,
+            "aria-describedby": payer_error ? "receipt-payer-error" : nil } %>
+    <% if payer_error %>
+      <p id="receipt-payer-error" class="yn-error-text"><%= payer_error %></p>
     <% end %>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <% has_amount_error = receipt.errors[:amount].any? || receipt.errors[:amount_cents].any? %>
+      <% amount_error = field_error.call(:amount, :amount_cents) %>
       <%= form.label :amount, "Amount", class: "yn-label", for: "receipt-amount" %>
       <%= form.text_field :amount, value: receipt.formatted_amount, inputmode: "decimal", placeholder: "0.00",
-            class: "yn-input tabular-nums #{'yn-field-invalid' if has_amount_error}", id: "receipt-amount",
-            autofocus: (receipt.errors.empty? ? true : nil),
-            "aria-invalid": has_amount_error ? "true" : nil,
-            "aria-describedby": has_amount_error ? "receipt-amount-error" : nil %>
-      <% if has_amount_error %>
-        <p id="receipt-amount-error" class="yn-error-text"><%= receipt.errors[:amount].first || receipt.errors[:amount_cents].first %></p>
+            class: "yn-input tabular-nums #{'yn-field-invalid' if amount_error}", id: "receipt-amount",
+            autofocus: (tenancy && receipt.errors.empty? ? true : nil),
+            "aria-invalid": amount_error ? "true" : nil,
+            "aria-describedby": amount_error ? "receipt-amount-error" : nil %>
+      <% if amount_error %>
+        <p id="receipt-amount-error" class="yn-error-text"><%= amount_error %></p>
       <% end %>
     </div>
     <div>
+      <% date_error = field_error.call(:received_on) %>
       <%= form.label :received_on, "Received on", class: "yn-label", for: "receipt-date" %>
-      <%= form.date_field :received_on, class: "yn-input #{'yn-field-invalid' if receipt.errors[:received_on].any?}", id: "receipt-date",
-            "aria-invalid": receipt.errors[:received_on].any? ? "true" : nil,
-            "aria-describedby": receipt.errors[:received_on].any? ? "receipt-date-error" : nil %>
-      <% if receipt.errors[:received_on].any? %>
-        <p id="receipt-date-error" class="yn-error-text"><%= receipt.errors[:received_on].first %></p>
+      <%= form.date_field :received_on, class: "yn-input #{'yn-field-invalid' if date_error}", id: "receipt-date",
+            "aria-invalid": date_error ? "true" : nil,
+            "aria-describedby": date_error ? "receipt-date-error" : nil %>
+      <% if date_error %>
+        <p id="receipt-date-error" class="yn-error-text"><%= date_error %></p>
       <% end %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
+      <% method_error = field_error.call(:payment_method) %>
       <%= form.label :payment_method, "Payment method", class: "yn-label", for: "receipt-method" %>
       <%= form.text_field :payment_method, placeholder: "Zelle, check, cash…",
-            class: "yn-input #{'yn-field-invalid' if receipt.errors[:payment_method].any?}", id: "receipt-method",
-            "aria-invalid": receipt.errors[:payment_method].any? ? "true" : nil,
-            "aria-describedby": receipt.errors[:payment_method].any? ? "receipt-method-error" : nil %>
-      <% if receipt.errors[:payment_method].any? %>
-        <p id="receipt-method-error" class="yn-error-text"><%= receipt.errors[:payment_method].first %></p>
+            class: "yn-input #{'yn-field-invalid' if method_error}", id: "receipt-method",
+            "aria-invalid": method_error ? "true" : nil,
+            "aria-describedby": method_error ? "receipt-method-error" : nil %>
+      <% if method_error %>
+        <p id="receipt-method-error" class="yn-error-text"><%= method_error %></p>
       <% end %>
     </div>
     <div>
+      <% ref_error = field_error.call(:external_reference) %>
       <%= form.label :external_reference, class: "yn-label", for: "receipt-ref" do %>
         Reference <span class="font-normal text-stone-400">(optional)</span>
       <% end %>
       <%= form.text_field :external_reference, placeholder: "Check #1042",
-            class: "yn-input #{'yn-field-invalid' if receipt.errors[:external_reference].any?}", id: "receipt-ref",
-            "aria-invalid": receipt.errors[:external_reference].any? ? "true" : nil,
-            "aria-describedby": receipt.errors[:external_reference].any? ? "receipt-ref-error" : nil %>
-      <% if receipt.errors[:external_reference].any? %>
-        <p id="receipt-ref-error" class="yn-error-text"><%= receipt.errors[:external_reference].first %></p>
+            class: "yn-input #{'yn-field-invalid' if ref_error}", id: "receipt-ref",
+            "aria-invalid": ref_error ? "true" : nil,
+            "aria-describedby": ref_error ? "receipt-ref-error" : nil %>
+      <% if ref_error %>
+        <p id="receipt-ref-error" class="yn-error-text"><%= ref_error %></p>
       <% end %>
     </div>
   </div>
 
   <div>
+    <% memo_error = field_error.call(:memo) %>
     <%= form.label :memo, class: "yn-label", for: "receipt-memo" do %>
       Memo <span class="font-normal text-stone-400">(optional)</span>
     <% end %>
-    <%= form.text_area :memo, rows: 2, class: "yn-textarea", id: "receipt-memo" %>
+    <%= form.text_area :memo, rows: 2, class: "yn-textarea #{'yn-field-invalid' if memo_error}", id: "receipt-memo",
+          "aria-invalid": memo_error ? "true" : nil,
+          "aria-describedby": memo_error ? "receipt-memo-error" : nil %>
+    <% if memo_error %>
+      <p id="receipt-memo-error" class="yn-error-text"><%= memo_error %></p>
+    <% end %>
   </div>
 
   <div class="flex justify-end gap-2 pt-2">
     <% if form_context == :dialog %>
       <button type="button" data-action="modal#close" class="yn-btn yn-btn-ghost">Cancel</button>
     <% else %>
-      <%= link_to "Cancel", tenancy_path(tenancy), class: "yn-btn yn-btn-ghost" %>
+      <%= link_to "Cancel", cancel_path, class: "yn-btn yn-btn-ghost" %>
     <% end %>
     <%= form.submit "Record receipt", class: "yn-btn yn-btn-primary" %>
   </div>

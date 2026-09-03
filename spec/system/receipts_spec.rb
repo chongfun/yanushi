@@ -22,9 +22,9 @@ RSpec.describe "Receipts", type: :system do
 
     click_on "Record receipt", match: :first
 
-    expect(page).to have_content("Record Payment")
+    expect(page).to have_css("h1", text: "Record receipt")
 
-    select "##{tenancy.id} - #{property.address} (#{unit.name})", from: "receipt-tenancy"
+    find("#receipt-tenancy").find(:option, text: property.address).select_option
     select party.display_name, from: "receipt-payer"
     page.execute_script("document.getElementById('receipt-amount').value = '1000.00'")
     page.execute_script("document.getElementById('receipt-method').value = 'Zelle'")
@@ -37,7 +37,7 @@ RSpec.describe "Receipts", type: :system do
     expect(page).to have_text("$1,000.00")
     expect(page).to have_text("Ledger Tester")
     expect(page).to have_text("ZEL-1001")
-    expect(page).to have_link("Download PDF Receipt")
+    expect(page).to have_link("Download PDF")
   end
 
   it "records a payment from the standalone tenancy receipt form in real Turbo browser", :js do
@@ -67,7 +67,8 @@ RSpec.describe "Receipts", type: :system do
     receipt = res.value!.data[:receipt]
 
     visit receipt_path(receipt)
-    click_on "Correct Payment"
+    find("summary", text: "More").click
+    click_on "Correct receipt"
 
     expect(page).to have_text("Correction Semantics")
     fill_in "Amount ($)", with: "1100.00"
@@ -89,13 +90,14 @@ RSpec.describe "Receipts", type: :system do
     receipt = res.value!.data[:receipt]
 
     visit receipt_path(receipt)
-    click_on "Void Payment"
+    find("summary", text: "More").click
+    click_on "Void receipt…"
     within("#confirm-modal") do
-      expect(page).to have_text("Are you sure you want to void this payment?")
+      expect(page).to have_text("Void this receipt?")
       click_button "Confirm"
     end
 
     expect(page).to have_text("Payment has been voided")
-    expect(page).to have_text("This payment was voided.")
+    expect(page).to have_text("This receipt was voided.")
   end
 end

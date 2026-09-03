@@ -1,8 +1,7 @@
+<% content_for :title, "Overview" %>
+
 <div class="max-w-5xl space-y-10">
-  <header>
-    <h1 class="text-2xl font-semibold tracking-tight">Overview</h1>
-    <p class="mt-1 text-sm text-stone-500"><%= Date.current.strftime("%A, %B %-d") %></p>
-  </header>
+  <%= render "shared/page_header", title: "Overview", meta: Date.current.strftime("%A, %B %-d") %>
 
   <!-- Needs attention -->
   <section aria-labelledby="attention-heading">
@@ -38,7 +37,7 @@
       </div>
     <% else %>
       <p class="text-sm text-stone-500 m-0">
-        <span class="yn-status"><span class="yn-dot yn-dot-ok"></span>Nothing needs attention.</span>
+        <%= render "shared/status", text: "Nothing needs attention.", tone: :ok %>
       </p>
     <% end %>
   </section>
@@ -84,7 +83,9 @@
               <span class="min-w-0 flex-1">
                 <span class="block text-sm font-medium text-stone-900"><%= row.property.address %></span>
                 <span class="block text-sm text-stone-500">
-                  <% if row.total_units_count == 1 %>
+                  <% if row.total_units_count.zero? %>
+                    No units yet
+                  <% elsif row.total_units_count == 1 %>
                     1 unit &middot; <%= row.occupied_units_count == 1 ? "occupied" : "vacant" %>
                   <% else %>
                     <%= row.total_units_count %> units &middot; <%= row.occupied_units_count %> occupied, <%= row.total_units_count - row.occupied_units_count %> vacant
@@ -96,14 +97,17 @@
               <% elsif row.balance_cents.negative? %>
                 <span class="text-sm text-stone-500 whitespace-nowrap tabular-nums"><%= format_money_cents(row.balance_cents.abs) %> credit</span>
               <% else %>
-                <span class="yn-status yn-status-sm whitespace-nowrap"><span class="yn-dot yn-dot-ok"></span>Settled</span>
+                <%= render "shared/status", text: "Settled", tone: :ok, size: :sm, extra_class: "whitespace-nowrap" %>
               <% end %>
             <% end %>
           </li>
         <% end %>
       </ul>
     <% else %>
-      <p class="text-sm text-stone-500 m-0">No properties added yet.</p>
+      <%= render "shared/empty_state",
+            title: "Add your first property",
+            body: "Yanushi tracks units, tenancies, and finances per property.",
+            action: link_to("Add property", new_property_path, class: "yn-btn yn-btn-primary yn-btn-sm") %>
     <% end %>
   </section>
 
@@ -111,6 +115,7 @@
   <section aria-labelledby="recent-heading">
     <div class="flex items-baseline justify-between mb-3">
       <h2 id="recent-heading" class="text-sm font-semibold">Recent activity</h2>
+      <%= link_to "All activity →", money_path, class: "yn-link text-sm" %>
     </div>
 
     <% if @overview.recent_activity.any? %>
@@ -118,39 +123,19 @@
         <table class="yn-table">
           <thead class="sr-only">
             <tr>
-              <th>Date</th>
-              <th>Event</th>
-              <th>Property</th>
-              <th class="text-right">Amount</th>
+              <th scope="col">Date</th>
+              <th scope="col">Event</th>
+              <th scope="col">Property</th>
+              <th scope="col" class="text-right">Amount</th>
             </tr>
           </thead>
           <tbody>
-            <% @overview.recent_activity.each do |row| %>
-              <tr>
-                <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
-                <td>
-                  <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
-                  <%= link_to target_path, class: "yn-row-link" do %>
-                    <%= row.label %>
-                    <% if row.rentable_unit %>
-                      <span class="text-stone-400">&middot; <%= row.rentable_unit.name %></span>
-                    <% end %>
-                  <% end %>
-                  <% if row.corrected? %>
-                    <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-                  <% elsif row.voided? %>
-                    <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-danger"></span>Voided</span>
-                  <% end %>
-                </td>
-                <td class="text-stone-500"><%= row.property&.address %></td>
-                <td class="text-right tabular-nums whitespace-nowrap"><%= format_money_cents(row.amount_cents.abs) %></td>
-              </tr>
-            <% end %>
+            <%= render partial: "accounting/activity_row", collection: @overview.recent_activity, as: :row, locals: { context: :property, detail: :unit } %>
           </tbody>
         </table>
       </div>
     <% else %>
-      <p class="text-sm text-stone-500 m-0">No recent activity recorded.</p>
+      <p class="text-sm text-stone-500 m-0">No activity yet. Receipts, charges, and expenses will appear here as they are recorded.</p>
     <% end %>
   </section>
 </div>

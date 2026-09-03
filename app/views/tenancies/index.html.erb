@@ -1,71 +1,65 @@
 <% content_for :title, "Tenancies" %>
 
 <div class="max-w-5xl">
-  <header class="mb-6">
-    <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-      <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Portfolio</h1>
-      <%= link_to "New tenancy", new_tenancy_path, class: "yn-btn yn-btn-primary" %>
-    </div>
-    <nav class="yn-tabs mt-4" aria-label="Portfolio sections">
-      <%= link_to "Properties", portfolio_path, class: "yn-tab" %>
-      <%= link_to "Tenancies", tenancies_path, class: "yn-tab", "aria-current": "page" %>
-      <%= link_to "Parties", parties_path, class: "yn-tab" %>
-    </nav>
-  </header>
+  <%= render "portfolio/header", current_tab: :tenancies %>
 
   <% if @tenancies.any? %>
-    <table class="yn-table">
-      <thead>
-        <tr>
-          <th scope="col">Property / Unit</th>
-          <th scope="col">Agreement</th>
-          <th scope="col">Period</th>
-          <th scope="col">Tenants</th>
-          <th scope="col" class="text-right tabular-nums">Current rent</th>
-          <th scope="col" class="text-right tabular-nums">Balance</th>
-        </tr>
-      </thead>
-      <tbody id="tenancies">
-        <% @tenancies.each do |tenancy| %>
-          <%
-            tenant_parties = tenancy.parties.select { |p| tenancy.tenancy_parties.find { |tp| tp.party_id == p.id }&.tenant? }
-            tenant_name = tenant_parties.map(&:display_name).presence || tenancy.parties.map(&:display_name).presence
-            rent_term = tenancy.rent_terms.active.first || tenancy.rent_terms.order(effective_from: :desc).first
-            balance = tenancy.current_balance
-            balance_cents = tenancy.current_balance_cents
-          %>
-          <tr id="<%= dom_id tenancy %>">
-            <td>
-              <%= link_to tenancy_path(tenancy), class: "yn-row-link" do %>
-                <%= tenancy.property.address %>
-              <% end %>
-              <span class="block text-[13px] text-stone-500"><%= tenancy.rentable_unit.display_name %></span>
-            </td>
-            <td><%= tenancy.agreement_type.humanize %></td>
-            <td class="text-stone-500 whitespace-nowrap text-sm">
-              <%= tenancy.commencement_date.strftime("%b %d, %Y") %>
-              <% if tenancy.termination_date %>
-                – <%= tenancy.termination_date.strftime("%b %d, %Y") %>
-              <% else %>
-                (Month-to-Month)
-              <% end %>
-            </td>
-            <td><%= tenant_name ? tenant_name.to_sentence : "—" %></td>
-            <td class="text-right tabular-nums whitespace-nowrap">
-              <%= rent_term ? "#{format_money_cents(rent_term.amount_cents)}/mo" : "—" %>
-            </td>
-            <td class="text-right tabular-nums whitespace-nowrap <%= balance_cents.positive? ? 'text-stone-900 font-medium' : 'text-stone-500' %>">
-              <% if balance_cents.zero? %>
-                <span class="text-stone-400">—</span>
-              <% else %>
-                <%= balance_phrase_cents(balance_cents) %>
-              <% end %>
-            </td>
+    <div class="overflow-x-auto">
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Property / Unit</th>
+            <th scope="col">Agreement</th>
+            <th scope="col">Period</th>
+            <th scope="col">Tenants</th>
+            <th scope="col" class="text-right tabular-nums">Current rent</th>
+            <th scope="col" class="text-right tabular-nums">Balance</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody id="tenancies">
+          <% @tenancies.each do |tenancy| %>
+            <%
+              tenant_names = tenancy.all_tenant_parties.map(&:display_name).presence ||
+                             tenancy.tenancy_parties.filter_map { |tp| tp.party&.display_name }.presence
+              rent_term = tenancy.primary_rent_term
+              balance_cents = @balances[tenancy.id] || 0
+            %>
+            <tr id="<%= dom_id tenancy %>">
+              <td>
+                <%= link_to tenancy_path(tenancy), class: "yn-row-link" do %>
+                  <%= tenancy.rentable_unit.property.address %>
+                <% end %>
+                <span class="block text-[13px] text-stone-500"><%= tenancy.rentable_unit.display_name %></span>
+              </td>
+              <td><%= tenancy.agreement_type.humanize %></td>
+              <td class="text-stone-500 whitespace-nowrap text-sm">
+                <%= tenancy.commencement_date.strftime("%b %d, %Y") %>
+                <% if tenancy.termination_date %>
+                  – <%= tenancy.termination_date.strftime("%b %d, %Y") %>
+                <% else %>
+                  (Month-to-Month)
+                <% end %>
+              </td>
+              <td><%= tenant_names ? tenant_names.to_sentence : "—" %></td>
+              <td class="text-right tabular-nums whitespace-nowrap">
+                <%= rent_term ? "#{format_money_cents(rent_term.amount_cents)}/mo" : "—" %>
+              </td>
+              <td class="text-right tabular-nums whitespace-nowrap <%= balance_cents.positive? ? 'text-stone-900 font-medium' : 'text-stone-500' %>">
+                <% if balance_cents.zero? %>
+                  <span class="text-stone-400" aria-hidden="true">—</span><span class="sr-only">Settled</span>
+                <% else %>
+                  <%= balance_phrase_cents(balance_cents) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% else %>
-    <p class="text-sm text-stone-500 m-0">No tenancies found.</p>
+    <%= render "shared/empty_state",
+          title: "No tenancies yet",
+          body: "A tenancy records who occupies a unit, what rent is due, and what they owe. Start one from a vacant unit on a property, or create one here.",
+          action: link_to("Create a tenancy", new_tenancy_path, class: "yn-btn yn-btn-primary yn-btn-sm") %>
   <% end %>
 </div>

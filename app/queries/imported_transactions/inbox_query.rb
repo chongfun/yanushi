@@ -84,7 +84,7 @@ module ImportedTransactions
       def fetch_reviewables
         if load_records
           records = user.imported_transactions
-                        .includes(:matched_party, :source_document, matched_tenancy: { rentable_unit: :property })
+                        .includes(:matched_party, :source_document, matched_tenancy: [ :property, :rentable_unit ])
                         .reviewable
                         .order(created_at: :desc, id: :desc)
                         .to_a
@@ -92,7 +92,7 @@ module ImportedTransactions
         else
           next_txn = user.imported_transactions
                          .reviewable
-                         .includes(:matched_party, :source_document, matched_tenancy: { rentable_unit: :property })
+                         .includes(:matched_party, :source_document, matched_tenancy: [ :property, :rentable_unit ])
                          .order(created_at: :desc, id: :desc)
                          .first
           [ [], user.imported_transactions.reviewable.count, next_txn ]
@@ -104,7 +104,7 @@ module ImportedTransactions
 
         user.imported_transactions
             .reviewable
-            .includes(:matched_party, :source_document, matched_tenancy: { rentable_unit: :property })
+            .includes(:matched_party, :source_document, matched_tenancy: [ :property, :rentable_unit ])
             .find_by(id: updated_transaction_id)
       end
 

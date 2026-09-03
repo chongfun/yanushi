@@ -57,6 +57,7 @@ interface ::_RbsRailsPathHelpers
   def new_tenancy_path: (*untyped) -> ::String
   def edit_tenancy_path: (*untyped) -> ::String
   def tenancy_path: (*untyped) -> ::String
+  def tenancy_agreement_path: (*untyped) -> ::String
   def accounts_path: (*untyped) -> ::String
   def account_path: (*untyped) -> ::String
   def journal_entry_path: (*untyped) -> ::String
@@ -179,6 +180,7 @@ interface ::_RbsRailsPathHelpers
   def new_tenancy_url: (*untyped) -> ::String
   def edit_tenancy_url: (*untyped) -> ::String
   def tenancy_url: (*untyped) -> ::String
+  def tenancy_agreement_url: (*untyped) -> ::String
   def accounts_url: (*untyped) -> ::String
   def account_url: (*untyped) -> ::String
   def journal_entry_url: (*untyped) -> ::String

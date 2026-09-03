@@ -56,7 +56,7 @@ RSpec.describe "RentTerms", type: :request do
         }
       }.to change(RentTerm, :count).by(1)
 
-      expect(response).to redirect_to(tenancy_url(tenancy))
+      expect(response).to redirect_to(tenancy_agreement_url(tenancy))
       expect(initial_term.reload.effective_until).to eq(future_date_1 - 1.day)
 
       post tenancy_rent_terms_url(tenancy), params: {
@@ -67,7 +67,7 @@ RSpec.describe "RentTerms", type: :request do
           effective_from: future_date_2
         }
       }
-      expect(response).to redirect_to(tenancy_url(tenancy))
+      expect(response).to redirect_to(tenancy_agreement_url(tenancy))
 
       post tenancy_rent_terms_url(tenancy, format: :json), params: {
         rent_term: {

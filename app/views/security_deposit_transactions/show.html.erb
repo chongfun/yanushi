@@ -107,7 +107,7 @@
           <% @journal_entries.each do |entry| %>
             <div class="p-3 bg-stone-50 rounded-lg border border-stone-200 text-xs">
               <div class="flex justify-between font-bold mb-2 text-stone-900">
-                <span><%= entry.event_type.titleize %></span>
+                <%= link_to entry.event_type.titleize, journal_entry_path(entry), class: "yn-link" %>
                 <span><%= entry.occurred_on.strftime("%b %d, %Y") %></span>
               </div>
               <table class="w-full font-mono text-xs">

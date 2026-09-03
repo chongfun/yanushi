@@ -34,12 +34,12 @@ RSpec.describe "Expenses", type: :system do
     expect(page).to have_text("Repairs")
     expect(page).to have_text("Fixed the leaky roof")
     expect(page).to have_text("$450.00")
-    expect(page).to have_text("Posted to Ledger")
+    expect(page).to have_text("Posted")
 
     expense = Expense.last
 
     # Add reimbursement charge
-    click_on "＋ Add Reimbursement Charge"
+    click_on "Add reimbursement charge"
     select "#{unit.display_name} - Tenancy ##{tenancy.id} (#{party.display_name})", from: "Tenancy to Charge"
     fill_in "Reimbursement Amount ($)", with: "150.00"
     fill_in "Description / Memo", with: "Roof repair tenant share"
@@ -56,8 +56,9 @@ RSpec.describe "Expenses", type: :system do
 
     visit expense_path(expense)
 
-    # Correct expense
-    click_on "Correct Expense"
+    # Correct expense (from the More menu)
+    find("summary", text: "More").click
+    click_on "Correct expense"
     expect(page).to have_content("Reversal & Replacement Notice")
 
     fill_in "expense[amount]", with: "250.00"
@@ -84,7 +85,8 @@ RSpec.describe "Expenses", type: :system do
 
     # Void the replacement expense
     visit expense_path(replacement)
-    click_on "Void Expense"
+    find("summary", text: "More").click
+    click_on "Void expense…"
 
     expect(page).to have_content("Expense was successfully voided and reversed.")
     expect(page).to have_content("Expense Voided")

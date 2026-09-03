@@ -41,14 +41,13 @@ class PropertyTaxReviewResolutionsController < ApplicationController
     @schedule_e_result = TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
     @tax_profile = @schedule_e_result.tax_profile
     @form_definition = TaxReporting::ScheduleEFormDefinition.for(@year)
-    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
 
     respond_to do |format|
       if saved
-        action_verb = is_update ? "updated" : "recorded"
+        @action_verb = is_update ? "updated" : "recorded"
         format.html do
           redirect_to schedule_e_property_path(@property, year: @year),
-                      notice: "Tax treatment for Journal Entry ##{@resolution.journal_entry_id} was successfully #{action_verb}."
+                      notice: "Tax treatment for Journal Entry ##{@resolution.journal_entry_id} was successfully #{@action_verb}."
         end
         format.turbo_stream
       else
@@ -76,7 +75,6 @@ class PropertyTaxReviewResolutionsController < ApplicationController
     @schedule_e_result = TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
     @tax_profile = @schedule_e_result.tax_profile
     @form_definition = TaxReporting::ScheduleEFormDefinition.for(@year)
-    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
 
     respond_to do |format|
       format.html do

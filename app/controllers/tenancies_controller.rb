@@ -3,7 +3,8 @@ class TenanciesController < ApplicationController
   before_action :set_form_data, only: %i[new edit create update]
 
   def index
-    @tenancies = authenticated_user.tenancies.includes({ rentable_unit: :property }, { tenancy_parties: :party })
+    @tenancies = authenticated_user.tenancies.includes({ rentable_unit: :property }, { tenancy_parties: :party }, :rent_terms)
+    @balances = Accounting::TenancyBalancesQuery.call(tenancies: @tenancies.to_a)
   end
 
   def show

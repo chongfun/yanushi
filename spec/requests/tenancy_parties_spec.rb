@@ -56,7 +56,7 @@ RSpec.describe "TenancyParties", type: :request do
         }
       }.to change(TenancyParty, :count).by(1)
 
-      expect(response).to redirect_to(tenancy_url(tenancy))
+      expect(response).to redirect_to(tenancy_agreement_url(tenancy))
 
       another_party = create(:party, user: user, display_name: "Another Party")
       post tenancy_tenancy_parties_url(tenancy, format: :json), params: {
@@ -110,7 +110,7 @@ RSpec.describe "TenancyParties", type: :request do
           role: "guarantor"
         }
       }
-      expect(response).to redirect_to(tenancy_url(tenancy))
+      expect(response).to redirect_to(tenancy_agreement_url(tenancy))
       expect(tenancy_party.reload.effective_until).to eq(Date.current + 6.months)
       expect(tenancy_party.role).to eq("tenant")
 
@@ -168,7 +168,7 @@ RSpec.describe "TenancyParties", type: :request do
         delete tenancy_tenancy_party_url(tenancy, tenancy_party)
       }.not_to change(TenancyParty, :count)
 
-      expect(response).to redirect_to(tenancy_url(tenancy))
+      expect(response).to redirect_to(tenancy_agreement_url(tenancy))
       follow_redirect!
       expect(response.body).to include("tenancy must maintain continuous tenant coverage")
 
@@ -181,7 +181,7 @@ RSpec.describe "TenancyParties", type: :request do
         delete tenancy_tenancy_party_url(tenancy, second_party)
       }.to change(TenancyParty, :count).by(-1)
 
-      expect(response).to redirect_to(tenancy_url(tenancy))
+      expect(response).to redirect_to(tenancy_agreement_url(tenancy))
 
       third_party = create(:tenancy_party,
         tenancy: tenancy,

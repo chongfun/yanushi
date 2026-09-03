@@ -28,45 +28,22 @@
   <% end %>
 
   <% if @activity_result.rows.any? %>
-    <table class="yn-table">
-      <thead>
-        <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Event</th>
-          <th scope="col">Property</th>
-          <th scope="col" class="text-right tabular-nums">Amount</th>
-          <th scope="col"><span class="sr-only">Audit</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @activity_result.rows.each do |row| %>
+    <div class="overflow-x-auto">
+      <table class="yn-table">
+        <thead>
           <tr>
-            <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
-            <td>
-              <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
-              <%= link_to target_path, class: "yn-row-link" do %>
-                <%= row.label %>
-                <% if row.description.present? && row.description != row.label %>
-                  <span class="text-stone-400">&middot; <%= row.description %></span>
-                <% end %>
-              <% end %>
-              <% if row.corrected? %>
-                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-              <% elsif row.voided? %>
-                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-danger"></span>Voided</span>
-              <% end %>
-            </td>
-            <td class="text-stone-500 whitespace-nowrap"><%= row.property&.address || "—" %></td>
-            <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
-              <%= signed_money_cents(row.amount_cents) %>
-            </td>
-            <td class="text-right whitespace-nowrap">
-              <%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
-            </td>
+            <th scope="col">Date</th>
+            <th scope="col">Event</th>
+            <th scope="col">Property</th>
+            <th scope="col" class="text-right tabular-nums">Amount</th>
+            <th scope="col"><span class="sr-only">Audit</span></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <%= render partial: "accounting/activity_row", collection: @activity_result.rows, as: :row, locals: { context: :property, audit: true } %>
+        </tbody>
+      </table>
+    </div>
 
     <% if @activity_result.total_pages > 1 %>
       <% start_idx = ((@activity_result.page - 1) * @activity_result.per_page) + 1 %>

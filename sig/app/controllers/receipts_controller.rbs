@@ -9,6 +9,8 @@ class ReceiptsController < ApplicationController
   @per_page: Integer
   @total_count: Integer
   @total_pages: Integer
+  @balance_cents: Integer?
+  @recent_activity_rows: Array[Accounting::TenantReceivableActivityQuery::StatementRow]
 
   def index: () -> void
   def show: () -> void
@@ -24,4 +26,5 @@ class ReceiptsController < ApplicationController
   def set_receipt: () -> void
   def receipt_params: () -> ActionController::Parameters
   def load_form_collections: () -> void
+  def render_receipt_failure: () -> void
 end

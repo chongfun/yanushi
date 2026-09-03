@@ -159,7 +159,11 @@ class Tenancy < ApplicationRecord
   end
 
   def most_recent_rent_term
-    rent_terms.order(effective_from: :desc).first
+    if rent_terms.loaded?
+      rent_terms.max_by(&:effective_from)
+    else
+      rent_terms.order(effective_from: :desc).first
+    end
   end
 
   def deletable?

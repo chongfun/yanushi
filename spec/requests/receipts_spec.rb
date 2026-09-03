@@ -52,7 +52,7 @@ RSpec.describe "Receipts", type: :request do
     it "renders HTML details" do
       get receipt_url(receipt)
       expect(response).to be_successful
-      expect(response.body).to include("Payment Details")
+      expect(response.body).to include("Receipt from Alice Walker")
       expect(response.body).to include("$1,200.00")
       expect(response.body).to include("Alice Walker")
       expect(response.body).to include("ZEL123")
@@ -81,7 +81,7 @@ RSpec.describe "Receipts", type: :request do
     it "renders top-level new receipt page" do
       get new_receipt_url
       expect(response).to be_successful
-      expect(response.body).to include("Record Payment")
+      expect(response.body).to include("Record receipt")
     end
 
     it "renders nested new receipt page preselecting single active tenant" do
@@ -652,7 +652,7 @@ RSpec.describe "Receipts", type: :request do
     it "renders the correction form" do
       get correction_receipt_url(receipt)
       expect(response).to be_successful
-      expect(response.body).to include("Correct Payment")
+      expect(response.body).to include("Correct receipt")
       expect(response.body).to include("ZEL100")
     end
 

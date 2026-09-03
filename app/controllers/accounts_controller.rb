@@ -3,10 +3,16 @@ class AccountsController < ApplicationController
 
   def index
     @accounts = authenticated_user.accounts.order(:account_type, :key)
-    @balances = {}
+    raw_sums = Posting.joins(:journal_entry)
+                      .where(account_id: @accounts.map(&:id))
+                      .where("journal_entries.occurred_on <= ?", Date.current)
+                      .group(:account_id)
+                      .sum(:amount_cents)
+    balances = {} # : Hash[Integer, Integer]
     @accounts.each do |acc|
-      @balances[acc.id] = Accounting::AccountBalanceQuery.call(account: acc, as_of: Date.current)
+      balances[acc.id] = Accounting::NaturalBalance.convert(acc, raw_sums[acc.id] || 0)
     end
+    @balances = balances
   end
 
   def show

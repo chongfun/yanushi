@@ -1,0 +1,10 @@
+<%= @property.address %> ·
+<%= @tax_profile ? @tax_profile.schedule_e_property_type.humanize : "Not configured" %>
+<% if @tax_profile&.other_description.present? %>(<%= @tax_profile.other_description %>)<% end %> ·
+<% if @schedule_e_result.unresolved_review_items.any? %>
+  <%= render "shared/status", text: (@schedule_e_result.unresolved_review_items.size == 1 ? "1 item needs review" : "#{@schedule_e_result.unresolved_review_items.size} items need review"), tone: :warn, size: :sm %>
+<% elsif @tax_profile.blank? %>
+  <%= render "shared/status", text: "Needs tax profile", tone: :warn, size: :sm %>
+<% else %>
+  <%= render "shared/status", text: "Ready", tone: :ok, size: :sm %>
+<% end %>

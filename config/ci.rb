@@ -9,6 +9,7 @@ CI.run do
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: Importmap vulnerability audit", "bin/importmap audit"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
+  step "Assets: Tailwind build", "bin/rails tailwindcss:build"
   step "Tests: RSpec", "bundle exec rspec"
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 

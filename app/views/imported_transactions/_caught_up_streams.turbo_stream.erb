@@ -1,0 +1,7 @@
+<%# Caught-up state for the originating tab. Locals: processing_count, failed_count %>
+<%= turbo_stream.replace "inbox_review_workspace",
+                         partial: "imported_transactions/caught_up",
+                         locals: { processing_count: processing_count, failed_count: failed_count, focus_on_connect: true } %>
+<%= turbo_stream.replace "inbox_review_empty",
+                         partial: "imported_transactions/caught_up",
+                         locals: { processing_count: processing_count, failed_count: failed_count, focus_on_connect: true } %>

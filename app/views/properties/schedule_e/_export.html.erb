@@ -24,7 +24,7 @@
       <% if @tax_profile.blank? %>
         <span>PDF export is unavailable — <strong>tax profile</strong> must be configured for <%= @year %> before exporting.</span>
       <% elsif unresolved_count.positive? %>
-        <span>PDF export is unavailable — <strong><%= pluralize(unresolved_count, "review item") %></strong> below still need decisions.</span>
+        <span>PDF export is unavailable — <%= link_to "#{pluralize(unresolved_count, "review item")} below", "#schedule_e_review", class: "yn-link font-medium" %> still <%= unresolved_count == 1 ? "needs a decision" : "need decisions" %>.</span>
       <% elsif !template_available %>
         <span>PDF export is unavailable — Schedule E PDF template for <%= @year %> is not yet available; view the projected worksheet below.</span>
       <% end %>

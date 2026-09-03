@@ -2,7 +2,7 @@ class PartiesController < ApplicationController
   before_action :set_party, only: %i[show edit update destroy]
 
   def index
-    @parties = authenticated_user.parties.includes(:party_aliases)
+    @parties = authenticated_user.parties.includes(:party_aliases, :tenancy_parties)
   end
 
   def show

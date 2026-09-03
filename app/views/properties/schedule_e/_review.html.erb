@@ -10,7 +10,7 @@
     </h2>
 
     <div class="yn-surface divide-y divide-stone-200">
-      <% @schedule_e_result.review_items.each do |item| %>
+      <% (@schedule_e_result.unresolved_review_items + @schedule_e_result.resolved_review_items).each do |item| %>
         <% target_entry = item.resolution_target %>
         <% if item.resolved? %>
           <div class="flex items-center justify-between gap-4 px-4 py-3 bg-stone-50" id="<%= dom_id(item.resolution) %>">
@@ -119,5 +119,10 @@
         <% end %>
       <% end %>
     </div>
+  <% else %>
+    <h2 id="se-review-heading" class="text-sm font-semibold mb-3" tabindex="-1">Needs review</h2>
+    <p class="text-sm text-stone-500 m-0">
+      <%= render "shared/status", text: "No items need review for #{@year}.", tone: :ok %>
+    </p>
   <% end %>
 </section>

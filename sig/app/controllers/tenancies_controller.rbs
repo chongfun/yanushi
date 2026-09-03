@@ -1,5 +1,6 @@
 class TenanciesController < ApplicationController
   @tenancies: Tenancy::ActiveRecord_Relation
+  @balances: Hash[Integer, Integer]
   @tenancy: Tenancy
   @properties: Property::ActiveRecord_Relation
   @parties: Party::ActiveRecord_Relation

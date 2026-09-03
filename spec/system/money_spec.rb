@@ -76,7 +76,7 @@ RSpec.describe "Money", type: :system do
 
     # Click on Expense row to view expense details
     click_on "Ace Plumbing"
-    expect(page).to have_text("Expense Details")
+    expect(page).to have_css("h1", text: "Ace Plumbing")
     expect(page).to have_text("Sink repair")
     expect(page).to have_text("$450.00")
     expect(page).to have_link("742 Evergreen Terrace")

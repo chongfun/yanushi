@@ -1,26 +1,9 @@
-<%= turbo_stream.replace "sidebar_inbox_badge",
-                         partial: "shared/inbox_badge",
-                         locals: { count: @review_count, id: "sidebar_inbox_badge", target_id: "sidebar_inbox_badge" } %>
-
-<%= turbo_stream.replace "drawer_inbox_badge",
-                         partial: "shared/inbox_badge",
-                         locals: { count: @review_count, id: "drawer_inbox_badge", target_id: "drawer_inbox_badge" } %>
-
-<%= turbo_stream.replace "mobile_inbox_badge",
-                         partial: "shared/mobile_inbox_badge",
-                         locals: { count: @review_count, target_id: "mobile_inbox_badge" } %>
-
-<%= turbo_stream.replace "tab_review_count" do %>
-  <span id="tab_review_count"><% if @review_count > 0 %><span class="yn-count"><%= @review_count %></span><% end %></span>
-<% end %>
-
-<%= turbo_stream.replace "tab_processing_count" do %>
-  <span id="tab_processing_count"><% if (@processing_count + @failed_count) > 0 %><span class="yn-count"><%= @processing_count + @failed_count %></span><% end %></span>
-<% end %>
-
-<%= turbo_stream.replace "tab_history_count" do %>
-  <span id="tab_history_count"><% if @history_count > 0 %><span class="yn-count yn-count-neutral"><%= @history_count %></span><% end %></span>
-<% end %>
+<%= render "imported_transactions/count_streams",
+           review_count: @review_count,
+           processing_count: @processing_count,
+           failed_count: @failed_count,
+           history_count: @history_count,
+           inbox_revision: @inbox_revision %>
 
 <% if @next_transaction.present? %>
   <%= turbo_stream.replace "inbox_review_queue_list",
@@ -41,24 +24,12 @@
                              focus_on_connect: true
                            } %>
 <% else %>
-  <%= turbo_stream.replace "inbox_review_workspace",
-                           partial: "imported_transactions/review_view",
-                           locals: {
-                             transactions: [],
-                             selected_transaction: nil,
-                             parties: @parties,
-                             tenancies: @tenancies,
-                             party_tenancies_map: @party_tenancies_map,
-                             tenancy_parties_map: @tenancy_parties_map,
-                             processing_count: @processing_count,
-                             failed_count: @failed_count,
-                             focus_on_connect: true
-                           } %>
+  <%# The user's own broadcast may already have swapped the workspace for the
+      caught-up state; target both ids so this focusing version wins either way. %>
+  <%= render "imported_transactions/caught_up_streams",
+             processing_count: @processing_count,
+             failed_count: @failed_count %>
 <% end %>
-
-<%= turbo_stream.replace "inbox_sync",
-                         partial: "imported_transactions/sync_target",
-                         locals: { revision: @inbox_revision, review_count: @review_count } %>
 
 <%= turbo_stream.append "flash-messages",
                         partial: "shared/toast",

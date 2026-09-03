@@ -1,6 +1,7 @@
 class ExpensesController < ApplicationController
   @expense: Expense
   @expenses: Expense::ActiveRecord_Relation
+  @reimbursements: Charge::ActiveRecord_Relation
   @nested_property: Property?
   @properties: Property::ActiveRecord_Relation
   @financial_activity: Array[Accounting::ActivityRow]

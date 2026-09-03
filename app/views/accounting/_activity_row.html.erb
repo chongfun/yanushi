@@ -1,0 +1,55 @@
+<%#
+  One row of a financial activity table (Overview, Money Activity, Property
+  Overview, Property Activity). The event links to its source record; the
+  journal entry is reachable from the optional audit column.
+
+  Locals:
+    row     : Accounting::ActivityRow
+    context : :property (default) | :unit | :tenancy_or_unit, what the third column shows
+    detail  : :description (default) | :unit, the muted text after the event label
+    audit   : true to append the Journal link column
+%>
+<%
+  context = local_assigns.fetch(:context, :property)
+  detail = local_assigns.fetch(:detail, :description)
+  audit = local_assigns.fetch(:audit, false)
+%>
+<tr>
+  <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
+  <td>
+    <%= link_to activity_source_path(row), class: "yn-row-link" do %>
+      <%= row.label %>
+      <% if detail == :unit %>
+        <% if row.rentable_unit %>
+          <span class="text-stone-400">&middot; <%= row.rentable_unit.name %></span>
+        <% end %>
+      <% elsif row.description.present? && row.description != row.label %>
+        <span class="text-stone-400">&middot; <%= row.description %></span>
+      <% end %>
+    <% end %>
+    <% if row.corrected? %>
+      <%= render "shared/status", text: "Corrected", size: :sm, extra_class: "ml-1" %>
+    <% elsif row.voided? %>
+      <%= render "shared/status", text: "Voided", size: :sm, extra_class: "ml-1" %>
+    <% end %>
+  </td>
+  <% if context == :unit %>
+    <td class="text-stone-500 whitespace-nowrap"><%= row.rentable_unit&.name || "—" %></td>
+  <% elsif context == :tenancy_or_unit %>
+    <td class="text-stone-500 whitespace-nowrap">
+      <% if row.tenancy %>
+        <%= link_to (row.rentable_unit&.name || "Tenancy"), tenancy_path(row.tenancy), class: "yn-link text-[13px]" %>
+      <% elsif row.rentable_unit %>
+        <%= row.rentable_unit.name %>
+      <% else %>
+        —
+      <% end %>
+    </td>
+  <% else %>
+    <td class="text-stone-500 whitespace-nowrap"><%= row.property&.address || "—" %></td>
+  <% end %>
+  <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>"><%= signed_money_cents(row.amount_cents) %></td>
+  <% if audit %>
+    <td class="text-right whitespace-nowrap"><%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %></td>
+  <% end %>
+</tr>

@@ -1,0 +1,30 @@
+<%# Every Inbox mutation and broadcast refreshes the same count surfaces:
+    the three global badges, the three tab badges, and the sync revision.
+    Locals: review_count, processing_count, failed_count, history_count, inbox_revision %>
+<%= turbo_stream.replace "sidebar_inbox_badge",
+                         partial: "shared/inbox_badge",
+                         locals: { count: review_count, id: "sidebar_inbox_badge", target_id: "sidebar_inbox_badge" } %>
+
+<%= turbo_stream.replace "drawer_inbox_badge",
+                         partial: "shared/inbox_badge",
+                         locals: { count: review_count, id: "drawer_inbox_badge", target_id: "drawer_inbox_badge" } %>
+
+<%= turbo_stream.replace "mobile_inbox_badge",
+                         partial: "shared/mobile_inbox_badge",
+                         locals: { count: review_count, target_id: "mobile_inbox_badge" } %>
+
+<%= turbo_stream.replace "tab_review_count",
+                         partial: "imported_transactions/tab_badge",
+                         locals: { target_id: "tab_review_count", count: review_count } %>
+
+<%= turbo_stream.replace "tab_processing_count",
+                         partial: "imported_transactions/tab_badge",
+                         locals: { target_id: "tab_processing_count", count: processing_count + failed_count } %>
+
+<%= turbo_stream.replace "tab_history_count",
+                         partial: "imported_transactions/tab_badge",
+                         locals: { target_id: "tab_history_count", count: history_count, neutral: true } %>
+
+<%= turbo_stream.replace "inbox_sync",
+                         partial: "imported_transactions/sync_target",
+                         locals: { revision: inbox_revision, review_count: review_count } %>

@@ -1,9 +1,8 @@
-<% content_for :title, "Add Participant" %>
+<% content_for :title, "Add participant" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Add Participant to Tenancy #<%= @tenancy.id %></h1>
-
+<div class="max-w-xl">
+  <%= render "tenancies/page_header", tenancy: @tenancy, title: "Add participant" %>
+  <div class="yn-surface p-6">
     <%= render "form", tenancy_party: @tenancy_party %>
   </div>
 </div>

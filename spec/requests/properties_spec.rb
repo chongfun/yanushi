@@ -9,9 +9,16 @@ RSpec.describe "Properties", type: :request do
   end
 
   describe "GET /properties" do
-    it "renders a successful response" do
+    it "redirects the HTML index to the Portfolio landing" do
       get properties_url
+      expect(response).to redirect_to(portfolio_url)
+      expect(response).to have_http_status(:moved_permanently)
+    end
+
+    it "still serves the JSON index" do
+      get properties_url(format: :json)
       expect(response).to be_successful
+      expect(response.parsed_body.map { |p| p["address"] }).to include(property.address)
     end
   end
 
@@ -174,7 +181,7 @@ RSpec.describe "Properties", type: :request do
         delete property_url(property)
       }.to change(Property, :count).by(-1)
 
-      expect(response).to redirect_to(properties_url)
+      expect(response).to redirect_to(portfolio_url)
 
       second_property = create(:property, user: user)
       delete property_url(second_property, format: :json)

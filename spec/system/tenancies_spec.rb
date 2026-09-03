@@ -334,7 +334,7 @@ RSpec.describe "Tenancies", type: :system do
     expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Record receipt")
 
     # 2. Full payoff: record remaining $300 -> $0.00 settled, Record receipt is removed via Turbo Stream without reload
-    page.execute_script("document.querySelectorAll('#flash-messages .alert').forEach(el => el.remove())")
+    page.execute_script("document.querySelectorAll('#flash-messages .yn-alert').forEach(el => el.remove())")
     click_on "Record receipt"
     expect(page).to have_css("dialog#modal[open]")
 

@@ -26,51 +26,53 @@
 
 <% if confirmed_transactions.empty? %>
   <p class="text-sm text-stone-500 mt-2">
-    <span class="yn-status"><span class="yn-dot yn-dot-neutral"></span>No confirmed transactions found.</span>
+    <span class="yn-status"><span class="yn-dot"></span>No confirmed transactions found.</span>
   </p>
 <% else %>
-  <table class="yn-table max-w-4xl">
-    <thead>
-      <tr>
-        <th scope="col">Date</th>
-        <th scope="col">Payer</th>
-        <th scope="col">Source</th>
-        <th scope="col">Recorded as</th>
-        <th scope="col" class="text-right tabular-nums">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% confirmed_transactions.each do |txn| %>
+  <div class="overflow-x-auto">
+    <table class="yn-table max-w-4xl">
+      <thead>
         <tr>
-          <td class="whitespace-nowrap text-stone-500 w-20">
-            <%= txn.occurred_on&.strftime("%b %d") || "—" %>
-          </td>
-          <td>
-            <%= txn.matched_party&.display_name || txn.payer_name || "—" %>
-          </td>
-          <td class="text-stone-500">
-            <%= [txn.payment_method&.titleize, txn.source_document&.attachment_filename].compact.join(" · ") %>
-          </td>
-          <td>
-            <% if txn.confirmed_source.is_a?(Receipt) %>
-              <%= link_to receipt_path(txn.confirmed_source), class: "yn-link" do %>
-                Receipt — <%= txn.confirmed_source.tenancy.property.address %>
-              <% end %>
-            <% elsif txn.confirmed_source.is_a?(SecurityDepositTransaction) %>
-              <%= link_to security_deposit_transaction_path(txn.confirmed_source), class: "yn-link" do %>
-                Security deposit — <%= txn.confirmed_source.security_deposit.tenancy.property.address %>
-              <% end %>
-            <% else %>
-              <span class="text-stone-400">Confirmed</span>
-            <% end %>
-          </td>
-          <td class="text-right tabular-nums whitespace-nowrap font-medium">
-            <%= format_money_cents(txn.amount_cents) %>
-          </td>
+          <th scope="col">Date</th>
+          <th scope="col">Payer</th>
+          <th scope="col">Source</th>
+          <th scope="col">Recorded as</th>
+          <th scope="col" class="text-right tabular-nums">Amount</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% confirmed_transactions.each do |txn| %>
+          <tr>
+            <td class="whitespace-nowrap text-stone-500 w-20">
+              <%= txn.occurred_on&.strftime("%b %d") || "—" %>
+            </td>
+            <td>
+              <%= txn.matched_party&.display_name || txn.payer_name || "—" %>
+            </td>
+            <td class="text-stone-500">
+              <%= [txn.payment_method&.titleize, txn.source_document&.attachment_filename].compact.join(" · ") %>
+            </td>
+            <td>
+              <% if txn.confirmed_source.is_a?(Receipt) %>
+                <%= link_to receipt_path(txn.confirmed_source), class: "yn-link" do %>
+                  Receipt — <%= txn.confirmed_source.tenancy.property.address %>
+                <% end %>
+              <% elsif txn.confirmed_source.is_a?(SecurityDepositTransaction) %>
+                <%= link_to security_deposit_transaction_path(txn.confirmed_source), class: "yn-link" do %>
+                  Security deposit — <%= txn.confirmed_source.security_deposit.tenancy.property.address %>
+                <% end %>
+              <% else %>
+                <span class="text-stone-400">Confirmed</span>
+              <% end %>
+            </td>
+            <td class="text-right tabular-nums whitespace-nowrap font-medium">
+              <%= format_money_cents(txn.amount_cents) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 
   <% if total_pages > 1 %>
     <% start_idx = ((page - 1) * per_page) + 1 %>

@@ -28,7 +28,7 @@
   <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
   <td>
     <% if row.source.present? %>
-      <%= link_to row.description, polymorphic_path(row.source), class: "yn-row-link" %>
+      <%= link_to row.description, activity_source_path(row), class: "yn-row-link" %>
     <% else %>
       <%= row.description %>
     <% end %>

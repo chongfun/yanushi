@@ -3110,6 +3110,34 @@ and `rbs validate` green.
 - Icons: inline 16px SVG (`viewBox="0 0 16 16"`, `fill="currentColor"`,
   `aria-hidden="true"`), sourced from `app-shell.html`. No icon font, no
   icon gem.
+- Added in the post-M6 review (2026-09-02):
+  - `accounting/_activity_row` is the one row template for every financial
+    activity table (Overview, Money Activity, Property Overview, Property
+    Activity). Locals: `row`, `context` (`:property` | `:unit` |
+    `:tenancy_or_unit`), `audit` (adds the Journal column). It links the
+    event through `ApplicationHelper#activity_source_path`, which resolves
+    the source record's page and falls back to the journal entry.
+  - `portfolio/_header` and `money/_header` build their tab sets on
+    `shared/_page_header` + `shared/_tabs`; `properties/_summary` and
+    `properties/_recent_activity` are the stream targets the expense dialog
+    replaces.
+  - `shared/_status` accepts `extra_class`; `.yn-alert-ok` and a
+    `prefers-reduced-motion` block live in both stylesheets.
+  - `/properties` (HTML) redirects to `/portfolio`; the JSON index remains.
+  - `tenancies/_page_header` is the header for standalone pages that belong
+    to one tenancy (receipt form, rent change, participants, deposit): eyebrow
+    Portfolio / property / unit, meta "tenants · unit · property".
+  - `receipts/_form` is the only receipt form; with `tenancy: nil` it renders
+    a tenancy select for the Money entry point. The controller passes
+    `parties`, `tenancies`, and `balance_cents`; the partial runs no queries.
+  - Receipt, expense, and charge detail pages use the shared page header with
+    infrequent and destructive actions (correct, void) in a More menu and the
+    common action (Download PDF, Add reimbursement charge) as the primary.
+    Vocabulary is "receipt", sentence case, no record ids in titles.
+  - The Inbox confirm button is always enabled; JavaScript only relabels it.
+    An unclassified confirm is rejected by the server with a focused 422.
+  - Deposit receive/refund/apply failures re-render the deposit page (422)
+    with the submitted values and the reason inline.
 
 # Appendix B: stable DOM ID registry
 

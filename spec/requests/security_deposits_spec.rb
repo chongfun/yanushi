@@ -16,7 +16,7 @@ RSpec.describe "SecurityDeposits", type: :request do
     it "renders the new form" do
       get new_tenancy_security_deposit_path(tenancy)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Set Up Security Deposit")
+      expect(response.body).to include("Set up security deposit")
     end
 
     it "redirects to show if deposit requirement already exists" do
@@ -44,7 +44,7 @@ RSpec.describe "SecurityDeposits", type: :request do
         security_deposit: { required_amount: "-100", due_on: Date.current }
       }
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Set Up Security Deposit")
+      expect(response.body).to include("Set up security deposit")
     end
   end
 
@@ -53,7 +53,7 @@ RSpec.describe "SecurityDeposits", type: :request do
       create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
       get tenancy_security_deposit_path(tenancy)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Security Deposit")
+      expect(response.body).to include("Security deposit")
       expect(response.body).to include("Record Deposit Payment")
     end
 
@@ -68,7 +68,7 @@ RSpec.describe "SecurityDeposits", type: :request do
       create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
       get edit_tenancy_security_deposit_path(tenancy)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Edit Security Deposit Requirement")
+      expect(response.body).to include("Edit security deposit requirement")
     end
 
     it "redirects with alert if transactions already exist" do
@@ -101,7 +101,7 @@ RSpec.describe "SecurityDeposits", type: :request do
         security_deposit: { required_amount: "-500", due_on: Date.current }
       }
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Edit Security Deposit Requirement")
+      expect(response.body).to include("Edit security deposit requirement")
     end
   end
 
@@ -122,15 +122,16 @@ RSpec.describe "SecurityDeposits", type: :request do
       expect(deposit.held_cents).to eq(100_000)
     end
 
-    it "redirects with alert on failure" do
+    it "re-renders the deposit page with the reason and the submitted values on failure" do
       create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
       post receive_tenancy_security_deposit_path(tenancy), params: {
         party_id: party.id,
         amount: "-100",
         occurred_on: Date.current
       }
-      expect(response).to redirect_to(tenancy_security_deposit_path(tenancy))
-      expect(flash[:alert]).to be_present
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('role="alert"')
+      expect(response.body).to include("Record Deposit Payment")
     end
   end
 
@@ -154,15 +155,16 @@ RSpec.describe "SecurityDeposits", type: :request do
       expect(deposit.held_cents).to eq(50_000)
     end
 
-    it "redirects with alert on failure" do
+    it "re-renders the deposit page with the reason and the submitted values on failure" do
       create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
       post refund_tenancy_security_deposit_path(tenancy), params: {
         party_id: party.id,
         amount: "500.00",
         occurred_on: Date.current
       }
-      expect(response).to redirect_to(tenancy_security_deposit_path(tenancy))
-      expect(flash[:alert]).to be_present
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('role="alert"')
+      expect(response.body).to include("Record Deposit Payment")
     end
   end
 
@@ -196,15 +198,16 @@ RSpec.describe "SecurityDeposits", type: :request do
       expect(tenancy.current_balance_cents).to eq(0)
     end
 
-    it "redirects with alert on failure" do
+    it "re-renders the deposit page with the reason and the submitted values on failure" do
       create(:security_deposit, tenancy: tenancy, required_amount_cents: 200_000)
       post apply_tenancy_security_deposit_path(tenancy), params: {
         charge_id: 999_999,
         amount: "500.00",
         occurred_on: Date.current
       }
-      expect(response).to redirect_to(tenancy_security_deposit_path(tenancy))
-      expect(flash[:alert]).to be_present
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('role="alert"')
+      expect(response.body).to include("Record Deposit Payment")
     end
   end
 end

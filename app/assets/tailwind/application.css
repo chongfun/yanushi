@@ -480,3 +480,18 @@ turbo-frame[busy] {
   pointer-events: none;
   transition: opacity 0.15s ease-in-out;
 }
+
+/* ---------------------------------------------------------------------------
+ * Motion (PRD §20): honor the reduced-motion preference.
+ * ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

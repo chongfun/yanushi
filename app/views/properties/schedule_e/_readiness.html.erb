@@ -1,21 +1,5 @@
+<%# Stable aria-live wrapper; Turbo Streams `update` its content so the
+    announcement comes from a change inside an existing live region. %>
 <p class="mt-1 text-sm text-stone-500" id="schedule_e_readiness" aria-live="polite" aria-atomic="true">
-  <%= @property.address %> ·
-  <%= @tax_profile ? @tax_profile.schedule_e_property_type.humanize : "Not configured" %>
-  <% if @tax_profile&.other_description.present? %>(<%= @tax_profile.other_description %>)<% end %> ·
-  <% if @schedule_e_result.unresolved_review_items.any? %>
-    <span class="yn-status yn-status-sm">
-      <span class="yn-dot yn-dot-warn"></span>
-      <%= @schedule_e_result.unresolved_review_items.size == 1 ? "1 item needs review" : "#{@schedule_e_result.unresolved_review_items.size} items need review" %>
-    </span>
-  <% elsif @tax_profile.blank? %>
-    <span class="yn-status yn-status-sm">
-      <span class="yn-dot yn-dot-warn"></span>
-      Needs tax profile
-    </span>
-  <% else %>
-    <span class="yn-status yn-status-sm">
-      <span class="yn-dot yn-dot-ok"></span>
-      Ready
-    </span>
-  <% end %>
+  <%= render "properties/schedule_e/readiness_content" %>
 </p>

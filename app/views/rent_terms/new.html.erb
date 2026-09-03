@@ -1,49 +1,76 @@
-<% content_for :title, "Change Rent" %>
+<% content_for :title, "Change rent" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-2">Change Rent for Tenancy #<%= @tenancy.id %></h1>
-    <p class="text-xs text-stone-500 mb-6">Changing rent creates a new effective-dated term and closes the prior term. Historical terms remain unchanged.</p>
+<div class="max-w-xl">
+  <%= render "tenancies/page_header", tenancy: @tenancy, title: "Change rent" %>
+
+  <div class="yn-surface p-6">
+    <p class="text-sm text-stone-500 mt-0 mb-5">A rent change starts a new effective-dated term and closes the current one. Earlier terms stay on the record.</p>
 
     <%= form_with(model: [@tenancy, @rent_term], class: "space-y-4") do |form| %>
+      <% error_for = ->(*attrs) { attrs.flat_map { |a| @rent_term.errors[a] }.first } %>
       <% if @rent_term.errors.any? %>
         <div class="yn-alert yn-alert-danger" role="alert">
-          <div>
-            <h3 class="font-bold text-sm"><%= pluralize(@rent_term.errors.count, "error") %> prohibited this rent change:</h3>
-            <ul class="list-disc pl-5 mt-1 text-sm">
-              <% @rent_term.errors.each do |error| %>
-                <li><%= error.full_message %></li>
-              <% end %>
-            </ul>
-          </div>
+          Rent couldn't be changed — <%= pluralize(@rent_term.errors.count, "field") %> needs a fix.
+          <ul class="list-disc pl-5 mt-1 text-sm">
+            <% @rent_term.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
         </div>
       <% end %>
 
       <div>
-        <%= form.label :amount, "New Monthly Rent ($)", class: "yn-label" %>
-        <%= form.number_field :amount, value: (@rent_term.amount_cents ? @rent_term.amount_cents / 100.0 : nil), step: 0.01, min: 0, class: "yn-input font-mono tabular-nums", placeholder: "2150.00", required: true %>
+        <% amount_error = error_for.call(:amount, :amount_cents) %>
+        <%= form.label :amount, "New monthly rent", class: "yn-label", for: "rent-term-amount" %>
+        <%= form.number_field :amount, value: (@rent_term.amount_cents ? sprintf("%.2f", @rent_term.amount_cents / 100.0) : nil),
+              step: 0.01, min: 0, placeholder: "2150.00", inputmode: "decimal",
+              class: "yn-input tabular-nums #{'yn-field-invalid' if amount_error}", id: "rent-term-amount",
+              autofocus: (@rent_term.errors.empty? ? true : nil),
+              "aria-invalid": amount_error ? "true" : nil,
+              "aria-describedby": amount_error ? "rent-term-amount-error" : nil %>
+        <% if amount_error %>
+          <p id="rent-term-amount-error" class="yn-error-text"><%= amount_error %></p>
+        <% end %>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <%= form.label :effective_from, "Effective From Date", class: "yn-label" %>
-          <%= form.date_field :effective_from, class: "yn-input", required: true %>
+          <% from_error = error_for.call(:effective_from) %>
+          <%= form.label :effective_from, "Effective from", class: "yn-label", for: "rent-term-from" %>
+          <%= form.date_field :effective_from, class: "yn-input #{'yn-field-invalid' if from_error}", id: "rent-term-from",
+                "aria-invalid": from_error ? "true" : nil,
+                "aria-describedby": from_error ? "rent-term-from-error" : nil %>
+          <% if from_error %>
+            <p id="rent-term-from-error" class="yn-error-text"><%= from_error %></p>
+          <% end %>
         </div>
-
         <div>
-          <%= form.label :due_day, "Due Day of Month", class: "yn-label" %>
-          <%= form.number_field :due_day, min: 1, max: 31, class: "yn-input font-mono tabular-nums", required: true %>
+          <% due_error = error_for.call(:due_day) %>
+          <%= form.label :due_day, "Due day of month", class: "yn-label", for: "rent-term-due-day" %>
+          <%= form.number_field :due_day, min: 1, max: 31, class: "yn-input tabular-nums #{'yn-field-invalid' if due_error}", id: "rent-term-due-day",
+                "aria-invalid": due_error ? "true" : nil,
+                "aria-describedby": due_error ? "rent-term-due-day-error" : nil %>
+          <% if due_error %>
+            <p id="rent-term-due-day-error" class="yn-error-text"><%= due_error %></p>
+          <% end %>
         </div>
       </div>
 
       <div>
-        <%= form.label :frequency, "Frequency", class: "yn-label" %>
-        <%= form.select :frequency, RentTerm::FREQUENCIES.map { |f| [f.titleize, f] }, {}, { class: "yn-select" } %>
+        <% freq_error = error_for.call(:frequency) %>
+        <%= form.label :frequency, "Frequency", class: "yn-label", for: "rent-term-frequency" %>
+        <%= form.select :frequency, RentTerm::FREQUENCIES.map { |f| [f.titleize, f] }, {},
+              { class: "yn-select #{'yn-field-invalid' if freq_error}", id: "rent-term-frequency",
+                "aria-invalid": freq_error ? "true" : nil,
+                "aria-describedby": freq_error ? "rent-term-frequency-error" : nil } %>
+        <% if freq_error %>
+          <p id="rent-term-frequency-error" class="yn-error-text"><%= freq_error %></p>
+        <% end %>
       </div>
 
-      <div class="flex justify-end gap-3 pt-4">
-        <%= link_to "Cancel", @tenancy, class: "yn-btn yn-btn-secondary" %>
-        <%= form.submit "Apply Rent Change", class: "yn-btn yn-btn-primary" %>
+      <div class="flex justify-end gap-2 pt-2">
+        <%= link_to "Cancel", tenancy_agreement_path(@tenancy), class: "yn-btn yn-btn-ghost" %>
+        <%= form.submit "Apply rent change", class: "yn-btn yn-btn-primary" %>
       </div>
     <% end %>
   </div>

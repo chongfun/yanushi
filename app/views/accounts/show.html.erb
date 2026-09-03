@@ -61,7 +61,7 @@
         <div class="font-mono text-2xl font-bold tabular-nums text-stone-900">
           <%= format_money_cents(@activity_result.opening_natural_balance_cents) %>
         </div>
-        <div class="text-xs text-stone-400 mt-1">Prior to <%= @date_range.from&.strftime("%b %d, %Y") || "beginning" %></div>
+        <div class="text-xs text-stone-500 mt-1">Prior to <%= @date_range.from&.strftime("%b %d, %Y") || "beginning" %></div>
       </div>
 
       <div class="bg-white border border-stone-200 rounded-lg p-4">
@@ -69,7 +69,7 @@
         <div class="font-mono text-2xl font-bold tabular-nums text-indigo-600">
           <%= format_money_cents(@activity_result.closing_natural_balance_cents) %>
         </div>
-        <div class="text-xs text-stone-400 mt-1">As of <%= @date_range.through&.strftime("%b %d, %Y") || Date.current.strftime("%b %d, %Y") %></div>
+        <div class="text-xs text-stone-500 mt-1">As of <%= @date_range.through&.strftime("%b %d, %Y") || Date.current.strftime("%b %d, %Y") %></div>
       </div>
     </div>
 
@@ -101,7 +101,7 @@
                 <td class="text-sm">
                   <%= row.description %>
                   <% if row.memo.present? %>
-                    <div class="text-xs text-stone-400 italic"><%= row.memo %></div>
+                    <div class="text-xs text-stone-500 italic"><%= row.memo %></div>
                   <% end %>
                 </td>
                 <td class="text-xs text-stone-500">

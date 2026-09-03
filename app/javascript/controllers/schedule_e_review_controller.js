@@ -1,14 +1,33 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Focuses the next actionable element when autoFocus is enabled
+// Moves keyboard focus to the next actionable control after the review
+// section is replaced by a Turbo Stream (autoFocus is set by the stream).
 export default class extends Controller {
   static values = { autoFocus: Boolean }
 
   connect() {
     if (this.autoFocusValue) {
-      // Defer until DOM paints
-      requestAnimationFrame(() => this.manageFocus())
+      // The section is already in the document when a stream replace connects
+      // this controller, so focus can move synchronously. Deferring a frame
+      // leaves a window where focus sits on a removed node.
+      this.manageFocus()
     }
+
+    // Turbo preserves focus across a stream render by element id. If focus is
+    // on a node this section will re-render (the heading, a select), Turbo
+    // would put it back there after the response and override the move made
+    // above. Releasing focus when one of this section's forms submits leaves
+    // the response in charge of where focus lands.
+    this._submitStartListener = (event) => {
+      if (this.element.contains(event.target) && this.element.contains(document.activeElement)) {
+        document.activeElement.blur()
+      }
+    }
+    document.addEventListener("turbo:submit-start", this._submitStartListener)
+  }
+
+  disconnect() {
+    document.removeEventListener("turbo:submit-start", this._submitStartListener)
   }
 
   manageFocus() {

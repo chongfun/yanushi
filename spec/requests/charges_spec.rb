@@ -265,7 +265,7 @@ RSpec.describe "Charges", type: :request do
     it "renders a successful response" do
       get charge_path(charge)
       expect(response).to be_successful
-      expect(response.body).to include("Charge Details")
+      expect(response.body).to include("Late fee")
       expect(response.body).to include("$50.00")
     end
 

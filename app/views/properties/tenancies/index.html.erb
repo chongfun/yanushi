@@ -53,7 +53,11 @@
           </table>
         </div>
       <% else %>
-        <p class="text-sm text-stone-500 m-0">No active tenancies.</p>
+        <% vacant_unit = @property.rentable_units.select(&:active?).find { |u| u.tenancies.none?(&:active?) } %>
+        <%= render "shared/empty_state",
+              title: "No active tenancies",
+              body: "Every unit at this property is vacant. Create a tenancy to start tracking rent and balances.",
+              action: link_to("Create tenancy", new_tenancy_path(rentable_unit_id: vacant_unit&.id), class: "yn-btn yn-btn-primary yn-btn-sm") %>
       <% end %>
     </section>
 

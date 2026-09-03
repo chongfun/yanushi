@@ -306,7 +306,7 @@ RSpec.describe "Inbox", type: :system do
       expect(find_field("create_alias")).not_to be_checked
     end
 
-    it "dynamically updates primary button text and disabled state across Choose classification, Confirm receipt, and Confirm deposit" do
+    it "updates the primary button label as the classification changes and lets the server reject an unclassified confirm" do
       page.current_window.resize_to(1280, 800)
 
       unit2 = create(:rentable_unit, property: property, unit_identifier: "Unit 2")
@@ -331,33 +331,32 @@ RSpec.describe "Inbox", type: :system do
       visit inbox_path
       expect(page).to have_css("#review_form_#{txn.id}")
 
-      # Initial state for unclassified: button says Choose classification and is disabled
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Choose classification")
-      expect(find("#confirm_btn_#{txn.id}")).to be_disabled
+      # Initial state for unclassified: the label says what is missing; the button stays enabled
+      expect(page).to have_button("Choose classification", disabled: false)
+
+      # Submitting unclassified is rejected by the server, in place, with the reason focused
+      click_button "Choose classification"
+      expect(page).to have_css("#form_error_alert", text: "requires classification", wait: 10)
+      expect(page).to have_css("#review_form_#{txn.id}")
 
       # Switch Record as to Security deposit
       select "Security deposit", from: "rev-kind-#{txn.id}"
-
-      # Button text dynamically updates to Confirm deposit and is enabled
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Confirm deposit")
-      expect(find("#confirm_btn_#{txn.id}")).not_to be_disabled
+      expect(page).to have_button("Confirm deposit")
 
       # Switch to Tenant receipt
       select "Tenant receipt", from: "rev-kind-#{txn.id}"
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Confirm receipt")
-      expect(find("#confirm_btn_#{txn.id}")).not_to be_disabled
+      expect(page).to have_button("Confirm receipt")
 
       # Switch back to Needs classification
       select "Needs classification", from: "rev-kind-#{txn.id}"
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Choose classification")
-      expect(find("#confirm_btn_#{txn.id}")).to be_disabled
+      expect(page).to have_button("Choose classification")
 
       # Switch to Security deposit and confirm
       select "Security deposit", from: "rev-kind-#{txn.id}"
       click_button "Confirm deposit"
 
-      expect(page).to have_content("Transaction confirmed and recorded successfully.")
-      expect(page).to have_content("You’re caught up")
+      expect(page).to have_content("Transaction confirmed and recorded successfully.", wait: 10)
+      expect(page).to have_content("You’re caught up", wait: 10)
 
       txn.reload
       expect(txn.status).to eq("confirmed")

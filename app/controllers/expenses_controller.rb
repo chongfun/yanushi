@@ -16,6 +16,7 @@ class ExpensesController < ApplicationController
   end
 
   def show
+    @reimbursements = @expense.reimbursement_charges.includes(tenancy: :rentable_unit).order(:created_at)
   end
 
   def new
