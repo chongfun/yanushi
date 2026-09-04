@@ -32,6 +32,9 @@ export default class extends Controller {
     this._settledListener = (event) => {
       const id = event.detail && event.detail.transactionId
       if (id) this._pendingIds.delete(String(id))
+      // The response has rendered whatever comes next; put that item in the
+      // URL so refresh and Back land on it.
+      this.syncUrl(this.activeTransactionId)
     }
     document.addEventListener("inbox:settled", this._settledListener)
 
@@ -96,6 +99,23 @@ export default class extends Controller {
   select(event) {
     if (!this.isDesktop) return
     this.highlightRow(event.currentTarget)
+    this.syncUrl(this.transactionIdFromRow(event.currentTarget))
+  }
+
+  // The reviewed item is real navigation state: keep it in the query string so
+  // a refresh, a Back, or a shared link reopens the same item (the server
+  // already honors selected_id and falls back when it is gone).
+  syncUrl(id) {
+    if (!this.isDesktop || !id) return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get("selected_id") === String(id)) return
+    url.searchParams.set("selected_id", id)
+    window.history.replaceState({}, "", url.toString())
+  }
+
+  transactionIdFromRow(row) {
+    const rowId = row && row.id
+    return rowId && rowId.startsWith("imported_transaction_") ? rowId.replace("imported_transaction_", "") : null
   }
 
   // The frame finished loading a transaction: make sure its row is the one

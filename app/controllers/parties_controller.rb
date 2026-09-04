@@ -2,10 +2,19 @@ class PartiesController < ApplicationController
   before_action :set_party, only: %i[show edit update destroy]
 
   def index
-    @parties = authenticated_user.parties.includes(:party_aliases, :tenancy_parties)
+    page = [ params[:page].to_i, 1 ].max
+    @per_page = 25
+    scope = authenticated_user.parties.includes(:party_aliases, :tenancy_parties).order(:display_name)
+    @total_count = scope.count
+    @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
+    @page = @total_pages > 0 ? [ page, @total_pages ].min : page
+    @parties = scope.limit(@per_page).offset((@page - 1) * @per_page).to_a
   end
 
   def show
+    @tenancy_participations = @party.tenancy_parties
+                                    .includes(tenancy: [ :property, :rentable_unit ])
+                                    .order(effective_from: :desc, id: :desc)
   end
 
   def new

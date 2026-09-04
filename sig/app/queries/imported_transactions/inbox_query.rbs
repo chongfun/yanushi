@@ -1,5 +1,6 @@
 module ImportedTransactions
   class InboxQuery
+    QUEUE_LIMIT: Integer
     class InboxResult < Data
       attr_reader reviewable_transactions: Array[ImportedTransaction]
       attr_reader review_count: Integer

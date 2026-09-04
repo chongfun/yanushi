@@ -1,5 +1,13 @@
+<%# Locals: transactions, selected_transaction, total_count (optional, the full
+    queue size when it exceeds the rendered page) %>
 <div class="lg:w-96 lg:shrink-0 yn-surface divide-y divide-stone-200 overflow-hidden" data-controller="responsive-frame" id="inbox_review_queue_list">
   <% transactions.each do |txn| %>
     <%= render "imported_transactions/review_row", transaction: txn, selected: (txn.id == selected_transaction&.id) %>
+  <% end %>
+  <% total = local_assigns[:total_count].to_i %>
+  <% if total > transactions.size %>
+    <p class="px-4 py-3 text-[13px] text-stone-500 m-0">
+      Showing the first <span class="tabular-nums"><%= transactions.size %></span> of <span class="tabular-nums"><%= total %></span>. Confirm these to see the rest.
+    </p>
   <% end %>
 </div>

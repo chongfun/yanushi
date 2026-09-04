@@ -8,7 +8,7 @@
 <% if @next_transaction.present? %>
   <%= turbo_stream.replace "inbox_review_queue_list",
                            partial: "imported_transactions/review_list",
-                           locals: { transactions: @reviewable_transactions, selected_transaction: @next_transaction } %>
+                           locals: { transactions: @reviewable_transactions, selected_transaction: @next_transaction, total_count: @review_count } %>
 
   <%= turbo_stream.replace "inbox_review",
                            partial: "imported_transactions/review_detail",

@@ -1,14 +1,16 @@
+<%# Inbox attention count in the navigation. The wrapper is stable: Turbo
+    Streams `update` its content so an announcement comes from a change inside
+    an existing live region rather than a replaced node. Only the surface that
+    is actually displayed announces (the sidebar at lg and up, the mobile top
+    bar below it); the drawer copy is silent because it duplicates them.
+    Locals: count (defaults to the current user's reviewable count), id, announce %>
 <% count = local_assigns.fetch(:count) { inbox_reviewable_count } %>
 <% id = local_assigns[:id] || local_assigns[:target_id] %>
+<% announce = local_assigns.fetch(:announce, false) %>
 <% if id.present? %>
-  <span id="<%= id %>" class="inline-flex <%= 'hidden' if count.to_i <= 0 %>" aria-live="polite" aria-atomic="true">
-    <% if count.to_i > 0 %>
-      <span class="yn-count"><%= count %></span>
-    <% end %>
-  </span>
-<% else %>
-  <% if count.to_i > 0 %>
-    <span class="yn-count" aria-live="polite" aria-atomic="true"><%= count %></span>
+  <%= tag.span(id: id, class: "inline-flex", aria: (announce ? { live: "polite", atomic: "true" } : {})) do %>
+    <%= render "shared/inbox_badge_content", count: count %>
   <% end %>
+<% else %>
+  <%= render "shared/inbox_badge_content", count: count %>
 <% end %>
-

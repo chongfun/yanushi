@@ -130,6 +130,13 @@
 
 .yn-btn-sm { height: 2rem; padding: 0 0.75rem; font-size: 0.8125rem; }
 
+/* A dialog trigger waiting on its frame request (PRD 19: perceptible async
+ * operations get an indicator). Set by modal_controller on click. */
+.yn-btn[aria-busy="true"] {
+  opacity: 0.7;
+  cursor: progress;
+}
+
 .yn-btn[disabled],
 .yn-btn[aria-disabled="true"] {
   opacity: 0.5;
@@ -464,7 +471,7 @@ dialog.modal-dialog::backdrop {
   font-size: 1.25rem;
   line-height: 1;
   color: var(--yn-muted);
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
 }
 .modal-close:hover { color: var(--yn-ink); background: #f5f5f4; }

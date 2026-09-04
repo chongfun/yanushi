@@ -43,7 +43,7 @@
 
     <div>
       <% has_unit_error = expense.errors[:rentable_unit_id].any? || expense.errors[:rentable_unit].any? %>
-      <%= form.label :rentable_unit_id, "Unit (Optional)", class: "yn-label", for: "expense-unit" %>
+      <%= form.label :rentable_unit_id, "Unit (optional)", class: "yn-label", for: "expense-unit" %>
       <%= form.collection_select :rentable_unit_id, nested_prop.rentable_units, :id, :display_name,
             { include_blank: "Entire property / No specific unit" },
             { class: "yn-select w-full #{'yn-field-invalid' if has_unit_error}", id: "expense-unit",
@@ -73,7 +73,7 @@
 
       <div>
         <% has_unit_error = expense.errors[:rentable_unit_id].any? || expense.errors[:rentable_unit].any? %>
-        <%= form.label :rentable_unit_id, "Unit (Optional)", class: "yn-label", for: "expense-unit" %>
+        <%= form.label :rentable_unit_id, "Unit (optional)", class: "yn-label", for: "expense-unit" %>
         <% eligible_units = (expense.property_id.present? ? prop_list.find { |p| p.id.to_s == expense.property_id.to_s }&.rentable_units : nil) || [] %>
         <%= form.collection_select :rentable_unit_id, eligible_units, :id, :display_name,
               { include_blank: "Entire property / No specific unit" },
@@ -93,7 +93,7 @@
     <%= form.label :expense_kind, "Category", class: "yn-label", for: "expense-kind" %>
     <%= form.select :expense_kind,
           Expense::EXPENSE_KINDS.map { |k| [k.titleize, k] },
-          { prompt: "Select Category" },
+          { prompt: "Select a category" },
           { class: "yn-select w-full #{'yn-field-invalid' if has_kind_error}", id: "expense-kind", required: true,
             "aria-invalid": has_kind_error ? "true" : nil,
             "aria-describedby": has_kind_error ? "expense-kind-error" : nil } %>
@@ -105,7 +105,7 @@
   <div class="grid grid-cols-2 gap-4">
     <div>
       <% has_amount_error = expense.errors[:amount].any? || expense.errors[:amount_cents].any? %>
-      <%= form.label :amount, "Amount ($)", class: "yn-label", for: "expense-amount" %>
+      <%= form.label :amount, "Amount", class: "yn-label", for: "expense-amount" %>
       <%= form.text_field :amount, value: expense.formatted_amount, inputmode: "decimal",
             class: "yn-input tabular-nums w-full #{'yn-field-invalid' if has_amount_error}", id: "expense-amount",
             placeholder: "0.00", required: true,
@@ -117,7 +117,7 @@
     </div>
     <div>
       <% has_date_error = expense.errors[:paid_on].any? %>
-      <%= form.label :paid_on, "Date Paid", class: "yn-label", for: "expense-date" %>
+      <%= form.label :paid_on, "Paid on", class: "yn-label", for: "expense-date" %>
       <%= form.date_field :paid_on, value: expense.paid_on,
             class: "yn-input w-full #{'yn-field-invalid' if has_date_error}", id: "expense-date", required: true,
             "aria-invalid": has_date_error ? "true" : nil,
@@ -131,7 +131,7 @@
   <div class="grid grid-cols-2 gap-4">
     <div>
       <% has_vendor_error = expense.errors[:vendor_name].any? %>
-      <%= form.label :vendor_name, "Vendor / Payee", class: "yn-label", for: "expense-vendor" %>
+      <%= form.label :vendor_name, "Vendor", class: "yn-label", for: "expense-vendor" %>
       <%= form.text_field :vendor_name,
             class: "yn-input w-full #{'yn-field-invalid' if has_vendor_error}", id: "expense-vendor",
             placeholder: "e.g. City Power, Home Depot",
@@ -143,7 +143,7 @@
     </div>
     <div>
       <% has_ref_error = expense.errors[:external_reference].any? %>
-      <%= form.label :external_reference, "Invoice / Receipt #", class: "yn-label", for: "expense-ref" %>
+      <%= form.label :external_reference, "Reference", class: "yn-label", for: "expense-ref" %>
       <%= form.text_field :external_reference,
             class: "yn-input w-full #{'yn-field-invalid' if has_ref_error}", id: "expense-ref",
             placeholder: "e.g. INV-1002",

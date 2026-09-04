@@ -97,6 +97,34 @@ RSpec.describe "Properties", type: :system do
     expect(page).not_to have_text("Rent")
   end
 
+  it "walks Portfolio to a property's activity and on to the accounting detail" do
+    property = create(:property, user: user, address: "77 Journey Lane")
+    unit = create(:rentable_unit, property: property)
+    tenancy = create(:tenancy, rentable_unit: unit, commencement_date: Date.current.beginning_of_year)
+    create(:rent_term, tenancy: tenancy, amount_cents: 180_000, effective_from: Date.current.beginning_of_year)
+    Charges::CreateService.call(
+      tenancy: tenancy,
+      charge_kind: "rent",
+      charge_date: Date.current,
+      amount_cents: 180_000,
+      description: "Journey rent"
+    )
+
+    visit portfolio_path
+    click_on "77 Journey Lane"
+    expect(page).to have_current_path(property_path(property))
+
+    click_on "Activity"
+    expect(page).to have_current_path(property_activity_path(property))
+    expect(page).to have_text("Journey rent")
+
+    within("tr", text: "Journey rent") { click_on "Journal" }
+
+    expect(page).to have_css("h1", text: "Journal Entry")
+    expect(page).to have_text("Tenant Receivable")
+    expect(page).to have_text("$1,800.00")
+  end
+
   it "records an expense with property context and redirects to Property Activity" do
     visit property_path(property)
     click_on "Record expense"
@@ -105,9 +133,9 @@ RSpec.describe "Properties", type: :system do
     expect(page).to have_text("123 Main St")
 
     select "Repairs", from: "Category"
-    fill_in "Amount ($)", with: "250.00"
-    fill_in "Date Paid", with: Date.current.strftime("%Y-%m-%d")
-    fill_in "Vendor / Payee", with: "Ace Plumbing"
+    fill_in "Amount", with: "250.00"
+    fill_in "Paid on", with: Date.current.strftime("%Y-%m-%d")
+    fill_in "Vendor", with: "Ace Plumbing"
     fill_in "Description", with: "Fix bathroom pipe leak"
     click_on "Record Expense"
 
@@ -168,7 +196,7 @@ RSpec.describe "Properties", type: :system do
 
     click_on "Create tenancy"
     expect(page).to have_current_path(new_tenancy_path(rentable_unit_id: vacant_unit.id))
-    expect(page).to have_select("Select Rentable Unit", selected: "#{vacant_unit.name} (#{vacant_unit.unit_identifier})")
+    expect(page).to have_select("Rentable unit", selected: "#{vacant_unit.name} (#{vacant_unit.unit_identifier})")
   end
 
   it "closes property overflow menu on Escape and restores focus", js: true do

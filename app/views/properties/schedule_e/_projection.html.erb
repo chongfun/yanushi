@@ -23,7 +23,7 @@
                   <% @schedule_e_result.rents_received_drilldown.each do |detail| %>
                     <li class="flex justify-between gap-4 py-0.5">
                       <span><%= detail.occurred_on.strftime("%b %-d") %>: <%= detail.label %></span>
-                      <span class="tabular-nums font-mono"><%= format_money_cents(detail.amount_cents) %></span>
+                      <span class="tabular-nums"><%= format_money_cents(detail.amount_cents) %></span>
                     </li>
                   <% end %>
                 </ul>
@@ -57,7 +57,7 @@
                     <% @schedule_e_result.other_expense_details.each do |detail| %>
                       <li class="flex justify-between gap-4 py-0.5">
                         <span><%= detail.occurred_on.strftime("%b %-d") %>: <%= detail.description %></span>
-                        <span class="tabular-nums font-mono"><%= format_money_cents(detail.amount_cents) %></span>
+                        <span class="tabular-nums"><%= format_money_cents(detail.amount_cents) %></span>
                       </li>
                     <% end %>
                   </ul>

@@ -45,21 +45,10 @@
       </table>
     </div>
 
-    <% if @activity_result.total_pages > 1 %>
-      <% start_idx = ((@activity_result.page - 1) * @activity_result.per_page) + 1 %>
-      <% end_idx = [@activity_result.page * @activity_result.per_page, @activity_result.total_count].min %>
-      <nav class="flex items-center justify-between mt-4 max-w-5xl" aria-label="Pagination">
-        <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @activity_result.total_count %></span></p>
-        <div class="flex gap-2">
-          <% if @activity_result.page > 1 %>
-            <%= link_to "Previous", money_path(page: @activity_result.page - 1, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-          <% end %>
-          <% if @activity_result.page < @activity_result.total_pages %>
-            <%= link_to "Next", money_path(page: @activity_result.page + 1, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-          <% end %>
-        </div>
-      </nav>
-    <% end %>
+    <%= render "shared/pagination",
+          page: @activity_result.page, per_page: @activity_result.per_page,
+          total_count: @activity_result.total_count, total_pages: @activity_result.total_pages,
+          page_url: ->(p) { money_path(page: p, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]) } %>
   <% else %>
     <div class="yn-empty">
       <p class="yn-empty-title">No financial activity found</p>

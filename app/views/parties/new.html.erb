@@ -1,6 +1,15 @@
-<% content_for :title, "New Tenant / Payer" %>
+<% content_for :title, "New party" %>
 
-<div class="max-w-2xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">New Tenant / Payer</h1>
-  <%= render "form", party: @party %>
+<div class="max-w-2xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Parties", parties_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "New party",
+        meta: "A person or organization on your tenancies: a tenant, guarantor, or payer." %>
+  <div class="yn-surface p-6">
+    <%= render "form", party: @party %>
+  </div>
 </div>

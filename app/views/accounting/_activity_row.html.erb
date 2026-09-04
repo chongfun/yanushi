@@ -5,7 +5,8 @@
 
   Locals:
     row     : Accounting::ActivityRow
-    context : :property (default) | :unit | :tenancy_or_unit, what the third column shows
+    context : :property (default) | :unit | :tenancy_or_unit | :party, what the third
+              column shows
     detail  : :description (default) | :unit, the muted text after the event label
     audit   : true to append the Journal link column
 %>
@@ -33,7 +34,9 @@
       <%= render "shared/status", text: "Voided", size: :sm, extra_class: "ml-1" %>
     <% end %>
   </td>
-  <% if context == :unit %>
+  <% if context == :party %>
+    <td class="text-stone-500 whitespace-nowrap"><%= row.party&.display_name || "—" %></td>
+  <% elsif context == :unit %>
     <td class="text-stone-500 whitespace-nowrap"><%= row.rentable_unit&.name || "—" %></td>
   <% elsif context == :tenancy_or_unit %>
     <td class="text-stone-500 whitespace-nowrap">

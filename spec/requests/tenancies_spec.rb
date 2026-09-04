@@ -347,7 +347,7 @@ RSpec.describe "Tenancies", type: :request do
 
       get statement_tenancy_path(tenancy)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Tenant Account Statement")
+      expect(response.body).to include("Tenant account statement")
       expect(response.body).to include("Opening Balance")
       expect(response.body).to include("Closing Balance")
       expect(response.body).to include("Rent")

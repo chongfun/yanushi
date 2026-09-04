@@ -146,7 +146,7 @@ module Accounting
           scope = scope.where("journal_entries.occurred_on <= ?", date_range.through)
         end
 
-        scope.includes(:property, :rentable_unit, :tenancy, :party, :journal_entry)
+        scope.includes(:property, :rentable_unit, :party, :journal_entry, tenancy: :rentable_unit)
              .order("journal_entries.occurred_on ASC, journal_entries.id ASC, postings.id ASC")
       end
   end

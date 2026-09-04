@@ -1,13 +1,8 @@
-<% content_for :title, "New Rentable Unit" %>
+<% content_for :title, "Add unit" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">New Unit for <%= @property.address %></h1>
-
-  <div class="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+<div class="max-w-xl">
+  <%= render "properties/page_header", property: @property, title: "Add unit" %>
+  <div class="yn-surface p-6">
     <%= render "form", rentable_unit: @rentable_unit %>
-  </div>
-
-  <div class="flex justify-between">
-    <%= link_to "Back to Property", @property, class: "yn-btn yn-btn-ghost yn-btn-sm" %>
   </div>
 </div>

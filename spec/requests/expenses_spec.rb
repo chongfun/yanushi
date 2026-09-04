@@ -401,7 +401,7 @@ RSpec.describe "Expenses", type: :request do
 
       get correction_expense_url(expense)
       expect(response).to be_successful
-      expect(response.body).to include("Active Reimbursements Notice")
+      expect(response.body).to include("will be restated to link to the replacement expense")
     end
 
     it "redirects if expense is voided" do

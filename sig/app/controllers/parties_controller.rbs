@@ -1,6 +1,11 @@
 class PartiesController < ApplicationController
-  @parties: Party::ActiveRecord_Relation
+  @parties: Array[Party]
+  @page: Integer
+  @per_page: Integer
+  @total_count: Integer
+  @total_pages: Integer
   @party: Party
+  @tenancy_participations: TenancyParty::ActiveRecord_Relation
 
   def index: () -> void
   def show: () -> void

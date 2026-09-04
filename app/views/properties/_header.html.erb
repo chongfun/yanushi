@@ -21,6 +21,8 @@
   ]
 %>
 
+<% content_for :title, [ @property.address, tab_items.find { |t| t[:current] }&.dig(:label) ].compact.join(" · ") %>
+
 <%= render "shared/page_header",
       eyebrow: capture { %>
         <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>

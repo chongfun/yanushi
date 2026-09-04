@@ -3146,6 +3146,33 @@ and `rbs validate` green.
     mutation. Remote removals of that id reconcile again from then on.
   - Deposit receive/refund/apply failures re-render the deposit page (422)
     with the submitted values and the reason inline.
+- Added 2026-09-03, finishing the pages the PRD did not name and the last
+  PRD gaps:
+  - `properties/_page_header` and `tenancies/_page_header` are the headers for
+    standalone pages scoped to one property or tenancy. `properties/_header`
+    remains the property workspace header (it owns the four tabs and now sets
+    `content_for :title` for all of them).
+  - `shared/_pagination` (locals: page, per_page, total_count, total_pages,
+    `page_url` lambda) is the one pagination control; Receipts, Expenses, Money
+    Activity, property Activity, Inbox History, Tenancies, and Parties use it.
+    Tenancies and Parties are now paged; the Inbox Needs review queue renders
+    at most `InboxQuery::QUEUE_LIMIT` rows and says so.
+  - Signed-out pages (sign in, password reset) render without the app shell:
+    the layout branches on `authenticated?`, and `shared/_auth_card` is their
+    surface. `<html lang="en">` is set.
+  - Inbox count badges are stable live regions updated in place; only the
+    surface that is displayed announces (sidebar at lg+, mobile top bar below),
+    and the count carries an sr-only "imported transactions need review".
+  - The receipt/charge/expense dialog opens immediately with the trigger's
+    label and a "Loading…" line, and shows an error in place if the frame
+    request fails (PRD 19).
+  - The Inbox master/detail selection is written to `?selected_id=` with
+    `history.replaceState`, so refresh and Back reopen the same item.
+  - `/dashboards/index` redirects to `/` (301). Screenshots are named after
+    the screens they show, and README covers Overview, Portfolio, property
+    Activity, tenancy, the receipt dialog, upload, Inbox, Reports, Schedule E.
+  - Field labels and page titles are sentence case across every form; money is
+    `format_money_cents` with `tabular-nums` and no `font-mono`.
 
 # Appendix B: stable DOM ID registry
 

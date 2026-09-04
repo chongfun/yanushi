@@ -365,9 +365,9 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review_queue_list">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="sidebar_inbox_badge">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="drawer_inbox_badge">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="mobile_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="sidebar_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="drawer_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="mobile_inbox_badge">))
         expect(response.body).to include(%(<turbo-stream action="replace" target="tab_review_count">))
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review">))
         expect(response.body).to include(%(<turbo-stream action="append" target="flash-messages">))
@@ -748,7 +748,7 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review_queue_list">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="sidebar_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="sidebar_inbox_badge">))
         expect(ImportedTransaction.exists?(txn1.id)).to be(false)
       end
 

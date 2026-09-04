@@ -1,126 +1,123 @@
-<% content_for :title, "Journal Entry ##{@journal_entry.id}" %>
+<%
+  entry = @journal_entry
+  postings = entry.postings.to_a
+  total_debits = postings.sum { |p| p.amount_cents.positive? ? p.amount_cents : 0 }
+  total_credits = postings.sum { |p| p.amount_cents.negative? ? p.amount_cents.abs : 0 }
+%>
+<% content_for :title, "Journal Entry ##{entry.id}" %>
 
-<div class="max-w-5xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold tracking-tight text-stone-900">Journal Entry #<%= @journal_entry.id %></h1>
-        <span class="yn-status yn-status-sm">
-          <span class="yn-dot <%= @journal_entry.reversal? ? 'yn-dot-warn' : 'yn-dot-ok' %>"></span>
-          <%= @journal_entry.event_type.titleize %>
-        </span>
-      </div>
-      <p class="text-sm text-stone-500 mt-1"><%= @journal_entry.description %></p>
-    </div>
-    <div>
-      <%= link_to "Back to Accounts", accounts_path, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-    </div>
-  </div>
+<div class="max-w-5xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          Accounting
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Accounts", accounts_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "Journal Entry ##{entry.id}",
+        meta: capture { %>
+          <%= entry.event_type.titleize %> &middot;
+          <%= entry.occurred_on.strftime("%b %-d, %Y") %>
+          <% if entry.description.present? %>&middot; <%= entry.description %><% end %>
+        <% } %>
 
-  <!-- Entry Meta Details Card -->
-  <div class="bg-white border border-stone-200 rounded-lg p-4 mb-6">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-      <div>
-        <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Occurred On</div>
-        <div class="font-medium text-stone-900"><%= @journal_entry.occurred_on.strftime("%B %d, %Y") %></div>
-      </div>
-      <div>
-        <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Posted At</div>
-        <div class="font-medium text-stone-900"><%= @journal_entry.posted_at.strftime("%B %d, %Y %H:%M") %></div>
-      </div>
-      <div>
-        <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Source Event</div>
-        <div class="font-medium">
-          <% if @journal_entry.source %>
-            <% case @journal_entry.source %>
-            <% when Charge %>
-              <%= link_to "Charge ##{@journal_entry.source.id}", charge_path(@journal_entry.source), class: "yn-link" %>
-            <% when Receipt %>
-              <%= link_to "Payment ##{@journal_entry.source.id}", receipt_path(@journal_entry.source), class: "yn-link" %>
-            <% when Expense %>
-              <%= link_to "Expense ##{@journal_entry.source.id}", expense_path(@journal_entry.source), class: "yn-link" %>
-            <% when SecurityDepositTransaction %>
-              <%= link_to "Deposit Txn ##{@journal_entry.source.id}", security_deposit_transaction_path(@journal_entry.source), class: "yn-link" %>
-            <% else %>
-              <%= @journal_entry.source_type %> #<%= @journal_entry.source_id %>
-            <% end %>
-          <% else %>
-            <span class="text-stone-500">N/A</span>
-          <% end %>
-        </div>
-      </div>
-      <div>
-        <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Reversal Status</div>
+  <div class="space-y-10">
+    <section aria-labelledby="entry-meta-heading">
+      <h2 id="entry-meta-heading" class="sr-only">Entry details</h2>
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4 text-sm">
         <div>
-          <% if @journal_entry.reversal? && @journal_entry.reversal_of %>
-            Reversal of <%= link_to "Entry ##{@journal_entry.reversal_of_id}", journal_entry_path(@journal_entry.reversal_of_id), class: "yn-link font-medium text-amber-700" %>
-          <% elsif @journal_entry.reversed? && @journal_entry.reversal %>
-            Reversed by <%= link_to "Entry ##{@journal_entry.reversal.id}", journal_entry_path(@journal_entry.reversal), class: "yn-link font-medium text-amber-700" %>
-          <% elsif @journal_entry.reversed? %>
-            <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Reversed</span>
-          <% else %>
-            <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Active</span>
-          <% end %>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Occurred on</dt>
+          <dd class="mt-0.5 m-0 font-medium"><%= entry.occurred_on.strftime("%b %-d, %Y") %></dd>
         </div>
-      </div>
-    </div>
-  </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Posted at</dt>
+          <dd class="mt-0.5 m-0 font-medium"><%= entry.posted_at.strftime("%b %-d, %Y at %-l:%M %p") %></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Source</dt>
+          <dd class="mt-0.5 m-0 font-medium">
+            <% case entry.source %>
+            <% when Charge %>
+              <%= link_to "Charge ##{entry.source.id}", charge_path(entry.source), class: "yn-link" %>
+            <% when Receipt %>
+              <%= link_to "Receipt ##{entry.source.id}", receipt_path(entry.source), class: "yn-link" %>
+            <% when Expense %>
+              <%= link_to "Expense ##{entry.source.id}", expense_path(entry.source), class: "yn-link" %>
+            <% when SecurityDepositTransaction %>
+              <%= link_to "Deposit transaction ##{entry.source.id}", security_deposit_transaction_path(entry.source), class: "yn-link" %>
+            <% when SecurityDeposit %>
+              <%= link_to "Security deposit", tenancy_security_deposit_path(entry.source.tenancy), class: "yn-link" %>
+            <% when nil %>
+              <span class="text-stone-500">Not linked</span>
+            <% else %>
+              <%= entry.source_type %> #<%= entry.source_id %>
+            <% end %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Reversal</dt>
+          <dd class="mt-0.5 m-0 font-medium">
+            <% if entry.reversal? && entry.reversal_of %>
+              Reversal of <%= link_to "Entry ##{entry.reversal_of_id}", journal_entry_path(entry.reversal_of_id), class: "yn-link" %>
+            <% elsif entry.reversed? && entry.reversal %>
+              Reversed by <%= link_to "Entry ##{entry.reversal.id}", journal_entry_path(entry.reversal), class: "yn-link" %>
+            <% elsif entry.reversed? %>
+              <%= render "shared/status", text: "Reversed", tone: :warn, size: :sm %>
+            <% else %>
+              <%= render "shared/status", text: "Active", tone: :ok, size: :sm %>
+            <% end %>
+          </dd>
+        </div>
+      </dl>
+    </section>
 
-  <!-- Posting Lines Table (Debits / Credits) -->
-  <div class="overflow-x-auto border border-stone-200 rounded-lg bg-white">
-    <table class="yn-table">
-      <thead>
-        <tr>
-          <th scope="col">Account</th>
-          <th scope="col">Dimensions</th>
-          <th scope="col">Memo</th>
-          <th scope="col" class="text-right">Debit</th>
-          <th scope="col" class="text-right">Credit</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% total_debits = 0 %>
-        <% total_credits = 0 %>
-        <% @journal_entry.postings.each do |posting| %>
-          <% debit = posting.amount_cents.positive? ? posting.amount_cents : 0 %>
-          <% credit = posting.amount_cents.negative? ? posting.amount_cents.abs : 0 %>
-          <% total_debits += debit %>
-          <% total_credits += credit %>
-          <tr>
-            <td>
-              <div class="font-medium">
-                <%= link_to posting.account.name, account_path(posting.account), class: "yn-row-link" %>
-              </div>
-              <div class="text-xs font-mono text-stone-500"><%= posting.account.key %></div>
-            </td>
-            <td class="text-xs text-stone-600">
-              <% if posting.property %>
-                <div>Property: <%= link_to posting.property.address, property_path(posting.property), class: "yn-link" %></div>
-              <% end %>
-              <% if posting.tenancy %>
-                <div>Tenancy: <%= link_to "##{posting.tenancy_id}", tenancy_path(posting.tenancy_id), class: "yn-link" %></div>
-              <% end %>
-              <% if posting.party %>
-                <div>Party: <%= link_to posting.party.display_name, party_path(posting.party), class: "yn-link" %></div>
-              <% end %>
-            </td>
-            <td class="text-sm italic text-stone-500"><%= posting.memo.presence || "—" %></td>
-            <td class="text-right font-mono font-medium tabular-nums">
-              <%= debit.positive? ? format_money_cents(debit) : "—" %>
-            </td>
-            <td class="text-right font-mono font-medium tabular-nums">
-              <%= credit.positive? ? format_money_cents(credit) : "—" %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-      <tfoot>
-        <tr class="font-bold bg-stone-50 border-t border-stone-200">
-          <td colspan="3" class="text-right text-stone-700">Total:</td>
-          <td class="text-right font-mono tabular-nums"><%= format_money_cents(total_debits) %></td>
-          <td class="text-right font-mono tabular-nums"><%= format_money_cents(total_credits) %></td>
-        </tr>
-      </tfoot>
-    </table>
+    <section aria-labelledby="postings-heading">
+      <h2 id="postings-heading" class="text-sm font-semibold mb-3">Postings</h2>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col">Account</th>
+              <th scope="col">Dimensions</th>
+              <th scope="col">Memo</th>
+              <th scope="col" class="text-right tabular-nums">Debit</th>
+              <th scope="col" class="text-right tabular-nums">Credit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% postings.each do |posting| %>
+              <% debit = posting.amount_cents.positive? ? posting.amount_cents : 0 %>
+              <% credit = posting.amount_cents.negative? ? posting.amount_cents.abs : 0 %>
+              <tr>
+                <td>
+                  <%= link_to posting.account.name, account_path(posting.account), class: "yn-row-link" %>
+                  <span class="block text-[13px] text-stone-500"><%= posting.account.key %></span>
+                </td>
+                <td class="text-[13px] text-stone-500">
+                  <% if posting.property %>
+                    <div><%= link_to posting.property.address, property_path(posting.property), class: "yn-link" %></div>
+                  <% end %>
+                  <% if posting.tenancy %>
+                    <div><%= link_to (posting.tenancy.rentable_unit&.display_name || "Tenancy"), tenancy_path(posting.tenancy), class: "yn-link" %></div>
+                  <% end %>
+                  <% if posting.party %>
+                    <div><%= link_to posting.party.display_name, party_path(posting.party), class: "yn-link" %></div>
+                  <% end %>
+                </td>
+                <td class="text-stone-500"><%= posting.memo.presence || "—" %></td>
+                <td class="text-right tabular-nums whitespace-nowrap"><%= debit.positive? ? format_money_cents(debit) : "—" %></td>
+                <td class="text-right tabular-nums whitespace-nowrap"><%= credit.positive? ? format_money_cents(credit) : "—" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot>
+            <tr class="border-t border-stone-300">
+              <td colspan="3" class="text-right font-medium text-stone-700">Total</td>
+              <td class="text-right tabular-nums whitespace-nowrap font-medium"><%= format_money_cents(total_debits) %></td>
+              <td class="text-right tabular-nums whitespace-nowrap font-medium"><%= format_money_cents(total_credits) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
   </div>
 </div>

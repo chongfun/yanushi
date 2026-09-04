@@ -1,50 +1,71 @@
-<% content_for :title, "Correct Deposit Transaction ##{@transaction.id}" %>
+<% content_for :title, "Correct deposit #{@transaction.transaction_kind}" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-2">Correct Deposit <%= @transaction.transaction_kind.titleize %></h1>
-    <p class="text-sm text-stone-500 mb-6">
-      This will reverse the original journal entry on its original date (<%= @transaction.occurred_on.strftime("%b %d, %Y") %>) and post a replacement transaction.
-    </p>
+<div class="max-w-xl">
+  <%= render "tenancies/page_header",
+        tenancy: @transaction.tenancy,
+        title: "Correct deposit #{@transaction.transaction_kind.humanize.downcase}" %>
 
+  <div class="yn-alert yn-alert-warn mb-6" role="status">
+    <span>This keeps the original transaction as a voided record, reverses its journal entry as of <%= @transaction.occurred_on.strftime("%b %-d, %Y") %>, and posts a replacement.</span>
+  </div>
+
+  <div class="yn-surface p-6">
     <%= form_with model: @transaction, url: correct_security_deposit_transaction_path(@transaction), method: :post, class: "space-y-4" do |f| %>
-      <div>
-        <label class="yn-label" for="security_deposit_transaction_amount">Amount ($)</label>
-        <%= f.number_field :amount, value: sprintf("%.2f", @transaction.amount), step: "0.01", min: "0.01", class: "yn-input font-mono tabular-nums", id: "security_deposit_transaction_amount", required: true %>
-      </div>
+      <% if @transaction.errors.any? %>
+        <div class="yn-alert yn-alert-danger" role="alert">
+          Correction couldn't be saved — <%= pluralize(@transaction.errors.count, "field") %> needs a fix.
+          <ul class="list-disc pl-5 mt-1 text-sm">
+            <% @transaction.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
-      <div>
-        <label class="yn-label" for="security_deposit_transaction_occurred_on">Date</label>
-        <%= f.date_field :occurred_on, value: @transaction.occurred_on, class: "yn-input", id: "security_deposit_transaction_occurred_on", required: true %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :amount, "Amount", class: "yn-label", for: "security_deposit_transaction_amount" %>
+          <%= f.number_field :amount, value: sprintf("%.2f", @transaction.amount), step: "0.01", min: "0.01", inputmode: "decimal",
+                class: "yn-input tabular-nums", id: "security_deposit_transaction_amount", required: true, autofocus: true %>
+        </div>
+        <div>
+          <%= f.label :occurred_on, "Date", class: "yn-label", for: "security_deposit_transaction_occurred_on" %>
+          <%= f.date_field :occurred_on, value: @transaction.occurred_on, class: "yn-input", id: "security_deposit_transaction_occurred_on", required: true %>
+        </div>
       </div>
 
       <% if @transaction.received? || @transaction.refunded? %>
         <div>
-          <label class="yn-label" for="security_deposit_transaction_party_id">
-            <%= @transaction.received? ? "Contributor (Payer)" : "Recipient" %>
-          </label>
-          <%= f.collection_select :party_id, @parties, :id, :display_name, { selected: @transaction.party_id }, class: "yn-select", id: "security_deposit_transaction_party_id", required: true %>
+          <%= f.label :party_id, (@transaction.received? ? "Contributor" : "Recipient"), class: "yn-label", for: "security_deposit_transaction_party_id" %>
+          <%= f.collection_select :party_id, @parties, :id, :display_name, { selected: @transaction.party_id },
+                { class: "yn-select", id: "security_deposit_transaction_party_id", required: true } %>
         </div>
       <% elsif @transaction.applied? %>
         <div>
-          <label class="yn-label" for="security_deposit_transaction_charge_id">Target Charge</label>
-          <%= f.collection_select :charge_id, @active_charges, :id, :description, { selected: @transaction.charge_id }, class: "yn-select", id: "security_deposit_transaction_charge_id", required: true %>
+          <%= f.label :charge_id, "Charge it was applied to", class: "yn-label", for: "security_deposit_transaction_charge_id" %>
+          <%= f.collection_select :charge_id, @active_charges, :id, :description, { selected: @transaction.charge_id },
+                { class: "yn-select", id: "security_deposit_transaction_charge_id", required: true } %>
         </div>
       <% end %>
 
-      <div>
-        <label class="yn-label" for="security_deposit_transaction_external_reference">Reference (Optional)</label>
-        <%= f.text_field :external_reference, value: @transaction.external_reference, class: "yn-input", id: "security_deposit_transaction_external_reference" %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :external_reference, class: "yn-label", for: "security_deposit_transaction_external_reference" do %>
+            Reference <span class="font-normal text-stone-400">(optional)</span>
+          <% end %>
+          <%= f.text_field :external_reference, value: @transaction.external_reference, class: "yn-input", id: "security_deposit_transaction_external_reference" %>
+        </div>
+        <div>
+          <%= f.label :memo, class: "yn-label", for: "security_deposit_transaction_memo" do %>
+            Memo <span class="font-normal text-stone-400">(optional)</span>
+          <% end %>
+          <%= f.text_field :memo, value: @transaction.memo, class: "yn-input", id: "security_deposit_transaction_memo" %>
+        </div>
       </div>
 
-      <div>
-        <label class="yn-label" for="security_deposit_transaction_memo">Memo (Optional)</label>
-        <%= f.text_field :memo, value: @transaction.memo, class: "yn-input", id: "security_deposit_transaction_memo" %>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2">
-        <%= link_to "Cancel", security_deposit_transaction_path(@transaction), class: "yn-btn yn-btn-secondary" %>
-        <%= f.submit "Save Correction", class: "yn-btn yn-btn-primary" %>
+      <div class="flex justify-end gap-2 pt-2">
+        <%= link_to "Cancel", security_deposit_transaction_path(@transaction), class: "yn-btn yn-btn-ghost" %>
+        <%= f.submit "Save correction", class: "yn-btn yn-btn-primary" %>
       </div>
     <% end %>
   </div>

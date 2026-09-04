@@ -23,7 +23,7 @@ RSpec.describe "ExpenseReimbursements", type: :request do
     it "renders a successful response" do
       get new_expense_reimbursement_path(expense)
       expect(response).to be_successful
-      expect(response.body).to include("Add Reimbursement Charge")
+      expect(response.body).to include("Add reimbursement charge")
     end
 
     it "redirects when expense is already fully reimbursed" do

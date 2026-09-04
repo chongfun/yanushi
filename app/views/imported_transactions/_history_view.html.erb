@@ -74,19 +74,7 @@
     </table>
   </div>
 
-  <% if total_pages > 1 %>
-    <% start_idx = ((page - 1) * per_page) + 1 %>
-    <% end_idx = [page * per_page, total_confirmed_count].min %>
-    <nav class="flex items-center justify-between mt-4 max-w-4xl" aria-label="Pagination">
-      <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= total_confirmed_count %></span></p>
-      <div class="flex gap-2">
-        <% if page > 1 %>
-          <%= link_to "Previous", inbox_path(view: "history", page: page - 1, search: filters[:search], payment_method: filters[:payment_method]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-        <% end %>
-        <% if page < total_pages %>
-          <%= link_to "Next", inbox_path(view: "history", page: page + 1, search: filters[:search], payment_method: filters[:payment_method]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-        <% end %>
-      </div>
-    </nav>
-  <% end %>
+  <%= render "shared/pagination",
+        page: page, per_page: per_page, total_count: total_confirmed_count, total_pages: total_pages,
+        page_url: ->(p) { inbox_path(view: "history", page: p, search: filters[:search], payment_method: filters[:payment_method]) } %>
 <% end %>

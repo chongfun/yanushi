@@ -26,6 +26,7 @@ export default class extends Controller {
       const modalFrame = this.hasContentTarget ? this.contentTarget.querySelector("turbo-frame") : document.getElementById("modal-frame")
       if (targetFrame === modalFrame || (modalFrame && modalFrame.contains(targetFrame))) {
         this._closing = false
+        this._clearPending()
         if (modalFrame && modalFrame.innerHTML.trim() !== "") {
           const title = modalFrame.dataset.modalTitle ||
                         modalFrame.getAttribute("data-modal-title") ||
@@ -58,14 +59,34 @@ export default class extends Controller {
     }
     document.addEventListener("turbo:before-stream-render", this.streamListener)
 
-    // Track trigger element for focus restoration
+    // Track the trigger for focus restoration, and mark it busy so the click
+    // has visible feedback while the frame request is in flight (PRD 19). The
+    // pending state lives on the trigger, not inside the dialog, so it cannot
+    // interfere with where focus lands when the form arrives.
     this._clickListener = (event) => {
       const trigger = event.target.closest("[data-turbo-frame='modal-frame']")
       if (trigger) {
         this._triggerElement = trigger
+        this._awaitingFrame = true
+        trigger.setAttribute("aria-busy", "true")
       }
     }
     document.addEventListener("click", this._clickListener, true)
+
+    // A frame request that fails leaves nothing on screen, so say so.
+    this._fetchErrorListener = () => {
+      if (!this._awaitingFrame) return
+      this._clearPending()
+      const flash = document.getElementById("flash-messages")
+      if (!flash) return
+      const alert = document.createElement("div")
+      alert.className = "yn-alert yn-alert-danger shadow-lg pointer-events-auto"
+      alert.setAttribute("role", "alert")
+      alert.dataset.controller = "toast"
+      alert.textContent = "That could not be loaded. Check your connection and try again."
+      flash.appendChild(alert)
+    }
+    document.addEventListener("turbo:fetch-request-error", this._fetchErrorListener)
   }
 
   disconnect() {
@@ -79,6 +100,7 @@ export default class extends Controller {
     if (this._trapListener) this.dialogTarget.removeEventListener("keydown", this._trapListener)
     document.removeEventListener("turbo:before-stream-render", this.streamListener)
     document.removeEventListener("click", this._clickListener, true)
+    document.removeEventListener("turbo:fetch-request-error", this._fetchErrorListener)
   }
 
   open() {
@@ -98,6 +120,15 @@ export default class extends Controller {
     }
   }
 
+  _modalFrame() {
+    return this.hasContentTarget ? this.contentTarget.querySelector("turbo-frame") : document.getElementById("modal-frame")
+  }
+
+  _clearPending() {
+    this._awaitingFrame = false
+    document.querySelectorAll("[data-turbo-frame='modal-frame'][aria-busy]").forEach((el) => el.removeAttribute("aria-busy"))
+  }
+
   _focusFirstInvalidOrAutofocus() {
     if (!this.dialogTarget.open) return
     const firstInvalid = this.dialogTarget.querySelector("[aria-invalid='true'], .yn-field-invalid")
@@ -113,6 +144,7 @@ export default class extends Controller {
   close(event) {
     if (event) event.preventDefault()
     this._closing = true
+    this._clearPending()
 
     if (this._trapListener) {
       this.dialogTarget.removeEventListener("keydown", this._trapListener)

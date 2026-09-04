@@ -1,60 +1,108 @@
-<% content_for :title, "Add Reimbursement Charge" %>
+<%
+  expense_label = @expense.vendor_name.presence || @expense.expense_kind&.titleize || "Expense"
+%>
+<% content_for :title, "Add reimbursement charge" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-2">Add Reimbursement Charge</h1>
-    <p class="text-xs text-stone-500 mb-6">
-      Bill all or part of Expense #<%= @expense.id %> (<%= number_to_currency(@expense.amount) %> - <%= @expense.expense_kind&.titleize %>) to a tenancy at <%= @expense.property.address %>.<br>
-      <span class="font-semibold text-stone-700">Available to reimburse: <%= number_to_currency(@expense.remaining_reimbursable_amount) %></span>
-    </p>
+<div class="max-w-xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Expenses", expenses_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to expense_label, expense_path(@expense), class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "Add reimbursement charge",
+        meta: capture { %>
+          Bills part of this <%= format_money_cents(@expense.amount_cents) %> expense at <%= @expense.property.address %> to a tenancy.
+          <span class="text-stone-700 font-medium"><%= format_money_cents(@expense.remaining_reimbursable_cents) %> still available.</span>
+        <% } %>
 
+  <div class="yn-surface p-6">
     <%= form_with(model: [@expense, @charge], url: expense_reimbursements_path(@expense), class: "space-y-4") do |form| %>
+      <% error_for = ->(*attrs) { attrs.flat_map { |a| @charge.errors[a] }.first } %>
       <% if @charge.errors.any? %>
         <div class="yn-alert yn-alert-danger" role="alert">
-          <div>
-            <h3 class="font-bold text-sm"><%= pluralize(@charge.errors.count, "error") %> prohibited this reimbursement from being saved:</h3>
-            <ul class="list-disc pl-5 mt-1 text-sm">
-              <% @charge.errors.each do |error| %>
-                <li><%= error.full_message %></li>
-              <% end %>
-            </ul>
-          </div>
+          Reimbursement couldn't be saved — <%= pluralize(@charge.errors.count, "field") %> needs a fix.
+          <ul class="list-disc pl-5 mt-1 text-sm">
+            <% @charge.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
         </div>
       <% end %>
 
       <div>
-        <%= form.label :tenancy_id, "Tenancy to Charge", class: "yn-label" %>
+        <% tenancy_error = error_for.call(:tenancy_id, :tenancy) %>
+        <%= form.label :tenancy_id, "Tenancy to charge", class: "yn-label", for: "reimbursement-tenancy" %>
         <%= form.select :tenancy_id,
-              @tenancies.map { |t| ["#{t.rentable_unit.display_name} - Tenancy ##{t.id} (#{t.parties.map(&:display_name).join(', ')})", t.id] },
-              { include_blank: "Select a tenancy..." },
-              { class: "yn-select", required: true } %>
+              @tenancies.map { |t| [ [ t.rentable_unit.display_name, t.all_tenant_parties.map(&:display_name).to_sentence.presence ].compact.join(" · "), t.id ] },
+              { include_blank: "Select a tenancy" },
+              { class: "yn-select #{'yn-field-invalid' if tenancy_error}", id: "reimbursement-tenancy", required: true,
+                autofocus: (@charge.errors.empty? ? true : nil),
+                "aria-invalid": tenancy_error ? "true" : nil,
+                "aria-describedby": tenancy_error ? "reimbursement-tenancy-error" : nil } %>
+        <% if tenancy_error %>
+          <p id="reimbursement-tenancy-error" class="yn-error-text"><%= tenancy_error %></p>
+        <% end %>
       </div>
 
       <div>
-        <%= form.label :amount, "Reimbursement Amount ($)", class: "yn-label" %>
-        <%= form.number_field :amount, value: (@charge.amount_cents ? @charge.amount_cents / 100.0 : (@charge.amount || @expense.remaining_reimbursable_amount)), step: 0.01, min: 0.01, max: (@expense.remaining_reimbursable_amount if @expense.remaining_reimbursable_amount > 0), class: "yn-input font-mono tabular-nums", placeholder: "100.00", required: true %>
+        <% amount_error = error_for.call(:amount, :amount_cents) %>
+        <%= form.label :amount, "Reimbursement amount", class: "yn-label", for: "reimbursement-amount" %>
+        <%= form.number_field :amount,
+              value: (@charge.amount_cents ? sprintf("%.2f", @charge.amount_cents / 100.0) : sprintf("%.2f", @expense.remaining_reimbursable_cents / 100.0)),
+              step: 0.01, min: 0.01, inputmode: "decimal",
+              max: (@expense.remaining_reimbursable_amount if @expense.remaining_reimbursable_cents > 0),
+              class: "yn-input tabular-nums #{'yn-field-invalid' if amount_error}", id: "reimbursement-amount", required: true,
+              "aria-invalid": amount_error ? "true" : nil,
+              "aria-describedby": amount_error ? "reimbursement-amount-error" : nil %>
+        <% if amount_error %>
+          <p id="reimbursement-amount-error" class="yn-error-text"><%= amount_error %></p>
+        <% end %>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <%= form.label :charge_date, "Charge Date", class: "yn-label" %>
-          <%= form.date_field :charge_date, value: (@charge.charge_date || @expense.paid_on || Date.current), class: "yn-input", required: true %>
+          <% charged_error = error_for.call(:charge_date) %>
+          <%= form.label :charge_date, "Charge date", class: "yn-label", for: "reimbursement-charge-date" %>
+          <%= form.date_field :charge_date, value: (@charge.charge_date || @expense.paid_on || Date.current),
+                class: "yn-input #{'yn-field-invalid' if charged_error}", id: "reimbursement-charge-date", required: true,
+                "aria-invalid": charged_error ? "true" : nil,
+                "aria-describedby": charged_error ? "reimbursement-charge-date-error" : nil %>
+          <% if charged_error %>
+            <p id="reimbursement-charge-date-error" class="yn-error-text"><%= charged_error %></p>
+          <% end %>
         </div>
-
         <div>
-          <%= form.label :due_on, "Due Date", class: "yn-label" %>
-          <%= form.date_field :due_on, value: (@charge.due_on || @expense.paid_on || Date.current), class: "yn-input", required: true %>
+          <% due_error = error_for.call(:due_on) %>
+          <%= form.label :due_on, "Due on", class: "yn-label", for: "reimbursement-due-on" %>
+          <%= form.date_field :due_on, value: (@charge.due_on || @expense.paid_on || Date.current),
+                class: "yn-input #{'yn-field-invalid' if due_error}", id: "reimbursement-due-on", required: true,
+                "aria-invalid": due_error ? "true" : nil,
+                "aria-describedby": due_error ? "reimbursement-due-on-error" : nil %>
+          <% if due_error %>
+            <p id="reimbursement-due-on-error" class="yn-error-text"><%= due_error %></p>
+          <% end %>
         </div>
       </div>
 
       <div>
-        <%= form.label :description, "Description / Memo", class: "yn-label" %>
-        <%= form.text_field :description, value: (@charge.description || @expense.description), class: "yn-input", placeholder: "e.g. Water bill share" %>
+        <% description_error = error_for.call(:description) %>
+        <%= form.label :description, "Description", class: "yn-label", for: "reimbursement-description" %>
+        <%= form.text_field :description, value: (@charge.description || @expense.description),
+              placeholder: "Water bill share",
+              class: "yn-input #{'yn-field-invalid' if description_error}", id: "reimbursement-description",
+              "aria-invalid": description_error ? "true" : nil,
+              "aria-describedby": description_error ? "reimbursement-description-error" : nil %>
+        <% if description_error %>
+          <p id="reimbursement-description-error" class="yn-error-text"><%= description_error %></p>
+        <% end %>
       </div>
 
-      <div class="flex justify-end gap-3 pt-4">
-        <%= link_to "Cancel", @expense, class: "yn-btn yn-btn-secondary" %>
-        <%= form.submit "Post Reimbursement Charge", class: "yn-btn yn-btn-primary" %>
+      <div class="flex justify-end gap-2 pt-2">
+        <%= link_to "Cancel", expense_path(@expense), class: "yn-btn yn-btn-ghost" %>
+        <%= form.submit "Post reimbursement charge", class: "yn-btn yn-btn-primary" %>
       </div>
     <% end %>
   </div>

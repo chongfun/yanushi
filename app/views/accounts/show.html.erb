@@ -1,144 +1,122 @@
-<% content_for :title, "#{@account.name} Ledger" %>
+<%
+  account = @account
+  result = @activity_result
+  filters_applied = params[:property_id].present? || params[:tenancy_id].present? || params[:from].present? || params[:through].present?
+%>
+<% content_for :title, "#{account.name} ledger" %>
 
-<div class="max-w-6xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
+<div class="max-w-6xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          Accounting
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Accounts", accounts_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: account.name,
+        meta: capture { %>
+          <%= render "shared/status",
+                text: account.account_type.titleize,
+                tone: (%w[asset income].include?(account.account_type) ? :ok : (%w[liability expense].include?(account.account_type) ? :warn : :neutral)),
+                size: :sm %>
+          &middot; <%= account.key %>
+        <% } %>
+
+  <!-- GET filters -->
+  <%= form_with url: account_path(account), method: :get, class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
     <div>
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold tracking-tight text-stone-900"><%= @account.name %></h1>
-        <span class="yn-status yn-status-sm">
-          <span class="yn-dot <%= case @account.account_type when 'asset', 'income' then 'yn-dot-ok' when 'liability', 'expense' then 'yn-dot-warn' else '' end %>"></span>
-          <%= @account.account_type.titleize %>
-        </span>
-      </div>
-      <p class="font-mono text-xs text-stone-500 mt-1">Key: <%= @account.key %></p>
+      <%= f.label :property_id, "Property", class: "yn-label", for: "acct-property" %>
+      <%= f.select :property_id,
+            options_from_collection_for_select(@properties, :id, :address, params[:property_id]),
+            { include_blank: "All properties" },
+            class: "yn-select w-52", id: "acct-property" %>
     </div>
     <div>
-      <%= link_to "Back to Accounts", accounts_path, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+      <%= f.label :tenancy_id, "Tenancy", class: "yn-label", for: "acct-tenancy" %>
+      <%= f.select :tenancy_id,
+            options_for_select(@tenancies.map { |t| [ "#{t.property.address} · #{t.rentable_unit.display_name}", t.id ] }, params[:tenancy_id]),
+            { include_blank: "All tenancies" },
+            class: "yn-select w-52", id: "acct-tenancy" %>
     </div>
-  </div>
-
-  <!-- Filter Form -->
-  <div class="bg-white border border-stone-200 rounded-lg mb-6 p-4">
-    <%= form_with url: account_path(@account), method: :get, class: "flex flex-wrap items-end gap-4" do |f| %>
-      <div>
-        <%= f.label :property_id, "Property", class: "yn-label text-xs font-semibold" %>
-        <%= f.select :property_id,
-              options_from_collection_for_select(@properties, :id, :address, params[:property_id]),
-              { include_blank: "All Properties" },
-              class: "yn-select text-sm py-1.5" %>
-      </div>
-      <div>
-        <%= f.label :tenancy_id, "Tenancy", class: "yn-label text-xs font-semibold" %>
-        <%= f.select :tenancy_id,
-              options_for_select(@tenancies.map { |t| ["Tenancy ##{t.id} (#{t.property.address} - #{t.rentable_unit.display_name})", t.id] }, params[:tenancy_id]),
-              { include_blank: "All Tenancies" },
-              class: "yn-select text-sm py-1.5" %>
-      </div>
-      <div>
-        <%= f.label :from, "From Date", class: "yn-label text-xs font-semibold" %>
-        <%= f.date_field :from, value: @date_range.from, class: "yn-input text-sm py-1.5" %>
-      </div>
-      <div>
-        <%= f.label :through, "Through Date", class: "yn-label text-xs font-semibold" %>
-        <%= f.date_field :through, value: @date_range.through, class: "yn-input text-sm py-1.5" %>
-      </div>
-      <div>
-        <%= f.submit "Filter", class: "yn-btn yn-btn-primary yn-btn-sm" %>
-      </div>
-      <% if params[:property_id].present? || params[:tenancy_id].present? || params[:from].present? || params[:through].present? %>
-        <div>
-          <%= link_to "Clear Filters", account_path(@account), class: "yn-btn yn-btn-ghost yn-btn-sm" %>
-        </div>
-      <% end %>
+    <div>
+      <%= f.label :from, "From", class: "yn-label", for: "acct-from" %>
+      <%= f.date_field :from, value: @date_range.from, class: "yn-input w-40", id: "acct-from" %>
+    </div>
+    <div>
+      <%= f.label :through, "Through", class: "yn-label", for: "acct-through" %>
+      <%= f.date_field :through, value: @date_range.through, class: "yn-input w-40", id: "acct-through" %>
+    </div>
+    <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
+    <% if filters_applied %>
+      <%= link_to "Clear filters", account_path(account), class: "yn-btn yn-btn-ghost text-sm" %>
     <% end %>
-  </div>
+  <% end %>
 
   <% if @date_range.valid? %>
-    <!-- Balances Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <div class="bg-white border border-stone-200 rounded-lg p-4">
-        <div class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1">Opening Balance</div>
-        <div class="font-mono text-2xl font-bold tabular-nums text-stone-900">
-          <%= format_money_cents(@activity_result.opening_natural_balance_cents) %>
-        </div>
-        <div class="text-xs text-stone-500 mt-1">Prior to <%= @date_range.from&.strftime("%b %d, %Y") || "beginning" %></div>
+    <dl class="grid grid-cols-2 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6 max-w-xl">
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Opening Balance</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(result.opening_natural_balance_cents) %></dd>
+        <dd class="text-xs text-stone-500 m-0">Prior to <%= @date_range.from&.strftime("%b %-d, %Y") || "the first entry" %></dd>
       </div>
-
-      <div class="bg-white border border-stone-200 rounded-lg p-4">
-        <div class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1">Closing Balance</div>
-        <div class="font-mono text-2xl font-bold tabular-nums text-indigo-600">
-          <%= format_money_cents(@activity_result.closing_natural_balance_cents) %>
-        </div>
-        <div class="text-xs text-stone-500 mt-1">As of <%= @date_range.through&.strftime("%b %d, %Y") || Date.current.strftime("%b %d, %Y") %></div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Closing Balance</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(result.closing_natural_balance_cents) %></dd>
+        <dd class="text-xs text-stone-500 m-0">As of <%= (@date_range.through || Date.current).strftime("%b %-d, %Y") %></dd>
       </div>
-    </div>
+    </dl>
 
-    <!-- Posting Lines Table -->
-    <div class="overflow-x-auto border border-stone-200 rounded-lg bg-white">
-      <table class="yn-table">
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Description</th>
-            <th scope="col">Dimensions</th>
-            <th scope="col" class="text-right">Debit</th>
-            <th scope="col" class="text-right">Credit</th>
-            <th scope="col" class="text-right">Running Balance</th>
-            <th scope="col" class="text-right">Entry</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if @activity_result.rows.empty? %>
+    <% if result.rows.any? %>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
             <tr>
-              <td colspan="7" class="text-center py-8 text-stone-500">
-                No ledger activity found for the selected period.
-              </td>
+              <th scope="col">Date</th>
+              <th scope="col">Description</th>
+              <th scope="col">Context</th>
+              <th scope="col" class="text-right tabular-nums">Debit</th>
+              <th scope="col" class="text-right tabular-nums">Credit</th>
+              <th scope="col" class="text-right tabular-nums">Balance</th>
+              <th scope="col"><span class="sr-only">Audit</span></th>
             </tr>
-          <% else %>
-            <% @activity_result.rows.each do |row| %>
+          </thead>
+          <tbody>
+            <% result.rows.each do |row| %>
               <tr>
-                <td class="text-sm text-stone-500 whitespace-nowrap"><%= row.occurred_on.strftime("%b %d, %Y") %></td>
-                <td class="text-sm">
+                <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
+                <td>
                   <%= row.description %>
                   <% if row.memo.present? %>
-                    <div class="text-xs text-stone-500 italic"><%= row.memo %></div>
+                    <span class="block text-[13px] text-stone-500"><%= row.memo %></span>
                   <% end %>
                 </td>
-                <td class="text-xs text-stone-500">
-                  <% if row.property %>
-                    <div><%= row.property.address %></div>
-                  <% end %>
-                  <% if row.tenancy %>
-                    <div>Tenancy #<%= row.tenancy.id %></div>
-                  <% end %>
-                  <% if row.party %>
-                    <div><%= row.party.display_name %></div>
-                  <% end %>
+                <td class="text-[13px] text-stone-500">
+                  <% if row.property %><div><%= row.property.address %></div><% end %>
+                  <% if row.tenancy %><div><%= row.tenancy.rentable_unit&.display_name || "Tenancy" %></div><% end %>
+                  <% if row.party %><div><%= row.party.display_name %></div><% end %>
                 </td>
-                <td class="text-right font-mono text-sm tabular-nums">
-                  <%= row.debit_cents.positive? ? format_money_cents(row.debit_cents) : "—" %>
-                </td>
-                <td class="text-right font-mono text-sm tabular-nums">
-                  <%= row.credit_cents.positive? ? format_money_cents(row.credit_cents) : "—" %>
-                </td>
-                <td class="text-right font-mono font-bold text-sm tabular-nums">
-                  <%= format_money_cents(row.running_natural_balance_cents) %>
-                </td>
-                <td class="text-right whitespace-nowrap">
-                  <%= link_to "Audit", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
-                </td>
+                <td class="text-right tabular-nums whitespace-nowrap"><%= row.debit_cents.positive? ? format_money_cents(row.debit_cents) : "—" %></td>
+                <td class="text-right tabular-nums whitespace-nowrap"><%= row.credit_cents.positive? ? format_money_cents(row.credit_cents) : "—" %></td>
+                <td class="text-right tabular-nums whitespace-nowrap font-medium"><%= format_money_cents(row.running_natural_balance_cents) %></td>
+                <td class="text-right whitespace-nowrap"><%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %></td>
               </tr>
             <% end %>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="yn-empty">
+        <p class="yn-empty-title">No ledger activity in this period</p>
+        <% if filters_applied %>
+          <p class="yn-empty-body">No postings match the selected filters.</p>
+          <%= link_to "Clear filters", account_path(account), class: "yn-btn yn-btn-secondary yn-btn-sm mt-3" %>
+        <% else %>
+          <p class="yn-empty-body">Postings appear here as receipts, charges, and expenses are recorded.</p>
+        <% end %>
+      </div>
+    <% end %>
   <% else %>
     <div class="yn-alert yn-alert-warn" role="alert">
-      <div>
-        <h3 class="font-bold">Unable to calculate account ledger</h3>
-        <div class="text-sm">Please correct the date range above (From date cannot be after Through date).</div>
-      </div>
+      <span>Unable to calculate account ledger: <%= @date_range.errors.to_sentence.presence || "the From date cannot be after the Through date" %>. Adjust the dates above.</span>
     </div>
   <% end %>
 </div>

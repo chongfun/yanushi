@@ -1,139 +1,136 @@
-<% content_for :title, "Deposit Transaction ##{@transaction.id}" %>
+<%
+  txn = @transaction
+  tenancy = txn.tenancy
+  kind_label = txn.transaction_kind.humanize
+  status_text, status_tone = if txn.superseded?
+    [ "Corrected", :neutral ]
+  elsif txn.voided?
+    [ "Voided", :neutral ]
+  else
+    [ "Active", :ok ]
+  end
+%>
+<% content_for :title, "Deposit #{kind_label.downcase}" %>
 
-<div class="max-w-4xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Deposit <%= @transaction.transaction_kind.titleize %></h1>
-      <p class="text-sm text-stone-500"><%= @transaction.tenancy.property.address %> — <%= @transaction.tenancy.rentable_unit.display_name %></p>
-    </div>
-    <div class="flex gap-2">
-      <%= link_to "Back to Deposit", tenancy_security_deposit_path(@transaction.tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <% if @transaction.active? %>
-        <%= link_to "Correct Transaction", correction_security_deposit_transaction_path(@transaction), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-        <%= button_to "Void Transaction", void_security_deposit_transaction_path(@transaction), method: :post, class: "yn-btn yn-btn-danger yn-btn-sm", form: { data: { turbo_confirm: "Are you sure you want to void this deposit transaction? This will reverse the accounting entry on its original date." } } %>
-      <% end %>
-    </div>
-  </div>
+<div class="max-w-4xl">
+  <%= render "tenancies/page_header",
+        tenancy: tenancy,
+        title: "Deposit #{kind_label.downcase}",
+        meta: capture { %>
+          <span class="tabular-nums <%= 'line-through' if txn.voided? %>"><%= format_money_cents(txn.amount_cents) %></span> &middot;
+          <%= txn.occurred_on.strftime("%b %-d, %Y") %> &middot;
+          <%= render "shared/status", text: status_text, tone: status_tone, size: :sm %>
+        <% },
+        actions: capture { %>
+          <% if txn.active? %>
+            <details class="relative" data-controller="menu">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
+                More
+                <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+              </summary>
+              <div class="yn-menu">
+                <%= link_to "Correct transaction", correction_security_deposit_transaction_path(txn), class: "yn-menu-item" %>
+                <hr class="yn-menu-separator">
+                <%= button_to "Void transaction…", void_security_deposit_transaction_path(txn), method: :post,
+                      class: "yn-menu-item yn-menu-item-danger",
+                      data: { turbo_confirm: "Void this deposit transaction? Its accounting entry will be reversed on the original date." } %>
+              </div>
+            </details>
+          <% end %>
+          <%= link_to "Security deposit", tenancy_security_deposit_path(tenancy), class: "yn-btn yn-btn-secondary" %>
+        <% } %>
 
-  <!-- Audit/Replacement Alerts -->
-  <% if @transaction.superseded? %>
+  <% if txn.superseded? %>
     <div class="yn-alert yn-alert-warn mb-6" role="status">
-      <div>
-        <h4 class="font-bold text-sm">This transaction was corrected</h4>
-        <p class="text-xs">
-          Superseded by
-          <%= link_to "Transaction ##{@transaction.superseded_by_id}", security_deposit_transaction_path(@transaction.superseded_by), class: "yn-link font-semibold" %>
-          on <%= @transaction.voided_at.strftime("%B %d, %Y at %l:%M %p") %>.
-        </p>
-      </div>
+      <span>This transaction was corrected. Superseded by <%= link_to "Transaction ##{txn.superseded_by_id}", security_deposit_transaction_path(txn.superseded_by), class: "yn-link font-medium" %> on <%= txn.voided_at.strftime("%B %-d, %Y") %>.</span>
     </div>
-  <% elsif @transaction.voided? %>
+  <% elsif txn.voided? %>
     <div class="yn-alert yn-alert-danger mb-6" role="status">
-      <div>
-        <h4 class="font-bold text-sm">This transaction was voided</h4>
-        <p class="text-xs">Voided on <%= @transaction.voided_at.strftime("%B %d, %Y at %l:%M %p") %>.</p>
-      </div>
+      <span>This transaction was voided on <%= txn.voided_at.strftime("%B %-d, %Y") %>. Its accounting entry has been reversed.</span>
     </div>
-  <% elsif @transaction.superseded_transaction.present? %>
+  <% elsif txn.superseded_transaction.present? %>
     <div class="yn-alert mb-6" role="status">
-      <div>
-        <h4 class="font-bold text-sm">This is a replacement transaction</h4>
-        <p class="text-xs">
-          Replaced
-          <%= link_to "Transaction ##{@transaction.superseded_transaction.id}", security_deposit_transaction_path(@transaction.superseded_transaction), class: "yn-link font-semibold" %>.
-        </p>
-      </div>
+      <span>This transaction replaces <%= link_to "Transaction ##{txn.superseded_transaction.id}", security_deposit_transaction_path(txn.superseded_transaction), class: "yn-link font-medium" %>.</span>
     </div>
   <% end %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <div class="bg-white border border-stone-200 rounded-lg p-6">
-      <h2 class="text-base font-bold text-stone-900 mb-4">Transaction Details</h2>
-
-      <dl class="divide-y divide-stone-200 text-sm">
-        <div class="py-2.5 flex justify-between">
-          <dt class="text-stone-500 font-medium">Transaction Kind</dt>
-          <dd class="font-semibold capitalize"><%= @transaction.transaction_kind.titleize %></dd>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+    <section aria-labelledby="deposit-txn-heading">
+      <h2 id="deposit-txn-heading" class="text-sm font-semibold mb-3">Transaction</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Kind</dt>
+          <dd class="m-0"><%= kind_label %></dd>
         </div>
-        <div class="py-2.5 flex justify-between">
-          <dt class="text-stone-500 font-medium">Amount</dt>
-          <dd class="font-mono font-bold text-lg tabular-nums"><%= number_to_currency(@transaction.amount) %></dd>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Amount</dt>
+          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-400' if txn.voided? %>"><%= format_money_cents(txn.amount_cents) %></dd>
         </div>
-        <div class="py-2.5 flex justify-between">
-          <dt class="text-stone-500 font-medium">Date</dt>
-          <dd><%= @transaction.occurred_on.strftime("%B %d, %Y") %></dd>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Date</dt>
+          <dd class="m-0"><%= txn.occurred_on.strftime("%B %-d, %Y") %></dd>
         </div>
-        <% if @transaction.party %>
-          <div class="py-2.5 flex justify-between">
-            <dt class="text-stone-500 font-medium"><%= @transaction.received? ? "Contributor" : "Recipient" %></dt>
-            <dd class="font-semibold"><%= link_to @transaction.party.display_name, @transaction.party, class: "yn-link" %></dd>
+        <% if txn.party %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500"><%= txn.received? ? "Contributor" : "Recipient" %></dt>
+            <dd class="m-0 text-right"><%= link_to txn.party.display_name, party_path(txn.party), class: "yn-link" %></dd>
           </div>
         <% end %>
-        <% if @transaction.charge %>
-          <div class="py-2.5 flex justify-between">
-            <dt class="text-stone-500 font-medium">Target Charge</dt>
-            <dd><%= link_to "Charge ##{@transaction.charge_id}: #{@transaction.charge.description || @transaction.charge.charge_kind.titleize}", charge_path(@transaction.charge), class: "yn-link" %></dd>
+        <% if txn.charge %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Applied to</dt>
+            <dd class="m-0 text-right"><%= link_to (txn.charge.description.presence || txn.charge.charge_kind.titleize), charge_path(txn.charge), class: "yn-link" %></dd>
           </div>
         <% end %>
-        <div class="py-2.5 flex justify-between">
-          <dt class="text-stone-500 font-medium">Reference</dt>
-          <dd class="font-mono text-stone-700"><%= @transaction.external_reference || "—" %></dd>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Reference</dt>
+          <dd class="m-0 tabular-nums"><%= txn.external_reference.presence || "—" %></dd>
         </div>
-        <div class="py-2.5 flex justify-between">
-          <dt class="text-stone-500 font-medium">Memo</dt>
-          <dd class="text-stone-700"><%= @transaction.memo || "—" %></dd>
-        </div>
-        <div class="py-2.5 flex justify-between items-center">
-          <dt class="text-stone-500 font-medium">Status</dt>
-          <dd>
-            <% if @transaction.superseded? %>
-              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-            <% elsif @transaction.voided? %>
-              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Voided</span>
-            <% else %>
-              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Active</span>
-            <% end %>
-          </dd>
-        </div>
+        <% if txn.memo.present? %>
+          <div class="py-2.5">
+            <dt class="text-stone-500 mb-1">Memo</dt>
+            <dd class="m-0 text-stone-700"><%= txn.memo %></dd>
+          </div>
+        <% end %>
       </dl>
-    </div>
+    </section>
 
-    <!-- Double-Entry Accounting Entries -->
-    <div class="bg-white border border-stone-200 rounded-lg p-6">
-      <h2 class="text-base font-bold text-stone-900 mb-4">Accounting Postings</h2>
-
+    <section aria-labelledby="deposit-postings-heading">
+      <h2 id="deposit-postings-heading" class="text-sm font-semibold mb-3">Accounting</h2>
       <% if @journal_entries.any? %>
-        <div class="space-y-3">
+        <div class="space-y-4">
           <% @journal_entries.each do |entry| %>
-            <div class="p-3 bg-stone-50 rounded-lg border border-stone-200 text-xs">
-              <div class="flex justify-between font-bold mb-2 text-stone-900">
-                <%= link_to entry.event_type.titleize, journal_entry_path(entry), class: "yn-link" %>
-                <span><%= entry.occurred_on.strftime("%b %d, %Y") %></span>
-              </div>
-              <table class="w-full font-mono text-xs">
-                <thead>
-                  <tr class="text-stone-500 border-b border-stone-200 pb-1">
-                    <th scope="col" class="text-left font-medium py-1">Account</th>
-                    <th scope="col" class="text-right font-medium py-1">Debit</th>
-                    <th scope="col" class="text-right font-medium py-1">Credit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% entry.postings.each do |p| %>
+            <div>
+              <p class="text-sm m-0 mb-1">
+                <%= link_to entry.event_type.titleize, journal_entry_path(entry), class: "yn-link font-medium" %>
+                <span class="text-stone-500">&middot; <%= entry.occurred_on.strftime("%b %-d, %Y") %></span>
+              </p>
+              <div class="overflow-x-auto">
+                <table class="yn-table">
+                  <thead>
                     <tr>
-                      <td class="py-0.5 text-stone-700"><%= p.account.name %></td>
-                      <td class="text-right tabular-nums py-0.5"><%= p.debit? ? number_to_currency(p.debit_amount / 100.0) : "" %></td>
-                      <td class="text-right tabular-nums py-0.5"><%= p.credit? ? number_to_currency(p.credit_amount / 100.0) : "" %></td>
+                      <th scope="col">Account</th>
+                      <th scope="col" class="text-right tabular-nums">Debit</th>
+                      <th scope="col" class="text-right tabular-nums">Credit</th>
                     </tr>
-                  <% end %>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    <% entry.postings.each do |posting| %>
+                      <tr>
+                        <td class="text-stone-700"><%= posting.account.name %></td>
+                        <td class="text-right tabular-nums whitespace-nowrap"><%= posting.debit? ? format_money_cents(posting.debit_amount) : "—" %></td>
+                        <td class="text-right tabular-nums whitespace-nowrap"><%= posting.credit? ? format_money_cents(posting.credit_amount) : "—" %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
             </div>
           <% end %>
         </div>
       <% else %>
-        <p class="text-sm text-stone-500">No journal entries recorded.</p>
+        <p class="text-sm text-stone-500 m-0">No journal entries recorded.</p>
       <% end %>
-    </div>
+    </section>
   </div>
 </div>

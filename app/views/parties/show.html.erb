@@ -1,118 +1,110 @@
-<% content_for :title, @party.display_name %>
+<%
+  party = @party
+  contact_lines = [ party.email_address.presence, party.phone_number.presence ].compact
+%>
+<% content_for :title, party.display_name %>
 
-<div class="max-w-4xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900"><%= @party.display_name %></h1>
-      <div class="flex gap-2 items-center mt-1">
-        <span class="yn-status yn-status-sm"><span class="yn-dot"></span><%= @party.party_type.titleize %></span>
-        <span class="text-xs text-stone-400">ID: <%= dom_id(@party) %></span>
-      </div>
-    </div>
-    <div class="flex gap-2">
-      <%= link_to "Back to List", parties_path, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <%= link_to "Edit Profile", edit_party_path(@party), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-    </div>
-  </div>
+<div class="max-w-4xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Parties", parties_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: party.display_name,
+        meta: capture { %>
+          <%= party.party_type.humanize %>
+          <% if contact_lines.any? %>&middot; <%= contact_lines.join(" · ") %><% end %>
+        <% },
+        actions: capture { %>
+          <details class="relative" data-controller="menu">
+            <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
+              More
+              <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+            </summary>
+            <div class="yn-menu">
+              <%= button_to "Delete party…", party_path(party), method: :delete,
+                    class: "yn-menu-item yn-menu-item-danger",
+                    data: { turbo_confirm: "Delete #{party.display_name}? This cannot be undone, and it is only possible for a party with no tenancy history." } %>
+            </div>
+          </details>
+          <%= link_to "Edit party", edit_party_path(party), class: "yn-btn yn-btn-primary" %>
+        <% } %>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Contact Info Card -->
-    <div class="bg-white border border-stone-200 rounded-lg p-6 flex flex-col items-center text-center">
-      <div class="w-16 h-16 rounded-full bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xl mb-3 border border-stone-200">
-        <%= @party.display_name.split.map(&:first).join.upcase[0..1] %>
-      </div>
-      <h2 class="text-lg font-bold text-stone-900"><%= @party.display_name %></h2>
-      
-      <hr class="w-full border-stone-200 my-4">
-      
-      <div class="w-full space-y-4">
-        <% if @party.email_address.present? %>
-          <div class="text-left">
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Email</div>
-            <%= mail_to @party.email_address, class: "flex items-center gap-2 yn-link" do %>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <span class="font-medium truncate"><%= @party.email_address %></span>
-            <% end %>
-          </div>
-        <% end %>
-
-        <% if @party.phone_number.present? %>
-          <div class="text-left">
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Phone</div>
-            <a href="tel:<%= @party.phone_number %>" class="flex items-center gap-2 yn-link">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-              <span class="font-medium"><%= @party.phone_number %></span>
-            </a>
-          </div>
-        <% end %>
-
-        <div class="text-left">
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Mailing Address</div>
-          <div class="text-sm leading-relaxed text-stone-700">
-            <%= @party.mailing_address.presence || "No address on file" %>
-          </div>
+  <div class="space-y-10">
+    <section aria-labelledby="party-contact-heading">
+      <h2 id="party-contact-heading" class="text-sm font-semibold mb-3">Contact</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200 max-w-xl">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Email</dt>
+          <dd class="m-0 text-right">
+            <%= party.email_address.present? ? mail_to(party.email_address, class: "yn-link") : "—" %>
+          </dd>
         </div>
-
-        <div class="text-left">
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Payment Aliases</div>
-          <div class="flex flex-wrap gap-1 mt-1">
-            <% if @party.party_aliases.any? %>
-              <% @party.party_aliases.each do |pa| %>
-                <span class="text-xs font-mono text-stone-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200"><%= pa.alias_name %></span>
-              <% end %>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Phone</dt>
+          <dd class="m-0 text-right">
+            <% if party.phone_number.present? %>
+              <a href="tel:<%= party.phone_number %>" class="yn-link"><%= party.phone_number %></a>
             <% else %>
-              <span class="text-xs text-stone-400">No aliases configured</span>
+              —
             <% end %>
-          </div>
+          </dd>
         </div>
-      </div>
-    </div>
-
-    <!-- Tenancies List -->
-    <div class="lg:col-span-2 space-y-6">
-      <div class="bg-white border border-stone-200 rounded-lg p-6">
-        <h3 class="font-bold text-base text-stone-900 mb-4">Tenancies & Agreements</h3>
-        
-        <% if @party.tenancies.any? %>
-          <div class="space-y-3">
-            <% @party.tenancy_parties.includes(tenancy: { rentable_unit: :property }).each do |tp| %>
-              <% tenancy = tp.tenancy %>
-              <div class="bg-stone-50 p-4 rounded-lg border border-stone-200 flex justify-between items-center">
-                <div>
-                  <div class="font-bold text-sm text-stone-900"><%= tenancy.property.address %> — <%= tenancy.rentable_unit.name %></div>
-                  <div class="flex gap-2 items-center mt-1 text-xs">
-                    <span class="text-xs font-medium text-stone-700 bg-white px-2 py-0.5 rounded border border-stone-200"><%= tp.role.titleize %></span>
-                    <span class="text-stone-500">
-                      <%= tp.effective_from.strftime("%b %d, %Y") %> - <%= tp.effective_until&.strftime("%b %d, %Y") || "Ongoing" %>
-                    </span>
-                  </div>
-                </div>
-                <%= link_to "View Tenancy", tenancy, class: "yn-link text-sm" %>
-              </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Mailing address</dt>
+          <dd class="m-0 text-right"><%= party.mailing_address.presence || "—" %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Payment aliases</dt>
+          <dd class="m-0 text-right">
+            <% if party.party_aliases.any? %>
+              <%= party.party_aliases.map(&:alias_name).join(", ") %>
+            <% else %>
+              <span class="text-stone-500">None. Imports match this party by name.</span>
             <% end %>
-          </div>
-        <% else %>
-          <div class="yn-empty">
-            <p class="yn-empty-body mb-0">This party currently has no tenancy agreements.</p>
-          </div>
-        <% end %>
-      </div>
-
-      <div class="bg-white border border-stone-200 rounded-lg overflow-hidden">
-        <div class="p-4 flex justify-between items-center bg-stone-50">
-          <div>
-            <h4 class="font-bold text-sm text-stone-900">Danger Zone</h4>
-            <p class="text-xs text-stone-500">Deleting a party record cannot be undone.</p>
-          </div>
-          <%= button_to "Delete Party", @party, method: :delete, 
-              class: "yn-btn yn-btn-danger yn-btn-sm", 
-              form: { data: { turbo_confirm: "Are you sure you want to delete this party? This action is irreversible." } } %>
+          </dd>
         </div>
-      </div>
-    </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="party-tenancies-heading">
+      <h2 id="party-tenancies-heading" class="text-sm font-semibold mb-3">Tenancies</h2>
+
+      <% if @tenancy_participations.any? %>
+        <div class="overflow-x-auto">
+          <table class="yn-table">
+            <thead>
+              <tr>
+                <th scope="col">Property / Unit</th>
+                <th scope="col">Role</th>
+                <th scope="col">Participating</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @tenancy_participations.each do |tp| %>
+                <% tenancy = tp.tenancy %>
+                <tr>
+                  <td>
+                    <%= link_to tenancy.property.address, tenancy_path(tenancy), class: "yn-row-link" %>
+                    <span class="block text-[13px] text-stone-500"><%= tenancy.rentable_unit.display_name %></span>
+                  </td>
+                  <td><%= tp.role.humanize %></td>
+                  <td class="text-stone-500 whitespace-nowrap">
+                    <%= tp.effective_from.strftime("%b %-d, %Y") %> –
+                    <%= tp.effective_until&.strftime("%b %-d, %Y") || "present" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <%= render "shared/empty_state",
+              title: "No tenancies yet",
+              body: "This party is not on any tenancy. Add them as a participant from a tenancy's Agreement tab.",
+              action: link_to("Browse tenancies", tenancies_path, class: "yn-btn yn-btn-secondary yn-btn-sm") %>
+      <% end %>
+    </section>
   </div>
 </div>

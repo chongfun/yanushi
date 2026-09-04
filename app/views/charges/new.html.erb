@@ -1,17 +1,17 @@
+<% content_for :title, "Add charge" %>
+
 <% if turbo_frame_request? %>
-  <%# Dialog context: wrapped in turbo-frame for modal loading %>
-  <turbo-frame id="modal-frame" data-modal-title="Add charge">
+  <%# Dialog over the tenancy page %>
+  <turbo-frame id="modal-frame">
+    <%# Turbo swaps the frame's children, not its attributes, so the dialog title rides on this wrapper %>
     <div data-modal-title="Add charge">
       <%= render "charges/form", charge: @charge, tenancy: @tenancy, form_context: :dialog %>
     </div>
   </turbo-frame>
 <% else %>
-  <%# Standalone form (direct browser visit) %>
-  <% content_for :title, "Add charge" %>
-  <div class="max-w-xl mx-auto py-8">
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Add charge</h1>
-    </div>
+  <%# Standalone page for one tenancy %>
+  <div class="max-w-xl">
+    <%= render "tenancies/page_header", tenancy: @tenancy, title: "Add charge" %>
     <div class="yn-surface p-6">
       <%= render "charges/form", charge: @charge, tenancy: @tenancy, form_context: :standalone %>
     </div>

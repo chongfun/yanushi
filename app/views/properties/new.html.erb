@@ -1,13 +1,11 @@
-<% content_for :title, "New Property" %>
+<% content_for :title, "Add property" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">New Property</h1>
-
-  <div class="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+<div class="max-w-xl">
+  <%= render "shared/page_header",
+        eyebrow: link_to("Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit"),
+        title: "Add property",
+        meta: "Yanushi tracks units, tenancies, and finances per property." %>
+  <div class="yn-surface p-6">
     <%= render "form", property: @property %>
-  </div>
-
-  <div class="flex justify-between">
-    <%= link_to "Back to Portfolio", portfolio_path, class: "yn-btn yn-btn-ghost yn-btn-sm" %>
   </div>
 </div>

@@ -23,9 +23,9 @@ RSpec.describe "Expenses", type: :system do
 
     select property.address, from: "Property"
     select "Repairs", from: "Category"
-    fill_in "Date Paid", with: Date.today.to_s
-    fill_in "Amount ($)", with: "450.00"
-    fill_in "Vendor / Payee", with: "Roof Repair Pro"
+    fill_in "Paid on", with: Date.today.to_s
+    fill_in "Amount", with: "450.00"
+    fill_in "Vendor", with: "Roof Repair Pro"
     fill_in "Description", with: "Fixed the leaky roof"
 
     click_on "Record Expense"
@@ -40,10 +40,10 @@ RSpec.describe "Expenses", type: :system do
 
     # Add reimbursement charge
     click_on "Add reimbursement charge"
-    select "#{unit.display_name} - Tenancy ##{tenancy.id} (#{party.display_name})", from: "Tenancy to Charge"
-    fill_in "Reimbursement Amount ($)", with: "150.00"
-    fill_in "Description / Memo", with: "Roof repair tenant share"
-    click_on "Post Reimbursement Charge"
+    select "#{unit.display_name} · #{party.display_name}", from: "Tenancy to charge"
+    fill_in "Reimbursement amount", with: "150.00"
+    fill_in "Description", with: "Roof repair tenant share"
+    click_on "Post reimbursement charge"
 
     expect(page).to have_current_path(expense_path(expense))
     expect(page).to have_content("Reimbursement charge was successfully created and posted.")
@@ -59,11 +59,11 @@ RSpec.describe "Expenses", type: :system do
     # Correct expense (from the More menu)
     find("summary", text: "More").click
     click_on "Correct expense"
-    expect(page).to have_content("Reversal & Replacement Notice")
+    expect(page).to have_content("reverses the original ledger entry")
 
     fill_in "expense[amount]", with: "250.00"
     fill_in "expense[description]", with: "Corrected water bill"
-    click_on "Post Corrected Expense"
+    click_on "Save correction"
 
     expect(page).to have_content("Expense was successfully corrected.")
     expect(page).to have_content("$250.00")

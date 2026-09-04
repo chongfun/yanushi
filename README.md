@@ -59,35 +59,48 @@ See [Double-Entry Accounting Architecture](documentation/accounting_architecture
 
 ## Visual Workflows & Usage Examples
 
-### 1. Tenancy Running Accounts & Activity Ledger
-Tenancy accounts maintain dynamic, double-entry ledger-backed running balances. Scheduled rent charges, receipts, and billed reimbursements drive the tenancy account, while property and maintenance expenses post separately to the property ledger.
+### 1. Overview: what needs attention
+The Overview leads with actionable exceptions (imported transactions awaiting review, failed imports, tenancies carrying a balance), then a compact portfolio summary, the property list, and recent activity.
 
-![Tenancy Running Account](public/screenshots/tenancy_view.png)
-
-![Charges & Ledger Postings](public/screenshots/ledger_items.png)
+![Overview](public/screenshots/overview.png)
 
 ---
 
-### 2. Automated Document Ingestion & Confirmation Queue
-Upload bank checking statements (e.g. Chase) or digital receipts (Venmo, Zelle). Yanushi parses transaction metadata, deduplicates files via SHA-256, and matches payments directly to active tenancies.
+### 2. Portfolio & property workspaces
+Portfolio lists properties with occupancy and outstanding balance; Properties, Tenancies, and Parties are tabs of the same page. Each property is a workspace with Overview, Tenancies, Activity, and Tax tabs, each at its own URL.
 
-![Upload Source Document](public/screenshots/upload_document.png)
+![Portfolio](public/screenshots/portfolio.png)
 
-![Review & Confirmation Queue](public/screenshots/imported_transactions_review.png)
-
----
-
-### 3. Recording Receipts
-Record receipts for cash, checks, or direct transfers from the tenancy page. Each receipt immediately debits operating Cash and credits Tenant Receivable on the double-entry ledger.
-
-![Record receipt](public/screenshots/record_payment_modal.png)
+![Property activity ledger](public/screenshots/property_activity.png)
 
 ---
 
-### 4. Schedule E Tax Worksheet & Reporting
-Generate property-level Schedule E tax worksheets with IRS classifications (Codes 1–5, 7–8), cash-basis rental income calculation (Line 3), standardized expense categorization, review resolution workflows, and PDF export.
+### 3. Tenancy running accounts
+The tenancy page answers what the tenancy owes and why: the running balance, then chronological account activity. Scheduled rent charges, receipts, and billed reimbursements drive the tenancy account, while property and maintenance expenses post separately to the property ledger.
 
-![Schedule E Tax Worksheet](public/screenshots/tax_worksheet.png)
+![Tenancy running account](public/screenshots/tenancy.png)
+
+Recording a receipt is a dialog over the tenancy page. The balance and activity update in place through Turbo Streams; validation errors re-render inside the dialog with the entered values intact.
+
+![Record receipt dialog](public/screenshots/record_receipt_dialog.png)
+
+---
+
+### 4. Automated document ingestion & the review Inbox
+Upload bank checking statements (e.g. Chase) or digital receipts (Venmo, Zelle). Yanushi parses transaction metadata, deduplicates files via SHA-256, and matches payments to active tenancies. The Inbox separates Needs review, Processing & failed, and History; confirming an item removes it from the queue, updates the counts, and loads the next one.
+
+![Upload a statement](public/screenshots/upload_statement.png)
+
+![Inbox review queue](public/screenshots/inbox_review.png)
+
+---
+
+### 5. Reports & Schedule E
+Reports shows which property and year still needs work. The Schedule E page is review-first: unresolved items come before the projected form, and PDF export becomes available once every review decision is resolved.
+
+![Reports](public/screenshots/reports.png)
+
+![Schedule E worksheet](public/screenshots/schedule_e.png)
 
 ---
 

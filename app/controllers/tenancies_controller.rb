@@ -3,8 +3,16 @@ class TenanciesController < ApplicationController
   before_action :set_form_data, only: %i[new edit create update]
 
   def index
-    @tenancies = authenticated_user.tenancies.includes({ rentable_unit: :property }, { tenancy_parties: :party }, :rent_terms)
-    @balances = Accounting::TenancyBalancesQuery.call(tenancies: @tenancies.to_a)
+    page = [ params[:page].to_i, 1 ].max
+    @per_page = 25
+    scope = authenticated_user.tenancies
+                              .includes({ rentable_unit: :property }, { tenancy_parties: :party }, :rent_terms)
+                              .order(commencement_date: :desc, id: :desc)
+    @total_count = scope.count
+    @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
+    @page = @total_pages > 0 ? [ page, @total_pages ].min : page
+    @tenancies = scope.limit(@per_page).offset((@page - 1) * @per_page).to_a
+    @balances = Accounting::TenancyBalancesQuery.call(tenancies: @tenancies)
   end
 
   def show

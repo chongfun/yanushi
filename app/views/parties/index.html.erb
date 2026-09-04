@@ -34,6 +34,10 @@
         </tbody>
       </table>
     </div>
+
+    <%= render "shared/pagination",
+          page: @page, per_page: @per_page, total_count: @total_count, total_pages: @total_pages,
+          page_url: ->(p) { parties_path(page: p) } %>
   <% else %>
     <%= render "shared/empty_state",
           title: "No parties yet",

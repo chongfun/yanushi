@@ -15,12 +15,12 @@ RSpec.describe "Parties", type: :system do
     visit parties_path
     click_on "New party"
 
-    fill_in "Legal / Display Name", with: "Jane Doe"
-    select "Individual", from: "Party Type"
-    fill_in "Email Address", with: "jane@example.com"
-    fill_in "Phone Number", with: "555-1234"
+    fill_in "Legal or display name", with: "Jane Doe"
+    select "Individual", from: "Party type"
+    fill_in "Email", with: "jane@example.com"
+    fill_in "Phone", with: "555-1234"
 
-    click_on "Create Party"
+    click_on "Add party"
 
     expect(page).to have_text("Party was successfully created")
     expect(page).to have_text("Jane Doe")

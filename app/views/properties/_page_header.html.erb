@@ -1,0 +1,13 @@
+<%# Page header for standalone pages that belong to one property (unit forms,
+    the expense form, tax profile forms). The property workspace itself uses
+    `properties/_header`, which adds the Overview/Tenancies/Activity/Tax tabs.
+    Locals: property, title, meta (optional), actions (optional) %>
+<%= render "shared/page_header",
+      eyebrow: capture { %>
+        <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <span class="mx-1 text-stone-300">/</span>
+        <%= link_to property.address, property_path(property), class: "hover:text-stone-700 no-underline text-inherit" %>
+      <% },
+      title: title,
+      meta: local_assigns.fetch(:meta, property.address),
+      actions: local_assigns[:actions] %>

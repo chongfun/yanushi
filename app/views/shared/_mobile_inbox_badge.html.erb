@@ -1,6 +1,6 @@
+<%# Inbox count in the mobile top bar. Stable wrapper, streamed content: see
+    shared/_inbox_badge. Local: count %>
 <% count = local_assigns.fetch(:count) { inbox_reviewable_count } %>
-<span id="mobile_inbox_badge" class="ml-auto inline-flex items-center gap-1.5 text-sm font-medium text-stone-600 <%= 'hidden' if count.to_i <= 0 %>">
-  <%= link_to inbox_path, class: "inline-flex items-center gap-1.5 text-stone-600 hover:text-stone-900 no-underline" do %>
-    Inbox <span class="yn-count"><%= count %></span>
-  <% end %>
+<span id="mobile_inbox_badge" class="ml-auto inline-flex items-center" aria-live="polite" aria-atomic="true">
+  <%= render "shared/mobile_inbox_badge_content", count: count %>
 </span>

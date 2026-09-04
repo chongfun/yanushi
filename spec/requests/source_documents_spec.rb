@@ -11,7 +11,7 @@ RSpec.describe "SourceDocuments", type: :request do
     it "renders upload form" do
       get new_source_document_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Ingest Source Document")
+      expect(response.body).to include("Upload statement")
     end
   end
 

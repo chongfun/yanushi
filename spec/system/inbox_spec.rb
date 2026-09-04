@@ -95,8 +95,8 @@ RSpec.describe "Inbox", type: :system do
       # Click txn1 (Item C)
       page.execute_script("document.querySelector('#imported_transaction_#{txn1.id}').click()")
 
-      # Frame loads txn1 without full-page navigation
-      expect(page).to have_current_path(inbox_path)
+      # Frame loads txn1 without full-page navigation (the reviewed item is in the query string)
+      expect(page).to have_current_path(inbox_path, ignore_query: true)
       within("#inbox_review") do
         expect(page).to have_content("$1,000.00")
       end
@@ -106,7 +106,7 @@ RSpec.describe "Inbox", type: :system do
       # Click replaced row txn2 (Item B) again -> must load into frame, NOT full-page navigate
       page.execute_script("document.querySelector('#imported_transaction_#{txn2.id}').click()")
 
-      expect(page).to have_current_path(inbox_path)
+      expect(page).to have_current_path(inbox_path, ignore_query: true)
       within("#inbox_review") do
         expect(page).to have_content("$2,000.00")
       end

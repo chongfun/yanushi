@@ -1,5 +1,9 @@
 class TenanciesController < ApplicationController
-  @tenancies: Tenancy::ActiveRecord_Relation
+  @tenancies: Array[Tenancy]
+  @page: Integer
+  @per_page: Integer
+  @total_count: Integer
+  @total_pages: Integer
   @balances: Hash[Integer, Integer]
   @tenancy: Tenancy
   @properties: Property::ActiveRecord_Relation

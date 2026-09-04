@@ -35,11 +35,11 @@
       <%= form.fields_for :unit do |uf| %>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <%= uf.label :name, "Unit Name (e.g. Unit A, Apt 1)", class: "yn-label" %>
+            <%= uf.label :name, "Unit name", class: "yn-label" %>
             <%= uf.text_field :name, class: "yn-input", placeholder: "Main Unit" %>
           </div>
           <div>
-            <%= uf.label :unit_identifier, "Identifier (Optional)", class: "yn-label" %>
+            <%= uf.label :unit_identifier, "Identifier (optional)", class: "yn-label" %>
             <%= uf.text_field :unit_identifier, class: "yn-input", placeholder: "101" %>
           </div>
         </div>
@@ -48,6 +48,6 @@
   <% end %>
 
   <div class="pt-2">
-    <%= form.submit class: "yn-btn yn-btn-primary w-full" %>
+    <%= form.submit (property.persisted? ? "Save property" : "Add property"), class: "yn-btn yn-btn-primary w-full" %>
   </div>
 <% end %>

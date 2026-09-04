@@ -1,255 +1,126 @@
-<% content_for :title, "Tenancy ##{@tenancy.id} Account Statement" %>
+<%
+  view_mode = @view_mode
+  tab_items = [
+    { label: "Tenant account", path: statement_tenancy_path(@tenancy, from: params[:from], through: params[:through], year: params[:year]), current: view_mode == "receivable" },
+    { label: "All financial activity", path: statement_tenancy_path(@tenancy, view: "all", from: params[:from], through: params[:through], year: params[:year]), current: view_mode == "all" }
+  ]
+%>
+<% content_for :title, "Tenant account statement" %>
 
-<div class="max-w-6xl mx-auto py-6">
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+<div class="max-w-5xl">
+  <%= render "tenancies/page_header",
+        tenancy: @tenancy,
+        title: "Tenant account statement",
+        actions: link_to("Record receipt", new_tenancy_receipt_path(@tenancy), class: "yn-btn yn-btn-primary") %>
+
+  <%= render "shared/tabs", items: tab_items, aria_label: "Statement views" %>
+
+  <!-- GET filters -->
+  <%= form_with url: statement_tenancy_path(@tenancy), method: :get, data: { controller: "date-range-filter" }, class: "flex flex-wrap items-end gap-3 mt-6 mb-6" do |f| %>
+    <%= f.hidden_field :view, value: view_mode if view_mode == "all" %>
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Tenant Account Statement</h1>
-      <p class="text-sm text-stone-500">
-        <%= @tenancy.property.address %> — <%= @tenancy.rentable_unit.display_name %>
-        (<%= @tenancy.parties.map(&:display_name).join(", ") %>)
-      </p>
+      <%= f.label :year, "Year", class: "yn-label", for: "stmt-year" %>
+      <%= f.select :year,
+            options_for_select(Accounting::ActiveYearsQuery.call(property: @tenancy.property, additional_years: [@date_range.year].compact), @date_range.year),
+            { include_blank: "Custom Range" },
+            class: "yn-select w-32", id: "stmt-year",
+            data: { date_range_filter_target: "yearSelect", action: "change->date-range-filter#yearChanged" } %>
     </div>
-    <div class="flex gap-2">
-      <%= link_to "Back to Tenancy", tenancy_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <%= link_to "Record receipt", new_tenancy_receipt_path(@tenancy), class: "yn-btn yn-btn-primary yn-btn-sm" %>
+    <div>
+      <%= f.label :from, "From", class: "yn-label", for: "stmt-from" %>
+      <%= f.date_field :from, value: (@date_range.year ? nil : @date_range.from), class: "yn-input w-40", id: "stmt-from",
+            data: { date_range_filter_target: "fromInput", action: "input->date-range-filter#dateChanged" } %>
     </div>
-  </div>
-
-  <!-- Filter Form -->
-  <div class="bg-white border border-stone-200 rounded-lg mb-6 p-4">
-    <%= form_with url: statement_tenancy_path(@tenancy), method: :get, data: { controller: "date-range-filter" }, class: "flex flex-wrap items-end gap-4" do |f| %>
-      <%= f.hidden_field :view, value: @view_mode if @view_mode == "all" %>
-      <div>
-        <%= f.label :year, "Year", class: "yn-label text-xs" %>
-        <%= f.select :year,
-              options_for_select(Accounting::ActiveYearsQuery.call(property: @tenancy.property, additional_years: [@date_range.year].compact), @date_range.year),
-              { include_blank: "Custom Range" },
-              class: "yn-select text-sm py-1.5",
-              data: { date_range_filter_target: "yearSelect", action: "change->date-range-filter#yearChanged" } %>
-      </div>
-      <div>
-        <%= f.label :from, "From Date", class: "yn-label text-xs" %>
-        <%= f.date_field :from, value: (@date_range.year ? nil : @date_range.from), class: "yn-input text-sm py-1.5", data: { date_range_filter_target: "fromInput", action: "input->date-range-filter#dateChanged" } %>
-      </div>
-      <div>
-        <%= f.label :through, "Through Date", class: "yn-label text-xs" %>
-        <%= f.date_field :through, value: (@date_range.year ? nil : @date_range.through), class: "yn-input text-sm py-1.5", data: { date_range_filter_target: "throughInput", action: "input->date-range-filter#dateChanged" } %>
-      </div>
-      <div>
-        <%= f.submit "Update Statement", class: "yn-btn yn-btn-primary yn-btn-sm" %>
-      </div>
-    <% end %>
-  </div>
-
-  <!-- View Mode Tabs -->
-  <nav class="yn-tabs mb-6" aria-label="Statement view">
-    <%= link_to "Tenant Receivable Statement",
-          statement_tenancy_path(@tenancy, from: params[:from], through: params[:through], year: params[:year]),
-          class: "yn-tab #{@view_mode == 'receivable' ? 'font-semibold' : ''}",
-          aria: { current: (@view_mode == "receivable" ? "page" : nil) } %>
-    <%= link_to "All Financial Activity",
-          statement_tenancy_path(@tenancy, view: "all", from: params[:from], through: params[:through], year: params[:year]),
-          class: "yn-tab #{@view_mode == 'all' ? 'font-semibold' : ''}",
-          aria: { current: (@view_mode == "all" ? "page" : nil) } %>
-  </nav>
+    <div>
+      <%= f.label :through, "Through", class: "yn-label", for: "stmt-through" %>
+      <%= f.date_field :through, value: (@date_range.year ? nil : @date_range.through), class: "yn-input w-40", id: "stmt-through",
+            data: { date_range_filter_target: "throughInput", action: "input->date-range-filter#dateChanged" } %>
+    </div>
+    <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
+  <% end %>
 
   <% if @date_range.valid? %>
-    <% if @view_mode == "receivable" %>
-      <!-- Balance Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div class="bg-white border border-stone-200 rounded-lg p-4">
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Opening Balance</div>
-          <div class="font-mono text-2xl font-bold tabular-nums <%= @statement.opening_balance_cents > 0 ? 'text-rose-600' : (@statement.opening_balance_cents < 0 ? 'text-emerald-600' : 'text-stone-900') %>">
-            <%= @statement.opening_balance_cents < 0 ? '-' : '' %><%= number_to_currency(@statement.opening_balance.abs) %>
-          </div>
-          <div class="text-xs text-stone-500 mt-1">
-            <% if @statement.opening_balance_cents > 0 %>
-              Amount owed prior to <%= @date_range.from&.strftime("%b %d, %Y") || "period" %>
-            <% elsif @statement.opening_balance_cents < 0 %>
-              Credit balance prior to <%= @date_range.from&.strftime("%b %d, %Y") || "period" %>
+    <% if view_mode == "receivable" %>
+      <%
+        opening_cents = @statement.opening_balance_cents
+        closing_cents = @statement.closing_balance_cents
+        from_label = @date_range.from&.strftime("%b %-d, %Y") || "the first entry"
+        as_of_label = (@date_range.through || Date.current).strftime("%b %-d, %Y")
+      %>
+      <dl class="grid grid-cols-2 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6 max-w-xl">
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Opening Balance</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= balance_phrase_cents(opening_cents) %></dd>
+          <dd class="text-xs text-stone-500 m-0">
+            <% if opening_cents.positive? %>
+              Amount owed prior to <%= from_label %>
+            <% elsif opening_cents.negative? %>
+              Credit balance prior to <%= from_label %>
             <% else %>
-              Settled ($0.00) prior to <%= @date_range.from&.strftime("%b %d, %Y") || "period" %>
+              Nothing owed prior to <%= from_label %>
             <% end %>
-          </div>
+          </dd>
         </div>
-
-        <div class="bg-white border border-stone-200 rounded-lg p-4">
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Closing Balance</div>
-          <div class="font-mono text-2xl font-bold tabular-nums <%= @statement.closing_balance_cents > 0 ? 'text-rose-600' : (@statement.closing_balance_cents < 0 ? 'text-emerald-600' : 'text-stone-900') %>">
-            <%= @statement.closing_balance_cents < 0 ? '-' : '' %><%= number_to_currency(@statement.closing_balance.abs) %>
-          </div>
-          <div class="text-xs text-stone-500 mt-1">
-            <% as_of_label = @date_range.through&.strftime("%b %d, %Y") || Date.current.strftime("%b %d, %Y") %>
-            <% if @statement.closing_balance_cents > 0 %>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Closing Balance</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= balance_phrase_cents(closing_cents) %></dd>
+          <dd class="text-xs text-stone-500 m-0">
+            <% if closing_cents.positive? %>
               Amount owed as of <%= as_of_label %>
-            <% elsif @statement.closing_balance_cents < 0 %>
+            <% elsif closing_cents.negative? %>
               Tenant credit as of <%= as_of_label %>
             <% else %>
               Paid in full as of <%= as_of_label %>
             <% end %>
-          </div>
+          </dd>
         </div>
-      </div>
+      </dl>
 
-      <!-- Statement Table -->
-      <div class="bg-white border border-stone-200 rounded-lg p-6">
+      <% if @statement.rows.any? %>
         <div class="overflow-x-auto">
           <table class="yn-table">
             <thead>
               <tr>
                 <th scope="col">Date</th>
-                <th scope="col">Type</th>
-                <th scope="col">Description / Memo</th>
-                <th scope="col">Payer / Participant</th>
-                <th scope="col" class="text-right">Amount</th>
-                <th scope="col" class="text-right">Running Balance</th>
-                <th scope="col" class="text-right">Entry</th>
+                <th scope="col">Activity</th>
+                <th scope="col" class="text-right tabular-nums">Amount</th>
+                <th scope="col" class="text-right tabular-nums">Balance</th>
+                <th scope="col"><span class="sr-only">Audit</span></th>
               </tr>
             </thead>
             <tbody>
-              <% if @statement.rows.empty? %>
-                <tr>
-                  <td colspan="7" class="text-center py-8 text-stone-500">
-                    No statement activity found for the selected period.
-                  </td>
-                </tr>
-              <% else %>
-                <% @statement.rows.each do |row| %>
-                  <tr class="<%= 'opacity-60 bg-stone-50' if row.corrected? || row.voided? %>">
-                    <td class="text-sm whitespace-nowrap"><%= row.occurred_on.strftime("%b %d, %Y") %></td>
-                    <td>
-                      <% if row.reversal %>
-                        <% if row.kind == 'waiver' %>
-                          <span class="text-xs font-mono uppercase text-stone-600">Waiver</span>
-                        <% else %>
-                          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Correction</span>
-                        <% end %>
-                      <% elsif row.kind == "rent" || row.kind == "late_fee" || row.kind == "reimbursement" || row.kind == "other" %>
-                        <span class="text-xs font-mono uppercase text-stone-600"><%= row.label %></span>
-                      <% elsif row.kind == "payment" %>
-                        <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Payment</span>
-                      <% elsif row.kind == "deposit_applied" %>
-                        <span class="text-xs font-mono uppercase text-indigo-700">Deposit Applied</span>
-                      <% else %>
-                        <span class="text-xs font-mono uppercase text-stone-600"><%= row.label %></span>
-                      <% end %>
-                    </td>
-                    <td class="text-sm">
-                      <%= row.description %>
-                      <% if row.lifecycle_status == :corrected %>
-                        <span class="yn-status yn-status-sm ml-2"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-                      <% elsif row.lifecycle_status == :voided %>
-                        <span class="text-xs text-stone-500 ml-2">Waived</span>
-                      <% end %>
-                    </td>
-                    <td class="text-sm text-stone-600">
-                      <%= row.party&.display_name || "—" %>
-                    </td>
-                    <td class="text-right font-mono font-medium text-sm tabular-nums">
-                      <% if row.amount_cents.positive? %>
-                        <span class="text-rose-600">+<%= number_to_currency(row.amount_cents / 100.0) %></span>
-                      <% elsif row.amount_cents.negative? %>
-                        <span class="text-emerald-600">-<%= number_to_currency(row.amount_cents.abs / 100.0) %></span>
-                      <% else %>
-                        $0.00
-                      <% end %>
-                    </td>
-                    <td class="text-right font-mono font-bold text-sm tabular-nums <%= row.running_balance_cents > 0 ? 'text-rose-600' : 'text-emerald-600' %>">
-                      <%= row.running_balance_cents < 0 ? '-' : '' %><%= number_to_currency((row.running_balance_cents.abs) / 100.0) %>
-                    </td>
-                    <td class="text-right whitespace-nowrap">
-                      <%= link_to "Audit", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
-                    </td>
-                  </tr>
-                <% end %>
-              <% end %>
+              <%= render partial: "tenancies/activity_row", collection: @statement.rows, as: :row %>
             </tbody>
           </table>
         </div>
-      </div>
+      <% else %>
+        <p class="text-sm text-stone-500 m-0">No account activity in this period.</p>
+      <% end %>
     <% else %>
-      <!-- All Financial Activity Table -->
-      <div class="bg-white border border-stone-200 rounded-lg p-6">
+      <% if @financial_activity.any? %>
         <div class="overflow-x-auto">
           <table class="yn-table">
             <thead>
               <tr>
                 <th scope="col">Date</th>
-                <th scope="col">Type</th>
-                <th scope="col">Details</th>
+                <th scope="col">Event</th>
                 <th scope="col">Participant</th>
-                <th scope="col" class="text-right">Amount</th>
-                <th scope="col" class="text-right">Entry</th>
+                <th scope="col" class="text-right tabular-nums">Amount</th>
+                <th scope="col"><span class="sr-only">Audit</span></th>
               </tr>
             </thead>
             <tbody>
-              <% if @financial_activity.empty? %>
-                <tr>
-                  <td colspan="6" class="text-center py-8 text-stone-500">
-                    No financial activity found for the selected period.
-                  </td>
-                </tr>
-              <% else %>
-                <% @financial_activity.each do |row| %>
-                  <tr class="<%= 'opacity-60 bg-stone-50' if row.corrected? || row.voided? %>">
-                    <td class="text-sm whitespace-nowrap"><%= row.occurred_on.strftime("%b %d, %Y") %></td>
-                    <td>
-                      <% if row.reversal %>
-                        <% if row.kind == 'waiver' %>
-                          <span class="text-xs font-mono uppercase text-stone-600">Waiver</span>
-                        <% else %>
-                          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Correction</span>
-                        <% end %>
-                      <% else %>
-                        <% case row.kind %>
-                        <% when 'rent', 'late_fee', 'reimbursement', 'charge' %>
-                          <span class="text-xs font-mono uppercase text-stone-600"><%= row.label %></span>
-                        <% when 'payment' %>
-                          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Payment</span>
-                        <% when 'deposit_received', 'deposit_refunded', 'deposit_applied' %>
-                          <span class="text-xs font-mono uppercase text-indigo-700"><%= row.label %></span>
-                        <% else %>
-                          <span class="text-xs font-mono uppercase text-stone-600"><%= row.label %></span>
-                        <% end %>
-                      <% end %>
-                    </td>
-                    <td class="text-sm">
-                      <span class="font-medium text-stone-900"><%= row.description.presence || row.label %></span>
-                      <% if row.lifecycle_status == :corrected %>
-                        <span class="yn-status yn-status-sm ml-2"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-                      <% elsif row.lifecycle_status == :voided %>
-                        <span class="text-xs text-stone-500 ml-2">Waived</span>
-                      <% end %>
-                    </td>
-                    <td class="text-sm text-stone-600">
-                      <%= row.party&.display_name || "—" %>
-                    </td>
-                    <td class="text-right font-mono font-medium tabular-nums">
-                      <% if row.amount_cents.negative? %>
-                        <span class="text-rose-600">-<%= number_to_currency(row.amount_cents.abs / 100.0) %></span>
-                      <% elsif row.amount_cents.positive? %>
-                        <span class="text-emerald-600">+<%= number_to_currency(row.amount_cents / 100.0) %></span>
-                      <% else %>
-                        <span class="text-stone-400">$0.00</span>
-                      <% end %>
-                    </td>
-                    <td class="text-right whitespace-nowrap">
-                      <%= link_to "Audit", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
-                    </td>
-                  </tr>
-                <% end %>
-              <% end %>
+              <%= render partial: "accounting/activity_row", collection: @financial_activity, as: :row, locals: { context: :party, audit: true } %>
             </tbody>
           </table>
         </div>
-      </div>
+      <% else %>
+        <p class="text-sm text-stone-500 m-0">No financial activity in this period.</p>
+      <% end %>
     <% end %>
   <% else %>
     <div class="yn-alert yn-alert-warn" role="alert">
-      <div>
-        <h3 class="font-bold text-sm">Unable to generate financial report</h3>
-        <div class="text-xs">Please correct the date range above (From date cannot be after Through date).</div>
-      </div>
+      <span>Unable to generate financial report: <%= @date_range.errors.to_sentence.presence || "the From date cannot be after the Through date" %>. Adjust the dates above.</span>
     </div>
   <% end %>
 </div>

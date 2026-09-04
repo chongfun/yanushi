@@ -70,10 +70,10 @@ RSpec.describe "Receipts", type: :system do
     find("summary", text: "More").click
     click_on "Correct receipt"
 
-    expect(page).to have_text("Correction Semantics")
-    fill_in "Amount ($)", with: "1100.00"
+    expect(page).to have_text("keeps the original receipt as a voided record")
+    fill_in "Amount", with: "1100.00"
 
-    click_on "Save Replacement Payment"
+    click_on "Save correction"
 
     expect(page).to have_text("Payment corrected successfully.")
     expect(page).to have_text("$1,100.00")

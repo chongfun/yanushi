@@ -17,27 +17,27 @@
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <%= form.label :display_name, "Legal / Display Name", class: "yn-label" %>
+        <%= form.label :display_name, "Legal or display name", class: "yn-label" %>
         <%= form.text_field :display_name, placeholder: "e.g. John Doe or Acme Corp", class: "yn-input", required: true %>
       </div>
 
       <div>
-        <%= form.label :party_type, "Party Type", class: "yn-label" %>
+        <%= form.label :party_type, "Party type", class: "yn-label" %>
         <%= form.select :party_type, Party::PARTY_TYPES.map { |k| [k.titleize, k] }, {}, { class: "yn-select", required: true } %>
       </div>
 
       <div>
-        <%= form.label :email_address, "Email Address", class: "yn-label" %>
+        <%= form.label :email_address, "Email", class: "yn-label" %>
         <%= form.email_field :email_address, placeholder: "john@example.com", class: "yn-input" %>
       </div>
 
       <div>
-        <%= form.label :phone_number, "Phone Number", class: "yn-label" %>
+        <%= form.label :phone_number, "Phone", class: "yn-label" %>
         <%= form.text_field :phone_number, placeholder: "+15556661234", class: "yn-input" %>
       </div>
 
       <div class="md:col-span-2">
-        <%= form.label :mailing_address, "Mailing Address", class: "yn-label" %>
+        <%= form.label :mailing_address, "Mailing address", class: "yn-label" %>
         <%= form.text_field :mailing_address, placeholder: "123 Main St", class: "yn-input" %>
       </div>
     </div>
@@ -61,7 +61,7 @@
         <div class="flex items-center gap-3" data-nested-form-wrapper data-new-record="false">
           <%= alias_form.hidden_field :_destroy %>
           <div class="w-full">
-            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "yn-input font-mono text-sm" %>
+            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "yn-input text-sm" %>
           </div>
           <button type="button" class="yn-btn yn-btn-danger yn-btn-sm shrink-0" data-action="nested-form#remove" aria-label="Remove alias">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
@@ -75,7 +75,7 @@
       <%= form.fields_for :party_aliases, PartyAlias.new, child_index: "NEW_RECORD" do |alias_form| %>
         <div class="flex items-center gap-3 mt-3" data-nested-form-wrapper data-new-record="true">
           <div class="w-full">
-            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "yn-input font-mono text-sm" %>
+            <%= alias_form.text_field :alias_name, placeholder: "e.g. Jane S. Smith or @janesmith", class: "yn-input text-sm" %>
           </div>
           <button type="button" class="yn-btn yn-btn-danger yn-btn-sm shrink-0" data-action="nested-form#remove" aria-label="Remove alias">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 pointer-events-none" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 12m-4.72 0L9.34 9m1.28-6h3.707a1 1 0 0 1 .707.293l.586.586H18.5a1 1 0 0 1 0 2H5.5a1 1 0 0 1 0-2h2.929l.586-.586A1 1 0 0 1 9.73 3z" /></svg>
@@ -87,6 +87,6 @@
 
   <div class="flex justify-end gap-3 pt-2">
     <%= link_to "Cancel", parties_path, class: "yn-btn yn-btn-secondary" %>
-    <%= form.submit class: "yn-btn yn-btn-primary" %>
+    <%= form.submit (party.persisted? ? "Save party" : "Add party"), class: "yn-btn yn-btn-primary" %>
   </div>
 <% end %>

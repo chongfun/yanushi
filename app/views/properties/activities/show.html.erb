@@ -63,22 +63,11 @@
         </table>
       </div>
 
-      <% if @activity_result.total_pages > 1 %>
-        <% start_idx = ((@activity_result.page - 1) * @activity_result.per_page) + 1 %>
-        <% end_idx = [@activity_result.page * @activity_result.per_page, @activity_result.total_count].min %>
-        <% filter_params = { year: params[:year], from: params[:from], through: params[:through] }.compact_blank %>
-        <nav class="flex items-center justify-between mt-4" aria-label="Pagination">
-          <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @activity_result.total_count %></span></p>
-          <div class="flex gap-2">
-            <% if @activity_result.page > 1 %>
-              <%= link_to "Previous", property_activity_path(@property, filter_params.merge(page: @activity_result.page - 1)), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-            <% end %>
-            <% if @activity_result.page < @activity_result.total_pages %>
-              <%= link_to "Next", property_activity_path(@property, filter_params.merge(page: @activity_result.page + 1)), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-            <% end %>
-          </div>
-        </nav>
-      <% end %>
+      <% filter_params = { year: params[:year], from: params[:from], through: params[:through] }.compact_blank %>
+      <%= render "shared/pagination",
+            page: @activity_result.page, per_page: @activity_result.per_page,
+            total_count: @activity_result.total_count, total_pages: @activity_result.total_pages,
+            page_url: ->(p) { property_activity_path(@property, filter_params.merge(page: p)) } %>
     <% else %>
       <p class="text-sm text-stone-500 m-0">No financial activity found for this period.</p>
     <% end %>

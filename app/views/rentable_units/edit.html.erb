@@ -1,16 +1,23 @@
-<% content_for :title, "Editing #{@rentable_unit.name}" %>
+<% content_for :title, "Edit #{@rentable_unit.name}" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Editing <%= @rentable_unit.name %></h1>
-
-  <div class="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+<div class="max-w-xl">
+  <%= render "properties/page_header",
+        property: @property,
+        title: "Edit #{@rentable_unit.name}",
+        actions: capture { %>
+          <details class="relative" data-controller="menu">
+            <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
+              More
+              <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+            </summary>
+            <div class="yn-menu">
+              <%= button_to "Deactivate or delete unit…", [@property, @rentable_unit], method: :delete,
+                    class: "yn-menu-item yn-menu-item-danger",
+                    data: { turbo_confirm: "Deactivate or delete this unit? A unit with tenancy history is deactivated rather than removed." } %>
+            </div>
+          </details>
+        <% } %>
+  <div class="yn-surface p-6">
     <%= render "form", rentable_unit: @rentable_unit %>
-  </div>
-
-  <div class="flex justify-between">
-    <%= button_to "Deactivate / Delete Unit", [@property, @rentable_unit], method: :delete,
-        class: "yn-btn yn-btn-danger yn-btn-sm",
-        form: { data: { turbo_confirm: "Are you sure you want to deactivate or delete this unit?" } } %>
-    <%= link_to "Back to Property", @property, class: "yn-btn yn-btn-ghost yn-btn-sm" %>
   </div>
 </div>

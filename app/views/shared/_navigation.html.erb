@@ -18,7 +18,7 @@
     <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.8 3.06A1.75 1.75 0 0 1 4.41 2h7.18c.7 0 1.33.42 1.61 1.06l1.65 3.85c.1.22.15.46.15.7v4.64A1.75 1.75 0 0 1 13.25 14H2.75A1.75 1.75 0 0 1 1 12.25V7.61c0-.24.05-.48.15-.7L2.8 3.06ZM4.41 3.5a.25.25 0 0 0-.23.15L2.77 7h2.98l.75 1.5h3l.75-1.5h2.98l-1.41-3.35a.25.25 0 0 0-.23-.15H4.41Z"/></svg>
     Inbox
     <span class="ml-auto">
-      <%= render "shared/inbox_badge", id: local_assigns[:badge_id] || "sidebar_inbox_badge" %>
+      <%= render "shared/inbox_badge", id: local_assigns[:badge_id] || "sidebar_inbox_badge", announce: (local_assigns[:badge_id] || "sidebar_inbox_badge") == "sidebar_inbox_badge" %>
     </span>
   <% end %>
 

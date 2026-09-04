@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root "dashboards#index"
+  get "dashboards/index", to: redirect("/", status: 301)
 
   get "portfolio", to: "portfolio#show", as: :portfolio
   get "money", to: "money#show", as: :money

@@ -281,16 +281,16 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       created_exp = exp_res.value!.data[:expense]
 
       visit correction_expense_path(created_exp)
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
 
       # Change vendor, reference, and enter negative amount
       fill_in "expense_vendor_name", with: "Updated Utility Vendor"
       fill_in "expense_external_reference", with: "INV-CORRECT-999"
       page.execute_script("document.getElementById('expense_amount').value = '-75.00'")
       page.execute_script("document.getElementById('expense-correction-form').noValidate = true")
-      click_button "Post Corrected Expense"
+      click_button "Save correction"
 
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
       expect(page).to have_css(".yn-alert-danger")
       expect(page).to have_text(/must be greater than 0|Expense amount must be greater than zero|Correction couldn't be saved/)
 
@@ -315,16 +315,16 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       created_exp = exp_res.value!.data[:expense]
 
       visit correction_expense_path(created_exp)
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
 
       # Clear required fields (amount, date) using JS to simulate browser validation bypass
       page.execute_script("document.getElementById('expense_amount').value = ''")
       page.execute_script("document.getElementById('expense_paid_on').value = ''")
       page.execute_script("document.getElementById('expense-correction-form').noValidate = true")
-      click_button "Post Corrected Expense"
+      click_button "Save correction"
 
       # Verify 422 ARIA error path
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
       expect(page).to have_css(".yn-alert-danger")
 
       amount_input = find("#expense_amount")
@@ -416,7 +416,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       visit new_property_path
       fill_in "Address", with: "777 Maple Avenue"
       select "Commercial", from: "Asset type"
-      click_on "Create Property"
+      click_on "Add property"
 
       # Expect flash toast with role="status" and message
       expect(page).to have_css("div[role='status'].yn-alert", text: "Property was successfully created.")
@@ -511,32 +511,38 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
     end
 
-    it "captures fresh high-res screenshots for the five core application areas" do
+    it "captures fresh high-res screenshots of the primary areas" do
       screenshots_dir = ENV["UPDATE_SCREENSHOTS"].present? ? Rails.root.join("public/screenshots") : Rails.root.join("tmp/screenshots")
       FileUtils.mkdir_p(screenshots_dir)
 
-      # 1. Overview / Dashboard
+      # 1. Overview
       visit root_path
       expect(page).to have_text("Overview")
-      page.save_screenshot(screenshots_dir.join("ledger_view.png"))
+      page.save_screenshot(screenshots_dir.join("overview.png"))
 
-      # 2. Property Overview & Activity
+      # 2. Portfolio
+      visit portfolio_path
+      expect(page).to have_css("main#main h1", text: "Portfolio")
+      page.save_screenshot(screenshots_dir.join("portfolio.png"))
+
+      # 3. Property workspace, Activity tab
       visit property_activity_path(property)
       expect(page).to have_text("Activity")
-      page.save_screenshot(screenshots_dir.join("ledger_items.png"))
+      page.save_screenshot(screenshots_dir.join("property_activity.png"))
 
-      # 3. Tenancy Running Account
+      # 4. Tenancy workspace
       visit tenancy_path(tenancy)
       expect(page).to have_text("Alice Tenant")
-      page.save_screenshot(screenshots_dir.join("tenancy_view.png"))
+      page.save_screenshot(screenshots_dir.join("tenancy.png"))
 
-      # 4. Record Payment Modal
+      # 5. Record receipt dialog
       visit tenancy_path(tenancy)
       click_on "Record receipt"
       expect(page).to have_css("dialog#modal[open]")
-      page.save_screenshot(screenshots_dir.join("record_payment_modal.png"))
+      expect(page).to have_css("#receipt-form")
+      page.save_screenshot(screenshots_dir.join("record_receipt_dialog.png"))
 
-      # 5. Inbox Review & Queue
+      # 6. Inbox, Needs review
       create(:imported_transaction,
         user: user,
         status: "matched",
@@ -550,18 +556,23 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       )
       visit inbox_path
       expect(page).to have_text("Needs review")
-      page.save_screenshot(screenshots_dir.join("imported_transactions_review.png"))
+      page.save_screenshot(screenshots_dir.join("inbox_review.png"))
 
-      # 6. Upload Source Document
-      visit inbox_path(view: "processing")
-      expect(page).to have_text("Upload statement")
-      page.save_screenshot(screenshots_dir.join("upload_document.png"))
+      # 7. Upload a statement
+      visit new_source_document_path
+      expect(page).to have_css("main#main h1", text: "Upload statement")
+      page.save_screenshot(screenshots_dir.join("upload_statement.png"))
 
-      # 7. Schedule E Tax Worksheet
+      # 8. Reports landing
       property.tax_profiles.create!(tax_year: Date.current.year, schedule_e_property_type: "single_family_residence")
+      visit reports_path(year: Date.current.year)
+      expect(page).to have_css("main#main h1", text: "Reports")
+      page.save_screenshot(screenshots_dir.join("reports.png"))
+
+      # 9. Schedule E worksheet
       visit schedule_e_property_path(property, year: Date.current.year)
       expect(page).to have_text("Schedule E")
-      page.save_screenshot(screenshots_dir.join("tax_worksheet.png"))
+      page.save_screenshot(screenshots_dir.join("schedule_e.png"))
     end
   end
 end

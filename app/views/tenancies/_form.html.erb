@@ -18,7 +18,7 @@
       <h3 class="font-bold text-base text-stone-900 border-b border-stone-200 pb-3 mb-4">Property & Rentable Unit</h3>
       
       <div>
-        <%= form.label :rentable_unit_id, "Select Rentable Unit", class: "yn-label" %>
+        <%= form.label :rentable_unit_id, "Rentable unit", class: "yn-label" %>
         <select name="tenancy[rentable_unit_id]" id="tenancy_rentable_unit_id" class="yn-select" required>
           <option value="">-- Choose a Unit --</option>
           <% @properties.each do |property| %>
@@ -65,24 +65,24 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <%= form.label :agreement_type, "Agreement Type", class: "yn-label" %>
+        <%= form.label :agreement_type, "Agreement type", class: "yn-label" %>
         <%= form.select :agreement_type, Tenancy::AGREEMENT_TYPES.map { |k| [k.titleize, k] }, {}, { class: "yn-select", required: true } %>
       </div>
 
       <div>
-        <%= form.label :late_period_days, "Grace Period (Days)", class: "yn-label" %>
-        <%= form.number_field :late_period_days, class: "yn-input font-mono", min: 0 %>
+        <%= form.label :late_period_days, "Grace period (days)", class: "yn-label" %>
+        <%= form.number_field :late_period_days, class: "yn-input tabular-nums", min: 0 %>
       </div>
 
       <% if tenancy.new_record? %>
         <div>
-          <%= form.label :commencement_date, "Commencement Date", class: "yn-label" %>
+          <%= form.label :commencement_date, "Commencement date", class: "yn-label" %>
           <%= form.date_field :commencement_date, class: "yn-input", required: true %>
         </div>
       <% end %>
 
       <div>
-        <%= form.label :termination_date, "Termination Date (Leave blank if Month-to-Month)", class: "yn-label" %>
+        <%= form.label :termination_date, "Termination date (leave blank for month-to-month)", class: "yn-label" %>
         <%= form.date_field :termination_date, class: "yn-input" %>
       </div>
     </div>
@@ -95,13 +95,13 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label class="yn-label" for="tenancy_rent_amount">Monthly Rent ($)</label>
-          <input type="number" name="tenancy[rent_amount]" id="tenancy_rent_amount" step="0.01" min: 0 placeholder="2000.00" class="yn-input font-mono tabular-nums" required />
+          <label class="yn-label" for="tenancy_rent_amount">Monthly rent</label>
+          <input type="number" name="tenancy[rent_amount]" id="tenancy_rent_amount" step="0.01" min="0" placeholder="2000.00" class="yn-input tabular-nums" required />
         </div>
 
         <div>
-          <label class="yn-label" for="tenancy_due_day">Due Day of Month</label>
-          <input type="number" name="tenancy[due_day]" id="tenancy_due_day" min="1" max="31" value="1" class="yn-input font-mono tabular-nums" required />
+          <label class="yn-label" for="tenancy_due_day">Due day of month</label>
+          <input type="number" name="tenancy[due_day]" id="tenancy_due_day" min="1" max="31" value="1" class="yn-input tabular-nums" required />
         </div>
 
         <div>
@@ -116,6 +116,6 @@
 
   <div class="flex justify-end gap-3 pt-2">
     <%= link_to "Cancel", tenancies_path, class: "yn-btn yn-btn-secondary" %>
-    <%= form.submit class: "yn-btn yn-btn-primary px-8" %>
+    <%= form.submit (tenancy.persisted? ? "Save agreement" : "Create tenancy"), class: "yn-btn yn-btn-primary px-8" %>
   </div>
 <% end %>

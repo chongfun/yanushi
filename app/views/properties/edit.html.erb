@@ -1,14 +1,11 @@
-<% content_for :title, "Editing #{@property.address}" %>
+<% content_for :title, "Edit #{@property.address}" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Editing Property</h1>
-
-  <div class="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+<div class="max-w-xl">
+  <%= render "properties/page_header",
+        property: @property,
+        title: "Edit property",
+        actions: link_to("View property", property_path(@property), class: "yn-btn yn-btn-secondary") %>
+  <div class="yn-surface p-6">
     <%= render "form", property: @property %>
-  </div>
-
-  <div class="flex justify-between">
-    <%= link_to "Show Property", @property, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-    <%= link_to "Back to Portfolio", portfolio_path, class: "yn-btn yn-btn-ghost yn-btn-sm" %>
   </div>
 </div>

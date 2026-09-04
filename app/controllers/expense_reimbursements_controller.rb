@@ -55,10 +55,12 @@ class ExpenseReimbursementsController < ApplicationController
     end
 
     def set_eligible_tenancies
+      # The form labels each option with its tenants, so preload the join rows
+      # that `all_tenant_parties` reads rather than the `parties` through-association.
       @tenancies = if (unit = @expense.rentable_unit)
-        unit.tenancies.includes({ rentable_unit: :property }, :parties)
+        unit.tenancies.includes({ rentable_unit: :property }, { tenancy_parties: :party })
       else
-        @expense.property.tenancies.includes({ rentable_unit: :property }, :parties)
+        @expense.property.tenancies.includes({ rentable_unit: :property }, { tenancy_parties: :party })
       end
     end
 
