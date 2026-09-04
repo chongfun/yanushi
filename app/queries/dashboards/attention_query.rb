@@ -212,10 +212,18 @@ module Dashboards
           u.id,
           year,
           u.properties.count,
-          u.journal_entries.maximum(:posted_at)&.to_i,
-          PropertyTaxReviewResolution.where(property_id: property_ids).maximum(:updated_at)&.to_i,
-          PropertyTaxProfile.where(property_id: property_ids).maximum(:updated_at)&.to_i
+          stamp(u.journal_entries.maximum(:posted_at)),
+          stamp(PropertyTaxReviewResolution.where(property_id: property_ids).maximum(:updated_at)),
+          stamp(PropertyTaxProfile.where(property_id: property_ids).maximum(:updated_at))
         ]
+      end
+
+      # Postgres keeps microseconds and `Time#to_i` discards them, which is the
+      # difference between a key that moves with the data and one that holds a
+      # count for the rest of the hour. Two resolutions inside one second are
+      # ordinary, and the second one has to reach the dashboard.
+      def stamp(time)
+        time&.utc&.iso8601(6)
       end
 
       # The most recent year with ledger activity that is earlier than this one.

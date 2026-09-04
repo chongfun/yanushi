@@ -432,6 +432,32 @@ RSpec.describe Dashboards::AttentionQuery do
 
       before { allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new) }
 
+      # A deposit applied to a charge classifies as review_required, whatever
+      # the entry hangs off; one entry per source and event type is all the
+      # ledger allows, so two of them need two sources.
+      def review_entry(day:, source:)
+        entry = create(
+          :journal_entry,
+          user: user,
+          occurred_on: Date.new(filing_year, 9, day),
+          event_type: "deposit_applied",
+          source: source
+        )
+        create(:posting, journal_entry: entry, property: property, amount_cents: -50_000, account: user.accounts.find_by!(key: "tenant_receivable"))
+        create(:posting, journal_entry: entry, property: property, amount_cents: 50_000, account: user.accounts.find_by!(key: "security_deposits_held"))
+        entry
+      end
+
+      def resolve(entry)
+        create(
+          :property_tax_review_resolution,
+          property: property,
+          tax_year: filing_year,
+          journal_entry: entry,
+          treatment: "exclude"
+        )
+      end
+
       it "does not scale with the portfolio once the summary is cached" do
         5.times { seed_activity(create(:property, user: user)) }
 
@@ -471,6 +497,31 @@ RSpec.describe Dashboards::AttentionQuery do
           treatment: "exclude"
         )
 
+        expect(described_class.call(user: user)).to eq([])
+      end
+
+      it "recomputes for a resolution recorded in the same second as the one before it" do
+        add_tax_profile(property)
+        first = review_entry(day: 12, source: property)
+        second = review_entry(day: 13, source: tenancy)
+
+        expect(described_class.call(user: user).map(&:kind)).to eq([ :schedule_e_review ])
+
+        # Postgres keeps microseconds, and two resolutions inside one second is
+        # an ordinary way to clear a short review list. A key carrying whole
+        # seconds cannot tell these two apart, and the dashboard would go on
+        # asking for work that is already done until the entry expired.
+        # The block form refuses to nest inside the clock this file already
+        # pins, and `with_usec` is what keeps the fractional second that the
+        # whole point of this example rests on.
+        same_second = Time.current
+
+        travel_to(same_second + 0.1.seconds, with_usec: true)
+        resolve(first)
+        expect(described_class.call(user: user).size).to eq(1)
+
+        travel_to(same_second + 0.9.seconds, with_usec: true)
+        resolve(second)
         expect(described_class.call(user: user)).to eq([])
       end
     end

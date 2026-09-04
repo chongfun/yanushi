@@ -3223,7 +3223,11 @@ and `rbs validate` green.
     (`Rails.cache`, one hour), keyed on the property count and the latest
     `journal_entries.posted_at`, review resolution, and tax profile
     timestamps, so the dashboard stops issuing per-property queries on every
-    render while still reflecting a change immediately.
+    render while still reflecting a change immediately. Those timestamps enter
+    the key as microsecond ISO strings: Postgres keeps the fractional second
+    and `Time#to_i` discards it, which would let a resolution recorded inside
+    the same second as the one before it leave the item standing for the rest
+    of the hour.
   - `responsive_frame` re-resolves the row when its keyboard load timer
     fires instead of holding the element. Clicking a detached anchor escapes
     Turbo's delegated handler, and the browser then followed the href and
