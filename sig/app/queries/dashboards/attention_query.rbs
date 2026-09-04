@@ -36,6 +36,7 @@ module Dashboards
     def schedule_e_items: () -> Array[AttentionItem]
     def schedule_e_summary: (User u, Integer year) -> Hash[Symbol, Integer]
   def schedule_e_cache_key: (User u, Integer year) -> Array[untyped]
+  def fingerprint: (untyped relation) -> Array[untyped]
   def stamp: (untyped time) -> String?
   def filing_tax_year: (User u) -> Integer?
   end

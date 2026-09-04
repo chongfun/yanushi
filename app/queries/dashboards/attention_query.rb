@@ -212,10 +212,22 @@ module Dashboards
           u.id,
           year,
           u.properties.count,
+          # Journal entries are append-only, so a new one always carries the
+          # latest `posted_at` and a timestamp alone notices it. A correction
+          # is another entry, not an edit or a deletion.
           stamp(u.journal_entries.maximum(:posted_at)),
-          stamp(PropertyTaxReviewResolution.where(property_id: property_ids).maximum(:updated_at)),
-          stamp(PropertyTaxProfile.where(property_id: property_ids).maximum(:updated_at))
+          *fingerprint(PropertyTaxReviewResolution.where(property_id: property_ids)),
+          *fingerprint(PropertyTaxProfile.where(property_id: property_ids))
         ]
+      end
+
+      # A latest-timestamp moves when a row is written and stays put when one
+      # is removed. Every resolved Schedule E item offers Undo, which deletes
+      # the resolution, and undoing any but the newest leaves the maximum
+      # untouched: the review item comes back while the dashboard goes on
+      # reporting it as handled. Counting the rows is what sees one leave.
+      def fingerprint(relation)
+        [ relation.count, stamp(relation.maximum(:updated_at)) ]
       end
 
       # Postgres keeps microseconds and `Time#to_i` discards them, which is the

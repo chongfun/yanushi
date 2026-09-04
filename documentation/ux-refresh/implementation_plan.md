@@ -3220,14 +3220,18 @@ and `rbs validate` green.
     are deliberately exempt: they are written by the service and a leading
     minus there is a negative number, not an injection.
   - The Overview attention queue reads a cached Schedule E summary
-    (`Rails.cache`, one hour), keyed on the property count and the latest
-    `journal_entries.posted_at`, review resolution, and tax profile
-    timestamps, so the dashboard stops issuing per-property queries on every
-    render while still reflecting a change immediately. Those timestamps enter
-    the key as microsecond ISO strings: Postgres keeps the fractional second
-    and `Time#to_i` discards it, which would let a resolution recorded inside
-    the same second as the one before it leave the item standing for the rest
-    of the hour.
+    (`Rails.cache`, one hour) rather than issuing per-property queries on
+    every render. Two rules govern the key, and both come from cases where an
+    earlier version of it went stale:
+    - Timestamps enter as microsecond ISO strings. Postgres keeps the
+      fractional second and `Time#to_i` discards it, which let a resolution
+      recorded inside the same second as the one before it leave the item
+      standing for the rest of the hour.
+    - Every relation that can lose a row contributes its row count as well as
+      its latest timestamp. A maximum stays put when a row is deleted, and
+      Schedule E offers Undo on each resolved review item, so undoing any but
+      the newest brought the review item back while the dashboard reported it
+      as handled. Journal entries are append-only and need only the timestamp.
   - `responsive_frame` re-resolves the row when its keyboard load timer
     fires instead of holding the element. Clicking a detached anchor escapes
     Turbo's delegated handler, and the browser then followed the href and

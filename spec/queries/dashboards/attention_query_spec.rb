@@ -524,6 +524,27 @@ RSpec.describe Dashboards::AttentionQuery do
         resolve(second)
         expect(described_class.call(user: user)).to eq([])
       end
+
+      it "recomputes when the resolution that is undone is not the newest one" do
+        add_tax_profile(property)
+        first = review_entry(day: 12, source: property)
+        second = review_entry(day: 13, source: tenancy)
+
+        older = resolve(first)
+        travel_to(Time.current + 5.minutes)
+        resolve(second)
+
+        expect(described_class.call(user: user)).to eq([])
+
+        # Undo on the older item is what the Schedule E page offers for every
+        # resolved row, and it deletes the resolution. The newest one still
+        # holds the latest timestamp, so a key built on that alone cannot tell
+        # the review item came back.
+        older.destroy!
+
+        expect(described_class.call(user: user).map(&:kind)).to eq([ :schedule_e_review ])
+        expect(described_class.call(user: user).first.description).to eq("#{filing_year} tax year · 1 item needs review")
+      end
     end
   end
 end
