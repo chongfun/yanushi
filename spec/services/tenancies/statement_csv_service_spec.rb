@@ -128,5 +128,73 @@ RSpec.describe Tenancies::StatementCsvService, type: :service do
       expect(data.map { |row| row[2] }).to include("Alice Walker")
       expect(csv).not_to include("−")
     end
+
+    # A spreadsheet evaluates a cell that begins with =, +, -, or @, so any
+    # cell carrying a name someone typed has to reach Excel as literal text.
+    describe "spreadsheet formula neutralization" do
+      it "makes a description that looks like a formula literal text" do
+        [ '=HYPERLINK("https://example.invalid","Alice")', "+1+1", "-2+3", "@SUM(A1)" ].each do |payload|
+          Charges::CreateService.call(
+            tenancy: tenancy,
+            charge_kind: "other",
+            amount_cents: 1_000,
+            charge_date: Date.new(2026, 2, 1),
+            description: payload
+          )
+        end
+
+        csv = described_class.call(tenancy: tenancy, date_range: date_range, statement: statement)
+        cells = parse(csv).flatten.compact
+
+        [ "=", "+", "@" ].each do |trigger|
+          expect(cells.none? { |cell| cell.start_with?(trigger) }).to be true
+        end
+        expect(cells).to include("'" + '=HYPERLINK("https://example.invalid","Alice")')
+        expect(cells).to include("'@SUM(A1)")
+        expect(cells).to include("'-2+3")
+      end
+
+      it "makes a payer name and a property address that look like formulas literal text" do
+        formula_party = create(:party, user: user, display_name: "=cmd|' /C calc'!A0")
+        formula_property = create(:property, user: user, address: "@10 Formula Way")
+        formula_unit = create(:rentable_unit, property: formula_property, name: "=Unit")
+        formula_tenancy = create(
+          :tenancy,
+          rentable_unit: formula_unit,
+          commencement_date: Date.new(2026, 1, 1),
+          termination_date: Date.new(2026, 12, 31),
+          agreement_type: "fixed_term"
+        )
+        create(:tenancy_party, tenancy: formula_tenancy, party: formula_party, role: "tenant", effective_from: Date.new(2026, 1, 1))
+
+        csv = described_class.call(
+          tenancy: formula_tenancy,
+          date_range: date_range,
+          statement: Accounting::TenantReceivableActivityQuery.call(tenancy: formula_tenancy, date_range: date_range)
+        )
+        cells = parse(csv).flatten.compact
+
+        expect(cells.none? { |cell| cell.start_with?("=", "@") }).to be true
+        expect(cells).to include("'=cmd|' /C calc'!A0")
+        expect(cells).to include("'@10 Formula Way")
+        expect(cells).to include("'#{formula_unit.display_name}")
+      end
+
+      it "leaves negative money as a number a spreadsheet can still total" do
+        charge_rent(cents: 100_000, on: Date.new(2026, 1, 1))
+        Receipts::CreateService.call(
+          tenancy: tenancy,
+          payer_party: party,
+          amount_cents: 40_000,
+          received_on: Date.new(2026, 1, 5),
+          payment_method: "check"
+        )
+
+        csv = described_class.call(tenancy: tenancy, date_range: date_range, statement: statement)
+
+        expect(csv).to include("-$400.00")
+        expect(csv).not_to include("'-$400.00")
+      end
+    end
   end
 end

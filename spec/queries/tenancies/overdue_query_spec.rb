@@ -65,6 +65,23 @@ RSpec.describe Tenancies::OverdueQuery do
       expect(overdue_for(tenancy)).to eq(tenancy.id => 50_000)
     end
 
+    it "does not let a future-dated charge shield money that is already late" do
+      # The balance excludes the future charge's journal entry, so the shield
+      # must exclude the charge itself or the overdue amount disappears.
+      post_charge(amount_cents: 50_000, due_on: Date.current - 40.days)
+      post_charge(amount_cents: 120_000, due_on: Date.current + 10.days)
+
+      expect(balances_for(tenancy)).to eq(tenancy.id => 50_000)
+      expect(overdue_for(tenancy)).to eq(tenancy.id => 50_000)
+    end
+
+    it "still shields a charge dated today whose grace period has not passed" do
+      post_charge(amount_cents: 50_000, due_on: Date.current - 40.days)
+      post_charge(amount_cents: 120_000, due_on: Date.current)
+
+      expect(overdue_for(tenancy)).to eq(tenancy.id => 50_000)
+    end
+
     it "applies credits to the oldest charge first, clearing the overdue amount" do
       post_charge(amount_cents: 50_000, due_on: Date.current - 40.days)
       post_charge(amount_cents: 120_000, due_on: Date.current)

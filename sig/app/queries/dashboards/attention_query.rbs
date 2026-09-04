@@ -34,6 +34,8 @@ module Dashboards
     def import_failed_items: () -> Array[AttentionItem]
     def overdue_balance_items: () -> Array[AttentionItem]
     def schedule_e_items: () -> Array[AttentionItem]
-    def filing_tax_year: (User u) -> Integer?
+    def schedule_e_summary: (User u, Integer year) -> Hash[Symbol, Integer]
+  def schedule_e_cache_key: (User u, Integer year) -> Array[untyped]
+  def filing_tax_year: (User u) -> Integer?
   end
 end

@@ -23,7 +23,7 @@ RSpec.describe "Inbox", type: :system do
 
   after do
     if page.driver.is_a?(Capybara::Selenium::Driver)
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
     end
   end
 
@@ -43,7 +43,7 @@ RSpec.describe "Inbox", type: :system do
 
   describe "wide-screen master/detail review loop", js: true do
     it "allows selecting stream-replaced queue rows, managing aria-current and focus, and completing review" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       txn1 = create(
         :imported_transaction,
@@ -152,7 +152,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "traverses the queue and confirms the open item from the keyboard alone" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       txn1, txn2, txn3 = [ 100_000, 200_000, 300_000 ].each_with_index.map do |cents, index|
         create(
@@ -227,7 +227,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "edits unclassified fields and confirms in a single atomic step" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       unmatched_txn = create(
         :imported_transaction,
@@ -268,7 +268,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "dynamically updates the alias proposal when changing payer and persists the alias for the selected party" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       party_bob = create(:party, user: user, display_name: "Bob Belcher")
 
@@ -312,7 +312,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "dynamically switches alias proposal candidate when new party has existing alias and confirms the exact proposal" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       party_bob = create(:party, user: user, display_name: "Bob Belcher")
       # party_bob already has "HOMER_SIMPSON_99" as an alias, so proposed candidate for party_bob is "@homersimpson"
@@ -357,7 +357,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "preserves unchecked alias checkbox across a 422 validation failure" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       invalid_txn = create(
         :imported_transaction,
@@ -396,7 +396,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "updates the primary button label as the classification changes and lets the server reject an unclassified confirm" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       unit2 = create(:rentable_unit, property: property, unit_identifier: "Unit 2")
       deposit_tenancy = create(:tenancy, rentable_unit: unit2, agreement_type: "fixed_term", commencement_date: Date.new(2025, 1, 1), termination_date: Date.new(2026, 12, 31))
@@ -454,7 +454,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "focuses the validation problem or invalid control on 422 response" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       invalid_txn = create(
         :imported_transaction,
@@ -491,7 +491,7 @@ RSpec.describe "Inbox", type: :system do
 
   describe "narrow-screen standalone review flow", js: true do
     it "navigates to standalone review, allows editing unresolved item, and redirects through the review queue until caught up" do
-      page.current_window.resize_to(375, 667)
+      resize_window_to(375, 667)
 
       txn1 = create(
         :imported_transaction,
@@ -666,7 +666,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "renders explicit classification warning or category in queue row status lines and formats Chase source descriptions" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       # 1. Chase statement parsed row (payer_username is nil, raw_text contains description)
       chase_txn = create(
@@ -757,7 +757,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "does not discard an in-progress review form when background broadcast arrives, adds new items to queue, and transitions cleanly on confirm" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       txn1 = create(
         :imported_transaction,

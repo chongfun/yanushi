@@ -415,5 +415,64 @@ RSpec.describe Dashboards::AttentionQuery do
       expect(described_class.call(user: user)).to eq([])
       expect(described_class.call(user: other_user).map(&:kind)).to eq([ :schedule_e_review ])
     end
+
+    # The counts cost one full Schedule E computation per property, so the
+    # dashboard must not pay that on every load. The cache key names every
+    # input that can change the answer, so cheapness cannot cost accuracy.
+    describe "cost on the dashboard" do
+      def count_schedule_e_queries
+        count = 0
+        subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+          count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+        end
+        described_class.call(user: user)
+        ActiveSupport::Notifications.unsubscribe(subscription)
+        count
+      end
+
+      before { allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new) }
+
+      it "does not scale with the portfolio once the summary is cached" do
+        5.times { seed_activity(create(:property, user: user)) }
+
+        cold = count_schedule_e_queries
+        warm = count_schedule_e_queries
+
+        # Five more properties must not make the cached read any dearer.
+        5.times { |i| seed_activity(create(:property, user: user)) }
+        Rails.cache.clear
+        count_schedule_e_queries
+        warm_with_ten = count_schedule_e_queries
+
+        expect(warm).to be < cold
+        expect(warm_with_ten).to eq(warm)
+      end
+
+      it "recomputes when a resolution changes the answer" do
+        add_tax_profile(property)
+        entry = create(
+          :journal_entry,
+          user: user,
+          occurred_on: Date.new(filing_year, 9, 12),
+          event_type: "deposit_applied",
+          source: property
+        )
+        create(:posting, journal_entry: entry, property: property, amount_cents: -50_000, account: user.accounts.find_by!(key: "tenant_receivable"))
+        create(:posting, journal_entry: entry, property: property, amount_cents: 50_000, account: user.accounts.find_by!(key: "security_deposits_held"))
+
+        expect(described_class.call(user: user).map(&:kind)).to eq([ :schedule_e_review ])
+
+        # Resolving the review item clears the attention item, cache or not.
+        create(
+          :property_tax_review_resolution,
+          property: property,
+          tax_year: filing_year,
+          journal_entry: entry,
+          treatment: "exclude"
+        )
+
+        expect(described_class.call(user: user)).to eq([])
+      end
+    end
   end
 end

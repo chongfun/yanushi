@@ -429,7 +429,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
   describe "375px mobile viewport responsiveness", js: true do
     before do
       Accounting::ChartOfAccounts.ensure_for(user)
-      page.driver.browser.manage.window.resize_to(375, 667)
+      resize_window_to(375, 667)
       visit new_session_path
       fill_in "email", with: user.email
       fill_in "password", with: "password"
@@ -438,7 +438,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
     end
 
     after do
-      page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
+      resize_window_to(1400, 1400)
     end
 
     it "renders the mobile topbar without horizontal overflow" do
@@ -485,7 +485,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
   describe "Screenshot generation for documentation refresh (P3 acceptance)", js: true do
     before do
       Accounting::ChartOfAccounts.ensure_for(user)
-      page.driver.browser.manage.window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
       visit new_session_path
       fill_in "email", with: user.email
       fill_in "password", with: "password"
@@ -511,7 +511,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
     end
 
     after do
-      page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
+      resize_window_to(1400, 1400)
     end
 
     it "captures fresh high-res screenshots of the primary areas" do

@@ -146,7 +146,7 @@ RSpec.describe "Properties", type: :system do
   end
 
   it "contains table overflow horizontally within containers on mobile viewport", js: true do
-    page.driver.browser.manage.window.resize_to(375, 812)
+    resize_window_to(375, 812)
 
     unit1 = create(:rentable_unit, property: property, name: "Unit 1 With Long Description")
     tenancy1 = create(:tenancy, :month_to_month, rentable_unit: unit1, commencement_date: Date.current - 2.months)

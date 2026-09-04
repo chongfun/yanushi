@@ -3205,6 +3205,49 @@ and `rbs validate` green.
   - `GET /search` finds properties, units, tenancies, and parties, scoped to
     the user by construction, each group one bounded query.
 
+- Added 2026-09-04, answering the second external review and the test
+  infrastructure it exposed:
+  - `Tenancies::OverdueQuery` shields only charges that are *both* already
+    dated and still inside their grace period. `Charges::PostService` dates
+    the journal entry with `charge_date`, and `TenancyBalancesQuery` counts
+    entries on or before `as_of`, so a charge dated in the future is not in
+    the balance and must not be subtracted from it. Without the
+    `charge_date <= as_of` clause, one future charge hid money that was
+    already late.
+  - `Tenancies::StatementCsvService` prefixes any person-authored cell that
+    begins with `=`, `+`, `-`, `@`, a tab, or a newline with an apostrophe, so
+    Excel and LibreOffice read it as text rather than a formula. Money columns
+    are deliberately exempt: they are written by the service and a leading
+    minus there is a negative number, not an injection.
+  - The Overview attention queue reads a cached Schedule E summary
+    (`Rails.cache`, one hour), keyed on the property count and the latest
+    `journal_entries.posted_at`, review resolution, and tax profile
+    timestamps, so the dashboard stops issuing per-property queries on every
+    render while still reflecting a change immediately.
+  - `responsive_frame` re-resolves the row when its keyboard load timer
+    fires instead of holding the element. Clicking a detached anchor escapes
+    Turbo's delegated handler, and the browser then followed the href and
+    navigated the whole page to the standalone review screen.
+  - `.yn-tabs` pins `overflow-y: hidden`. CSS computes a `visible` axis as
+    `auto` once the other axis is not visible, so with the active tab's
+    underline overlapping the container border every tab strip grew a stray
+    vertical scrollbar.
+  - Test infrastructure, and the reason it exists: this headless Chrome
+    intermittently swallows the input Capybara synthesizes. JavaScript keeps
+    running, frames arrive in milliseconds, the target is unobstructed and
+    hit-testable, and yet no click event reaches the document, from Capybara,
+    from Selenium's Actions API, or from a DevTools mouse dispatch at any
+    coordinate; a keystroke sent at the same moment is dropped too, and
+    nothing raises. It appears as soon as any other example runs before the
+    browser specs, which is why it never showed up in a file-scoped run.
+    `spec/support/capybara_click_delivery.rb` prepends a check to
+    `Capybara::Node::Element#click`: a capture-phase document listener counts
+    what arrives, and a click that produced nothing at all is dispatched again
+    from the page, with a line on stderr saying so. The native click still
+    goes first, so visibility, viewport, enabled state, and overlap are still
+    enforced by the driver. `resize_window_to` waits for the requested size
+    and then for a composited frame at it.
+
 # Appendix B: stable DOM ID registry
 
 IDs that Turbo Streams target. Rename only with a repo-wide grep of both

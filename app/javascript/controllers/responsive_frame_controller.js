@@ -165,10 +165,25 @@ export default class extends Controller {
     if (index === current) return
 
     const row = rows[index]
+    const id = this.transactionIdFromRow(row)
     this.highlightRow(row)
-    this.syncUrl(this.transactionIdFromRow(row))
+    this.syncUrl(id)
     this.cancelPendingLoad()
-    this._loadTimeout = setTimeout(() => row.click(), KEYBOARD_LOAD_DELAY)
+    this._loadTimeout = setTimeout(() => this.loadRow(id), KEYBOARD_LOAD_DELAY)
+  }
+
+  // Re-resolve the row when the timer fires rather than holding the element:
+  // the queue can be re-rendered in between, and clicking a detached anchor
+  // escapes Turbo's delegated handler, so the browser would follow the href
+  // and navigate the whole page to the standalone review screen. Refreshing
+  // the frame attribute first keeps that click identical to a mouse click
+  // even if the row was rendered before this controller connected.
+  loadRow(id) {
+    const row = id ? this.rowFor(id) : null
+    if (!row || !row.isConnected) return
+
+    this.updateFrame(row)
+    row.click()
   }
 
   cancelPendingLoad() {
@@ -180,9 +195,10 @@ export default class extends Controller {
   // response streams, and the pending-id bookkeeping all behave as if the
   // reader had clicked it.
   confirmSelected() {
+    this.cancelPendingLoad()
     const id = this.activeTransactionId
     const button = id ? document.getElementById(`confirm_btn_${id}`) : null
-    if (button) button.click()
+    if (button && button.isConnected) button.click()
   }
 
   // The reviewed item is real navigation state: keep it in the query string so

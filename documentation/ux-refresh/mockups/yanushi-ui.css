@@ -243,7 +243,13 @@
   display: flex;
   gap: 0.25rem;
   border-bottom: 1px solid var(--yn-border);
+  /* Narrow screens scroll the strip sideways. `overflow-y` is pinned because
+   * CSS computes a `visible` axis as `auto` once the other axis is not
+   * visible: with the active tab's underline overlapping the container border,
+   * that left one pixel of vertical overflow, so every tab strip grew a stray
+   * vertical scrollbar and a click on a tab could land on it instead. */
   overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .yn-tab {
@@ -251,7 +257,6 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 0.75rem;
-  margin-bottom: -1px;
   border-bottom: 2px solid transparent;
   font-size: 0.875rem;
   font-weight: 500;

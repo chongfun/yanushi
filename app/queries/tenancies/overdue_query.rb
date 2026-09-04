@@ -40,11 +40,19 @@ module Tenancies
 
       # Posted, active charges whose due date plus the tenancy's own grace
       # period has not yet passed. `date + integer` is a date in Postgres.
+      #
+      # `charge_date <= as_of` keeps this in the same temporal universe as the
+      # balance it is subtracted from: `Charges::PostService` dates the journal
+      # entry with the charge date, and `TenancyBalancesQuery` counts only
+      # entries occurring on or before `as_of`. Without it a future-dated
+      # charge would shield money it is not part of, and genuinely late money
+      # would vanish from the attention queue.
       def not_yet_due_cents_by_tenancy
         Charge.active
               .posted
               .joins(:tenancy)
               .where(tenancy_id: tenancies.map(&:id))
+              .where("charges.charge_date <= ?", as_of)
               .where("charges.due_on + tenancies.late_period_days >= ?", as_of)
               .group(:tenancy_id)
               .sum(:amount_cents)

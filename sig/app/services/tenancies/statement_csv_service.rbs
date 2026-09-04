@@ -2,6 +2,7 @@ module Tenancies
   class StatementCsvService
     ACCOUNT_COLUMNS: Array[String]
     ACTIVITY_COLUMNS: Array[String]
+    FORMULA_TRIGGERS: Array[String]
 
     def self.call: (
       tenancy: Tenancy,
@@ -29,6 +30,7 @@ module Tenancies
     def view_mode: () -> String
     def write_preamble: (untyped csv) -> void
     def write_account_rows: (untyped csv, Array[Accounting::TenantReceivableActivityQuery::StatementRow] rows) -> void
+    def csv_text: (untyped value) -> String
     def write_activity_rows: (untyped csv, Array[Accounting::ActivityRow] rows) -> void
   end
 end

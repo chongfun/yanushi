@@ -151,10 +151,10 @@ module Dashboards
         year = filing_tax_year(u)
         return [] unless year
 
-        needs_work = Reports::ScheduleEStatusesQuery.call(user: u, tax_year: year).select(&:needs_work?)
-        return [] if needs_work.empty?
+        summary = schedule_e_summary(u, year)
+        property_count = summary[:property_count].to_i
+        return [] if property_count.zero?
 
-        property_count = needs_work.size
         title = if property_count == 1
           "1 property is not ready for Schedule E"
         else
@@ -162,11 +162,11 @@ module Dashboards
         end
 
         parts = [ "#{year} tax year" ] # : Array[String]
-        profile_count = needs_work.count { |status| status.state == :needs_profile }
+        profile_count = summary[:profile_count].to_i
         if profile_count.positive?
           parts << (profile_count == 1 ? "1 property needs a tax profile" : "#{profile_count} properties need a tax profile")
         end
-        review_count = needs_work.sum { |status| status.unresolved_review_count }
+        review_count = summary[:review_count].to_i
         if review_count.positive?
           parts << (review_count == 1 ? "1 item needs review" : "#{review_count} items need review")
         end
@@ -179,6 +179,42 @@ module Dashboards
             path: Rails.application.routes.url_helpers.reports_path(year: year),
             severity: :warn
           )
+        ]
+      end
+
+      # Three counts is all the item says, but reaching them runs the whole
+      # Schedule E computation once per property, which is too much for the
+      # app's front door: a twenty-property portfolio measured about twelve
+      # queries per property. The answer changes only when a posting, a
+      # resolution, or a tax profile changes, so the key covers all three and a
+      # stale item cannot outlive the data it describes. The hour bounds the one
+      # input the key cannot see, a change to the account map in code.
+      #
+      # The proper fix is a status query that does not scale with the portfolio;
+      # this keeps the dashboard cheap until that lands.
+      def schedule_e_summary(u, year)
+        Rails.cache.fetch(schedule_e_cache_key(u, year), expires_in: 1.hour) do
+          needs_work = Reports::ScheduleEStatusesQuery.call(user: u, tax_year: year).select(&:needs_work?)
+
+          {
+            property_count: needs_work.size,
+            profile_count: needs_work.count { |status| status.state == :needs_profile },
+            review_count: needs_work.sum { |status| status.unresolved_review_count }
+          }
+        end
+      end
+
+      def schedule_e_cache_key(u, year)
+        property_ids = u.properties.select(:id)
+
+        [
+          "dashboards/schedule_e_attention",
+          u.id,
+          year,
+          u.properties.count,
+          u.journal_entries.maximum(:posted_at)&.to_i,
+          PropertyTaxReviewResolution.where(property_id: property_ids).maximum(:updated_at)&.to_i,
+          PropertyTaxProfile.where(property_id: property_ids).maximum(:updated_at)&.to_i
         ]
       end
 
