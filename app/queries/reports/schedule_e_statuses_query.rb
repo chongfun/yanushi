@@ -1,11 +1,22 @@
 module Reports
   class ScheduleEStatusesQuery
-    ScheduleEStatus = Data.define(
+    # States that still require action from the owner, in the order the Reports
+    # landing should surface them (PRD 13.1: which properties require work).
+    NEEDS_WORK_STATES = [ :needs_profile, :needs_review ].freeze
+
+    # Sort weight per state; unknown states sort last.
+    STATE_ORDER = { needs_profile: 0, needs_review: 1, ready: 2 }.freeze
+
+    class ScheduleEStatus < Data.define(
       :property,
       :state,
       :unresolved_review_count,
       :net_income_cents
     )
+      def needs_work?
+        NEEDS_WORK_STATES.include?(state)
+      end
+    end
 
     def self.call(user:, tax_year:)
       new(user: user, tax_year: tax_year).call
@@ -53,9 +64,14 @@ module Reports
       return [] unless user
 
       properties = user.properties.includes(:tax_profiles).order(:address)
-      properties.map do |property|
+      statuses = properties.map do |property|
         schedule_e_result = TaxReporting::ScheduleEQuery.call(property: property, tax_year: tax_year)
         self.class.build_status(property: property, schedule_e_result: schedule_e_result)
+      end
+
+      # Work first, then ready; address is the tiebreak inside each group.
+      statuses.sort_by do |status|
+        [ STATE_ORDER.fetch(status.state, STATE_ORDER.size), status.property.address ]
       end
     end
 

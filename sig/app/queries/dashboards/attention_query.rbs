@@ -1,5 +1,6 @@
 module Dashboards
   class AttentionQuery
+
     class AttentionItem
       attr_reader kind: Symbol
       attr_reader title: String
@@ -31,6 +32,8 @@ module Dashboards
     def balances: () -> untyped
     def inbox_review_items: () -> Array[AttentionItem]
     def import_failed_items: () -> Array[AttentionItem]
-    def balance_due_items: () -> Array[AttentionItem]
+    def overdue_balance_items: () -> Array[AttentionItem]
+    def schedule_e_items: () -> Array[AttentionItem]
+    def filing_tax_year: (User u) -> Integer?
   end
 end

@@ -1,18 +1,38 @@
 class ExpensesController < ApplicationController
+  include IndexFilters
+
   before_action :set_expense, only: %i[show correction correct void]
   before_action :set_nested_property, only: %i[new create]
   before_action :set_form_data, only: %i[new create correction correct]
 
   def index
+    @properties = authenticated_user.properties.order(:address)
+    @active_years = Accounting::ActiveYearsQuery.call(user: authenticated_user)
+    @filter_range = filter_year_range
+    @filters = {
+      property_id: filter_property_id(@properties),
+      year: @filter_range&.year,
+      expense_kind: filter_expense_kind,
+      search: params[:search].to_s.strip.presence
+    }.compact
+
     page = [ params[:page].to_i, 1 ].max
     @per_page = 25
-    scope = authenticated_user.expenses
-                              .includes(:property, :rentable_unit, :superseded_by, :superseded_expense, :reimbursement_charges)
-                              .order(paid_on: :desc, created_at: :desc)
+    scope = filtered_expenses
+
     @total_count = scope.count
     @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
     @page = @total_pages > 0 ? [ page, @total_pages ].min : page
-    @expenses = scope.limit(@per_page).offset((@page - 1) * @per_page)
+
+    # Aggregates, so the totals do not depend on the page that is displayed.
+    @paid_total_cents = scope.active.sum(:amount_cents).to_i
+    @voided_total_cents = scope.voided.sum(:amount_cents).to_i
+
+    @expenses = scope
+      .includes(:property, :rentable_unit, :superseded_by, :superseded_expense, :reimbursement_charges)
+      .order(paid_on: :desc, created_at: :desc)
+      .limit(@per_page)
+      .offset((@page - 1) * @per_page)
   end
 
   def show
@@ -251,6 +271,39 @@ class ExpensesController < ApplicationController
   end
 
   private
+
+    # Index filters live entirely in URL params so a filtered list is
+    # shareable and survives a refresh.
+    def filter_expense_kind
+      kind = params[:expense_kind].to_s.strip
+      Expense::EXPENSE_KINDS.include?(kind) ? kind : nil
+    end
+
+    def filtered_expenses
+      scope = authenticated_user.expenses
+
+      if (property_id = @filters[:property_id])
+        scope = scope.where(property_id: property_id)
+      end
+
+      if (range = @filter_range)
+        scope = scope.where(paid_on: range.from..range.through)
+      end
+
+      if (kind = @filters[:expense_kind])
+        scope = scope.where(expense_kind: kind)
+      end
+
+      if (search = @filters[:search])
+        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
+        scope = scope.where(
+          "expenses.vendor_name ILIKE :q OR expenses.description ILIKE :q OR expenses.external_reference ILIKE :q",
+          q: pattern
+        )
+      end
+
+      scope
+    end
 
     def set_expense
       @expense = authenticated_user.expenses.find(params.expect(:id))

@@ -3173,6 +3173,37 @@ and `rbs validate` green.
     Activity, tenancy, the receipt dialog, upload, Inbox, Reports, Schedule E.
   - Field labels and page titles are sentence case across every form; money is
     `format_money_cents` with `tabular-nums` and no `font-mono`.
+- Added 2026-09-03, UX improvements beyond the PRD's own list:
+  - The Overview attention queue raises only money that is actually late.
+    `Tenancies::OverdueQuery` computes, in one grouped pass,
+    `[balance - charges still inside their grace period, 0].max` using each
+    tenancy's `late_period_days`. Total outstanding stays in the portfolio
+    summary strip. `Reports::ScheduleEStatusesQuery#needs_work?` is the single
+    definition of "needs work", used by both Reports and the attention queue,
+    which raises one aggregate Schedule E item for the filing year.
+  - Reports groups into Needs work then Ready, ordered by state with address
+    as the tiebreak.
+  - Receipts and Expenses filter by property, year, category, and text, with
+    state in URL params carried through `shared/_pagination`; the shared
+    reading of those params lives in the `IndexFilters` controller concern.
+    Money Activity, Receipts, and Expenses each show period totals, Money
+    Activity via `Accounting::PortfolioSummaryQuery` (one grouped aggregate,
+    field names matching `PropertySummaryQuery`).
+  - The tenant statement exports PDF and CSV from the same URL and filters,
+    through `Tenancies::StatementExport` shared by both. Voided and corrected
+    rows stay in the document with the reason named. NOTE: Prawn's built-in
+    AFM fonts cannot encode the U+2212 minus that `signed_money_cents` emits,
+    so anything rendering money into a PDF must go through
+    `StatementExport.text`.
+  - One `@media print` block in both stylesheets drops the shell, dialogs,
+    toasts, and pointer-only affordances; `.turbo-progress-bar` is on-palette.
+  - Turbo Drive `advance` visits move focus to `#main h1`; frame and stream
+    renders keep their own focus contracts. The Inbox queue takes `j`/`k`,
+    the arrow keys, and `c` to confirm, guarded against modifiers, form
+    fields, open dialogs, and widths below `lg`, with a hint the controller
+    reveals only where the shortcuts work.
+  - `GET /search` finds properties, units, tenancies, and parties, scoped to
+    the user by construction, each group one bounded query.
 
 # Appendix B: stable DOM ID registry
 

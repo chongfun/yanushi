@@ -1,0 +1,28 @@
+<%# The search field. A plain GET form to /search, so a result page is
+    shareable and survives a refresh.
+    Locals:
+      field_id       : id the visually hidden label points at (required, unique per page)
+      label          : label text (default "Search")
+      placeholder    : default "Search…"
+      visible_submit : true renders a "Search" button beside the field
+      autofocus      : default false %>
+<% field_id = local_assigns.fetch(:field_id) %>
+<% visible_submit = local_assigns.fetch(:visible_submit, false) %>
+<%= form_with url: search_path, method: :get, class: (visible_submit ? "flex items-start gap-2" : "block") do |f| %>
+  <div class="<%= class_names("relative", "flex-1 min-w-0" => visible_submit) %>">
+    <%= label_tag field_id, local_assigns.fetch(:label, "Search"), class: "sr-only" %>
+    <svg viewBox="0 0 16 16" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="currentColor" aria-hidden="true"><path d="M10.68 11.74a6 6 0 1 1 1.06-1.06l3.04 3.04a.75.75 0 1 1-1.06 1.06l-3.04-3.04ZM11.5 7a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0Z"/></svg>
+    <%= f.search_field :q,
+          value: params[:q],
+          id: field_id,
+          placeholder: local_assigns.fetch(:placeholder, "Search…"),
+          autocomplete: "off",
+          autofocus: local_assigns.fetch(:autofocus, false),
+          class: "yn-input pl-8" %>
+  </div>
+  <% if visible_submit %>
+    <button type="submit" class="yn-btn yn-btn-secondary">Search</button>
+  <% else %>
+    <button type="submit" class="sr-only">Search</button>
+  <% end %>
+<% end %>

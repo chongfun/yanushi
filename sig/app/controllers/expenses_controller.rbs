@@ -1,9 +1,13 @@
 class ExpensesController < ApplicationController
+  include IndexFilters
   @expense: Expense
   @expenses: Expense::ActiveRecord_Relation
   @reimbursements: Charge::ActiveRecord_Relation
   @nested_property: Property?
   @properties: Property::ActiveRecord_Relation
+  @active_years: Array[Integer]
+  @filter_range: Accounting::DateRange?
+  @filters: Hash[Symbol, untyped]
   @financial_activity: Array[Accounting::ActivityRow]
   @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
   @ytd_summary: Accounting::PropertySummaryQuery::SummaryResult
@@ -14,6 +18,8 @@ class ExpensesController < ApplicationController
   @per_page: Integer
   @total_count: Integer
   @total_pages: Integer
+  @paid_total_cents: Integer
+  @voided_total_cents: Integer
 
   def index: () -> untyped
   def show: () -> untyped
@@ -25,6 +31,8 @@ class ExpensesController < ApplicationController
 
   private
 
+  def filter_expense_kind: () -> String?
+  def filtered_expenses: () -> untyped
   def set_expense: () -> untyped
   def set_nested_property: () -> untyped
   def set_form_data: () -> untyped

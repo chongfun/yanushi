@@ -27,6 +27,20 @@ RSpec.describe "Inbox", type: :system do
     end
   end
 
+  # Presses a shortcut key with focus where a reader working the queue would
+  # have it: on the row that is open. The keystroke is dispatched at the
+  # focused element rather than through WebDriver, whose synthetic key
+  # delivery is unreliable once other examples have driven this browser; the
+  # event still travels the real path (focused element -> window listener),
+  # which is what the shortcuts are bound to.
+  def press_shortcut(key, from: "#inbox_review_queue_list a[aria-current='true']", meta: false)
+    page.execute_script(<<~JS, key, from, meta)
+      const target = document.querySelector(arguments[1])
+      target.focus()
+      target.dispatchEvent(new KeyboardEvent("keydown", { key: arguments[0], metaKey: arguments[2], bubbles: true, cancelable: true }))
+    JS
+  end
+
   describe "wide-screen master/detail review loop", js: true do
     it "allows selecting stream-replaced queue rows, managing aria-current and focus, and completing review" do
       page.current_window.resize_to(1280, 800)
@@ -135,6 +149,81 @@ RSpec.describe "Inbox", type: :system do
       page.refresh
       expect(page).to have_content("You’re caught up")
       expect(page).to have_no_css("#sidebar_inbox_badge .yn-count")
+    end
+
+    it "traverses the queue and confirms the open item from the keyboard alone" do
+      page.current_window.resize_to(1280, 800)
+
+      txn1, txn2, txn3 = [ 100_000, 200_000, 300_000 ].each_with_index.map do |cents, index|
+        create(
+          :imported_transaction,
+          user: user,
+          source_document: source_document,
+          status: "matched",
+          transaction_kind: "tenant_receipt",
+          matched_party: party,
+          matched_tenancy: tenancy,
+          payer_name: "Homer Simpson",
+          amount_cents: cents,
+          occurred_on: Date.new(2026, 8, 19) + index,
+          payment_method: "zelle",
+          external_reference: "ZL-KB-#{index}"
+        )
+      end
+
+      visit inbox_path
+
+      # The shortcuts are advertised next to the queue they drive
+      within("#inbox_review_queue_list") do
+        expect(page).to have_text("Keyboard:")
+      end
+      expect(page).to have_css("#imported_transaction_#{txn3.id}[aria-current='true']")
+
+      # j walks down the queue, loading each item into the detail frame
+      press_shortcut("j")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$2,000.00") }
+
+      press_shortcut("j")
+      expect(page).to have_css("#imported_transaction_#{txn1.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$1,000.00") }
+
+      # ... and stops at the end of the queue rather than wrapping
+      press_shortcut("j")
+      expect(page).to have_css("#imported_transaction_#{txn1.id}[aria-current='true']")
+
+      # k walks back up
+      press_shortcut("k")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$2,000.00") }
+
+      # The arrow keys do the same thing
+      press_shortcut("ArrowDown")
+      expect(page).to have_css("#imported_transaction_#{txn1.id}[aria-current='true']")
+      press_shortcut("ArrowUp")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$2,000.00") }
+
+      # Inside a form control the same key is just a keystroke
+      press_shortcut("j", from: "#rev-ref-#{txn2.id}")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+
+      # A modifier turns it back into the browser's own shortcut
+      press_shortcut("j", meta: true)
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+
+      # c confirms the open item, exactly as its primary button does
+      within("#inbox_review") { expect(page).to have_button("Confirm receipt") }
+      press_shortcut("c")
+      expect(page).to have_content("Transaction confirmed and recorded successfully.")
+      expect(page).to have_no_css("#imported_transaction_#{txn2.id}")
+      expect(page).to have_css("#sidebar_inbox_badge", text: "2")
+
+      txn2.reload
+      expect(txn2.status).to eq("confirmed")
+      expect(txn2.confirmed_source).to be_a(Receipt)
+      expect(txn1.reload.status).to eq("matched")
+      expect(txn3.reload.status).to eq("matched")
     end
 
     it "edits unclassified fields and confirms in a single atomic step" do

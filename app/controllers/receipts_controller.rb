@@ -1,17 +1,36 @@
 class ReceiptsController < ApplicationController
+  include IndexFilters
+
   before_action :set_tenancy, only: %i[new create]
   before_action :set_receipt, only: %i[show correction correct void]
 
   def index
+    @properties = authenticated_user.properties.order(:address)
+    @active_years = Accounting::ActiveYearsQuery.call(user: authenticated_user)
+    @filter_range = filter_year_range
+    @filters = {
+      property_id: filter_property_id(@properties),
+      year: @filter_range&.year,
+      search: params[:search].to_s.strip.presence
+    }.compact
+
     page = [ params[:page].to_i, 1 ].max
     @per_page = 25
-    scope = authenticated_user.receipts
-                              .includes(:payer_party, :superseded_by, :superseded_receipt, :imported_transaction, tenancy: [ :property, :rentable_unit ])
-                              .order(received_on: :desc, created_at: :desc)
+    scope = filtered_receipts
+
     @total_count = scope.count
     @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
     @page = @total_pages > 0 ? [ page, @total_pages ].min : page
-    @receipts = scope.limit(@per_page).offset((@page - 1) * @per_page)
+
+    # Aggregates, so the totals do not depend on the page that is displayed.
+    @received_total_cents = scope.active.sum(:amount_cents).to_i
+    @voided_total_cents = scope.voided.sum(:amount_cents).to_i
+
+    @receipts = scope
+      .includes(:payer_party, :superseded_by, :superseded_receipt, :imported_transaction, tenancy: [ :property, :rentable_unit ])
+      .order(received_on: :desc, created_at: :desc)
+      .limit(@per_page)
+      .offset((@page - 1) * @per_page)
   end
 
   def show
@@ -288,6 +307,30 @@ class ReceiptsController < ApplicationController
   end
 
   private
+
+    # Index filters live entirely in URL params so a filtered list is
+    # shareable and survives a refresh.
+    def filtered_receipts
+      scope = authenticated_user.receipts
+
+      if (property_id = @filters[:property_id])
+        scope = scope.joins(tenancy: :rentable_unit).where(rentable_units: { property_id: property_id })
+      end
+
+      if (range = @filter_range)
+        scope = scope.where(received_on: range.from..range.through)
+      end
+
+      if (search = @filters[:search])
+        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
+        scope = scope.joins(:payer_party).where(
+          "parties.display_name ILIKE :q OR receipts.external_reference ILIKE :q",
+          q: pattern
+        )
+      end
+
+      scope
+    end
 
     def set_tenancy
       if params[:tenancy_id]

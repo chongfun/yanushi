@@ -15,7 +15,7 @@ class TenanciesController < ApplicationController
   @security_deposit_held_cents: Integer
   @date_range: Accounting::DateRange
   @statement: Accounting::TenantReceivableActivityQuery::StatementResult
-  @financial_activity: Accounting::TenancyActivityQuery::ActivityResult
+  @financial_activity: Array[Accounting::ActivityRow]
   @view_mode: String
 
   def index: () -> void
@@ -30,6 +30,10 @@ class TenanciesController < ApplicationController
   private
 
   def set_tenancy: () -> Tenancy
+  def statement_pdf: () -> String
+  def statement_csv: () -> String
+  def statement_export_blocked?: () -> bool
+  def statement_export_filename: (String extension) -> String
   def set_form_data: () -> void
   def tenancy_create_params: () -> ActionController::Parameters
   def tenancy_update_params: () -> ActionController::Parameters

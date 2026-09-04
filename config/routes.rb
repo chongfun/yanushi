@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "money", to: "money#show", as: :money
   get "inbox", to: "imported_transactions#index", as: :inbox
   get "reports", to: "reports#show", as: :reports
+  get "search", to: "search#show", as: :search
 
   resources :properties do
     scope module: :properties do

@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe Dashboards::OverviewQuery do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:user) { create(:user) }
   let(:other_user) { create(:user) }
 
@@ -16,6 +18,11 @@ RSpec.describe Dashboards::OverviewQuery do
   end
   let(:party) { create(:party, user: user, display_name: "Jane Smith") }
 
+  # The overdue rule keys off today; pin the clock and restore it afterwards.
+  around do |example|
+    travel_to(Date.new(2026, 9, 15)) { example.run }
+  end
+
   before do
     Accounting::ChartOfAccounts.ensure_for(user)
     Accounting::ChartOfAccounts.ensure_for(other_user)
@@ -26,12 +33,12 @@ RSpec.describe Dashboards::OverviewQuery do
     it "returns an OverviewResult with all sections populated" do
       unit2 # instantiate vacant unit2
 
-      # Create an attention item (charge $350)
+      # Create an attention item: $350 charged, and overdue past the grace period
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "rent",
         amount_cents: 35_000,
-        charge_date: Date.current
+        charge_date: Date.current - 10.days
       )
 
       result = described_class.call(user: user)
@@ -157,6 +164,29 @@ RSpec.describe Dashboards::OverviewQuery do
       described_class.call(user: user)
 
       expect(Accounting::TenancyBalancesQuery).to have_received(:call).once
+    end
+
+    it "splits overdue from not-yet-due money in one batched pass" do
+      allow(Tenancies::OverdueQuery).to receive(:call).and_call_original
+
+      described_class.call(user: user)
+
+      expect(Tenancies::OverdueQuery).to have_received(:call).once
+    end
+
+    it "keeps a balance that is still inside its grace period out of the attention queue" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 35_000,
+        charge_date: Date.current
+      )
+
+      result = described_class.call(user: user)
+
+      expect(result.attention_items).to eq([])
+      expect(result.portfolio_summary.outstanding_balances_cents).to eq(35_000)
+      expect(result.properties.first.balance_cents).to eq(35_000)
     end
   end
 end

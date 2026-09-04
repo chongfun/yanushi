@@ -1,0 +1,10 @@
+module IndexFilters
+  extend ActiveSupport::Concern
+
+  def params: () -> ActionController::Parameters
+
+  private
+
+  def filter_property_id: (untyped properties) -> Integer?
+  def filter_year_range: () -> Accounting::DateRange?
+end

@@ -5,5 +5,11 @@
     </button>
     <%= link_to "Yanushi", root_path, class: "text-[15px] font-semibold tracking-tight text-stone-900 no-underline" %>
     <%= render "shared/mobile_inbox_badge" %>
+    <%# The sidebar search field has no room here, so the top bar links to the
+        search page, where the field itself lives. %>
+    <%= link_to search_path, class: "yn-btn yn-btn-ghost min-h-11 min-w-11" do %>
+      <svg viewBox="0 0 16 16" class="w-5 h-5 pointer-events-none" fill="currentColor" aria-hidden="true"><path d="M10.68 11.74a6 6 0 1 1 1.06-1.06l3.04 3.04a.75.75 0 1 1-1.06 1.06l-3.04-3.04ZM11.5 7a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0Z"/></svg>
+      <span class="sr-only">Search</span>
+    <% end %>
   </div>
 </header>

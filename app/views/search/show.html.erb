@@ -1,0 +1,43 @@
+<% content_for :title, "Search" %>
+
+<div class="max-w-3xl">
+  <%= render "shared/page_header",
+        title: "Search",
+        meta: (@result ? "#{pluralize(@result.total_count, "match")} for “#{@query}”" : "One place to find a property, unit, tenancy, or party by name.") %>
+
+  <div class="mb-8">
+    <%= render "search/field",
+          field_id: "search-page-q",
+          label: "Search properties, units, tenancies, and parties",
+          placeholder: "Address, unit, or name…",
+          visible_submit: true,
+          autofocus: @query.blank? %>
+    <p class="yn-hint">
+      Matches addresses, unit names and identifiers, tenant names, and party aliases, email, and phone.
+    </p>
+  </div>
+
+  <% if @query.blank? %>
+    <%= render "shared/empty_state",
+          title: "Nothing searched yet",
+          body: "Type a name or an address above. Yanushi looks across every property, unit, tenancy, and party you own, so you can find a tenant without knowing which property they are in.",
+          action: link_to("Browse portfolio", portfolio_path, class: "yn-btn yn-btn-secondary yn-btn-sm") %>
+  <% elsif @result.nil? %>
+    <%= render "shared/empty_state",
+          title: "Search is too short",
+          body: "Enter at least #{@min_query_length} characters. One character matches almost everything, which is no help in finding one record.",
+          action: nil %>
+  <% elsif @result.total_count.zero? %>
+    <%= render "shared/empty_state",
+          title: "No matches for “#{@query}”",
+          body: "No property, unit, tenancy, or party matches that. Check the spelling, or try part of an address or a person's name.",
+          action: link_to("Browse portfolio", portfolio_path, class: "yn-btn yn-btn-secondary yn-btn-sm") %>
+  <% else %>
+    <div class="space-y-8">
+      <% @result.groups.each do |group| %>
+        <% next if group.records.empty? %>
+        <%= render "search/group", group: group %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

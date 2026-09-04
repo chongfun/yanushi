@@ -1,5 +1,13 @@
 <%
   view_mode = @view_mode
+  # The exports carry the view and the resolved period, so a download is the
+  # document the page is showing rather than a different one.
+  export_params = {
+    view: (view_mode == "all" ? "all" : nil),
+    year: @date_range.year,
+    from: (@date_range.year ? nil : @date_range.from&.iso8601),
+    through: (@date_range.year ? nil : @date_range.through&.iso8601)
+  }.compact_blank
   tab_items = [
     { label: "Tenant account", path: statement_tenancy_path(@tenancy, from: params[:from], through: params[:through], year: params[:year]), current: view_mode == "receivable" },
     { label: "All financial activity", path: statement_tenancy_path(@tenancy, view: "all", from: params[:from], through: params[:through], year: params[:year]), current: view_mode == "all" }
@@ -11,7 +19,17 @@
   <%= render "tenancies/page_header",
         tenancy: @tenancy,
         title: "Tenant account statement",
-        actions: link_to("Record receipt", new_tenancy_receipt_path(@tenancy), class: "yn-btn yn-btn-primary") %>
+        actions: capture { %>
+          <% [ [ "Download PDF", :pdf ], [ "Download CSV", :csv ] ].each do |label, extension| %>
+            <% if @date_range.valid? %>
+              <%= link_to label, statement_tenancy_path(@tenancy, export_params.merge(format: extension)),
+                    class: "yn-btn yn-btn-secondary", data: { turbo: false } %>
+            <% else %>
+              <button type="button" class="yn-btn yn-btn-secondary opacity-50 cursor-not-allowed" disabled aria-disabled="true"><%= label %></button>
+            <% end %>
+          <% end %>
+          <%= link_to "Record receipt", new_tenancy_receipt_path(@tenancy), class: "yn-btn yn-btn-primary" %>
+        <% } %>
 
   <%= render "shared/tabs", items: tab_items, aria_label: "Statement views" %>
 

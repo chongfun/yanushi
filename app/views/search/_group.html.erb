@@ -1,0 +1,48 @@
+<%# One kind of result: heading, match count, the capped rows, and a link to the
+    full index when the cap hid some. The page stays a finder, not a second
+    Portfolio. Local: group (a Search::PortfolioQuery::Group) %>
+<%
+  presentation = {
+    properties: {
+      heading: "Properties",
+      row: "search/property_row", as: :property,
+      more_label: "See all properties", more_path: portfolio_path
+    },
+    rentable_units: {
+      heading: "Units",
+      row: "search/rentable_unit_row", as: :rentable_unit,
+      more_label: "Browse units by property", more_path: portfolio_path
+    },
+    tenancies: {
+      heading: "Tenancies",
+      row: "search/tenancy_row", as: :tenancy,
+      more_label: "See all tenancies", more_path: tenancies_path
+    },
+    parties: {
+      heading: "Parties",
+      row: "search/party_row", as: :party,
+      more_label: "See all parties", more_path: parties_path
+    }
+  }.fetch(group.key)
+  heading_id = "search-group-#{group.key.to_s.dasherize}"
+  hidden_count = group.total_count - group.records.size
+%>
+<section aria-labelledby="<%= heading_id %>">
+  <div class="flex items-baseline justify-between gap-3 border-b border-stone-200 pb-2">
+    <h2 id="<%= heading_id %>" class="text-sm font-semibold tracking-tight text-stone-900"><%= presentation[:heading] %></h2>
+    <p class="text-[13px] text-stone-500">
+      <span class="tabular-nums"><%= group.total_count %></span> <%= "match".pluralize(group.total_count) %>
+    </p>
+  </div>
+
+  <ul class="divide-y divide-stone-100">
+    <%= render partial: presentation[:row], collection: group.records, as: presentation[:as] %>
+  </ul>
+
+  <% if hidden_count.positive? %>
+    <p class="mt-2 text-[13px] text-stone-500">
+      Showing the first <span class="tabular-nums"><%= group.records.size %></span>.
+      <%= link_to presentation[:more_label], presentation[:more_path], class: "yn-link" %>
+    </p>
+  <% end %>
+</section>

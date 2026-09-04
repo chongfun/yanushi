@@ -43,6 +43,26 @@ class TenanciesController < ApplicationController
         date_range: @date_range
       )
     end
+
+    respond_to do |format|
+      format.html
+      format.pdf do
+        unless statement_export_blocked?
+          send_data statement_pdf,
+                    filename: statement_export_filename("pdf"),
+                    type: "application/pdf",
+                    disposition: "attachment"
+        end
+      end
+      format.csv do
+        unless statement_export_blocked?
+          send_data statement_csv,
+                    filename: statement_export_filename("csv"),
+                    type: "text/csv",
+                    disposition: "attachment"
+        end
+      end
+    end
   end
 
   def new
@@ -132,6 +152,49 @@ class TenanciesController < ApplicationController
         { tenancy_parties: :party },
         :rent_terms
       ).find(params.expect(:id))
+    end
+
+    # The exports carry whichever view and period the page is showing, so a
+    # shared statement URL and its download stay the same document.
+    def statement_pdf
+      Tenancies::StatementPdfService.call(
+        tenancy: @tenancy,
+        date_range: @date_range,
+        statement: @view_mode == "all" ? nil : @statement,
+        activity_rows: @view_mode == "all" ? @financial_activity : nil
+      )
+    end
+
+    def statement_csv
+      Tenancies::StatementCsvService.call(
+        tenancy: @tenancy,
+        date_range: @date_range,
+        statement: @view_mode == "all" ? nil : @statement,
+        activity_rows: @view_mode == "all" ? @financial_activity : nil
+      )
+    end
+
+    # A range the page refuses to report on is not a document either: send the
+    # reader back to the page that can explain why.
+    def statement_export_blocked?
+      return false if @date_range.valid?
+
+      redirect_to statement_tenancy_path(@tenancy),
+                  alert: "Unable to generate financial report: #{@date_range.errors.to_sentence.presence || 'the From date cannot be after the Through date'}. Adjust the dates and download again."
+      true
+    end
+
+    def statement_export_filename(extension)
+      scope = @view_mode == "all" ? "tenancy-financial-activity" : "tenant-account-statement"
+      period = if (year = @date_range.year)
+        year.to_s
+      else
+        from = @date_range.from
+        through = @date_range.through || Date.current
+        [ from ? from.iso8601 : "opening", through.iso8601 ].join("-to-")
+      end
+
+      "#{scope}-#{@tenancy.rentable_unit.display_name.parameterize}-#{period}.#{extension}"
     end
 
     def set_form_data

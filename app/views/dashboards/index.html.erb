@@ -28,6 +28,8 @@
                 Open Inbox &rarr;
               <% elsif item.kind == :balance_due %>
                 Open tenancy &rarr;
+              <% elsif item.kind == :schedule_e_review %>
+                Open Reports &rarr;
               <% else %>
                 View &rarr;
               <% end %>

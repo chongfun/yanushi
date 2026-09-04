@@ -100,4 +100,69 @@ RSpec.describe "Money", type: :system do
     expect(page).to have_text("Repairs")
     expect(page).to have_text("$450.00")
   end
+
+  it "totals the filtered period and finds single receipts and expenses by filter" do
+    Charges::CreateService.call(
+      tenancy: tenancy,
+      charge_kind: "rent",
+      amount_cents: 120_000,
+      charge_date: Date.current
+    )
+    Receipts::CreateService.call(
+      tenancy: tenancy,
+      payer_party: party,
+      amount_cents: 120_000,
+      received_on: Date.current,
+      payment_method: "check",
+      external_reference: "CHK-4242"
+    )
+    Expenses::CreateService.call(
+      property: property,
+      expense_kind: "repairs",
+      amount_cents: 45_000,
+      paid_on: Date.current,
+      vendor_name: "Ace Plumbing",
+      description: "Sink repair"
+    )
+
+    # Money Activity answers "how much came in this period".
+    visit money_path
+    expect(page).to have_text("Income")
+    expect(page).to have_text("Expenses")
+    expect(page).to have_text("Net income")
+    expect(page).to have_text("Net cash movement")
+    expect(page).to have_text("$1,200.00")
+    expect(page).to have_text("$450.00")
+    expect(page).to have_text("$750.00")
+
+    # Receipts: search narrows the list, and the filter lives in the URL.
+    visit receipts_path
+    expect(page).to have_text("Total received")
+    fill_in "rc-search", with: "CHK-4242"
+    click_on "Apply"
+    expect(page).to have_current_path(/search=CHK-4242/)
+    expect(page).to have_text("Homer Simpson")
+    expect(page).to have_text("$1,200.00")
+
+    fill_in "rc-search", with: "nobody"
+    click_on "Apply"
+    expect(page).to have_text("No receipts match these filters")
+    within(".yn-empty") { click_on "Clear filters" }
+    expect(page).to have_current_path(receipts_path)
+    expect(page).to have_text("Homer Simpson")
+
+    # Expenses: category and property filters, with a filtered total.
+    visit expenses_path
+    select "Utilities", from: "ex-category"
+    click_on "Apply"
+    expect(page).to have_text("No expenses match these filters")
+
+    within(".yn-empty") { click_on "Clear filters" }
+    select "Repairs", from: "ex-category"
+    select "742 Evergreen Terrace", from: "ex-property"
+    click_on "Apply"
+    expect(page).to have_text("Ace Plumbing")
+    expect(page).to have_text("Total paid")
+    expect(page).to have_text("$450.00")
+  end
 end

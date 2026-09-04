@@ -33,6 +33,150 @@ RSpec.describe "Receipts", type: :request do
       expect(response).to be_successful
       expect(response.body).not_to include("Other Payer")
     end
+
+    it "renders an unfiltered empty state with no filters applied" do
+      get receipts_url
+      expect(response).to be_successful
+      expect(response.body).to include("No receipts recorded yet")
+      expect(response.body).not_to include("Clear filters")
+    end
+
+    context "with filters" do
+      let(:beta_property) { create(:property, user: user, address: "200 Beta Blvd") }
+      let(:beta_unit) { create(:rentable_unit, property: beta_property) }
+      let(:beta_tenancy) { create(:tenancy, rentable_unit: beta_unit, commencement_date: Date.new(2025, 1, 1)) }
+      let(:bob) { create(:party, user: user, display_name: "Bob Barker") }
+
+      before do
+        Receipts::CreateService.call(
+          tenancy: tenancy,
+          payer_party: party,
+          amount_cents: 100_000,
+          received_on: Date.new(2026, 2, 1),
+          payment_method: "check",
+          external_reference: "ALPHA-1"
+        )
+        Receipts::CreateService.call(
+          tenancy: beta_tenancy,
+          payer_party: bob,
+          amount_cents: 250_000,
+          received_on: Date.new(2025, 7, 4),
+          payment_method: "zelle",
+          external_reference: "BETA-9"
+        )
+      end
+
+      it "offers the filter fields with labels and years drawn from activity" do
+        get receipts_url
+        expect(response.body).to include('for="rc-property"')
+        expect(response.body).to include('id="rc-property"')
+        expect(response.body).to include('for="rc-year"')
+        expect(response.body).to include('id="rc-year"')
+        expect(response.body).to include('for="rc-search"')
+        expect(response.body).to include('id="rc-search"')
+        expect(response.body).to include("All properties")
+        expect(response.body).to include("All years")
+        expect(response.body).to include(">2025<")
+        expect(response.body).to include(">2026<")
+      end
+
+      it "filters by property" do
+        get receipts_url, params: { property_id: beta_property.id }
+        expect(response).to be_successful
+        expect(response.body).to include("Bob Barker")
+        expect(response.body).not_to include("Alice Walker")
+        expect(response.body).to include("Clear filters")
+      end
+
+      it "filters by year" do
+        get receipts_url, params: { year: "2026" }
+        expect(response).to be_successful
+        expect(response.body).to include("Alice Walker")
+        expect(response.body).not_to include("Bob Barker")
+      end
+
+      it "searches by payer name, case-insensitively" do
+        get receipts_url, params: { search: "barker" }
+        expect(response).to be_successful
+        expect(response.body).to include("Bob Barker")
+        expect(response.body).not_to include("Alice Walker")
+      end
+
+      it "searches by external reference" do
+        get receipts_url, params: { search: "alpha-1" }
+        expect(response).to be_successful
+        expect(response.body).to include("Alice Walker")
+        expect(response.body).not_to include("Bob Barker")
+      end
+
+      it "treats wildcard characters in the search as literals" do
+        get receipts_url, params: { search: "%" }
+        expect(response).to be_successful
+        expect(response.body).to include("No receipts match these filters")
+      end
+
+      it "composes property, year, and search filters" do
+        get receipts_url, params: { property_id: property.id, year: "2026", search: "alice" }
+        expect(response).to be_successful
+        expect(response.body).to include("Alice Walker")
+        expect(response.body).not_to include("Bob Barker")
+
+        get receipts_url, params: { property_id: property.id, year: "2025" }
+        expect(response).to be_successful
+        expect(response.body).to include("No receipts match these filters")
+        expect(response.body).to include("Clear filters")
+      end
+
+      it "ignores a year it cannot parse and a property that is not the user's" do
+        get receipts_url, params: { year: "not-a-year", property_id: create(:property, user: other_user).id }
+        expect(response).to be_successful
+        expect(response.body).to include("Alice Walker")
+        expect(response.body).to include("Bob Barker")
+      end
+
+      it "totals the filtered list rather than the visible page" do
+        get receipts_url, params: { year: "2026" }
+        expect(response).to be_successful
+        expect(response.body).to include("Total received")
+        expect(response.body).to include("$1,000.00")
+        expect(response.body).not_to include("$2,500.00")
+
+        get receipts_url
+        expect(response.body).to include("$3,500.00")
+      end
+
+      it "excludes voided receipts from the total and reports them separately" do
+        voided = Receipts::CreateService.call(
+          tenancy: tenancy,
+          payer_party: party,
+          amount_cents: 60_000,
+          received_on: Date.new(2026, 2, 2),
+          payment_method: "check",
+          external_reference: "ALPHA-2"
+        ).value!.data[:receipt]
+        Receipts::VoidService.call(receipt: voided, reason: "Duplicate")
+
+        get receipts_url, params: { year: "2026" }
+        expect(response).to be_successful
+        expect(response.body).to include("Voided (excluded)")
+        expect(response.body).to include("$600.00")
+        expect(response.body).to include("$1,000.00")
+      end
+
+      it "carries the filters through pagination" do
+        create_list(:receipt, 26, tenancy: tenancy, payer_party: party, user: user, received_on: Date.new(2024, 5, 1))
+
+        get receipts_url, params: { year: "2024", search: "alice" }
+        expect(response).to be_successful
+        next_page = CGI.escapeHTML(receipts_path(year: "2024", search: "alice", page: 2))
+        expect(response.body).to include(next_page)
+
+        get receipts_url, params: { year: "2024", search: "alice", page: 2 }
+        expect(response).to be_successful
+        expect(response.body).to include("Alice Walker")
+        expect(response.body).to include(CGI.escapeHTML(receipts_path(year: "2024", search: "alice", page: 1)))
+      end
+    end
   end
 
   describe "GET /receipts/:id" do

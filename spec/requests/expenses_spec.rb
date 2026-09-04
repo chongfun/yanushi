@@ -27,6 +27,153 @@ RSpec.describe "Expenses", type: :request do
       get expenses_url
       expect(response).to be_successful
     end
+
+    it "renders an unfiltered empty state when nothing is recorded" do
+      sign_in_as(other_user)
+
+      get expenses_url
+      expect(response).to be_successful
+      expect(response.body).to include("No expenses recorded yet")
+      expect(response.body).not_to include("Clear filters")
+    end
+
+    context "with filters" do
+      let(:beta_property) { create(:property, user: user, address: "200 Beta Blvd") }
+
+      let!(:insurance_expense) do
+        Expenses::CreateService.call(
+          property: property,
+          expense_kind: "insurance",
+          amount_cents: 60_000,
+          paid_on: Date.new(2025, 3, 1),
+          vendor_name: "Acme Insurance",
+          description: "Annual policy",
+          external_reference: "POL-77"
+        ).value!.data[:expense]
+      end
+
+      let!(:utilities_expense) do
+        Expenses::CreateService.call(
+          property: beta_property,
+          expense_kind: "utilities",
+          amount_cents: 25_000,
+          paid_on: Date.new(2026, 4, 1),
+          vendor_name: "City Water"
+        ).value!.data[:expense]
+      end
+
+      it "offers the filter fields with labels" do
+        get expenses_url
+        expect(response.body).to include('for="ex-property"')
+        expect(response.body).to include('id="ex-property"')
+        expect(response.body).to include('for="ex-year"')
+        expect(response.body).to include('id="ex-year"')
+        expect(response.body).to include('for="ex-category"')
+        expect(response.body).to include('id="ex-category"')
+        expect(response.body).to include('for="ex-search"')
+        expect(response.body).to include('id="ex-search"')
+        expect(response.body).to include("All properties")
+        expect(response.body).to include("All years")
+        expect(response.body).to include("All categories")
+        expect(response.body).to include(">2025<")
+      end
+
+      it "filters by property" do
+        get expenses_url, params: { property_id: beta_property.id }
+        expect(response).to be_successful
+        expect(response.body).to include("City Water")
+        expect(response.body).not_to include("Acme Insurance")
+        expect(response.body).to include("Clear filters")
+      end
+
+      it "filters by year" do
+        get expenses_url, params: { year: "2025" }
+        expect(response).to be_successful
+        expect(response.body).to include("Acme Insurance")
+        expect(response.body).not_to include("City Water")
+      end
+
+      it "filters by category" do
+        get expenses_url, params: { expense_kind: "utilities" }
+        expect(response).to be_successful
+        expect(response.body).to include("City Water")
+        expect(response.body).not_to include("Acme Insurance")
+      end
+
+      it "searches vendor, description, and reference" do
+        get expenses_url, params: { search: "acme" }
+        expect(response.body).to include("Acme Insurance")
+        expect(response.body).not_to include("City Water")
+
+        get expenses_url, params: { search: "annual pol" }
+        expect(response.body).to include("Acme Insurance")
+        expect(response.body).not_to include("City Water")
+
+        get expenses_url, params: { search: "POL-77" }
+        expect(response.body).to include("Acme Insurance")
+        expect(response.body).not_to include("City Water")
+      end
+
+      it "treats wildcard characters in the search as literals" do
+        get expenses_url, params: { search: "%" }
+        expect(response).to be_successful
+        expect(response.body).to include("No expenses match these filters")
+      end
+
+      it "composes property, year, category, and search filters" do
+        get expenses_url, params: { property_id: property.id, year: "2025", expense_kind: "insurance", search: "acme" }
+        expect(response).to be_successful
+        expect(response.body).to include("Acme Insurance")
+        expect(response.body).not_to include("City Water")
+
+        get expenses_url, params: { property_id: property.id, expense_kind: "utilities" }
+        expect(response).to be_successful
+        expect(response.body).to include("No expenses match these filters")
+        expect(response.body).to include("Clear filters")
+      end
+
+      it "ignores an unknown category, an unparseable year, and a property that is not the user's" do
+        get expenses_url, params: { expense_kind: "not-a-category", year: "nope", property_id: other_property.id }
+        expect(response).to be_successful
+        expect(response.body).to include("Acme Insurance")
+        expect(response.body).to include("City Water")
+      end
+
+      it "totals the filtered list rather than the visible page" do
+        get expenses_url, params: { year: "2025" }
+        expect(response).to be_successful
+        expect(response.body).to include("Total paid")
+        expect(response.body).to include("$600.00")
+        expect(response.body).not_to include("$250.00")
+
+        get expenses_url, params: { property_id: beta_property.id }
+        expect(response.body).to include("$250.00")
+        expect(response.body).not_to include("$600.00")
+      end
+
+      it "excludes voided expenses from the total and reports them separately" do
+        Expenses::VoidService.call(expense: insurance_expense, user: user)
+
+        get expenses_url, params: { year: "2025" }
+        expect(response).to be_successful
+        expect(response.body).to include("Voided (excluded)")
+        expect(response.body).to include("$600.00")
+        expect(response.body).to include("$0.00")
+      end
+
+      it "carries the filters through pagination" do
+        create_list(:expense, 26, property: property, expense_kind: "supplies", paid_on: Date.new(2024, 5, 1), vendor_name: "Bulk Supplies")
+
+        get expenses_url, params: { year: "2024", expense_kind: "supplies" }
+        expect(response).to be_successful
+        expect(response.body).to include(CGI.escapeHTML(expenses_path(year: "2024", expense_kind: "supplies", page: 2)))
+
+        get expenses_url, params: { year: "2024", expense_kind: "supplies", page: 2 }
+        expect(response).to be_successful
+        expect(response.body).to include("Bulk Supplies")
+        expect(response.body).to include(CGI.escapeHTML(expenses_path(year: "2024", expense_kind: "supplies", page: 1)))
+      end
+    end
   end
 
   describe "GET /new" do

@@ -3,7 +3,65 @@
 <div class="max-w-5xl">
   <%= render "money/header", current_tab: :expenses %>
 
+  <!-- GET filters -->
+  <%= form_with url: expenses_path, method: :get, class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
+    <div>
+      <%= f.label :property_id, "Property", class: "yn-label", for: "ex-property" %>
+      <%= f.select :property_id,
+            options_from_collection_for_select(@properties, :id, :address, @filters[:property_id]),
+            { include_blank: "All properties" },
+            class: "yn-select w-52",
+            id: "ex-property" %>
+    </div>
+    <div>
+      <%= f.label :year, "Year", class: "yn-label", for: "ex-year" %>
+      <%= f.select :year,
+            options_for_select(@active_years, @filters[:year]),
+            { include_blank: "All years" },
+            class: "yn-select w-32",
+            id: "ex-year" %>
+    </div>
+    <div>
+      <%= f.label :expense_kind, "Category", class: "yn-label", for: "ex-category" %>
+      <%= f.select :expense_kind,
+            options_for_select(Expense::EXPENSE_KINDS.map { |kind| [ kind.titleize, kind ] }, @filters[:expense_kind]),
+            { include_blank: "All categories" },
+            class: "yn-select w-48",
+            id: "ex-category" %>
+    </div>
+    <div>
+      <%= f.label :search, "Search", class: "yn-label", for: "ex-search" %>
+      <%= f.text_field :search,
+            value: @filters[:search],
+            placeholder: "Vendor, description, or reference",
+            class: "yn-input w-64",
+            id: "ex-search" %>
+    </div>
+    <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
+    <% if @filters.any? %>
+      <%= link_to "Clear filters", expenses_path, class: "yn-btn yn-btn-ghost text-sm" %>
+    <% end %>
+  <% end %>
+
   <% if @expenses.any? %>
+    <!-- Totals for the filtered list, not just this page -->
+    <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6">
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= @total_count %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Total paid</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@paid_total_cents) %></dd>
+      </div>
+      <% if @voided_total_cents > 0 %>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Voided (excluded)</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@voided_total_cents) %></dd>
+        </div>
+      <% end %>
+    </dl>
+
     <div class="overflow-x-auto">
       <table class="yn-table">
         <thead>
@@ -60,12 +118,16 @@
 
     <%= render "shared/pagination",
           page: @page, per_page: @per_page, total_count: @total_count, total_pages: @total_pages,
-          page_url: ->(p) { expenses_path(page: p) } %>
+          page_url: ->(p) { expenses_path(@filters.merge(page: p)) } %>
+  <% elsif @filters.any? %>
+    <%= render "shared/empty_state",
+          title: "No expenses match these filters",
+          body: "Try another property, another year, another category, or a different search term.",
+          action: link_to("Clear filters", expenses_path, class: "yn-btn yn-btn-secondary yn-btn-sm mt-3") %>
   <% else %>
-    <div class="yn-empty">
-      <p class="yn-empty-title">No expenses recorded yet</p>
-      <p class="yn-empty-body">Record property operating expenses to track cash outflows.</p>
-      <%= link_to "Record expense", new_expense_path, class: "yn-btn yn-btn-primary yn-btn-sm mt-3" %>
-    </div>
+    <%= render "shared/empty_state",
+          title: "No expenses recorded yet",
+          body: "Record property operating expenses to track cash outflows.",
+          action: link_to("Record expense", new_expense_path, class: "yn-btn yn-btn-primary yn-btn-sm mt-3") %>
   <% end %>
 </div>

@@ -30,7 +30,7 @@ RSpec.describe "Dashboards", type: :system, js: true do
       tenancy: tenancy,
       charge_kind: "rent",
       amount_cents: 100_000,
-      charge_date: Date.current
+      charge_date: Date.current - 10.days
     )
 
     Expenses::CreateService.call(
@@ -53,9 +53,9 @@ RSpec.describe "Dashboards", type: :system, js: true do
     expect(page).to have_text("Overview")
     expect(page).to have_text("999 Dashboard Ave")
 
-    # Attention item for outstanding balance
+    # Attention item for the overdue balance
     expect(page).to have_text("Needs attention")
-    expect(page).to have_text("John Tenant owes $1,000.00")
+    expect(page).to have_text("John Tenant is $1,000.00 overdue")
     expect(page).to have_text("Open tenancy →")
 
     # Metrics (case insensitive to accommodate CSS text-transform)
@@ -80,20 +80,27 @@ RSpec.describe "Dashboards", type: :system, js: true do
 
   it "executes the complete daily attention journey: Overview → attention item → tenancy action", js: true do
     expect(page).to have_text("Needs attention")
-    expect(page).to have_text("John Tenant owes $1,000.00")
+    expect(page).to have_text("John Tenant is $1,000.00 overdue")
 
     # Click the attention action link to enter tenancy context
     click_link "Open tenancy →"
     expect(page).to have_current_path(tenancy_path(tenancy))
+    # Wait for the tenancy page itself, not a Turbo preview of it: the Overview
+    # attention item also names the tenant.
+    expect(page).to have_css("#tenancy_balance", text: "$1,000.00 due")
     expect(page).to have_text("John Tenant")
+
     # Resolve the balance by recording a receipt
     click_on "Record receipt"
     expect(page).to have_css("dialog#modal[open]")
-    within("dialog#modal") do
-      find("#receipt-payer").find(:option, "John Tenant").select_option
-      fill_in "receipt-method", with: "Zelle"
-      click_button "Record receipt"
+    expect(page).to have_css("#modal-title", text: "Record receipt")
+    expect(page).to have_select("Payer")
+    within("form#receipt-form") do
+      select "John Tenant", from: "receipt-payer"
     end
+    expect(find("#receipt-amount").value.to_f).to eq(1000.0)
+    page.execute_script("document.getElementById('receipt-method').value = 'Zelle'")
+    page.execute_script("document.querySelector('form#receipt-form').requestSubmit()")
 
     expect(page).to have_text("Payment recorded successfully.")
     expect(page).to have_text(/settled/i)
@@ -103,6 +110,6 @@ RSpec.describe "Dashboards", type: :system, js: true do
     visit root_path
     expect(page).to have_current_path(root_path)
     expect(page).to have_text("Nothing needs attention.")
-    expect(page).to have_no_text("John Tenant owes")
+    expect(page).to have_no_text("John Tenant is $1,000.00 overdue")
   end
 end

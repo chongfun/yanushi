@@ -428,5 +428,104 @@ RSpec.describe "Tenancies", type: :request do
       expect(response.body).to include("Holding Deposit")
       expect(response.body).to include("Deposit Received")
     end
+
+    it "offers both downloads in the page header, carrying the period" do
+      get statement_tenancy_path(tenancy)
+
+      expect(response.body).to include("Download PDF")
+      expect(response.body).to include("Download CSV")
+      expect(response.body).to include(statement_tenancy_path(tenancy, format: :pdf, year: Date.current.year))
+      expect(response.body).to include(statement_tenancy_path(tenancy, format: :csv, year: Date.current.year))
+
+      get statement_tenancy_path(tenancy, view: "all")
+
+      expect(response.body).to include(
+        CGI.escapeHTML(statement_tenancy_path(tenancy, format: :pdf, view: "all", year: Date.current.year))
+      )
+    end
+
+    it "downloads the statement as a PDF" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 150_000,
+        charge_date: Date.current
+      )
+
+      get statement_tenancy_path(tenancy, format: :pdf)
+
+      expect(response).to be_successful
+      expect(response.content_type).to eq("application/pdf")
+      expect(response.body).to start_with("%PDF-")
+      expect(response.headers["Content-Disposition"]).to include("tenant-account-statement")
+    end
+
+    it "downloads the statement as a CSV naming the tenancy, the period, and the balances" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 150_000,
+        charge_date: Date.current
+      )
+
+      get statement_tenancy_path(tenancy, format: :csv)
+
+      expect(response).to be_successful
+      expect(response.content_type).to start_with("text/csv")
+      expect(response.body).to include("Tenant account statement")
+      expect(response.body).to include(party.display_name)
+      expect(response.body).to include("Calendar year #{Date.current.year}")
+      expect(response.body).to include("Closing balance")
+      expect(response.body).to include("$1,500.00")
+    end
+
+    it "exports the all-activity view when that is the view being shown" do
+      get statement_tenancy_path(tenancy, view: "all", format: :pdf)
+
+      expect(response).to be_successful
+      expect(response.headers["Content-Disposition"]).to include("tenancy-financial-activity")
+    end
+
+    it "names a custom period in the download filename" do
+      get statement_tenancy_path(tenancy, from: "2026-02-01", through: "2026-03-31", format: :csv)
+
+      expect(response).to be_successful
+      expect(response.headers["Content-Disposition"]).to include("2026-02-01-to-2026-03-31")
+      expect(response.body).to include("Feb 1, 2026 through Mar 31, 2026")
+    end
+
+    it "names an open-ended period in the download filename" do
+      get statement_tenancy_path(tenancy, through: "2026-03-31", format: :csv)
+
+      expect(response).to be_successful
+      expect(response.headers["Content-Disposition"]).to include("opening-to-2026-03-31")
+    end
+
+    it "refuses to export a range it cannot report on and says why" do
+      get statement_tenancy_path(tenancy, from: "2026-12-31", through: "2026-01-01", format: :pdf)
+
+      expect(response).to redirect_to(statement_tenancy_path(tenancy))
+      follow_redirect!
+      expect(response.body).to include("Unable to generate financial report")
+
+      get statement_tenancy_path(tenancy, from: "2026-12-31", through: "2026-01-01", format: :csv)
+      expect(response).to redirect_to(statement_tenancy_path(tenancy))
+    end
+
+    it "disables the downloads while the range is impossible" do
+      get statement_tenancy_path(tenancy, from: "2026-12-31", through: "2026-01-01")
+
+      expect(response.body).to include("Download PDF")
+      expect(response.body).to include("aria-disabled=\"true\"")
+      expect(response.body).not_to include(statement_tenancy_path(tenancy, format: :pdf))
+    end
+
+    it "returns 404 when exporting another user's tenancy" do
+      other_tenancy = create(:tenancy, rentable_unit: other_unit)
+
+      get statement_tenancy_path(other_tenancy, format: :pdf)
+
+      expect(response).to have_http_status(:not_found)
+    end
   end
 end

@@ -16,7 +16,7 @@
     <div>
       <%= f.label :year, "Year", class: "yn-label", for: "ma-year" %>
       <%= f.select :year,
-            options_for_select(@active_years, @activity_result.date_range.year),
+            options_for_select(@active_years, @date_range.year),
             {},
             class: "yn-select w-32",
             id: "ma-year" %>
@@ -25,6 +25,28 @@
     <% if @selected_property_id.present? || params[:year].present? || params[:from].present? || params[:through].present? %>
       <%= link_to "Clear filters", money_path, class: "yn-btn yn-btn-ghost text-sm" %>
     <% end %>
+  <% end %>
+
+  <% if @date_range.valid? %>
+    <!-- Period totals for the current filter -->
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6">
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@summary.income_recognized_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@summary.total_expenses_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@summary.net_income_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net cash movement</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@summary.net_cash_movement_cents) %></dd>
+      </div>
+    </dl>
   <% end %>
 
   <% if @activity_result.rows.any? %>

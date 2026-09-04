@@ -1,0 +1,7 @@
+class SearchController < ApplicationController
+  @min_query_length: Integer
+  @query: String
+  @result: Search::PortfolioQuery::Result?
+
+  def show: () -> void
+end

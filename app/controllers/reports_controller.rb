@@ -5,5 +5,6 @@ class ReportsController < ApplicationController
     @year = tax_year_obj.to_i
     @active_years = Accounting::ActiveYearsQuery.call(user: authenticated_user, additional_years: [ @year, previous_year, Date.current.year ])
     @statuses = Reports::ScheduleEStatusesQuery.call(user: authenticated_user, tax_year: @year)
+    @needs_work_statuses, @ready_statuses = @statuses.partition(&:needs_work?)
   end
 end

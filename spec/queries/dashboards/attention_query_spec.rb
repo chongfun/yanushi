@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe Dashboards::AttentionQuery do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:user) { create(:user) }
   let(:other_user) { create(:user) }
 
@@ -13,6 +15,12 @@ RSpec.describe Dashboards::AttentionQuery do
     create(:rent_term, tenancy: tenancy, amount_cents: 200_000, effective_from: Date.new(2025, 1, 1), effective_until: nil)
   end
   let(:party) { create(:party, user: user, display_name: "Jane Smith") }
+
+  # Both the overdue rule and the Schedule E filing year key off today, so pin
+  # the clock; the block form guarantees it is restored for later examples.
+  around do |example|
+    travel_to(Date.new(2026, 9, 15)) { example.run }
+  end
 
   before do
     Accounting::ChartOfAccounts.ensure_for(user)
@@ -68,7 +76,7 @@ RSpec.describe Dashboards::AttentionQuery do
       expect(item.severity).to eq(:danger)
     end
 
-    it "returns balance_due items for active tenancies with positive balance" do
+    it "returns a balance_due item once a charge is past the tenancy's grace period" do
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "rent",
@@ -81,10 +89,54 @@ RSpec.describe Dashboards::AttentionQuery do
 
       item = items.first
       expect(item.kind).to eq(:balance_due)
-      expect(item.title).to eq("Jane Smith owes $350.00")
-      expect(item.description).to include(property.address, "Unit 2", "balance outstanding")
+      expect(item.title).to eq("Jane Smith is $350.00 overdue")
+      expect(item.description).to eq("#{property.address} · Unit 2")
       expect(item.path).to eq("/tenancies/#{tenancy.id}")
       expect(item.severity).to eq(:warn)
+    end
+
+    it "stays silent while the whole balance is inside the tenancy's grace period" do
+      expect(tenancy.late_period_days).to eq(5)
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 200_000,
+        charge_date: Date.current
+      )
+
+      expect(tenancy.current_balance_cents).to eq(200_000)
+      expect(described_class.call(user: user)).to eq([])
+    end
+
+    it "stays silent on the last day of the grace period" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 5_000,
+        charge_date: Date.current - 5.days
+      )
+
+      expect(described_class.call(user: user)).to eq([])
+    end
+
+    it "names only the overdue part and says how much of the balance is not yet due" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 7_500,
+        charge_date: Date.current - 30.days
+      )
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 200_000,
+        charge_date: Date.current
+      )
+
+      items = described_class.call(user: user)
+      expect(items.size).to eq(1)
+      expect(items.first.title).to eq("Jane Smith is $75.00 overdue")
+      expect(items.first.description).to eq("#{property.address} · Unit 2 · $2,000.00 more not yet due")
     end
 
     it "isolates items strictly to the requested user" do
@@ -146,46 +198,46 @@ RSpec.describe Dashboards::AttentionQuery do
       unit_p = create(:rentable_unit, property: property, name: "Unit Past")
       past_t = create(:tenancy, rentable_unit: unit_p, agreement_type: "fixed_term", commencement_date: Date.current - 1.year, termination_date: Date.current - 1.month)
       items = described_class.call(user: user, tenancies: [ past_t ], balances: { past_t.id => 10_000 })
-      expect(items.first.description).to include("Past tenancy · balance outstanding")
+      expect(items.first.description).to include("Past tenancy")
     end
 
     it "handles upcoming tenancy with commencement_date" do
       unit_u = create(:rentable_unit, property: property, name: "Unit Up")
       up_t = create(:tenancy, rentable_unit: unit_u, agreement_type: "fixed_term", commencement_date: Date.current + 1.month)
       items = described_class.call(user: user, tenancies: [ up_t ], balances: { up_t.id => 10_000 })
-      expect(items.first.description).to include("Upcoming tenancy · balance outstanding")
+      expect(items.first.description).to include("Upcoming tenancy")
     end
 
-    it "surfaces positive balance from a terminated/past tenancy" do
+    it "surfaces overdue money from a terminated/past tenancy" do
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "late_fee",
         amount_cents: 80_000,
-        charge_date: Date.current - 5.days
+        charge_date: Date.current - 10.days
       )
       tenancy.update!(termination_date: Date.current - 1.day)
 
       items = described_class.call(user: user)
       balance_item = items.find { |i| i.kind == :balance_due }
       expect(balance_item).not_to be_nil
-      expect(balance_item.title).to eq("Jane Smith owes $800.00")
-      expect(balance_item.description).to include("Past tenancy · balance outstanding")
+      expect(balance_item.title).to eq("Jane Smith is $800.00 overdue")
+      expect(balance_item.description).to include("Past tenancy")
     end
 
     it "handles tenancies without assigned parties" do
       unit_x = create(:rentable_unit, property: property, name: "Unit X")
-      orphan_tenancy = create(:tenancy, rentable_unit: unit_x, agreement_type: "month_to_month", commencement_date: Date.current)
+      orphan_tenancy = create(:tenancy, rentable_unit: unit_x, agreement_type: "month_to_month", commencement_date: Date.current - 1.month)
       Charges::CreateService.call(
         tenancy: orphan_tenancy,
         charge_kind: "late_fee",
         amount_cents: 25_000,
-        charge_date: Date.current
+        charge_date: Date.current - 10.days
       )
 
       items = described_class.call(user: user)
       orphan_item = items.find { |i| i.path.include?(orphan_tenancy.id.to_s) }
       expect(orphan_item).not_to be_nil
-      expect(orphan_item.title).to eq("Tenant owes $250.00")
+      expect(orphan_item.title).to eq("Tenant is $250.00 overdue")
     end
 
     it "surfaces positive balance from an upcoming tenancy with Upcoming tenancy description" do
@@ -198,14 +250,14 @@ RSpec.describe Dashboards::AttentionQuery do
         tenancy: upcoming_tenancy,
         charge_kind: "late_fee",
         amount_cents: 25_000,
-        charge_date: Date.current
+        charge_date: Date.current - 10.days
       )
 
       items = described_class.call(user: user)
       upcoming_item = items.find { |i| i.path.include?(upcoming_tenancy.id.to_s) }
       expect(upcoming_item).not_to be_nil
-      expect(upcoming_item.title).to eq("Future Tenant owes $250.00")
-      expect(upcoming_item.description).to include("Upcoming tenancy · balance outstanding")
+      expect(upcoming_item.title).to eq("Future Tenant is $250.00 overdue")
+      expect(upcoming_item.description).to include("Upcoming tenancy")
     end
 
     it "restricts balance due debtor name to active tenants, excluding guarantors and former tenants" do
@@ -228,15 +280,140 @@ RSpec.describe Dashboards::AttentionQuery do
         tenancy: turn_tenancy,
         charge_kind: "rent",
         amount_cents: 50_000,
-        charge_date: Date.current
+        charge_date: Date.current - 10.days
       )
 
       items = described_class.call(user: user)
       turn_item = items.find { |i| i.path.include?(turn_tenancy.id.to_s) }
       expect(turn_item).not_to be_nil
-      expect(turn_item.title).to eq("Bob Present owes $500.00")
+      expect(turn_item.title).to eq("Bob Present is $500.00 overdue")
       expect(turn_item.title).not_to include("Alice")
       expect(turn_item.title).not_to include("Gary")
+    end
+  end
+
+  describe "unresolved Schedule E work" do
+    let(:filing_year) { Date.current.year - 1 }
+
+    # Ledger activity in `year` for `target`, plus a clean rent receipt so the
+    # property is Schedule E "ready" once it has a tax profile.
+    def seed_activity(target, year: filing_year)
+      target_unit = create(:rentable_unit, property: target, name: "Filing unit #{target.id}")
+      target_tenancy = create(
+        :tenancy,
+        rentable_unit: target_unit,
+        commencement_date: Date.new(year, 1, 1),
+        termination_date: Date.new(year, 12, 31)
+      )
+      create(:rent_term, tenancy: target_tenancy, amount_cents: 100_000, effective_from: Date.new(year, 1, 1))
+      Receipts::CreateService.call(
+        tenancy: target_tenancy,
+        payer_party: create(:party, user: user),
+        amount_cents: 100_000,
+        received_on: Date.new(year, 6, 1),
+        payment_method: "check"
+      )
+    end
+
+    def add_tax_profile(target, year: filing_year)
+      create(
+        :property_tax_profile,
+        property: target,
+        tax_year: year,
+        schedule_e_property_type: "single_family_residence"
+      )
+    end
+
+    it "raises no item when no year before this one has ledger activity" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "late_fee",
+        amount_cents: 25_000,
+        charge_date: Date.current - 10.days
+      )
+
+      expect(described_class.call(user: user).map(&:kind)).to eq([ :balance_due ])
+    end
+
+    it "raises no item when every property is ready for the filing year" do
+      seed_activity(property)
+      add_tax_profile(property)
+
+      expect(described_class.call(user: user)).to eq([])
+    end
+
+    it "raises an item when a property has no tax profile for the filing year" do
+      seed_activity(property)
+
+      items = described_class.call(user: user)
+      expect(items.map(&:kind)).to eq([ :schedule_e_review ])
+
+      item = items.first
+      expect(item.title).to eq("1 property is not ready for Schedule E")
+      expect(item.description).to eq("#{filing_year} tax year · 1 property needs a tax profile")
+      expect(item.path).to eq("/reports?year=#{filing_year}")
+      expect(item.severity).to eq(:warn)
+    end
+
+    it "raises an item when a property has unresolved review items" do
+      add_tax_profile(property)
+      entry = create(
+        :journal_entry,
+        user: user,
+        occurred_on: Date.new(filing_year, 9, 12),
+        event_type: "deposit_applied",
+        source: property
+      )
+      create(:posting, journal_entry: entry, property: property, amount_cents: -50_000, account: user.accounts.find_by!(key: "tenant_receivable"))
+      create(:posting, journal_entry: entry, property: property, amount_cents: 50_000, account: user.accounts.find_by!(key: "security_deposits_held"))
+
+      items = described_class.call(user: user)
+      expect(items.map(&:kind)).to eq([ :schedule_e_review ])
+      expect(items.first.title).to eq("1 property is not ready for Schedule E")
+      expect(items.first.description).to eq("#{filing_year} tax year · 1 item needs review")
+    end
+
+    it "aggregates every unready property into one item" do
+      seed_activity(property)
+      seed_activity(create(:property, user: user, address: "9 Elm St"))
+
+      items = described_class.call(user: user).select { |i| i.kind == :schedule_e_review }
+      expect(items.size).to eq(1)
+      expect(items.first.title).to eq("2 properties are not ready for Schedule E")
+      expect(items.first.description).to eq("#{filing_year} tax year · 2 properties need a tax profile")
+    end
+
+    it "files against the most recent completed year that has ledger activity" do
+      seed_activity(property, year: filing_year - 2)
+
+      item = described_class.call(user: user).find { |i| i.kind == :schedule_e_review }
+      expect(item).not_to be_nil
+      expect(item.path).to eq("/reports?year=#{filing_year - 2}")
+      expect(item.description).to start_with("#{filing_year - 2} tax year")
+    end
+
+    it "ignores another user's unready properties" do
+      seed_activity(property)
+      add_tax_profile(property)
+      other_property = create(:property, user: other_user)
+      other_unit = create(:rentable_unit, property: other_property)
+      other_tenancy = create(
+        :tenancy,
+        rentable_unit: other_unit,
+        commencement_date: Date.new(filing_year, 1, 1),
+        termination_date: Date.new(filing_year, 12, 31)
+      )
+      create(:rent_term, tenancy: other_tenancy, amount_cents: 100_000, effective_from: Date.new(filing_year, 1, 1))
+      Receipts::CreateService.call(
+        tenancy: other_tenancy,
+        payer_party: create(:party, user: other_user),
+        amount_cents: 100_000,
+        received_on: Date.new(filing_year, 6, 1),
+        payment_method: "check"
+      )
+
+      expect(described_class.call(user: user)).to eq([])
+      expect(described_class.call(user: other_user).map(&:kind)).to eq([ :schedule_e_review ])
     end
   end
 end

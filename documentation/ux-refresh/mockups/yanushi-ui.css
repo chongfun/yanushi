@@ -493,3 +493,107 @@ dialog.modal-dialog::backdrop {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Turbo Drive progress bar. Turbo ships a bright blue that belongs to no part
+ * of this palette; the bar is the same accent as `.yn-link` and focus rings.
+ * ------------------------------------------------------------------------ */
+
+.turbo-progress-bar {
+  height: 2px;
+  background: var(--yn-accent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Print. The statement, the Schedule E worksheet, and a receipt are documents
+ * someone hands to a tenant or an accountant, so printing has to drop the app
+ * around the page: navigation, dialogs, toasts, and every affordance that only
+ * means something to a pointer. Deliberately general — it targets the shell
+ * and the shared table atoms, never one page.
+ * ------------------------------------------------------------------------ */
+
+@media print {
+  /* Chrome, navigation, and transient surfaces. A print context usually
+   * measures narrower than the `lg` breakpoint, so it is the mobile top bar
+   * that survives rather than the sidebar: it is matched by its own
+   * `lg:hidden` class, and the sidebar is named anyway for the contexts that
+   * measure wider. */
+  body > a[href="#main"],
+  .yn-sidebar,
+  header.lg\:hidden,
+  #navigation-drawer,
+  #flash-messages,
+  #modal-container,
+  dialog,
+  .yn-btn,
+  .yn-menu,
+  details[data-controller="menu"] {
+    display: none !important;
+  }
+
+  /* Paper is white and flat. */
+  html,
+  body.yn-body {
+    background: #fff !important;
+    color: var(--yn-ink);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  main#main {
+    padding: 0 !important;
+  }
+
+  /* Links are plain text once printed, but they must stay readable. */
+  a,
+  a:visited {
+    color: var(--yn-ink) !important;
+    text-decoration: none;
+  }
+
+  /* Tables are the payload of every printable page. Scroll containers must
+   * release their content, headers repeat on each sheet, and rows stay whole
+   * instead of splitting across a page break. */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    overflow: visible !important;
+  }
+
+  .yn-table {
+    width: 100% !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  tr,
+  img,
+  .yn-alert,
+  .yn-empty {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+}

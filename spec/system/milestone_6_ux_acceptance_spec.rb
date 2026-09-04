@@ -373,11 +373,14 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
     end
 
     it "executes the complete daily attention journey: Overview → attention item → tenancy action (P3 acceptance)", js: true do
+      # Dated past the tenancy's grace period, since the attention queue now
+      # raises only money that is actually late.
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "late_fee",
         amount_cents: 50_000,
-        charge_date: Date.current
+        charge_date: Date.current - 30.days,
+        due_on: Date.current - 30.days
       )
 
       balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: tenancy, as_of: Date.current)
@@ -385,7 +388,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
 
       visit root_path
       expect(page).to have_text("Needs attention")
-      expect(page).to have_text("Alice Tenant owes $#{amount_dollars}")
+      expect(page).to have_text("Alice Tenant is $#{amount_dollars} overdue")
 
       # Click the attention action link to enter tenancy context
       click_link "Open tenancy →"
@@ -409,7 +412,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       within("aside.yn-sidebar") { click_on "Overview" }
       expect(page).to have_current_path(root_path)
       expect(page).to have_text("Nothing needs attention.")
-      expect(page).to have_no_text("Alice Tenant owes")
+      expect(page).to have_no_text("Alice Tenant is")
     end
 
     it "renders toast notifications with proper ARIA live status" do

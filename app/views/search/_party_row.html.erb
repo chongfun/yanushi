@@ -1,0 +1,14 @@
+<%# One party result. The secondary line shows the fields the search reads, so
+    it is clear why a row matched. Local: party %>
+<%
+  details = [ party.party_type.humanize ]
+  aliases = party.party_aliases.map(&:alias_name)
+  details << "aka #{aliases.to_sentence}" if aliases.any?
+  details << party.email_address if party.email_address.present?
+  details << party.phone_number if party.phone_number.present?
+%>
+<li class="py-2.5">
+  <%= link_to party.display_name, party_path(party),
+        class: "text-sm font-medium text-stone-900 no-underline hover:underline" %>
+  <p class="text-[13px] text-stone-500"><%= details.join(" · ") %></p>
+</li>

@@ -32,6 +32,33 @@ RSpec.describe "Reports", type: :request do
         expect(response.body).not_to include("888 Other Way")
       end
 
+      it "groups the properties that need work above the ready ones" do
+        previous_year = Date.current.year - 1
+        create(:property, user: user, address: "999 Zebra Way")
+        create(:property, user: user, address: "888 Yak St")
+        property_ready = create(:property, user: user, address: "111 Ready Ave")
+        create(
+          :property_tax_profile,
+          property: property_ready,
+          tax_year: previous_year,
+          schedule_e_property_type: "single_family_residence"
+        )
+
+        get reports_url
+        expect(response).to be_successful
+
+        body = response.body
+        expect(body).to include("Needs work")
+        expect(body).to include("2<span class=\"sr-only\"> properties need work</span>")
+
+        work_heading = body.index("reports-work-heading")
+        ready_heading = body.index("reports-ready-heading")
+        expect(work_heading).to be < body.index("888 Yak St")
+        expect(body.index("888 Yak St")).to be < body.index("999 Zebra Way")
+        expect(body.index("999 Zebra Way")).to be < ready_heading
+        expect(ready_heading).to be < body.index("111 Ready Ave")
+      end
+
       it "renders empty state when user has no properties" do
         get reports_url
         expect(response).to be_successful
@@ -67,6 +94,7 @@ RSpec.describe "Reports", type: :request do
         expect(response.body).to include("selected=\"selected\" value=\"2024\"")
         expect(response.body).to include("202 Pine St")
         expect(response.body).to include("Ready")
+        expect(response.body).to include("No properties need work for 2024.")
       end
     end
 

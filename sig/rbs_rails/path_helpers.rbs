@@ -11,6 +11,7 @@ interface ::_RbsRailsPathHelpers
   def money_path: (*untyped) -> ::String
   def inbox_path: (*untyped) -> ::String
   def reports_path: (*untyped) -> ::String
+  def search_path: (*untyped) -> ::String
   def property_tenancies_path: (*untyped) -> ::String
   def property_activity_path: (*untyped) -> ::String
   def property_tax_path: (*untyped) -> ::String
@@ -134,6 +135,7 @@ interface ::_RbsRailsPathHelpers
   def money_url: (*untyped) -> ::String
   def inbox_url: (*untyped) -> ::String
   def reports_url: (*untyped) -> ::String
+  def search_url: (*untyped) -> ::String
   def property_tenancies_url: (*untyped) -> ::String
   def property_activity_url: (*untyped) -> ::String
   def property_tax_url: (*untyped) -> ::String

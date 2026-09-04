@@ -79,6 +79,38 @@ RSpec.describe Reports::ScheduleEStatusesQuery do
       expect(status_ready.net_income_cents).to eq(100_000)
     end
 
+    it "orders needs_profile, then needs_review, then ready, with address as the tiebreak" do
+      # Addresses chosen so alphabetical order disagrees with state order.
+      ready_first_alphabetically = create(:property, user: user, address: "001 Ready Ave")
+      create(
+        :property_tax_profile,
+        property: ready_first_alphabetically,
+        tax_year: 2025,
+        schedule_e_property_type: "single_family_residence"
+      )
+      create(:property, user: user, address: "999 Zebra Way")
+
+      statuses = described_class.call(user: user, tax_year: 2025)
+
+      expect(statuses.map { |status| [ status.state, status.property.address ] }).to eq(
+        [
+          [ :needs_profile, "123 Main St" ],
+          [ :needs_profile, "999 Zebra Way" ],
+          [ :needs_review, "456 Oak Ave" ],
+          [ :ready, "001 Ready Ave" ],
+          [ :ready, "742 Evergreen Terrace" ]
+        ]
+      )
+    end
+
+    it "flags the states that still require action" do
+      statuses = described_class.call(user: user, tax_year: 2025).index_by(&:state)
+
+      expect(statuses[:needs_profile]).to be_needs_work
+      expect(statuses[:needs_review]).to be_needs_work
+      expect(statuses[:ready]).not_to be_needs_work
+    end
+
     it "enforces cross-user isolation" do
       other_property = create(:property, user: other_user)
       create(

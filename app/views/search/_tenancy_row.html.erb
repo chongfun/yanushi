@@ -1,0 +1,26 @@
+<%# One tenancy result. Local: tenancy
+    Everything read here is preloaded by Search::PortfolioQuery. %>
+<%
+  unit = tenancy.rentable_unit
+  property = unit.property
+  tenant_names = tenancy.all_tenant_parties.map(&:display_name)
+  status_text, status_tone = if tenancy.active?
+    [ "Active", :ok ]
+  elsif tenancy.upcoming?
+    [ "Upcoming", :warn ]
+  else
+    [ "Ended", :neutral ]
+  end
+  started_on = tenancy.commencement_date.strftime("%b %d, %Y")
+  period = tenancy.termination_date ? "#{started_on} – #{tenancy.termination_date.strftime("%b %d, %Y")}" : "#{started_on} onward"
+%>
+<li class="py-2.5">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+    <%= link_to "#{property.address} · #{unit.display_name}", tenancy_path(tenancy),
+          class: "text-sm font-medium text-stone-900 no-underline hover:underline" %>
+    <%= render "shared/status", text: status_text, tone: status_tone, size: :sm %>
+  </div>
+  <p class="text-[13px] text-stone-500">
+    <%= tenant_names.any? ? tenant_names.to_sentence : "No tenants recorded" %> &middot; <%= period %>
+  </p>
+</li>

@@ -19,7 +19,8 @@ module Dashboards
       items = [] # : Array[AttentionItem]
       items.concat(inbox_review_items)
       items.concat(import_failed_items)
-      items.concat(balance_due_items)
+      items.concat(overdue_balance_items)
+      items.concat(schedule_e_items)
       items
     end
 
@@ -79,7 +80,11 @@ module Dashboards
         end
       end
 
-      def balance_due_items
+      # Only money that is actually late belongs here. A positive balance on its
+      # own is normal for the days between a rent charge posting and the payment
+      # clearing; surfacing it would fill this list every month and teach the
+      # owner to ignore it. The portfolio summary still counts every balance.
+      def overdue_balance_items
         u = user
         return [] unless u
 
@@ -90,10 +95,15 @@ module Dashboards
         return [] if user_tenancies.empty?
 
         effective_balances = balances || Accounting::TenancyBalancesQuery.call(tenancies: user_tenancies)
+        overdue_by_tenancy = Tenancies::OverdueQuery.call(
+          tenancies: user_tenancies,
+          balances: effective_balances
+        )
 
         user_tenancies.filter_map do |tenancy|
           balance_cents = effective_balances[tenancy.id] || 0
-          next unless balance_cents.positive?
+          overdue_cents = overdue_by_tenancy[tenancy.id] || 0
+          next unless overdue_cents.positive?
 
           as_of_date = if tenancy.active?
             Date.current
@@ -109,22 +119,74 @@ module Dashboards
           tenant_label = party_names ? party_names.to_sentence : "Tenant"
           property_name = tenancy.rentable_unit&.property&.address || "Property"
           unit_name = tenancy.rentable_unit&.name || "Unit"
-          desc_suffix = if tenancy.active?
-            "balance outstanding"
-          elsif tenancy.upcoming?
-            "Upcoming tenancy · balance outstanding"
-          else
-            "Past tenancy · balance outstanding"
+
+          parts = [ property_name, unit_name ] # : Array[String]
+          if tenancy.upcoming?
+            parts << "Upcoming tenancy"
+          elsif !tenancy.active?
+            parts << "Past tenancy"
+          end
+          not_yet_due_cents = balance_cents - overdue_cents
+          if not_yet_due_cents.positive?
+            parts << "#{FormattingHelper.format_money_cents(not_yet_due_cents)} more not yet due"
           end
 
           AttentionItem.new(
             kind: :balance_due,
-            title: "#{tenant_label} owes #{FormattingHelper.format_money_cents(balance_cents)}",
-            description: "#{property_name} · #{unit_name} · #{desc_suffix}",
+            title: "#{tenant_label} is #{FormattingHelper.format_money_cents(overdue_cents)} overdue",
+            description: parts.join(" · "),
             path: Rails.application.routes.url_helpers.tenancy_path(tenancy),
             severity: :warn
           )
         end
+      end
+
+      # PRD 8.2: unresolved Schedule E work, as one aggregate item so the queue
+      # stays readable. The year that matters is the one being filed: the most
+      # recent year with ledger activity that is already over.
+      def schedule_e_items
+        u = user
+        return [] unless u
+
+        year = filing_tax_year(u)
+        return [] unless year
+
+        needs_work = Reports::ScheduleEStatusesQuery.call(user: u, tax_year: year).select(&:needs_work?)
+        return [] if needs_work.empty?
+
+        property_count = needs_work.size
+        title = if property_count == 1
+          "1 property is not ready for Schedule E"
+        else
+          "#{property_count} properties are not ready for Schedule E"
+        end
+
+        parts = [ "#{year} tax year" ] # : Array[String]
+        profile_count = needs_work.count { |status| status.state == :needs_profile }
+        if profile_count.positive?
+          parts << (profile_count == 1 ? "1 property needs a tax profile" : "#{profile_count} properties need a tax profile")
+        end
+        review_count = needs_work.sum { |status| status.unresolved_review_count }
+        if review_count.positive?
+          parts << (review_count == 1 ? "1 item needs review" : "#{review_count} items need review")
+        end
+
+        [
+          AttentionItem.new(
+            kind: :schedule_e_review,
+            title: title,
+            description: parts.join(" · "),
+            path: Rails.application.routes.url_helpers.reports_path(year: year),
+            severity: :warn
+          )
+        ]
+      end
+
+      # The most recent year with ledger activity that is earlier than this one.
+      # Accounting::ActiveYearsQuery always includes the current year, so the
+      # filter is what makes this "a year the owner would be filing".
+      def filing_tax_year(u)
+        Accounting::ActiveYearsQuery.call(user: u).select { |year| year < Date.current.year }.max
       end
   end
 end

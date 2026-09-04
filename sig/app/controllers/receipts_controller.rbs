@@ -1,14 +1,21 @@
 class ReceiptsController < ApplicationController
+  include IndexFilters
   @receipts: ActiveRecord::Relation
   @receipt: Receipt
   @replacement_receipt: Receipt
   @tenancy: Tenancy?
   @tenancies: ActiveRecord::Relation
   @parties: ActiveRecord::Relation
+  @properties: Property::ActiveRecord_Relation
+  @active_years: Array[Integer]
+  @filter_range: Accounting::DateRange?
+  @filters: Hash[Symbol, untyped]
   @page: Integer
   @per_page: Integer
   @total_count: Integer
   @total_pages: Integer
+  @received_total_cents: Integer
+  @voided_total_cents: Integer
   @balance_cents: Integer?
   @recent_activity_rows: Array[Accounting::TenantReceivableActivityQuery::StatementRow]
 
@@ -22,6 +29,7 @@ class ReceiptsController < ApplicationController
 
   private
 
+  def filtered_receipts: () -> untyped
   def set_tenancy: () -> void
   def set_receipt: () -> void
   def receipt_params: () -> ActionController::Parameters

@@ -7,6 +7,12 @@
     <%= link_to "Yanushi", root_path, class: "text-[15px] font-semibold tracking-tight text-stone-900 no-underline" %>
   </div>
 
+  <!-- Search across the portfolio. A tool, not one of the five primary
+       destinations (PRD 6.1), so it sits above navigation, not inside it. -->
+  <div class="px-3 pb-3">
+    <%= render "search/field", field_id: "sidebar-search-q", label: "Search" %>
+  </div>
+
   <!-- Primary and secondary navigation -->
   <%= render "shared/navigation", badge_id: "sidebar_inbox_badge" %>
 

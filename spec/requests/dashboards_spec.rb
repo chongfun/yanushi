@@ -36,13 +36,40 @@ RSpec.describe "Dashboards", type: :request do
           tenancy: tenancy,
           charge_kind: "rent",
           amount_cents: 35_000,
-          charge_date: Date.current
+          charge_date: Date.current - 10.days
         )
 
         get root_url
         expect(response).to be_successful
-        expect(response.body).to include("Jane Smith owes $350.00")
+        expect(response.body).to include("Jane Smith is $350.00 overdue")
         expect(response.body).to include(tenancy_path(tenancy))
+      end
+
+      it "renders the Schedule E attention item pointing at the filing year" do
+        filing_year = Date.current.year - 1
+        property = create(:property, user: user, address: "77 Filing Way")
+        unit = create(:rentable_unit, property: property, name: "Unit 1")
+        tenancy = create(
+          :tenancy,
+          rentable_unit: unit,
+          commencement_date: Date.new(filing_year, 1, 1),
+          termination_date: Date.new(filing_year, 12, 31)
+        )
+        create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.new(filing_year, 1, 1))
+        Receipts::CreateService.call(
+          tenancy: tenancy,
+          payer_party: create(:party, user: user),
+          amount_cents: 100_000,
+          received_on: Date.new(filing_year, 6, 1),
+          payment_method: "check"
+        )
+
+        get root_url
+        expect(response).to be_successful
+        expect(response.body).to include("1 property is not ready for Schedule E")
+        expect(response.body).to include("#{filing_year} tax year · 1 property needs a tax profile")
+        expect(response.body).to include("Open Reports")
+        expect(response.body).to include(reports_path(year: filing_year))
       end
     end
 

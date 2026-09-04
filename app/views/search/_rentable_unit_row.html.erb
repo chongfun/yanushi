@@ -1,0 +1,9 @@
+<%# One unit result. A unit has no page of its own: it lives on the property
+    workspace, which lists every unit and its occupancy. Local: rentable_unit %>
+<li class="py-2.5">
+  <%= link_to rentable_unit.display_name, property_path(rentable_unit.property),
+        class: "text-sm font-medium text-stone-900 no-underline hover:underline" %>
+  <p class="text-[13px] text-stone-500">
+    <%= rentable_unit.property.address %><%= " · Deactivated" unless rentable_unit.active? %>
+  </p>
+</li>

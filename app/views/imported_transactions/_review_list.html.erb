@@ -1,6 +1,10 @@
 <%# Locals: transactions, selected_transaction, total_count (optional, the full
     queue size when it exceeds the rendered page) %>
-<div class="lg:w-96 lg:shrink-0 yn-surface divide-y divide-stone-200 overflow-hidden" data-controller="responsive-frame" id="inbox_review_queue_list">
+<% kbd_class = "rounded border border-stone-300 bg-white px-1 py-0.5 text-[12px] font-medium text-stone-700" %>
+<div class="lg:w-96 lg:shrink-0 yn-surface divide-y divide-stone-200 overflow-hidden"
+     data-controller="responsive-frame"
+     data-action="keydown@window->responsive-frame#handleKeydown"
+     id="inbox_review_queue_list">
   <% transactions.each do |txn| %>
     <%= render "imported_transactions/review_row", transaction: txn, selected: (txn.id == selected_transaction&.id) %>
   <% end %>
@@ -10,4 +14,12 @@
       Showing the first <span class="tabular-nums"><%= transactions.size %></span> of <span class="tabular-nums"><%= total %></span>. Confirm these to see the rest.
     </p>
   <% end %>
+  <%# Revealed by the responsive-frame controller at lg and up; hidden without
+      JavaScript, where the shortcuts do not exist. %>
+  <p class="hidden px-4 py-3 text-[13px] text-stone-500 m-0" data-responsive-frame-target="hint">
+    Keyboard:
+    <span class="whitespace-nowrap"><kbd class="<%= kbd_class %>">j</kbd> or <kbd class="<%= kbd_class %>">Down</kbd> next,</span>
+    <span class="whitespace-nowrap"><kbd class="<%= kbd_class %>">k</kbd> or <kbd class="<%= kbd_class %>">Up</kbd> previous,</span>
+    <span class="whitespace-nowrap"><kbd class="<%= kbd_class %>">c</kbd> to confirm.</span>
+  </p>
 </div>
