@@ -34,6 +34,7 @@
     <%= render "imported_transactions/review_view",
                transactions: @reviewable_transactions,
                selected_transaction: @selected_transaction,
+               total_count: @review_count,
                parties: @parties,
                tenancies: @tenancies,
                party_tenancies_map: @party_tenancies_map,

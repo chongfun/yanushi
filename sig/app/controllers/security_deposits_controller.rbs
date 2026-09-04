@@ -4,6 +4,12 @@ class SecurityDepositsController < ApplicationController
   @transactions: untyped
   @parties: untyped
   @active_charges: untyped
+  @held_cents: Integer
+  @remaining_required_cents: Integer
+  @funding_status: String
+  @balance_cents: Integer
+  @failed_action: Symbol?
+  @failed_error: String?
 
   def show: () -> void
   def new: () -> void
@@ -15,6 +21,8 @@ class SecurityDepositsController < ApplicationController
   def apply: () -> void
 
   private
+  def load_show_data: () -> void
+  def render_deposit_action_failure: (Symbol action, String error) -> void
   def set_tenancy: () -> void
   def set_security_deposit: () -> void
   def security_deposit_params: () -> ActionController::Parameters

@@ -1,6 +1,17 @@
-<% content_for :title, "Editing #{@party.display_name}" %>
+<% content_for :title, "Edit #{@party.display_name}" %>
 
-<div class="max-w-2xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Editing <%= @party.display_name %></h1>
-  <%= render "form", party: @party %>
+<div class="max-w-2xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Parties", parties_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to @party.display_name, party_path(@party), class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "Edit #{@party.display_name}",
+        meta: @party.party_type.humanize %>
+  <div class="yn-surface p-6">
+    <%= render "form", party: @party %>
+  </div>
 </div>

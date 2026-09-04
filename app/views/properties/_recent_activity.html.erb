@@ -1,0 +1,29 @@
+<%# Bounded recent activity for the property Overview tab; the full ledger lives
+    on the Activity tab. Turbo Stream target: #property_recent_activity.
+    Locals: property, recent_activity (Array[Accounting::ActivityRow]) %>
+<section id="property_recent_activity" aria-labelledby="recent-heading">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 id="recent-heading" class="text-sm font-semibold">Recent activity</h2>
+    <%= link_to "All activity →", property_activity_path(property), class: "yn-link text-sm" %>
+  </div>
+
+  <% if recent_activity.any? %>
+    <div class="overflow-x-auto">
+      <table class="yn-table">
+        <thead class="sr-only">
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Event</th>
+            <th scope="col">Unit</th>
+            <th scope="col" class="text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render partial: "accounting/activity_row", collection: recent_activity, as: :row, locals: { context: :unit } %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-sm text-stone-500 m-0">No activity yet. Receipts, charges, and expenses for this property will appear here as they are recorded.</p>
+  <% end %>
+</section>

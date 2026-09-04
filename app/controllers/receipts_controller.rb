@@ -1,17 +1,36 @@
 class ReceiptsController < ApplicationController
+  include IndexFilters
+
   before_action :set_tenancy, only: %i[new create]
   before_action :set_receipt, only: %i[show correction correct void]
 
   def index
+    @properties = authenticated_user.properties.order(:address)
+    @active_years = Accounting::ActiveYearsQuery.call(user: authenticated_user)
+    @filter_range = filter_year_range
+    @filters = {
+      property_id: filter_property_id(@properties),
+      year: @filter_range&.year,
+      search: params[:search].to_s.strip.presence
+    }.compact
+
     page = [ params[:page].to_i, 1 ].max
     @per_page = 25
-    scope = authenticated_user.receipts
-                              .includes(:payer_party, :superseded_by, :superseded_receipt, :imported_transaction, tenancy: { rentable_unit: :property })
-                              .order(received_on: :desc, created_at: :desc)
+    scope = filtered_receipts
+
     @total_count = scope.count
     @total_pages = @total_count.zero? ? 0 : (@total_count.to_f / @per_page).ceil
     @page = @total_pages > 0 ? [ page, @total_pages ].min : page
-    @receipts = scope.limit(@per_page).offset((@page - 1) * @per_page)
+
+    # Aggregates, so the totals do not depend on the page that is displayed.
+    @received_total_cents = scope.active.sum(:amount_cents).to_i
+    @voided_total_cents = scope.voided.sum(:amount_cents).to_i
+
+    @receipts = scope
+      .includes(:payer_party, :superseded_by, :superseded_receipt, :imported_transaction, tenancy: [ :property, :rentable_unit ])
+      .order(received_on: :desc, created_at: :desc)
+      .limit(@per_page)
+      .offset((@page - 1) * @per_page)
   end
 
   def show
@@ -33,14 +52,14 @@ class ReceiptsController < ApplicationController
       received_on: Date.current
     )
 
+    load_form_collections
+
     if (t = @tenancy)
-      balance = t.current_balance
-      @receipt.amount = balance > 0 ? balance : nil
+      balance_cents = @balance_cents.to_i
+      @receipt.amount = balance_cents > 0 ? format("%.2f", balance_cents / 100.0) : nil
       primary_tenants = t.primary_tenant_parties
       @receipt.payer_party = primary_tenants.first if primary_tenants.size == 1
     end
-
-    load_form_collections
   end
 
   def create
@@ -56,20 +75,7 @@ class ReceiptsController < ApplicationController
         @receipt.payer_party = target_payer
         @receipt.errors.add(:tenancy_id, "Submitted tenancy does not match route tenancy")
         flash.now[:alert] = "Submitted tenancy does not match route tenancy"
-        load_form_collections
-        return respond_to do |format|
-          format.html { render :new, status: :unprocessable_content }
-          format.turbo_stream do
-            if @tenancy && params[:format] != "html"
-              render turbo_stream: turbo_stream.update("modal-frame",
-                                                       partial: "receipts/form",
-                                                       locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
-                     status: :unprocessable_content
-            else
-              render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
-            end
-          end
-        end
+        return render_receipt_failure
       end
       target_tenancy = t
     else
@@ -79,20 +85,7 @@ class ReceiptsController < ApplicationController
         @receipt.payer_party = target_payer
         @receipt.errors.add(:tenancy_id, "Tenancy is required")
         flash.now[:alert] = "Tenancy is required"
-        load_form_collections
-        return respond_to do |format|
-          format.html { render :new, status: :unprocessable_content }
-          format.turbo_stream do
-            if @tenancy && params[:format] != "html"
-              render turbo_stream: turbo_stream.update("modal-frame",
-                                                       partial: "receipts/form",
-                                                       locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
-                     status: :unprocessable_content
-            else
-              render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
-            end
-          end
-        end
+        return render_receipt_failure
       end
 
       target_tenancy = authenticated_user.tenancies.find_by(id: receipt_params[:tenancy_id])
@@ -102,20 +95,7 @@ class ReceiptsController < ApplicationController
         @receipt.payer_party = target_payer
         @receipt.errors.add(:tenancy_id, "Tenancy was not found")
         flash.now[:alert] = "Tenancy was not found"
-        load_form_collections
-        return respond_to do |format|
-          format.html { render :new, status: :unprocessable_content }
-          format.turbo_stream do
-            if @tenancy && params[:format] != "html"
-              render turbo_stream: turbo_stream.update("modal-frame",
-                                                       partial: "receipts/form",
-                                                       locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
-                     status: :unprocessable_content
-            else
-              render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
-            end
-          end
-        end
+        return render_receipt_failure
       end
     end
 
@@ -125,20 +105,7 @@ class ReceiptsController < ApplicationController
       @receipt.payer_party = nil
       @receipt.errors.add(:payer_party_id, "Payer party was not found")
       flash.now[:alert] = "Payer party was not found"
-      load_form_collections
-      return respond_to do |format|
-        format.html { render :new, status: :unprocessable_content }
-        format.turbo_stream do
-          if @tenancy && params[:format] != "html"
-            render turbo_stream: turbo_stream.update("modal-frame",
-                                                     partial: "receipts/form",
-                                                     locals: { receipt: @receipt, tenancy: @tenancy, form_context: :dialog }),
-                   status: :unprocessable_content
-          else
-            render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
-          end
-        end
-      end
+      return render_receipt_failure
     end
 
     result = Receipts::CreateService.call(
@@ -159,13 +126,12 @@ class ReceiptsController < ApplicationController
           redirect_to redirect_path, notice: "Payment recorded successfully.", status: :see_other
         end
         format.turbo_stream do
-          if @tenancy && params[:format] != "html"
-            @balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: @tenancy, as_of: Date.current)
-            @recent_activity_rows = Accounting::RecentTenantReceivableActivityQuery.call(tenancy: @tenancy)
+          if (t = @tenancy)
+            @balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: t, as_of: Date.current)
+            @recent_activity_rows = Accounting::RecentTenantReceivableActivityQuery.call(tenancy: t)
             render "receipts/create", formats: [ :turbo_stream ]
           else
-            redirect_path = @tenancy ? tenancy_path(@tenancy) : receipt_path(created_receipt)
-            redirect_to redirect_path, notice: "Payment recorded successfully.", status: :see_other
+            redirect_to receipt_path(created_receipt), notice: "Payment recorded successfully.", status: :see_other
           end
         end
       end
@@ -196,20 +162,7 @@ class ReceiptsController < ApplicationController
         end
       end
       flash.now[:alert] = result.failure.error
-      load_form_collections
-      respond_to do |format|
-        format.html { render :new, status: :unprocessable_content }
-        format.turbo_stream do
-          if @tenancy && params[:format] != "html"
-            render turbo_stream: turbo_stream.update("modal-frame",
-                     partial: "receipts/form",
-                     locals: { receipt: @receipt, tenancy: target_tenancy, form_context: :dialog }),
-                   status: :unprocessable_content
-          else
-            render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
-          end
-        end
-      end
+      render_receipt_failure
     end
   end
 
@@ -355,6 +308,30 @@ class ReceiptsController < ApplicationController
 
   private
 
+    # Index filters live entirely in URL params so a filtered list is
+    # shareable and survives a refresh.
+    def filtered_receipts
+      scope = authenticated_user.receipts
+
+      if (property_id = @filters[:property_id])
+        scope = scope.joins(tenancy: :rentable_unit).where(rentable_units: { property_id: property_id })
+      end
+
+      if (range = @filter_range)
+        scope = scope.where(received_on: range.from..range.through)
+      end
+
+      if (search = @filters[:search])
+        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
+        scope = scope.joins(:payer_party).where(
+          "parties.display_name ILIKE :q OR receipts.external_reference ILIKE :q",
+          q: pattern
+        )
+      end
+
+      scope
+    end
+
     def set_tenancy
       if params[:tenancy_id]
         @tenancy = authenticated_user.tenancies
@@ -393,7 +370,31 @@ class ReceiptsController < ApplicationController
     end
 
     def load_form_collections
-      @tenancies = authenticated_user.tenancies.includes(:parties, rentable_unit: :property)
       @parties = authenticated_user.parties.order(:display_name)
+      if (t = @tenancy)
+        @balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: t, as_of: Date.current)
+      else
+        @tenancies = authenticated_user.tenancies.includes({ tenancy_parties: :party }, :property, :rentable_unit).order(:id)
+      end
+    end
+
+    # Validation failures render the same form the request came from: the
+    # dialog re-renders inside the modal frame with a 422; standalone pages
+    # (which submit to an explicit .html action URL) re-render the full page.
+    def render_receipt_failure
+      load_form_collections
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_content }
+        format.turbo_stream do
+          if (t = @tenancy)
+            render turbo_stream: turbo_stream.update("modal-frame",
+                     partial: "receipts/form",
+                     locals: { receipt: @receipt, fixed_tenancy: t, form_context: :dialog, parties: @parties, balance_cents: @balance_cents }),
+                   status: :unprocessable_content
+          else
+            render :new, formats: [ :html ], content_type: "text/html", status: :unprocessable_content
+          end
+        end
+      end
     end
 end

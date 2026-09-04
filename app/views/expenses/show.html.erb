@@ -1,209 +1,199 @@
-<div class="max-w-3xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Expense Details</h1>
-      <p class="text-sm text-stone-500">Reference: <%= dom_id(@expense) %></p>
-    </div>
-    <div class="flex gap-2 items-center">
-      <%= link_to "Back to List", expenses_path, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <% if @expense.active? %>
-        <%= link_to "Correct Expense", correction_expense_path(@expense), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-        <% if @expense.reimbursement_charges.active.exists? %>
-          <span title="Void all active reimbursement charges before voiding this expense.">
-            <button class="yn-btn yn-btn-danger yn-btn-sm opacity-50 cursor-not-allowed" disabled>Void Expense</button>
-          </span>
-        <% else %>
-          <%= button_to "Void Expense", void_expense_path(@expense), method: :post,
-              class: "yn-btn yn-btn-danger yn-btn-sm",
-              form: { data: { turbo_confirm: "Are you sure you want to void this expense? This will reverse its ledger entry at the original paid date." } } %>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
+<%
+  expense = @expense
+  title_text = expense.vendor_name.presence || expense.expense_kind.titleize
+  inactive = expense.voided? || expense.superseded?
+  status_text, status_tone = if expense.superseded?
+    [ "Corrected (Superseded)", :neutral ]
+  elsif expense.voided?
+    [ "Voided & Reversed", :neutral ]
+  elsif expense.posted?
+    [ "Posted", :ok ]
+  else
+    [ "Unposted", :warn ]
+  end
+  active_reimbursements = @reimbursements.select(&:active?)
+%>
+<% content_for :title, "Expense · #{title_text}" %>
 
-  <% if @expense.superseded? %>
-    <div class="yn-alert yn-alert-warn mb-6" role="status">
-      <div>
-        <h3 class="font-bold text-sm">Expense Corrected</h3>
-        <div class="text-xs">
-          This expense was superseded by replacement <%= link_to "Expense ##{@expense.superseded_by_id}", expense_path(@expense.superseded_by_id), class: "yn-link font-bold" %>
-          on <%= @expense.voided_at&.strftime("%B %d, %Y") %>.
-        </div>
-      </div>
-    </div>
-  <% elsif @expense.voided? %>
-    <div class="yn-alert yn-alert-danger mb-6" role="status">
-      <div>
-        <h3 class="font-bold text-sm">Expense Voided</h3>
-        <div class="text-xs">This expense was voided on <%= @expense.voided_at.strftime("%B %d, %Y at %I:%M %p") %> and its accounting entries have been reversed.</div>
-      </div>
-    </div>
-  <% end %>
-
-  <% if @expense.superseded_expense %>
-    <div class="yn-alert mb-6" role="status">
-      <div>
-        <h3 class="font-bold text-sm">Replacement Expense</h3>
-        <div class="text-xs">
-          This record replaces original <%= link_to "Expense ##{@expense.superseded_expense.id}", expense_path(@expense.superseded_expense), class: "yn-link font-bold" %>.
-        </div>
-      </div>
-    </div>
-  <% end %>
-
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <div class="flex flex-col md:flex-row justify-between gap-8">
-      <!-- Expense Summary -->
-      <div class="space-y-6 flex-1">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Amount</div>
-          <div class="text-3xl font-bold font-mono tabular-nums <%= @expense.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
-            <%= number_to_currency(@expense.amount) %>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Paid On</div>
-            <div class="text-sm font-medium text-stone-900"><%= @expense.paid_on.strftime("%B %d, %Y") %></div>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Category</div>
-            <div class="text-sm font-mono uppercase text-stone-700"><%= @expense.expense_kind&.titleize %></div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Vendor</div>
-            <div class="text-sm font-medium text-stone-900"><%= @expense.vendor_name.presence || "—" %></div>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Reference #</div>
-            <div class="text-sm font-mono text-stone-700"><%= @expense.external_reference.presence || "—" %></div>
-          </div>
-        </div>
-
-        <% if @expense.description.present? %>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Description</div>
-            <div class="text-sm text-stone-700 bg-stone-50 px-4 py-3 rounded-lg border border-stone-200">
-              <%= @expense.description %>
-            </div>
-          </div>
-        <% end %>
-      </div>
-
-      <!-- Property / Scope Details -->
-      <div class="border-t md:border-t-0 md:border-l border-stone-200 pt-6 md:pt-0 md:pl-8 space-y-6 flex-1">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Property</div>
-          <div class="text-base font-bold leading-tight"><%= link_to @expense.property.address, property_path(@expense.property), class: "yn-link text-stone-900" %></div>
-          <div class="text-xs text-stone-500 mt-1">
-            Type: <%= @expense.property.asset_type.titleize %>
-          </div>
-        </div>
-
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Unit Scope</div>
-          <% if @expense.rentable_unit %>
-            <span class="text-xs font-mono text-stone-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200"><%= @expense.rentable_unit.display_name %></span>
-          <% else %>
-            <span class="text-xs text-stone-500">Property-wide / No specific unit</span>
-          <% end %>
-        </div>
-
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Accounting Status</div>
-          <% if @expense.superseded? %>
-            <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Corrected (Superseded)</span>
-          <% elsif @expense.voided? %>
-            <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Voided & Reversed</span>
-          <% elsif @expense.posted? %>
-            <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Posted to Ledger</span>
-          <% else %>
-            <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Unposted</span>
-          <% end %>
-        </div>
-      </div>
-    </div>
-
-    <!-- Reimbursements Section -->
-    <div class="border-t border-stone-200 my-6 pt-6">
-      <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <div>
-            <h3 class="font-bold text-sm text-stone-900">Reimbursement Charges</h3>
-            <p class="text-xs text-stone-500">
-              Reimbursed: <%= number_to_currency(@expense.total_active_reimbursement_cents / 100.0) %> of <%= number_to_currency(@expense.amount) %>
-              (<%= number_to_currency(@expense.remaining_reimbursable_amount) %> available)
-            </p>
-          </div>
-          <% if @expense.active? %>
-            <% if @expense.fully_reimbursed? %>
-              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Fully Reimbursed</span>
-            <% else %>
-              <%= link_to "＋ Add Reimbursement Charge", new_expense_reimbursement_path(@expense), class: "yn-btn yn-btn-primary yn-btn-sm" %>
+<div class="max-w-3xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Expenses", expenses_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: title_text,
+        meta: capture { %>
+          <span class="tabular-nums <%= 'line-through' if inactive %>"><%= format_money_cents(expense.amount_cents) %></span> &middot;
+          <%= expense.paid_on.strftime("%b %-d, %Y") %> &middot;
+          <%= expense.expense_kind.titleize %> &middot;
+          <%= render "shared/status", text: status_text, tone: status_tone, size: :sm %>
+        <% },
+        actions: capture { %>
+          <% if expense.active? %>
+            <details class="relative" data-controller="menu">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
+                More
+                <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+              </summary>
+              <div class="yn-menu">
+                <%= link_to "Correct expense", correction_expense_path(expense), class: "yn-menu-item" %>
+                <hr class="yn-menu-separator">
+                <% if active_reimbursements.any? %>
+                  <p class="yn-menu-item text-stone-500 m-0 cursor-default">Void the active reimbursement charges before voiding this expense.</p>
+                <% else %>
+                  <%= button_to "Void expense…", void_expense_path(expense), method: :post, class: "yn-menu-item yn-menu-item-danger",
+                        data: { turbo_confirm: "Void this expense? Its ledger entry will be reversed at the original paid date." } %>
+                <% end %>
+              </div>
+            </details>
+            <% unless expense.fully_reimbursed? %>
+              <%= link_to "Add reimbursement charge", new_expense_reimbursement_path(expense), class: "yn-btn yn-btn-primary" %>
             <% end %>
           <% end %>
-        </div>
+        <% } %>
 
-        <% reimbursements = @expense.reimbursement_charges.order(created_at: :asc) %>
-        <% if reimbursements.any? %>
-          <div class="overflow-x-auto border border-stone-200 rounded-lg">
-            <table class="yn-table text-sm">
-              <thead>
-                <tr>
-                  <th scope="col">Tenancy</th>
-                  <th scope="col">Date</th>
-                  <th scope="col">Description</th>
-                  <th scope="col" class="text-right">Amount</th>
-                  <th scope="col">Status</th>
-                  <th scope="col" class="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% reimbursements.each do |charge| %>
-                  <tr class="<%= 'opacity-60 bg-stone-50' if charge.voided? %>">
-                    <td>
-                      <div class="font-medium text-stone-900"><%= charge.tenancy.rentable_unit.display_name %></div>
-                      <div class="text-xs text-stone-500">Tenancy #<%= charge.tenancy_id %></div>
-                    </td>
-                    <td class="text-stone-500 whitespace-nowrap"><%= charge.charge_date.strftime("%b %d, %Y") %></td>
-                    <td class="text-xs text-stone-600 truncate max-w-xs"><%= charge.description %></td>
-                    <td class="font-mono text-right tabular-nums font-medium <%= charge.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
-                      <%= number_to_currency(charge.amount) %>
-                    </td>
-                    <td>
-                      <% if charge.superseded? %>
-                        <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-                      <% elsif charge.voided? %>
-                        <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Voided</span>
-                      <% else %>
-                        <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Active</span>
-                      <% end %>
-                    </td>
-                    <td class="text-right whitespace-nowrap">
-                      <div class="flex justify-end gap-1 items-center">
-                        <%= link_to "View", charge_path(charge), class: "yn-link text-[13px]" %>
-                        <% if charge.active? %>
-                          <%= button_to "Void", void_charge_path(charge), method: :post,
-                              class: "yn-btn yn-btn-danger yn-btn-sm",
-                              form: { data: { turbo_confirm: "Are you sure you want to void this reimbursement charge?" } } %>
-                        <% end %>
-                      </div>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-        <% else %>
-          <div class="text-xs text-stone-500 p-4 bg-stone-50 rounded-lg border border-stone-200 text-center">
-            No tenant reimbursement charges have been posted for this expense.
+  <% if expense.superseded? %>
+    <div class="yn-alert yn-alert-warn mb-6" role="status">
+      <span><strong class="font-medium">Expense Corrected.</strong> Superseded by <%= link_to "Expense ##{expense.superseded_by_id}", expense_path(expense.superseded_by_id), class: "yn-link font-medium" %> on <%= expense.voided_at&.strftime("%B %-d, %Y") %>.</span>
+    </div>
+  <% elsif expense.voided? %>
+    <div class="yn-alert yn-alert-danger mb-6" role="status">
+      <span><strong class="font-medium">Expense Voided.</strong> Voided on <%= expense.voided_at.strftime("%B %-d, %Y") %>; its accounting entries have been reversed.</span>
+    </div>
+  <% end %>
+  <% if expense.superseded_expense %>
+    <div class="yn-alert mb-6" role="status">
+      <span><strong class="font-medium">Replacement Expense.</strong> This record replaces <%= link_to "Expense ##{expense.superseded_expense.id}", expense_path(expense.superseded_expense), class: "yn-link font-medium" %>.</span>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 mb-10">
+    <section aria-labelledby="expense-details-heading">
+      <h2 id="expense-details-heading" class="text-sm font-semibold mb-3">Expense</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Amount</dt>
+          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-400' if inactive %>"><%= format_money_cents(expense.amount_cents) %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Paid on</dt>
+          <dd class="m-0"><%= expense.paid_on.strftime("%B %-d, %Y") %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Category</dt>
+          <dd class="m-0"><%= expense.expense_kind&.titleize %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Vendor</dt>
+          <dd class="m-0"><%= expense.vendor_name.presence || "—" %></dd>
+        </div>
+        <% if expense.external_reference.present? %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Reference</dt>
+            <dd class="m-0 tabular-nums"><%= expense.external_reference %></dd>
           </div>
         <% end %>
-      </div>
-    </div>
+        <% if expense.description.present? %>
+          <div class="py-2.5">
+            <dt class="text-stone-500 mb-1">Description</dt>
+            <dd class="m-0 text-stone-700"><%= expense.description %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </section>
+
+    <section aria-labelledby="expense-context-heading">
+      <h2 id="expense-context-heading" class="text-sm font-semibold mb-3">Property</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Property</dt>
+          <dd class="m-0 text-right"><%= link_to expense.property.address, property_path(expense.property), class: "yn-link" %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Unit</dt>
+          <dd class="m-0 text-right"><%= expense.rentable_unit ? expense.rentable_unit.display_name : "Property-wide" %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Activity</dt>
+          <dd class="m-0 text-right"><%= link_to "Property activity", property_activity_path(expense.property, year: expense.paid_on.year), class: "yn-link" %></dd>
+        </div>
+        <div class="py-2.5">
+          <dt class="text-stone-500 mb-1">Accounting</dt>
+          <dd class="m-0">
+            <% ledger_entries = expense.journal_entries.order(:occurred_on, :id).to_a %>
+            <% if ledger_entries.any? %>
+              <ul class="list-none m-0 p-0 space-y-0.5">
+                <% ledger_entries.each do |entry| %>
+                  <li><%= link_to "#{entry.event_type.humanize} · #{entry.occurred_on.strftime('%b %-d, %Y')}", journal_entry_path(entry), class: "yn-link" %></li>
+                <% end %>
+              </ul>
+            <% else %>
+              Not yet posted to the ledger.
+            <% end %>
+          </dd>
+        </div>
+      </dl>
+    </section>
   </div>
+
+  <!-- Reimbursements: the part of this expense billed back to tenants -->
+  <section id="expense_reimbursements" aria-labelledby="reimbursements-heading">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 id="reimbursements-heading" class="text-sm font-semibold">Reimbursement charges</h2>
+      <p class="text-sm text-stone-500 m-0">
+        <%= format_money_cents(expense.total_active_reimbursement_cents) %> of <%= format_money_cents(expense.amount_cents) %> billed
+        <% if expense.active? && expense.fully_reimbursed? %>
+          &middot; <%= render "shared/status", text: "Fully Reimbursed", tone: :ok, size: :sm %>
+        <% end %>
+      </p>
+    </div>
+
+    <% if @reimbursements.any? %>
+      <div class="overflow-x-auto">
+        <table class="yn-table">
+          <thead>
+            <tr>
+              <th scope="col">Tenancy</th>
+              <th scope="col">Date</th>
+              <th scope="col">Description</th>
+              <th scope="col" class="text-right tabular-nums">Amount</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @reimbursements.each do |charge| %>
+              <tr class="<%= 'opacity-60' if charge.voided? %>">
+                <td>
+                  <%= link_to charge.tenancy.rentable_unit.display_name, tenancy_path(charge.tenancy), class: "yn-row-link" %>
+                </td>
+                <td class="text-stone-500 whitespace-nowrap"><%= charge.charge_date.strftime("%b %-d, %Y") %></td>
+                <td class="text-stone-600"><%= charge.description %></td>
+                <td class="text-right tabular-nums whitespace-nowrap <%= charge.voided? ? 'line-through text-stone-400' : '' %>"><%= format_money_cents(charge.amount_cents) %></td>
+                <td>
+                  <% if charge.superseded? %>
+                    <%= render "shared/status", text: "Corrected", size: :sm %>
+                  <% elsif charge.voided? %>
+                    <%= render "shared/status", text: "Voided", size: :sm %>
+                  <% else %>
+                    <%= render "shared/status", text: "Active", tone: :ok, size: :sm %>
+                  <% end %>
+                </td>
+                <td class="text-right whitespace-nowrap">
+                  <%= link_to "View", charge_path(charge), class: "yn-link text-[13px]" %>
+                  <% if charge.active? %>
+                    <%= button_to "Void", void_charge_path(charge), method: :post, class: "yn-link text-[13px] ml-3 text-red-700",
+                          form: { class: "inline", data: { turbo_confirm: "Void this reimbursement charge?" } } %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-stone-500 m-0">No tenant reimbursement charges have been posted for this expense.</p>
+    <% end %>
+  </section>
 </div>

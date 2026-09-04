@@ -5,7 +5,7 @@ class PropertyTaxReviewResolutionsController < ApplicationController
   @schedule_e_result: TaxReporting::ScheduleEResult
   @tax_profile: PropertyTaxProfile?
   @form_definition: TaxReporting::ScheduleEFormDefinition
-  @active_years: Array[Integer]
+  @action_verb: String
 
   def create: () -> void
   def destroy: () -> void

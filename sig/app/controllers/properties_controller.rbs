@@ -8,16 +8,9 @@ class PropertiesController < ApplicationController
   @security_deposits_held_cents: Integer
   @date_range: Accounting::DateRange
   @year: Integer
-  @active_years: Array[Integer]
   @schedule_e_result: TaxReporting::ScheduleEResult
   @tax_profile: PropertyTaxProfile?
   @form_definition: TaxReporting::ScheduleEFormDefinition
-  @rents_received: BigDecimal
-  @utility_reimbursements: BigDecimal
-  @total_income: BigDecimal
-  @expenses_by_category: Hash[String, BigDecimal]
-  @total_expenses: BigDecimal
-  @net_income: BigDecimal
 
   def index: () -> void
   def show: () -> void

@@ -23,9 +23,9 @@ RSpec.describe "Expenses", type: :system do
 
     select property.address, from: "Property"
     select "Repairs", from: "Category"
-    fill_in "Date Paid", with: Date.today.to_s
-    fill_in "Amount ($)", with: "450.00"
-    fill_in "Vendor / Payee", with: "Roof Repair Pro"
+    fill_in "Paid on", with: Date.today.to_s
+    fill_in "Amount", with: "450.00"
+    fill_in "Vendor", with: "Roof Repair Pro"
     fill_in "Description", with: "Fixed the leaky roof"
 
     click_on "Record Expense"
@@ -34,16 +34,16 @@ RSpec.describe "Expenses", type: :system do
     expect(page).to have_text("Repairs")
     expect(page).to have_text("Fixed the leaky roof")
     expect(page).to have_text("$450.00")
-    expect(page).to have_text("Posted to Ledger")
+    expect(page).to have_text("Posted")
 
     expense = Expense.last
 
     # Add reimbursement charge
-    click_on "＋ Add Reimbursement Charge"
-    select "#{unit.display_name} - Tenancy ##{tenancy.id} (#{party.display_name})", from: "Tenancy to Charge"
-    fill_in "Reimbursement Amount ($)", with: "150.00"
-    fill_in "Description / Memo", with: "Roof repair tenant share"
-    click_on "Post Reimbursement Charge"
+    click_on "Add reimbursement charge"
+    select "#{unit.display_name} · #{party.display_name}", from: "Tenancy to charge"
+    fill_in "Reimbursement amount", with: "150.00"
+    fill_in "Description", with: "Roof repair tenant share"
+    click_on "Post reimbursement charge"
 
     expect(page).to have_current_path(expense_path(expense))
     expect(page).to have_content("Reimbursement charge was successfully created and posted.")
@@ -56,13 +56,14 @@ RSpec.describe "Expenses", type: :system do
 
     visit expense_path(expense)
 
-    # Correct expense
-    click_on "Correct Expense"
-    expect(page).to have_content("Reversal & Replacement Notice")
+    # Correct expense (from the More menu)
+    find("summary", text: "More").click
+    click_on "Correct expense"
+    expect(page).to have_content("reverses the original ledger entry")
 
     fill_in "expense[amount]", with: "250.00"
     fill_in "expense[description]", with: "Corrected water bill"
-    click_on "Post Corrected Expense"
+    click_on "Save correction"
 
     expect(page).to have_content("Expense was successfully corrected.")
     expect(page).to have_content("$250.00")
@@ -84,7 +85,8 @@ RSpec.describe "Expenses", type: :system do
 
     # Void the replacement expense
     visit expense_path(replacement)
-    click_on "Void Expense"
+    find("summary", text: "More").click
+    click_on "Void expense…"
 
     expect(page).to have_content("Expense was successfully voided and reversed.")
     expect(page).to have_content("Expense Voided")

@@ -1,0 +1,6 @@
+<%# Inner content of the mobile inbox badge. Local: count %>
+<% if count.to_i > 0 %>
+  <%= link_to inbox_path, class: "inline-flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 no-underline" do %>
+    Inbox <span class="yn-count"><%= count %></span><span class="sr-only"> imported transactions need review</span>
+  <% end %>
+<% end %>

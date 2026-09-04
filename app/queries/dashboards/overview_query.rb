@@ -32,7 +32,7 @@ module Dashboards
       return empty_result unless u
 
       props = u.properties.order(:address).includes(
-        rentable_units: { tenancies: [ { tenancy_parties: :party }, :rent_terms ] }
+        rentable_units: { tenancies: { tenancy_parties: :party } }
       ).to_a
       all_tenancies = props.flat_map { |p| p.rentable_units.flat_map(&:tenancies) }
       balances = Accounting::TenancyBalancesQuery.call(tenancies: all_tenancies, as_of: Date.current)
@@ -45,7 +45,7 @@ module Dashboards
         tenancies: all_tenancies,
         balances: balances
       )
-      properties = properties_summary(props: props, balances: balances)
+      properties = self.class.property_rows(props: props, balances: balances)
       recent_activity = Dashboards::RecentActivityQuery.call(user: user, through: Date.current, limit: 8)
 
       OverviewResult.new(
@@ -54,6 +54,35 @@ module Dashboards
         properties: properties,
         recent_activity: recent_activity
       )
+    end
+
+    # Compact per-property rows shared by the Overview and the Portfolio landing.
+    # A property's balance is the total due when any tenancy owes money; only
+    # when nothing is due does it show the total credit. Debt is not netted
+    # against another tenancy's credit.
+    def self.property_rows(props:, balances:)
+      props.map do |property|
+        units = property.rentable_units.select(&:active?)
+        occupied_units = units.count { |unit| unit.tenancies.any?(&:active?) }
+        prop_tenancies = property.rentable_units.flat_map(&:tenancies)
+        prop_balances = prop_tenancies.map { |t| balances[t.id] || 0 }
+        due_cents = prop_balances.select(&:positive?).sum
+        credit_cents = prop_balances.select(&:negative?).sum
+        prop_balance_cents = if due_cents.positive?
+          due_cents
+        elsif credit_cents.negative?
+          credit_cents
+        else
+          0
+        end
+
+        PropertyRow.new(
+          property: property,
+          occupied_units_count: occupied_units,
+          total_units_count: units.size,
+          balance_cents: prop_balance_cents
+        )
+      end
     end
 
     private
@@ -65,31 +94,6 @@ module Dashboards
           from: Date.current.beginning_of_year,
           through: Date.current
         )
-      end
-
-      def properties_summary(props:, balances:)
-        props.map do |property|
-          units = property.rentable_units.select(&:active?)
-          occupied_units = units.count { |unit| unit.tenancies.any?(&:active?) }
-          prop_tenancies = property.rentable_units.flat_map(&:tenancies)
-          prop_balances = prop_tenancies.map { |t| balances[t.id] || 0 }
-          due_cents = prop_balances.select(&:positive?).sum
-          credit_cents = prop_balances.select(&:negative?).sum
-          prop_balance_cents = if due_cents.positive?
-            due_cents
-          elsif credit_cents.negative?
-            credit_cents
-          else
-            0
-          end
-
-          PropertyRow.new(
-            property: property,
-            occupied_units_count: occupied_units,
-            total_units_count: units.size,
-            balance_cents: prop_balance_cents
-          )
-        end
       end
 
       def empty_result

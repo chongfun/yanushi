@@ -33,6 +33,7 @@ module Dashboards
     @user: User?
 
     def self.call: (user: User?) -> OverviewResult
+    def self.property_rows: (props: Array[Property], balances: Hash[Integer, Integer]) -> Array[PropertyRow]
     def initialize: (user: User?) -> void
     def call: () -> OverviewResult
 
@@ -40,7 +41,6 @@ module Dashboards
 
     def user: () -> User?
     def ytd_range: () -> Accounting::DateRange
-    def properties_summary: (props: Array[Property], balances: Hash[Integer, Integer]) -> Array[PropertyRow]
     def empty_result: () -> OverviewResult
   end
 end

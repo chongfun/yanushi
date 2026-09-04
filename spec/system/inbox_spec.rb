@@ -23,13 +23,27 @@ RSpec.describe "Inbox", type: :system do
 
   after do
     if page.driver.is_a?(Capybara::Selenium::Driver)
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
     end
+  end
+
+  # Presses a shortcut key with focus where a reader working the queue would
+  # have it: on the row that is open. The keystroke is dispatched at the
+  # focused element rather than through WebDriver, whose synthetic key
+  # delivery is unreliable once other examples have driven this browser; the
+  # event still travels the real path (focused element -> window listener),
+  # which is what the shortcuts are bound to.
+  def press_shortcut(key, from: "#inbox_review_queue_list a[aria-current='true']", meta: false)
+    page.execute_script(<<~JS, key, from, meta)
+      const target = document.querySelector(arguments[1])
+      target.focus()
+      target.dispatchEvent(new KeyboardEvent("keydown", { key: arguments[0], metaKey: arguments[2], bubbles: true, cancelable: true }))
+    JS
   end
 
   describe "wide-screen master/detail review loop", js: true do
     it "allows selecting stream-replaced queue rows, managing aria-current and focus, and completing review" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       txn1 = create(
         :imported_transaction,
@@ -95,8 +109,8 @@ RSpec.describe "Inbox", type: :system do
       # Click txn1 (Item C)
       page.execute_script("document.querySelector('#imported_transaction_#{txn1.id}').click()")
 
-      # Frame loads txn1 without full-page navigation
-      expect(page).to have_current_path(inbox_path)
+      # Frame loads txn1 without full-page navigation (the reviewed item is in the query string)
+      expect(page).to have_current_path(inbox_path, ignore_query: true)
       within("#inbox_review") do
         expect(page).to have_content("$1,000.00")
       end
@@ -106,7 +120,7 @@ RSpec.describe "Inbox", type: :system do
       # Click replaced row txn2 (Item B) again -> must load into frame, NOT full-page navigate
       page.execute_script("document.querySelector('#imported_transaction_#{txn2.id}').click()")
 
-      expect(page).to have_current_path(inbox_path)
+      expect(page).to have_current_path(inbox_path, ignore_query: true)
       within("#inbox_review") do
         expect(page).to have_content("$2,000.00")
       end
@@ -137,8 +151,83 @@ RSpec.describe "Inbox", type: :system do
       expect(page).to have_no_css("#sidebar_inbox_badge .yn-count")
     end
 
+    it "traverses the queue and confirms the open item from the keyboard alone" do
+      resize_window_to(1280, 800)
+
+      txn1, txn2, txn3 = [ 100_000, 200_000, 300_000 ].each_with_index.map do |cents, index|
+        create(
+          :imported_transaction,
+          user: user,
+          source_document: source_document,
+          status: "matched",
+          transaction_kind: "tenant_receipt",
+          matched_party: party,
+          matched_tenancy: tenancy,
+          payer_name: "Homer Simpson",
+          amount_cents: cents,
+          occurred_on: Date.new(2026, 8, 19) + index,
+          payment_method: "zelle",
+          external_reference: "ZL-KB-#{index}"
+        )
+      end
+
+      visit inbox_path
+
+      # The shortcuts are advertised next to the queue they drive
+      within("#inbox_review_queue_list") do
+        expect(page).to have_text("Keyboard:")
+      end
+      expect(page).to have_css("#imported_transaction_#{txn3.id}[aria-current='true']")
+
+      # j walks down the queue, loading each item into the detail frame
+      press_shortcut("j")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$2,000.00") }
+
+      press_shortcut("j")
+      expect(page).to have_css("#imported_transaction_#{txn1.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$1,000.00") }
+
+      # ... and stops at the end of the queue rather than wrapping
+      press_shortcut("j")
+      expect(page).to have_css("#imported_transaction_#{txn1.id}[aria-current='true']")
+
+      # k walks back up
+      press_shortcut("k")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$2,000.00") }
+
+      # The arrow keys do the same thing
+      press_shortcut("ArrowDown")
+      expect(page).to have_css("#imported_transaction_#{txn1.id}[aria-current='true']")
+      press_shortcut("ArrowUp")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+      within("#inbox_review") { expect(page).to have_content("$2,000.00") }
+
+      # Inside a form control the same key is just a keystroke
+      press_shortcut("j", from: "#rev-ref-#{txn2.id}")
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+
+      # A modifier turns it back into the browser's own shortcut
+      press_shortcut("j", meta: true)
+      expect(page).to have_css("#imported_transaction_#{txn2.id}[aria-current='true']")
+
+      # c confirms the open item, exactly as its primary button does
+      within("#inbox_review") { expect(page).to have_button("Confirm receipt") }
+      press_shortcut("c")
+      expect(page).to have_content("Transaction confirmed and recorded successfully.")
+      expect(page).to have_no_css("#imported_transaction_#{txn2.id}")
+      expect(page).to have_css("#sidebar_inbox_badge", text: "2")
+
+      txn2.reload
+      expect(txn2.status).to eq("confirmed")
+      expect(txn2.confirmed_source).to be_a(Receipt)
+      expect(txn1.reload.status).to eq("matched")
+      expect(txn3.reload.status).to eq("matched")
+    end
+
     it "edits unclassified fields and confirms in a single atomic step" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       unmatched_txn = create(
         :imported_transaction,
@@ -179,7 +268,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "dynamically updates the alias proposal when changing payer and persists the alias for the selected party" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       party_bob = create(:party, user: user, display_name: "Bob Belcher")
 
@@ -223,7 +312,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "dynamically switches alias proposal candidate when new party has existing alias and confirms the exact proposal" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       party_bob = create(:party, user: user, display_name: "Bob Belcher")
       # party_bob already has "HOMER_SIMPSON_99" as an alias, so proposed candidate for party_bob is "@homersimpson"
@@ -268,7 +357,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "preserves unchecked alias checkbox across a 422 validation failure" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       invalid_txn = create(
         :imported_transaction,
@@ -306,8 +395,8 @@ RSpec.describe "Inbox", type: :system do
       expect(find_field("create_alias")).not_to be_checked
     end
 
-    it "dynamically updates primary button text and disabled state across Choose classification, Confirm receipt, and Confirm deposit" do
-      page.current_window.resize_to(1280, 800)
+    it "updates the primary button label as the classification changes and lets the server reject an unclassified confirm" do
+      resize_window_to(1280, 800)
 
       unit2 = create(:rentable_unit, property: property, unit_identifier: "Unit 2")
       deposit_tenancy = create(:tenancy, rentable_unit: unit2, agreement_type: "fixed_term", commencement_date: Date.new(2025, 1, 1), termination_date: Date.new(2026, 12, 31))
@@ -331,33 +420,32 @@ RSpec.describe "Inbox", type: :system do
       visit inbox_path
       expect(page).to have_css("#review_form_#{txn.id}")
 
-      # Initial state for unclassified: button says Choose classification and is disabled
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Choose classification")
-      expect(find("#confirm_btn_#{txn.id}")).to be_disabled
+      # Initial state for unclassified: the label says what is missing; the button stays enabled
+      expect(page).to have_button("Choose classification", disabled: false)
+
+      # Submitting unclassified is rejected by the server, in place, with the reason focused
+      click_button "Choose classification"
+      expect(page).to have_css("#form_error_alert", text: "requires classification", wait: 10)
+      expect(page).to have_css("#review_form_#{txn.id}")
 
       # Switch Record as to Security deposit
       select "Security deposit", from: "rev-kind-#{txn.id}"
-
-      # Button text dynamically updates to Confirm deposit and is enabled
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Confirm deposit")
-      expect(find("#confirm_btn_#{txn.id}")).not_to be_disabled
+      expect(page).to have_button("Confirm deposit")
 
       # Switch to Tenant receipt
       select "Tenant receipt", from: "rev-kind-#{txn.id}"
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Confirm receipt")
-      expect(find("#confirm_btn_#{txn.id}")).not_to be_disabled
+      expect(page).to have_button("Confirm receipt")
 
       # Switch back to Needs classification
       select "Needs classification", from: "rev-kind-#{txn.id}"
-      expect(find("#confirm_btn_#{txn.id}").text).to eq("Choose classification")
-      expect(find("#confirm_btn_#{txn.id}")).to be_disabled
+      expect(page).to have_button("Choose classification")
 
       # Switch to Security deposit and confirm
       select "Security deposit", from: "rev-kind-#{txn.id}"
       click_button "Confirm deposit"
 
-      expect(page).to have_content("Transaction confirmed and recorded successfully.")
-      expect(page).to have_content("You’re caught up")
+      expect(page).to have_content("Transaction confirmed and recorded successfully.", wait: 10)
+      expect(page).to have_content("You’re caught up", wait: 10)
 
       txn.reload
       expect(txn.status).to eq("confirmed")
@@ -366,7 +454,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "focuses the validation problem or invalid control on 422 response" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       invalid_txn = create(
         :imported_transaction,
@@ -403,7 +491,7 @@ RSpec.describe "Inbox", type: :system do
 
   describe "narrow-screen standalone review flow", js: true do
     it "navigates to standalone review, allows editing unresolved item, and redirects through the review queue until caught up" do
-      page.current_window.resize_to(375, 667)
+      resize_window_to(375, 667)
 
       txn1 = create(
         :imported_transaction,
@@ -578,7 +666,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "renders explicit classification warning or category in queue row status lines and formats Chase source descriptions" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       # 1. Chase statement parsed row (payer_username is nil, raw_text contains description)
       chase_txn = create(
@@ -669,7 +757,7 @@ RSpec.describe "Inbox", type: :system do
     end
 
     it "does not discard an in-progress review form when background broadcast arrives, adds new items to queue, and transitions cleanly on confirm" do
-      page.current_window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
 
       txn1 = create(
         :imported_transaction,
@@ -900,6 +988,166 @@ RSpec.describe "Inbox", type: :system do
       # Session 1 receives real-time broadcast removal
       expect(page).to have_no_css("#source_document_#{failed_doc.id}")
       expect(page).to have_content("No uploads in flight and no failures.")
+    end
+
+    it "reconciles a remote removal of an item this tab saved earlier, once the save response has settled" do
+      doc_a = create(:source_document, user: user, status: "success", attachment_filename: "doc_a.pdf")
+      doc_b = create(:source_document, user: user, status: "success", attachment_filename: "doc_b.pdf")
+
+      txn_b = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_b,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 8, 19),
+        created_at: 2.hours.ago,
+        payment_method: "zelle"
+      )
+      txn_a = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_a,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 8, 20),
+        created_at: 1.hour.ago,
+        payment_method: "zelle"
+      )
+
+      visit inbox_path
+      expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+
+      # An ordinary local save; A stays reviewable and the response settles
+      fill_in "rev-ref-#{txn_a.id}", with: "REF-A"
+      click_button "Save without confirming"
+      expect(page).to have_content("Transaction record updated successfully.", wait: 10)
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+      expect(page).to have_field("rev-ref-#{txn_a.id}", with: "REF-A")
+
+      # Later, another session removes A. This tab must still converge on B.
+      SourceDocuments::DestroyService.call(user: user, document: doc_a)
+
+      expect(page).to have_no_css("#imported_transaction_#{txn_a.id}", wait: 10)
+      expect(page).to have_css("#imported_transaction_#{txn_b.id}[aria-current='true']", wait: 10)
+      within("#inbox_review") do
+        expect(page).to have_css("#review_form_#{txn_b.id}")
+        expect(page).to have_content("$500.00")
+      end
+    end
+
+    it "reconciles and lands on the next transaction when an item is deleted after submit-start but before lookup" do
+      doc_a = create(:source_document, user: user, status: "success", attachment_filename: "doc_a.pdf")
+      doc_b = create(:source_document, user: user, status: "success", attachment_filename: "doc_b.pdf")
+
+      txn_b = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_b,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 8, 19),
+        created_at: 2.hours.ago,
+        payment_method: "zelle"
+      )
+      txn_a = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_a,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 8, 20),
+        created_at: 1.hour.ago,
+        payment_method: "zelle"
+      )
+
+      visit inbox_path
+      expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+
+      original_set_transaction = ImportedTransactionsController.instance_method(:set_transaction)
+      allow_any_instance_of(ImportedTransactionsController).to receive(:set_transaction) do |controller|
+        if controller.params[:id] == txn_a.id.to_s
+          SourceDocuments::DestroyService.call(user: user, document: doc_a)
+        end
+        original_set_transaction.bind(controller).call
+      end
+
+      click_button "Save without confirming"
+
+      expect(page).to have_content("The transaction was deleted in another session.", wait: 10)
+      expect(page).to have_no_css("#imported_transaction_#{txn_a.id}")
+      expect(page).to have_css("#imported_transaction_#{txn_b.id}[aria-current='true']")
+      within("#inbox_review") do
+        expect(page).to have_css("#review_form_#{txn_b.id}")
+        expect(page).to have_content("$500.00")
+      end
+    end
+
+    it "releases pending id and reconciles queue when submission encounters a transport error" do
+      doc_a = create(:source_document, user: user, status: "success", attachment_filename: "doc_a.pdf")
+      doc_b = create(:source_document, user: user, status: "success", attachment_filename: "doc_b.pdf")
+
+      txn_b = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_b,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 50_000,
+        occurred_on: Date.new(2026, 8, 19),
+        created_at: 2.hours.ago,
+        payment_method: "zelle"
+      )
+      txn_a = create(
+        :imported_transaction,
+        user: user,
+        source_document: doc_a,
+        status: "matched",
+        transaction_kind: "tenant_receipt",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 100_000,
+        occurred_on: Date.new(2026, 8, 20),
+        created_at: 1.hour.ago,
+        payment_method: "zelle"
+      )
+
+      visit inbox_path
+      expect(page).to have_css("#imported_transaction_#{txn_a.id}[aria-current='true']")
+      expect(page).to have_css("#review_form_#{txn_a.id}")
+
+      # Dispatch on the form itself: `target` is not an event-init option, and the
+      # controller reads the transaction id from event.target's form.
+      page.execute_script(<<~JS)
+        const form = document.querySelector("#review_form_#{txn_a.id}");
+        form.dispatchEvent(new CustomEvent("turbo:submit-start", { bubbles: true }));
+        form.dispatchEvent(new CustomEvent("turbo:submit-end", { bubbles: true, detail: { success: false } }));
+      JS
+
+      SourceDocuments::DestroyService.call(user: user, document: doc_a)
+
+      expect(page).to have_no_css("#imported_transaction_#{txn_a.id}", wait: 10)
+      expect(page).to have_css("#imported_transaction_#{txn_b.id}[aria-current='true']", wait: 10)
+      within("#inbox_review") do
+        expect(page).to have_css("#review_form_#{txn_b.id}")
+        expect(page).to have_content("$500.00")
+      end
     end
 
     it "automatically selects the next transaction or transitions to caught-up when the actively reviewed item is destroyed remotely" do

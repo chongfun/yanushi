@@ -2,7 +2,9 @@ class MoneyController < ApplicationController
   @properties: Property::ActiveRecord_Relation
   @selected_property_id: Integer?
   @active_years: Array[Integer]
+  @date_range: Accounting::DateRange
   @activity_result: Accounting::PortfolioActivityQuery::PortfolioActivityResult
+  @summary: Accounting::PortfolioSummaryQuery::PortfolioSummaryResult
 
   def show: () -> untyped
 end

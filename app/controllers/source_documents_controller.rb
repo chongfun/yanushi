@@ -13,16 +13,16 @@ class SourceDocumentsController < ApplicationController
     if result.success?
       case result.value!.data[:upload_status]
       when :already_processed
-        redirect_to imported_transactions_path, notice: "This document has already been processed successfully."
+        redirect_to inbox_path, notice: "This document has already been processed successfully.", status: :see_other
       when :already_processing
-        redirect_to imported_transactions_path, notice: "This document is already currently being processed in the background."
+        redirect_to inbox_path(view: "processing"), notice: "This document is already being processed in the background.", status: :see_other
       when :retry_required
-        redirect_to imported_transactions_path, alert: "This document previously failed processing. Please click Retry in the Recent Uploads list."
+        redirect_to inbox_path(view: "processing"), alert: "This document previously failed processing. Use Retry on the Processing tab to run it again.", status: :see_other
       else
-        redirect_to imported_transactions_path, notice: "Document uploaded successfully and is being processed in the background."
+        redirect_to inbox_path(view: "processing"), notice: "Document uploaded successfully and is being processed in the background.", status: :see_other
       end
     else
-      redirect_to new_source_document_path, alert: result.failure.error
+      redirect_to new_source_document_path, alert: result.failure.error, status: :see_other
     end
   end
 

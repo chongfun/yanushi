@@ -1,10 +1,12 @@
 Rails.application.routes.draw do
   root "dashboards#index"
+  get "dashboards/index", to: redirect("/", status: 301)
 
   get "portfolio", to: "portfolio#show", as: :portfolio
   get "money", to: "money#show", as: :money
   get "inbox", to: "imported_transactions#index", as: :inbox
   get "reports", to: "reports#show", as: :reports
+  get "search", to: "search#show", as: :search
 
   resources :properties do
     scope module: :properties do

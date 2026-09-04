@@ -14,7 +14,7 @@ RSpec.describe "PropertyTaxProfiles", type: :request do
     it "renders a successful response with unselected property type prompt" do
       get new_property_tax_profile_path(property, tax_year: 2026)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Configure Tax Profile (2026)")
+      expect(response.body).to include("Configure tax profile (2026)")
       expect(response.body).to include("Choose Schedule E property type...")
       # Must not preselect multi_family_residence or any type from physical property type
       expect(response.body).not_to include('selected="selected"')
@@ -135,7 +135,7 @@ RSpec.describe "PropertyTaxProfiles", type: :request do
     it "renders a successful response for owned profile" do
       get edit_property_tax_profile_path(property, profile)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Edit Tax Profile (2026)")
+      expect(response.body).to include("Edit tax profile (2026)")
     end
 
     it "returns 404 for unowned property profile" do

@@ -1,11 +1,11 @@
-<div class="max-w-2xl mx-auto py-6">
-  <div class="mb-6">
-    <%= link_to "← Back to Schedule E", schedule_e_property_path(@property, year: @tax_profile.tax_year), class: "yn-btn yn-btn-ghost yn-btn-sm mb-2" %>
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900">Edit Tax Profile (<%= @tax_profile.tax_year %>)</h1>
-    <p class="text-sm text-stone-500"><%= @property.address %></p>
-  </div>
+<% content_for :title, "Edit tax profile (#{@tax_profile.tax_year})" %>
 
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
+<div class="max-w-2xl">
+  <%= render "properties/page_header",
+        property: @property,
+        title: "Edit tax profile (#{@tax_profile.tax_year})",
+        meta: "Applies to the #{@tax_profile.tax_year} Schedule E for this property." %>
+  <div class="yn-surface p-6">
     <%= render "form", tax_profile: @tax_profile %>
   </div>
 </div>

@@ -2,7 +2,7 @@
 <% failed_count = local_assigns[:failed_count].to_i %>
 
 <div id="inbox_review_empty">
-  <div class="bg-white rounded-xl border border-stone-200 p-6" id="inbox_caught_up" tabindex="-1" data-controller="inbox-focus" data-inbox-focus-autofocus-value="<%= local_assigns[:focus_on_connect] ? 'true' : 'false' %>">
+  <div class="yn-surface p-6" id="inbox_caught_up" tabindex="-1" data-controller="inbox-focus" data-inbox-focus-autofocus-value="<%= local_assigns[:focus_on_connect] ? 'true' : 'false' %>">
     <div class="yn-empty max-w-xl mx-auto">
       <% if failed_count > 0 %>
         <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-3">
@@ -10,7 +10,7 @@
             <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.39a1.75 1.75 0 0 1-1.543 2.563H1.918a1.75 1.75 0 0 1-1.543-2.563L6.457 1.047ZM8 4a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/>
           </svg>
         </div>
-        <p class="yn-empty-title text-stone-900" id="inbox_caught_up_title" tabindex="-1" data-inbox-focus-target="primary">Import Failed</p>
+        <h2 class="yn-empty-title text-stone-900" id="inbox_caught_up_title" tabindex="-1" data-inbox-focus-target="primary">Import Failed</h2>
         <p class="yn-empty-body text-stone-600 mb-4">
           No transactions need review right now, but <%= pluralize(failed_count, "statement upload") %> failed processing and <%= failed_count == 1 ? "requires" : "require" %> attention.
         </p>
@@ -25,7 +25,7 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
           </svg>
         </div>
-        <p class="yn-empty-title text-stone-900" id="inbox_caught_up_title" tabindex="-1" data-inbox-focus-target="primary">Processing Statements</p>
+        <h2 class="yn-empty-title text-stone-900" id="inbox_caught_up_title" tabindex="-1" data-inbox-focus-target="primary">Processing Statements</h2>
         <p class="yn-empty-body text-stone-600 mb-4">
           No transactions need review right now. <%= pluralize(processing_count, "statement upload") %> <%= processing_count == 1 ? "is" : "are" %> currently processing in the background.
         </p>
@@ -34,7 +34,7 @@
           <%= link_to "Upload statement", new_source_document_path, class: "yn-btn yn-btn-ghost" %>
         </div>
       <% else %>
-        <p class="yn-empty-title text-stone-900" id="inbox_caught_up_title" tabindex="-1" data-inbox-focus-target="primary">You’re caught up</p>
+        <h2 class="yn-empty-title text-stone-900" id="inbox_caught_up_title" tabindex="-1" data-inbox-focus-target="primary">You’re caught up</h2>
         <p class="yn-empty-body text-stone-600 mb-4">No imported transactions need review.</p>
         <%= link_to "Upload a statement", new_source_document_path, class: "yn-btn yn-btn-secondary" %>
       <% end %>

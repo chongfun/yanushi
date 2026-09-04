@@ -1,2 +1,7 @@
 module ApplicationHelper
+  def polymorphic_path: (untyped record, **untyped) -> String
+  def tenancy_security_deposit_path: (*untyped) -> String
+  def journal_entry_path: (*untyped) -> String
+
+  def activity_source_path: (Accounting::ActivityRow | Accounting::TenantReceivableActivityQuery::StatementRow row) -> String
 end

@@ -5,78 +5,11 @@
                         locals: { type: :notice, message: "Expense was successfully created." } %>
 
 <% if @nested_property.present? %>
-  <%= turbo_stream.replace "property_summary" do %>
-    <section id="property_summary" aria-labelledby="financials-heading">
-      <h2 id="financials-heading" class="sr-only">Financial summary</h2>
-      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4">
-        <div>
-          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Deposits held</dt>
-          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@security_deposits_held_cents) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income, YTD</dt>
-          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@ytd_summary.net_income_cents) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income, YTD</dt>
-          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@ytd_summary.income_recognized_cents) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses, YTD</dt>
-          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@ytd_summary.total_expenses_cents) %></dd>
-        </div>
-      </dl>
-    </section>
-  <% end %>
+  <%= turbo_stream.replace "property_summary",
+                           partial: "properties/summary",
+                           locals: { security_deposits_held_cents: @security_deposits_held_cents, ytd_summary: @ytd_summary } %>
 
-  <%= turbo_stream.replace "property_recent_activity" do %>
-    <section id="property_recent_activity" aria-labelledby="recent-heading">
-      <div class="flex items-baseline justify-between mb-3">
-        <h2 id="recent-heading" class="text-sm font-semibold">Recent activity</h2>
-        <%= link_to "All activity →", property_activity_path(@nested_property), class: "yn-link text-sm" %>
-      </div>
-
-      <% if @recent_activity.any? %>
-        <div class="overflow-x-auto">
-          <table class="yn-table">
-            <thead class="sr-only">
-              <tr>
-                <th>Date</th>
-                <th>Event</th>
-                <th>Unit</th>
-                <th class="text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @recent_activity.each do |row| %>
-                <tr>
-                  <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
-                  <td>
-                    <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
-                    <%= link_to target_path, class: "yn-row-link" do %>
-                      <%= row.label %>
-                      <% if row.description.present? && row.description != row.label %>
-                        <span class="text-stone-400">&middot; <%= row.description %></span>
-                      <% end %>
-                    <% end %>
-                    <% if row.corrected? %>
-                      <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-                    <% elsif row.voided? %>
-                      <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-danger"></span>Voided</span>
-                    <% end %>
-                  </td>
-                  <td class="text-stone-500 whitespace-nowrap"><%= row.rentable_unit&.name || "—" %></td>
-                  <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
-                    <%= signed_money_cents(row.amount_cents) %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      <% else %>
-        <p class="text-sm text-stone-500 m-0">No recent activity recorded.</p>
-      <% end %>
-    </section>
-  <% end %>
+  <%= turbo_stream.replace "property_recent_activity",
+                           partial: "properties/recent_activity",
+                           locals: { property: @nested_property, recent_activity: @recent_activity } %>
 <% end %>

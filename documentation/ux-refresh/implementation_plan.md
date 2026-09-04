@@ -3110,6 +3110,151 @@ and `rbs validate` green.
 - Icons: inline 16px SVG (`viewBox="0 0 16 16"`, `fill="currentColor"`,
   `aria-hidden="true"`), sourced from `app-shell.html`. No icon font, no
   icon gem.
+- Added in the post-M6 review (2026-09-02):
+  - `accounting/_activity_row` is the one row template for every financial
+    activity table (Overview, Money Activity, Property Overview, Property
+    Activity). Locals: `row`, `context` (`:property` | `:unit` |
+    `:tenancy_or_unit`), `audit` (adds the Journal column). It links the
+    event through `ApplicationHelper#activity_source_path`, which resolves
+    the source record's page and falls back to the journal entry.
+  - `portfolio/_header` and `money/_header` build their tab sets on
+    `shared/_page_header` + `shared/_tabs`; `properties/_summary` and
+    `properties/_recent_activity` are the stream targets the expense dialog
+    replaces.
+  - `shared/_status` accepts `extra_class`; `.yn-alert-ok` and a
+    `prefers-reduced-motion` block live in both stylesheets.
+  - `/properties` (HTML) redirects to `/portfolio`; the JSON index remains.
+  - `tenancies/_page_header` is the header for standalone pages that belong
+    to one tenancy (receipt form, rent change, participants, deposit): eyebrow
+    Portfolio / property / unit, meta "tenants · unit · property".
+  - `receipts/_form` is the only receipt form. Its `fixed_tenancy` local is
+    required: a Tenancy pins the form to that tenancy, an explicit nil renders
+    the tenancy select for the Money entry point (and stays that way after a
+    422, whatever tenancy the failed receipt carries). The controller passes
+    `parties`, `tenancies`, and `balance_cents`; the partial runs no queries.
+  - Receipt, expense, and charge detail pages use the shared page header with
+    infrequent and destructive actions (correct, void) in a More menu and the
+    common action (Download PDF, Add reimbursement charge) as the primary.
+    Vocabulary is "receipt", sentence case, no record ids in titles.
+  - The Inbox confirm button is always enabled; JavaScript only relabels it.
+    An unclassified confirm is rejected by the server with a focused 422.
+  - Every Inbox mutation response (confirm, update, destroy, and their 422s)
+    ends with `<turbo-stream action="inbox_settle" target="imported_transaction_ID">`,
+    a custom action registered in `application.js`. It runs in stream order,
+    after the response's DOM changes, and tells `responsive_frame` that the
+    id it marked pending at submit-start is no longer this tab's own in-flight
+    mutation. Remote removals of that id reconcile again from then on.
+  - Deposit receive/refund/apply failures re-render the deposit page (422)
+    with the submitted values and the reason inline.
+- Added 2026-09-03, finishing the pages the PRD did not name and the last
+  PRD gaps:
+  - `properties/_page_header` and `tenancies/_page_header` are the headers for
+    standalone pages scoped to one property or tenancy. `properties/_header`
+    remains the property workspace header (it owns the four tabs and now sets
+    `content_for :title` for all of them).
+  - `shared/_pagination` (locals: page, per_page, total_count, total_pages,
+    `page_url` lambda) is the one pagination control; Receipts, Expenses, Money
+    Activity, property Activity, Inbox History, Tenancies, and Parties use it.
+    Tenancies and Parties are now paged; the Inbox Needs review queue renders
+    at most `InboxQuery::QUEUE_LIMIT` rows and says so.
+  - Signed-out pages (sign in, password reset) render without the app shell:
+    the layout branches on `authenticated?`, and `shared/_auth_card` is their
+    surface. `<html lang="en">` is set.
+  - Inbox count badges are stable live regions updated in place; only the
+    surface that is displayed announces (sidebar at lg+, mobile top bar below),
+    and the count carries an sr-only "imported transactions need review".
+  - The receipt/charge/expense dialog opens immediately with the trigger's
+    label and a "Loading…" line, and shows an error in place if the frame
+    request fails (PRD 19).
+  - The Inbox master/detail selection is written to `?selected_id=` with
+    `history.replaceState`, so refresh and Back reopen the same item.
+  - `/dashboards/index` redirects to `/` (301). Screenshots are named after
+    the screens they show, and README covers Overview, Portfolio, property
+    Activity, tenancy, the receipt dialog, upload, Inbox, Reports, Schedule E.
+  - Field labels and page titles are sentence case across every form; money is
+    `format_money_cents` with `tabular-nums` and no `font-mono`.
+- Added 2026-09-03, UX improvements beyond the PRD's own list:
+  - The Overview attention queue raises only money that is actually late.
+    `Tenancies::OverdueQuery` computes, in one grouped pass,
+    `[balance - charges still inside their grace period, 0].max` using each
+    tenancy's `late_period_days`. Total outstanding stays in the portfolio
+    summary strip. `Reports::ScheduleEStatusesQuery#needs_work?` is the single
+    definition of "needs work", used by both Reports and the attention queue,
+    which raises one aggregate Schedule E item for the filing year.
+  - Reports groups into Needs work then Ready, ordered by state with address
+    as the tiebreak.
+  - Receipts and Expenses filter by property, year, category, and text, with
+    state in URL params carried through `shared/_pagination`; the shared
+    reading of those params lives in the `IndexFilters` controller concern.
+    Money Activity, Receipts, and Expenses each show period totals, Money
+    Activity via `Accounting::PortfolioSummaryQuery` (one grouped aggregate,
+    field names matching `PropertySummaryQuery`).
+  - The tenant statement exports PDF and CSV from the same URL and filters,
+    through `Tenancies::StatementExport` shared by both. Voided and corrected
+    rows stay in the document with the reason named. NOTE: Prawn's built-in
+    AFM fonts cannot encode the U+2212 minus that `signed_money_cents` emits,
+    so anything rendering money into a PDF must go through
+    `StatementExport.text`.
+  - One `@media print` block in both stylesheets drops the shell, dialogs,
+    toasts, and pointer-only affordances; `.turbo-progress-bar` is on-palette.
+  - Turbo Drive `advance` visits move focus to `#main h1`; frame and stream
+    renders keep their own focus contracts. The Inbox queue takes `j`/`k`,
+    the arrow keys, and `c` to confirm, guarded against modifiers, form
+    fields, open dialogs, and widths below `lg`, with a hint the controller
+    reveals only where the shortcuts work.
+  - `GET /search` finds properties, units, tenancies, and parties, scoped to
+    the user by construction, each group one bounded query.
+
+- Added 2026-09-04, answering the second external review and the test
+  infrastructure it exposed:
+  - `Tenancies::OverdueQuery` shields only charges that are *both* already
+    dated and still inside their grace period. `Charges::PostService` dates
+    the journal entry with `charge_date`, and `TenancyBalancesQuery` counts
+    entries on or before `as_of`, so a charge dated in the future is not in
+    the balance and must not be subtracted from it. Without the
+    `charge_date <= as_of` clause, one future charge hid money that was
+    already late.
+  - `Tenancies::StatementCsvService` prefixes any person-authored cell that
+    begins with `=`, `+`, `-`, `@`, a tab, or a newline with an apostrophe, so
+    Excel and LibreOffice read it as text rather than a formula. Money columns
+    are deliberately exempt: they are written by the service and a leading
+    minus there is a negative number, not an injection.
+  - The Overview attention queue reads a cached Schedule E summary
+    (`Rails.cache`, one hour) rather than issuing per-property queries on
+    every render. Two rules govern the key, and both come from cases where an
+    earlier version of it went stale:
+    - Timestamps enter as microsecond ISO strings. Postgres keeps the
+      fractional second and `Time#to_i` discards it, which let a resolution
+      recorded inside the same second as the one before it leave the item
+      standing for the rest of the hour.
+    - Every relation that can lose a row contributes its row count as well as
+      its latest timestamp. A maximum stays put when a row is deleted, and
+      Schedule E offers Undo on each resolved review item, so undoing any but
+      the newest brought the review item back while the dashboard reported it
+      as handled. Journal entries are append-only and need only the timestamp.
+  - `responsive_frame` re-resolves the row when its keyboard load timer
+    fires instead of holding the element. Clicking a detached anchor escapes
+    Turbo's delegated handler, and the browser then followed the href and
+    navigated the whole page to the standalone review screen.
+  - `.yn-tabs` pins `overflow-y: hidden`. CSS computes a `visible` axis as
+    `auto` once the other axis is not visible, so with the active tab's
+    underline overlapping the container border every tab strip grew a stray
+    vertical scrollbar.
+  - Test infrastructure, and the reason it exists: this headless Chrome
+    intermittently swallows the input Capybara synthesizes. JavaScript keeps
+    running, frames arrive in milliseconds, the target is unobstructed and
+    hit-testable, and yet no click event reaches the document, from Capybara,
+    from Selenium's Actions API, or from a DevTools mouse dispatch at any
+    coordinate; a keystroke sent at the same moment is dropped too, and
+    nothing raises. It appears as soon as any other example runs before the
+    browser specs, which is why it never showed up in a file-scoped run.
+    `spec/support/capybara_click_delivery.rb` prepends a check to
+    `Capybara::Node::Element#click`: a capture-phase document listener counts
+    what arrives, and a click that produced nothing at all is dispatched again
+    from the page, with a line on stderr saying so. The native click still
+    goes first, so visibility, viewport, enabled state, and overlap are still
+    enforced by the driver. `resize_window_to` waits for the requested size
+    and then for a composited frame at it.
 
 # Appendix B: stable DOM ID registry
 

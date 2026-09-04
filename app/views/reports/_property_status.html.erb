@@ -47,13 +47,13 @@
         <% case status.state %>
         <% when :needs_review %>
           <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span><%= status.unresolved_review_count == 1 ? "1 item needs review" : "#{status.unresolved_review_count} items need review" %></span>
-          <span class="text-stone-400"> · profile configured</span>
+          <span class="text-stone-500"> · profile configured</span>
         <% when :needs_profile %>
           <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Needs tax profile</span>
-          <span class="text-stone-400"> · Schedule E can’t be prepared yet</span>
+          <span class="text-stone-500"> · Schedule E can’t be prepared yet</span>
         <% when :ready %>
           <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Ready</span>
-          <span class="text-stone-400"> · net income </span>
+          <span class="text-stone-500"> · net income </span>
           <span class="tabular-nums text-stone-500"><%= signed_money_cents(status.net_income_cents) %></span>
         <% end %>
       </p>

@@ -1,9 +1,15 @@
-<% content_for :title, "New Tenancy" %>
+<% content_for :title, "New tenancy" %>
 
-<div class="max-w-2xl mx-auto py-6">
-  <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-6">Create New Tenancy</h1>
-
-  <div class="mb-6">
+<div class="max-w-2xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Tenancies", tenancies_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "New tenancy",
+        meta: "Records who occupies a unit, the rent they owe, and the account their payments post to." %>
+  <div class="yn-surface p-6">
     <%= render "form", tenancy: @tenancy %>
   </div>
 </div>

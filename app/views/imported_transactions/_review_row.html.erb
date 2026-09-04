@@ -8,51 +8,5 @@
               action: "click->responsive-frame#select"
             },
             class: "block px-4 py-3 no-underline text-inherit #{selected_class}" do %>
-  <span class="flex items-baseline justify-between gap-3">
-    <span class="text-sm font-medium text-stone-900 truncate">
-      <%= transaction.matched_party&.display_name || transaction.payer_name.presence || "Unidentified Payer" %>
-    </span>
-    <span class="text-sm font-semibold tabular-nums whitespace-nowrap">
-      <%= format_money_cents(transaction.amount_cents) %>
-    </span>
-  </span>
-  <span class="flex items-baseline justify-between gap-3 mt-0.5">
-    <span class="text-[13px] text-stone-500 truncate">
-      <%= imported_transaction_source_description(transaction) %>
-    </span>
-    <span class="text-[13px] text-stone-500 whitespace-nowrap">
-      <%= transaction.occurred_on&.strftime("%b %d") || "—" %>
-    </span>
-  </span>
-  <span class="yn-status yn-status-sm mt-1.5">
-    <% if transaction.failed? %>
-      <span class="yn-dot yn-dot-danger"></span>Failed parse
-    <% elsif transaction.unknown? %>
-      <span class="yn-dot yn-dot-warn"></span>Needs classification<% if transaction.matched_tenancy&.property %> · <%= transaction.matched_tenancy.property.address %><% end %>
-    <% elsif transaction.security_deposit? %>
-      <% case transaction.status %>
-      <% when "matched" %>
-        <span class="yn-dot yn-dot-ok"></span>Security deposit · Matched<% if transaction.matched_tenancy&.property %> · <%= transaction.matched_tenancy.property.address %><% end %>
-      <% when "ambiguous" %>
-        <span class="yn-dot yn-dot-warn"></span>Security deposit · Ambiguous · 2 possible tenancies
-      <% when "unmatched" %>
-        <span class="yn-dot yn-dot-warn"></span>Security deposit · Unmatched payer
-      <% else %>
-        <span class="yn-dot yn-dot-neutral"></span>Security deposit · <%= transaction.status.titleize %>
-      <% end %>
-    <% elsif transaction.tenant_receipt? %>
-      <% case transaction.status %>
-      <% when "matched" %>
-        <span class="yn-dot yn-dot-ok"></span>Tenant receipt · Matched<% if transaction.matched_tenancy&.property %> · <%= transaction.matched_tenancy.property.address %><% end %>
-      <% when "ambiguous" %>
-        <span class="yn-dot yn-dot-warn"></span>Tenant receipt · Ambiguous · 2 possible tenancies
-      <% when "unmatched" %>
-        <span class="yn-dot yn-dot-warn"></span>Tenant receipt · Unmatched payer
-      <% else %>
-        <span class="yn-dot yn-dot-neutral"></span>Tenant receipt · <%= transaction.status.titleize %>
-      <% end %>
-    <% else %>
-      <span class="yn-dot yn-dot-neutral"></span><%= transaction.status.titleize %>
-    <% end %>
-  </span>
+  <%= render "imported_transactions/review_row_content", transaction: transaction %>
 <% end %>

@@ -1,0 +1,24 @@
+<%# Compact YTD financial summary for the property Overview tab.
+    Turbo Stream target: #property_summary (replaced after recording an expense).
+    Locals: security_deposits_held_cents, ytd_summary %>
+<section id="property_summary" aria-labelledby="financials-heading">
+  <h2 id="financials-heading" class="sr-only">Financial summary</h2>
+  <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4">
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Deposits held</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(security_deposits_held_cents) %></dd>
+    </div>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income, YTD</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(ytd_summary.net_income_cents) %></dd>
+    </div>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income, YTD</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(ytd_summary.income_recognized_cents) %></dd>
+    </div>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses, YTD</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(ytd_summary.total_expenses_cents) %></dd>
+    </div>
+  </dl>
+</section>

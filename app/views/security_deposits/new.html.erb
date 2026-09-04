@@ -1,39 +1,10 @@
-<% content_for :title, "Set Up Security Deposit — Tenancy ##{@tenancy.id}" %>
+<% content_for :title, "Set up security deposit" %>
 
-<div class="max-w-xl mx-auto py-6">
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900 mb-2">Set Up Security Deposit</h1>
-    <p class="text-sm text-stone-500 mb-6">Record the contractual security deposit requirement for this tenancy.</p>
-
-    <%= form_with model: @security_deposit, url: tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-4" do |f| %>
-      <% if @security_deposit.errors.any? %>
-        <div class="yn-alert yn-alert-danger mb-6" role="alert">
-          <ul class="list-disc list-inside text-sm">
-            <% @security_deposit.errors.full_messages.each do |msg| %>
-              <li><%= msg %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-
-      <div>
-        <label class="yn-label" for="security_deposit_required_amount">
-          <span>Required Deposit Amount ($)</span>
-        </label>
-        <%= f.number_field :required_amount, step: "0.01", min: "0.01", placeholder: "2000.00", class: "yn-input font-mono tabular-nums", id: "security_deposit_required_amount", required: true %>
-      </div>
-
-      <div>
-        <label class="yn-label" for="security_deposit_due_on">
-          <span>Due Date</span>
-        </label>
-        <%= f.date_field :due_on, class: "yn-input", id: "security_deposit_due_on", required: true %>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2">
-        <%= link_to "Cancel", tenancy_path(@tenancy), class: "yn-btn yn-btn-secondary" %>
-        <%= f.submit "Save Deposit Requirement", class: "yn-btn yn-btn-primary" %>
-      </div>
-    <% end %>
+<div class="max-w-xl">
+  <%= render "tenancies/page_header", tenancy: @tenancy, title: "Set up security deposit" %>
+  <div class="yn-surface p-6">
+    <p class="text-sm text-stone-500 mt-0 mb-5">Record the deposit this tenancy is required to hold. Money received against it is tracked as a liability, separate from rent.</p>
+    <%= render "security_deposits/form", security_deposit: @security_deposit,
+               submit_label: "Save deposit requirement", cancel_path: tenancy_path(@tenancy) %>
   </div>
 </div>

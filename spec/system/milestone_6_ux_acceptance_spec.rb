@@ -100,16 +100,16 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
 
       visit receipt_path(receipt)
       expect(page).to have_current_path(receipt_path(receipt))
-      expect(page).to have_text("Receipt ID: ##{receipt.id}")
-      expect(page).to have_button("Void Payment")
+      expect(page).to have_css("h1", text: "Receipt from")
+      expect(page).to have_button("Void receipt…", visible: :all)
       expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
       page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
       expect(page).to have_css("#confirm-modal[open]")
-      expect(page).to have_text("Are you sure you want to void this payment?")
+      expect(page).to have_text("Void this receipt?")
       page.execute_script("document.querySelector('#confirm-modal [data-action*=\"turbo-confirm#confirm\"]').click()")
 
       expect(page).to have_text("Payment has been voided")
-      expect(page).to have_text("This payment was voided.")
+      expect(page).to have_text("This receipt was voided.")
       expect(receipt.reload).to be_voided
     end
 
@@ -135,8 +135,8 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       # 1. Visit receipt 1, trigger Void, backdrop cancel
       visit receipt_path(receipt1)
       expect(page).to have_current_path(receipt_path(receipt1))
-      expect(page).to have_text("Receipt ID: ##{receipt1.id}")
-      expect(page).to have_button("Void Payment")
+      expect(page).to have_css("h1", text: "Receipt from")
+      expect(page).to have_button("Void receipt…", visible: :all)
       expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
       page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
       expect(page).to have_css("#confirm-modal[open]")
@@ -149,8 +149,8 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       # 2. Visit receipt 2, trigger Void and Confirm
       visit receipt_path(receipt2)
       expect(page).to have_current_path(receipt_path(receipt2))
-      expect(page).to have_text("Receipt ID: ##{receipt2.id}")
-      expect(page).to have_button("Void Payment")
+      expect(page).to have_css("h1", text: "Receipt from")
+      expect(page).to have_button("Void receipt…", visible: :all)
       expect(page).to have_css("#confirm-modal[data-connected='true']", visible: :all)
       page.execute_script("document.querySelector('button[data-turbo-confirm]').click()")
       expect(page).to have_css("#confirm-modal[open]")
@@ -281,16 +281,16 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       created_exp = exp_res.value!.data[:expense]
 
       visit correction_expense_path(created_exp)
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
 
       # Change vendor, reference, and enter negative amount
       fill_in "expense_vendor_name", with: "Updated Utility Vendor"
       fill_in "expense_external_reference", with: "INV-CORRECT-999"
       page.execute_script("document.getElementById('expense_amount').value = '-75.00'")
       page.execute_script("document.getElementById('expense-correction-form').noValidate = true")
-      click_button "Post Corrected Expense"
+      click_button "Save correction"
 
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
       expect(page).to have_css(".yn-alert-danger")
       expect(page).to have_text(/must be greater than 0|Expense amount must be greater than zero|Correction couldn't be saved/)
 
@@ -315,16 +315,16 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       created_exp = exp_res.value!.data[:expense]
 
       visit correction_expense_path(created_exp)
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
 
       # Clear required fields (amount, date) using JS to simulate browser validation bypass
       page.execute_script("document.getElementById('expense_amount').value = ''")
       page.execute_script("document.getElementById('expense_paid_on').value = ''")
       page.execute_script("document.getElementById('expense-correction-form').noValidate = true")
-      click_button "Post Corrected Expense"
+      click_button "Save correction"
 
       # Verify 422 ARIA error path
-      expect(page).to have_css("h1", text: "Correct Expense")
+      expect(page).to have_css("h1", text: "Correct expense")
       expect(page).to have_css(".yn-alert-danger")
 
       amount_input = find("#expense_amount")
@@ -344,18 +344,18 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       visit new_receipt_path
 
       expect(page).to have_current_path(new_receipt_path)
-      expect(page).to have_css("h1", text: "Record Payment")
+      expect(page).to have_css("h1", text: "Record receipt")
 
       # Select tenancy, fill method, clear amount and submit
-      select "##{tenancy.id} - #{property.address} (#{unit.name})", from: "receipt-tenancy"
+      find("#receipt-tenancy").find(:option, text: property.address).select_option
       select "Alice Tenant", from: "receipt-payer"
       fill_in "receipt-method", with: "Zelle"
       page.execute_script("document.getElementById('receipt-amount').value = ''")
       page.execute_script("document.getElementById('receipt-form').noValidate = true")
-      click_button "Record Payment"
+      click_button "Record receipt"
 
       # Verify full page remains on standalone form and displays error alert + field ARIA error
-      expect(page).to have_css("h1", text: "Record Payment")
+      expect(page).to have_css("h1", text: "Record receipt")
       expect(page).to have_css(".yn-alert-danger", text: "Amount is required")
 
       amount_field = find("#receipt-amount")
@@ -363,15 +363,24 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       expect(amount_field[:'aria-describedby']).to eq("receipt-amount-error")
       expect(amount_field.value).to eq("")
       expect(page).to have_css("#receipt-amount-error.yn-error-text")
+
+      # Still the Money entry form: the tenancy stays a choice (with the submitted
+      # value kept) and the form still posts to the top-level endpoint
+      expect(find("#receipt-tenancy").value).to eq(tenancy.id.to_s)
+      expect(find("#receipt-form")[:action]).to end_with(receipts_path(format: :html))
+      expect(page).to have_link("Cancel", href: receipts_path)
       expect(page).to have_no_css("dialog#modal[open]")
     end
 
     it "executes the complete daily attention journey: Overview → attention item → tenancy action (P3 acceptance)", js: true do
+      # Dated past the tenancy's grace period, since the attention queue now
+      # raises only money that is actually late.
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "late_fee",
         amount_cents: 50_000,
-        charge_date: Date.current
+        charge_date: Date.current - 30.days,
+        due_on: Date.current - 30.days
       )
 
       balance_cents = Accounting::TenancyBalanceQuery.balance_cents_as_of(tenancy: tenancy, as_of: Date.current)
@@ -379,7 +388,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
 
       visit root_path
       expect(page).to have_text("Needs attention")
-      expect(page).to have_text("Alice Tenant owes $#{amount_dollars}")
+      expect(page).to have_text("Alice Tenant is $#{amount_dollars} overdue")
 
       # Click the attention action link to enter tenancy context
       click_link "Open tenancy →"
@@ -403,14 +412,14 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       within("aside.yn-sidebar") { click_on "Overview" }
       expect(page).to have_current_path(root_path)
       expect(page).to have_text("Nothing needs attention.")
-      expect(page).to have_no_text("Alice Tenant owes")
+      expect(page).to have_no_text("Alice Tenant is")
     end
 
     it "renders toast notifications with proper ARIA live status" do
       visit new_property_path
       fill_in "Address", with: "777 Maple Avenue"
       select "Commercial", from: "Asset type"
-      click_on "Create Property"
+      click_on "Add property"
 
       # Expect flash toast with role="status" and message
       expect(page).to have_css("div[role='status'].yn-alert", text: "Property was successfully created.")
@@ -420,7 +429,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
   describe "375px mobile viewport responsiveness", js: true do
     before do
       Accounting::ChartOfAccounts.ensure_for(user)
-      page.driver.browser.manage.window.resize_to(375, 667)
+      resize_window_to(375, 667)
       visit new_session_path
       fill_in "email", with: user.email
       fill_in "password", with: "password"
@@ -429,7 +438,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
     end
 
     after do
-      page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
+      resize_window_to(1400, 1400)
     end
 
     it "renders the mobile topbar without horizontal overflow" do
@@ -476,7 +485,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
   describe "Screenshot generation for documentation refresh (P3 acceptance)", js: true do
     before do
       Accounting::ChartOfAccounts.ensure_for(user)
-      page.driver.browser.manage.window.resize_to(1280, 800)
+      resize_window_to(1280, 800)
       visit new_session_path
       fill_in "email", with: user.email
       fill_in "password", with: "password"
@@ -502,35 +511,41 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
     end
 
     after do
-      page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
+      resize_window_to(1400, 1400)
     end
 
-    it "captures fresh high-res screenshots for the five core application areas" do
+    it "captures fresh high-res screenshots of the primary areas" do
       screenshots_dir = ENV["UPDATE_SCREENSHOTS"].present? ? Rails.root.join("public/screenshots") : Rails.root.join("tmp/screenshots")
       FileUtils.mkdir_p(screenshots_dir)
 
-      # 1. Overview / Dashboard
+      # 1. Overview
       visit root_path
       expect(page).to have_text("Overview")
-      page.save_screenshot(screenshots_dir.join("ledger_view.png"))
+      page.save_screenshot(screenshots_dir.join("overview.png"))
 
-      # 2. Property Overview & Activity
+      # 2. Portfolio
+      visit portfolio_path
+      expect(page).to have_css("main#main h1", text: "Portfolio")
+      page.save_screenshot(screenshots_dir.join("portfolio.png"))
+
+      # 3. Property workspace, Activity tab
       visit property_activity_path(property)
       expect(page).to have_text("Activity")
-      page.save_screenshot(screenshots_dir.join("ledger_items.png"))
+      page.save_screenshot(screenshots_dir.join("property_activity.png"))
 
-      # 3. Tenancy Running Account
+      # 4. Tenancy workspace
       visit tenancy_path(tenancy)
       expect(page).to have_text("Alice Tenant")
-      page.save_screenshot(screenshots_dir.join("tenancy_view.png"))
+      page.save_screenshot(screenshots_dir.join("tenancy.png"))
 
-      # 4. Record Payment Modal
+      # 5. Record receipt dialog
       visit tenancy_path(tenancy)
       click_on "Record receipt"
       expect(page).to have_css("dialog#modal[open]")
-      page.save_screenshot(screenshots_dir.join("record_payment_modal.png"))
+      expect(page).to have_css("#receipt-form")
+      page.save_screenshot(screenshots_dir.join("record_receipt_dialog.png"))
 
-      # 5. Inbox Review & Queue
+      # 6. Inbox, Needs review
       create(:imported_transaction,
         user: user,
         status: "matched",
@@ -544,18 +559,23 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       )
       visit inbox_path
       expect(page).to have_text("Needs review")
-      page.save_screenshot(screenshots_dir.join("imported_transactions_review.png"))
+      page.save_screenshot(screenshots_dir.join("inbox_review.png"))
 
-      # 6. Upload Source Document
-      visit inbox_path(view: "processing")
-      expect(page).to have_text("Upload statement")
-      page.save_screenshot(screenshots_dir.join("upload_document.png"))
+      # 7. Upload a statement
+      visit new_source_document_path
+      expect(page).to have_css("main#main h1", text: "Upload statement")
+      page.save_screenshot(screenshots_dir.join("upload_statement.png"))
 
-      # 7. Schedule E Tax Worksheet
+      # 8. Reports landing
       property.tax_profiles.create!(tax_year: Date.current.year, schedule_e_property_type: "single_family_residence")
+      visit reports_path(year: Date.current.year)
+      expect(page).to have_css("main#main h1", text: "Reports")
+      page.save_screenshot(screenshots_dir.join("reports.png"))
+
+      # 9. Schedule E worksheet
       visit schedule_e_property_path(property, year: Date.current.year)
       expect(page).to have_text("Schedule E")
-      page.save_screenshot(screenshots_dir.join("tax_worksheet.png"))
+      page.save_screenshot(screenshots_dir.join("schedule_e.png"))
     end
   end
 end

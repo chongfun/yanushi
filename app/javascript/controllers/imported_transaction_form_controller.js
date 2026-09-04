@@ -63,19 +63,16 @@ export default class extends Controller {
     if (!this.hasKindSelectTarget) return
     const kind = this.kindSelectTarget.value
 
+    // Presentation only: the label mirrors the chosen classification. The
+    // button stays enabled so the server's validation (a 422 with the reason,
+    // focused by inbox_focus) is the single rule, and no-JS behaves the same.
     if (this.hasConfirmButtonTarget) {
       if (kind === "unknown" || !kind) {
         this.confirmButtonTarget.textContent = "Choose classification"
-        this.confirmButtonTarget.disabled = true
-        this.confirmButtonTarget.classList.add("opacity-50", "cursor-not-allowed")
       } else if (kind === "security_deposit") {
         this.confirmButtonTarget.textContent = "Confirm deposit"
-        this.confirmButtonTarget.disabled = false
-        this.confirmButtonTarget.classList.remove("opacity-50", "cursor-not-allowed")
       } else {
         this.confirmButtonTarget.textContent = "Confirm receipt"
-        this.confirmButtonTarget.disabled = false
-        this.confirmButtonTarget.classList.remove("opacity-50", "cursor-not-allowed")
       }
     }
 

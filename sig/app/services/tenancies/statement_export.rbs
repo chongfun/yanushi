@@ -1,0 +1,47 @@
+module Tenancies
+  module StatementExport
+    MINUS: String
+    DASH: String
+    ACCOUNT_TITLE: String
+    ACTIVITY_TITLE: String
+    AUDIT_NOTE: String
+
+    def self.title: (untyped view_mode) -> String
+    def self.tenant_names: (Tenancy tenancy) -> String
+    def self.unit_label: (Tenancy tenancy) -> String
+    def self.property_label: (Tenancy tenancy) -> String
+    def self.identity_lines: (Tenancy tenancy) -> Array[Array[String]]
+    def self.period_label: (Accounting::DateRange date_range) -> String
+    def self.long_date: (Date date) -> String
+    def self.iso_date: (Date date) -> String
+    def self.money: (Integer? cents) -> String
+    def self.signed_money: (Integer? cents) -> String
+    def self.balance: (Integer? cents) -> String
+    def self.activity_label: (untyped row) -> String
+    def self.event_label: (untyped row) -> String
+    def self.statement_notes: (untyped row) -> String
+    def self.audit_note: (untyped row) -> String
+    def self.status_word: (untyped row) -> String
+    def self.party_name: (untyped row) -> String
+    def self.text: (untyped value) -> String
+
+    def title: (untyped view_mode) -> String
+    def tenant_names: (Tenancy tenancy) -> String
+    def unit_label: (Tenancy tenancy) -> String
+    def property_label: (Tenancy tenancy) -> String
+    def identity_lines: (Tenancy tenancy) -> Array[Array[String]]
+    def period_label: (Accounting::DateRange date_range) -> String
+    def long_date: (Date date) -> String
+    def iso_date: (Date date) -> String
+    def money: (Integer? cents) -> String
+    def signed_money: (Integer? cents) -> String
+    def balance: (Integer? cents) -> String
+    def activity_label: (untyped row) -> String
+    def event_label: (untyped row) -> String
+    def statement_notes: (untyped row) -> String
+    def audit_note: (untyped row) -> String
+    def status_word: (untyped row) -> String
+    def party_name: (untyped row) -> String
+    def text: (untyped value) -> String
+  end
+end

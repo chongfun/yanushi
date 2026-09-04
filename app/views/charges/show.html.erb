@@ -1,135 +1,135 @@
-<% content_for :title, "Charge ##{@charge.id}" %>
+<%
+  charge = @charge
+  tenancy = @tenancy
+  title_text = charge.description.presence || charge.charge_kind.titleize
+  inactive = charge.voided? || charge.superseded?
+  status_text, status_tone = if charge.superseded?
+    [ "Corrected (Superseded)", :neutral ]
+  elsif charge.voided?
+    [ "Voided & Reversed", :neutral ]
+  elsif charge.posted?
+    [ "Posted", :ok ]
+  else
+    [ "Draft", :warn ]
+  end
+%>
+<% content_for :title, "Charge · #{title_text}" %>
 
-<div class="max-w-3xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Charge Details</h1>
-      <p class="text-sm text-stone-500">Charge ID: #<%= @charge.id %> • Tenancy #<%= @tenancy.id %></p>
-    </div>
-    <div class="flex gap-2 items-center">
-      <%= link_to "Back to Tenancy", @tenancy, class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <% if @charge.active? %>
-        <%= button_to "Void Charge", void_charge_path(@charge), method: :post,
-            class: "yn-btn yn-btn-danger yn-btn-sm",
-            form: { data: { turbo_confirm: "Are you sure you want to void this charge? This will post a reversing journal entry to the ledger." } } %>
-      <% end %>
-    </div>
-  </div>
-
-  <% if @charge.superseded? %>
-    <div class="yn-alert yn-alert-warn mb-6" role="status">
-      <div>
-        <div class="font-bold text-sm">Charge Corrected</div>
-        <div class="text-xs">
-          This charge was corrected on <%= @charge.voided_at&.strftime("%B %d, %Y") %>.
-          <% if @charge.superseded_by %>
-            Replaced by <%= link_to "Charge ##{@charge.superseded_by_id}", charge_path(@charge.superseded_by), class: "yn-link font-semibold" %>.
+<div class="max-w-3xl">
+  <%= render "tenancies/page_header",
+        tenancy: tenancy,
+        title: title_text,
+        meta: capture { %>
+          <span class="tabular-nums <%= 'line-through' if inactive %>"><%= format_money_cents(charge.amount_cents) %></span> &middot;
+          <%= charge.charge_kind.titleize %> &middot;
+          charged <%= charge.charge_date.strftime("%b %-d, %Y") %> &middot;
+          <%= render "shared/status", text: status_text, tone: status_tone, size: :sm %>
+        <% },
+        actions: capture { %>
+          <% if charge.active? %>
+            <details class="relative" data-controller="menu">
+              <summary class="yn-btn yn-btn-secondary list-none cursor-pointer">
+                More
+                <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+              </summary>
+              <div class="yn-menu">
+                <%= button_to "Void charge…", void_charge_path(charge), method: :post, class: "yn-menu-item yn-menu-item-danger",
+                      data: { turbo_confirm: "Void this charge? A reversing journal entry will be posted to the ledger." } %>
+              </div>
+            </details>
           <% end %>
-        </div>
-      </div>
+          <%= link_to "Tenancy activity", tenancy_path(tenancy), class: "yn-btn yn-btn-secondary" %>
+        <% } %>
+
+  <% if charge.superseded? %>
+    <div class="yn-alert yn-alert-warn mb-6" role="status">
+      <span><strong class="font-medium">Charge Corrected.</strong> Corrected on <%= charge.voided_at&.strftime("%B %-d, %Y") %>.<% if charge.superseded_by %> Replaced by <%= link_to "Charge ##{charge.superseded_by_id}", charge_path(charge.superseded_by), class: "yn-link font-medium" %>.<% end %></span>
     </div>
-  <% elsif @charge.voided? %>
+  <% elsif charge.voided? %>
     <div class="yn-alert yn-alert-danger mb-6" role="status">
-      <div>
-        <div class="font-bold text-sm">Charge Voided</div>
-        <div class="text-xs">This charge was voided on <%= @charge.voided_at&.strftime("%B %d, %Y at %I:%M %p") %> and its accounting entries have been reversed.</div>
-      </div>
+      <span><strong class="font-medium">Charge Voided.</strong> Voided on <%= charge.voided_at&.strftime("%B %-d, %Y") %>; its accounting entries have been reversed.</span>
     </div>
   <% end %>
-
-  <% if @charge.superseded_charge.present? %>
+  <% if charge.superseded_charge.present? %>
     <div class="yn-alert mb-6" role="status">
-      <div>
-        <div class="font-bold text-sm">Replacement Charge</div>
-        <div class="text-xs">
-          This charge is a correction replacement for <%= link_to "Charge ##{@charge.superseded_charge.id}", charge_path(@charge.superseded_charge), class: "yn-link font-semibold" %>.
-        </div>
-      </div>
+      <span><strong class="font-medium">Replacement Charge.</strong> This charge corrects <%= link_to "Charge ##{charge.superseded_charge.id}", charge_path(charge.superseded_charge), class: "yn-link font-medium" %>.</span>
     </div>
   <% end %>
 
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <div class="flex flex-col md:flex-row justify-between gap-8">
-      <div class="space-y-6 flex-1">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Amount</div>
-          <div class="text-3xl font-bold font-mono tabular-nums <%= @charge.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
-            <%= number_to_currency(@charge.amount) %>
-          </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+    <section aria-labelledby="charge-details-heading">
+      <h2 id="charge-details-heading" class="text-sm font-semibold mb-3">Charge</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Amount</dt>
+          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-400' if inactive %>"><%= format_money_cents(charge.amount_cents) %></dd>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Charge Type</div>
-            <div class="text-sm font-medium uppercase font-mono"><%= @charge.charge_kind.titleize %></div>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Status</div>
-            <div>
-              <% if @charge.superseded? %>
-                <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Corrected (Superseded)</span>
-              <% elsif @charge.voided? %>
-                <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Voided & Reversed</span>
-              <% elsif @charge.posted? %>
-                <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Posted</span>
-              <% else %>
-                <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Draft</span>
-              <% end %>
-            </div>
-          </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Type</dt>
+          <dd class="m-0"><%= charge.charge_kind.titleize %></dd>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Charge Date</div>
-            <div class="text-sm font-medium text-stone-900"><%= @charge.charge_date.strftime("%B %d, %Y") %></div>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Due Date</div>
-            <div class="text-sm font-medium text-stone-900"><%= @charge.due_on.strftime("%B %d, %Y") %></div>
-          </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Charged on</dt>
+          <dd class="m-0"><%= charge.charge_date.strftime("%B %-d, %Y") %></dd>
         </div>
-
-        <% if @charge.service_period_start && @charge.service_period_end %>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Service Period</div>
-            <div class="text-sm font-medium text-stone-900">
-              <%= @charge.service_period_start.strftime("%B %d, %Y") %> – <%= @charge.service_period_end.strftime("%B %d, %Y") %>
-            </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Due on</dt>
+          <dd class="m-0"><%= charge.due_on.strftime("%B %-d, %Y") %></dd>
+        </div>
+        <% if charge.service_period_start && charge.service_period_end %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Service period</dt>
+            <dd class="m-0 text-right"><%= charge.service_period_start.strftime("%b %-d, %Y") %> – <%= charge.service_period_end.strftime("%b %-d, %Y") %></dd>
           </div>
         <% end %>
-
-        <% if @charge.description.present? %>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Description</div>
-            <div class="text-sm text-stone-700"><%= @charge.description %></div>
+        <% if charge.source_expense %>
+          <div class="flex justify-between gap-6 py-2.5">
+            <dt class="text-stone-500">Reimburses</dt>
+            <dd class="m-0 text-right"><%= link_to (charge.source_expense.vendor_name.presence || charge.source_expense.expense_kind.titleize), expense_path(charge.source_expense), class: "yn-link" %></dd>
           </div>
         <% end %>
-      </div>
+        <% if charge.description.present? %>
+          <div class="py-2.5">
+            <dt class="text-stone-500 mb-1">Description</dt>
+            <dd class="m-0 text-stone-700"><%= charge.description %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </section>
 
-      <div class="border-t md:border-t-0 md:border-l border-stone-200 pt-6 md:pt-0 md:pl-8 space-y-6 flex-1">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Property</div>
-          <div class="text-base font-bold text-stone-900"><%= @tenancy.property&.address %></div>
-          <div class="text-xs text-stone-500"><%= @tenancy.rentable_unit&.display_name %></div>
+    <section aria-labelledby="charge-context-heading">
+      <h2 id="charge-context-heading" class="text-sm font-semibold mb-3">Tenancy</h2>
+      <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Property</dt>
+          <dd class="m-0 text-right"><%= link_to tenancy.property.address, property_path(tenancy.property), class: "yn-link" %></dd>
         </div>
-
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Tenants</div>
-          <div class="flex flex-wrap gap-1.5">
-            <% @tenancy.parties.each do |party| %>
-              <span class="text-xs text-stone-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200"><%= party.display_name %></span>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Unit</dt>
+          <dd class="m-0 text-right"><%= link_to tenancy.rentable_unit.display_name, tenancy_path(tenancy), class: "yn-link" %></dd>
+        </div>
+        <div class="flex justify-between gap-6 py-2.5">
+          <dt class="text-stone-500">Tenants</dt>
+          <dd class="m-0 text-right"><%= tenancy.all_tenant_parties.map(&:display_name).to_sentence.presence || "—" %></dd>
+        </div>
+        <div class="py-2.5">
+          <dt class="text-stone-500 mb-1">Accounting</dt>
+          <dd class="m-0">
+            <% ledger_entries = charge.journal_entries.order(:occurred_on, :id).to_a %>
+            <% if ledger_entries.any? %>
+              <ul class="list-none m-0 p-0 space-y-0.5">
+                <% ledger_entries.each do |entry| %>
+                  <li><%= link_to "#{entry.event_type.humanize} · #{entry.occurred_on.strftime('%b %-d, %Y')}", journal_entry_path(entry), class: "yn-link" %></li>
+                <% end %>
+              </ul>
+            <% elsif charge.posted_at %>
+              Posted on <%= charge.posted_at.strftime("%b %-d, %Y") %>
+            <% else %>
+              Not yet posted to the ledger.
             <% end %>
-          </div>
+          </dd>
         </div>
-
-        <% if @charge.posted_at %>
-          <div>
-            <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Posted At</div>
-            <div class="text-xs font-mono text-stone-500"><%= @charge.posted_at.strftime("%Y-%m-%d %H:%M:%S UTC") %></div>
-          </div>
-        <% end %>
-      </div>
-    </div>
+      </dl>
+    </section>
   </div>
 </div>

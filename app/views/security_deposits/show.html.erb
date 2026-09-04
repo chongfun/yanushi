@@ -1,90 +1,80 @@
-<% content_for :title, "Security Deposit — Tenancy ##{@tenancy.id}" %>
+<% content_for :title, "Security deposit · #{@tenancy.rentable_unit.display_name}" %>
 
-<div class="max-w-5xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
+<div class="max-w-5xl">
+  <%= render "tenancies/page_header",
+        tenancy: @tenancy,
+        title: "Security deposit",
+        actions: (@transactions.none? ? link_to("Edit requirement", edit_tenancy_security_deposit_path(@tenancy), class: "yn-btn yn-btn-secondary") : nil) %>
+
+  <% failed = @failed_action %>
+
+  <!-- Summary -->
+  <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-8">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Security Deposit</h1>
-      <p class="text-sm text-stone-500"><%= @tenancy.property.address %> — <%= @tenancy.rentable_unit.display_name %></p>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Required</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@security_deposit.required_amount_cents) %></dd>
+      <dd class="text-xs text-stone-500 m-0">Due <%= @security_deposit.due_on.strftime("%b %-d, %Y") %></dd>
     </div>
-    <div class="flex gap-2">
-      <%= link_to "Back to Tenancy", tenancy_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <% if @transactions.none? %>
-        <%= link_to "Edit Requirement", edit_tenancy_security_deposit_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-      <% end %>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Currently held</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@held_cents) %></dd>
+      <dd class="text-xs text-stone-500 m-0">Ledger liability</dd>
     </div>
-  </div>
-
-  <!-- Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white border border-stone-200 rounded-lg p-4">
-      <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Required</div>
-      <div class="text-2xl font-bold font-mono tabular-nums text-stone-900"><%= number_to_currency(@security_deposit.required_amount) %></div>
-      <div class="text-xs text-stone-400 mt-1">Due: <%= @security_deposit.due_on.strftime("%b %d, %Y") %></div>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Remaining due</dt>
+      <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@remaining_required_cents) %></dd>
+      <dd class="text-xs text-stone-500 m-0">To fulfill requirement</dd>
     </div>
-
-    <div class="bg-white border border-stone-200 rounded-lg p-4">
-      <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Currently Held</div>
-      <div class="text-2xl font-bold font-mono tabular-nums text-indigo-600"><%= number_to_currency(@security_deposit.held_amount) %></div>
-      <div class="text-xs text-stone-400 mt-1">Ledger liability</div>
-    </div>
-
-    <div class="bg-white border border-stone-200 rounded-lg p-4">
-      <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Remaining Due</div>
-      <div class="text-2xl font-bold font-mono tabular-nums <%= @security_deposit.remaining_required_amount > 0 ? 'text-amber-600' : 'text-emerald-600' %>">
-        <%= number_to_currency(@security_deposit.remaining_required_amount) %>
-      </div>
-      <div class="text-xs text-stone-400 mt-1">To fulfill requirement</div>
-    </div>
-
-    <div class="bg-white border border-stone-200 rounded-lg p-4">
-      <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Funding Status</div>
-      <div class="mt-1">
-        <% case @security_deposit.funding_status %>
-        <% when "funded" %>
-          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Funded</span>
-        <% when "partially_funded" %>
-          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Partially Funded</span>
-        <% when "overfunded" %>
-          <span class="yn-status yn-status-sm"><span class="yn-dot"></span>Overfunded</span>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Funding status</dt>
+      <dd class="mt-1 m-0">
+        <% if @funding_status == "funded" %>
+          <%= render "shared/status", text: "Funded", tone: :ok, size: :sm %>
+        <% elsif @funding_status == "partially_funded" %>
+          <%= render "shared/status", text: "Partially Funded", tone: :warn, size: :sm %>
+        <% elsif @funding_status == "overfunded" %>
+          <%= render "shared/status", text: "Overfunded", size: :sm %>
         <% else %>
-          <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Not Funded</span>
+          <%= render "shared/status", text: "Not Funded", tone: :danger, size: :sm %>
         <% end %>
-      </div>
-      <div class="text-xs text-stone-400 mt-1">Contractual state</div>
+      </dd>
     </div>
-  </div>
+  </dl>
 
   <!-- Action Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <!-- Receive Deposit Card -->
-    <div class="bg-white border border-stone-200 rounded-lg p-6">
-      <h2 class="text-base font-bold text-stone-900 mb-1">Record Deposit Payment</h2>
+    <div class="yn-surface p-6">
+      <h2 class="text-sm font-semibold text-stone-900 mb-1">Record Deposit Payment</h2>
       <p class="text-xs text-stone-500 mb-4">Record money received toward this security deposit liability.</p>
+      <% if failed == :receive %>
+        <div class="yn-alert yn-alert-danger text-sm mb-3" role="alert" id="receive_error"><%= @failed_error %></div>
+      <% end %>
 
-      <%= form_with url: receive_tenancy_security_deposit_path(@tenancy), method: :post, local: true, class: "space-y-3" do |f| %>
+      <%= form_with url: receive_tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-3" do |f| %>
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_party_id">Contributor (Payer)</label>
-          <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name), class: "yn-select text-sm py-1.5", id: "receive_party_id", required: true %>
+          <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name, (failed == :receive ? params[:party_id] : nil)), class: "yn-select text-sm py-1.5", id: "receive_party_id", required: true %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_amount">Amount ($)</label>
-          <%= number_field_tag :amount, sprintf("%.2f", @security_deposit.remaining_required_amount > 0 ? @security_deposit.remaining_required_amount : 100.0), step: "0.01", min: "0.01", class: "yn-input text-sm py-1.5 font-mono tabular-nums", id: "receive_amount", required: true %>
+          <%= number_field_tag :amount, (failed == :receive ? params[:amount] : sprintf("%.2f", (@remaining_required_cents > 0 ? @remaining_required_cents : 10_000) / 100.0)), step: "0.01", min: "0.01", class: "yn-input text-sm py-1.5 tabular-nums", id: "receive_amount", required: true, "aria-invalid": (failed == :receive ? "true" : nil), "aria-describedby": (failed == :receive ? "receive_error" : nil) %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_occurred_on">Received On</label>
-          <%= date_field_tag :occurred_on, Date.current, class: "yn-input text-sm py-1.5", id: "receive_occurred_on", required: true %>
+          <%= date_field_tag :occurred_on, (failed == :receive ? params[:occurred_on] : Date.current), class: "yn-input text-sm py-1.5", id: "receive_occurred_on", required: true %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_external_reference">Reference (Optional)</label>
-          <%= text_field_tag :external_reference, nil, placeholder: "Check #, wire ref", class: "yn-input text-sm py-1.5", id: "receive_external_reference" %>
+          <%= text_field_tag :external_reference, (failed == :receive ? params[:external_reference] : nil), placeholder: "Check #, wire ref", class: "yn-input text-sm py-1.5", id: "receive_external_reference" %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_memo">Memo (Optional)</label>
-          <%= text_field_tag :memo, nil, placeholder: "Security deposit receipt", class: "yn-input text-sm py-1.5", id: "receive_memo" %>
+          <%= text_field_tag :memo, (failed == :receive ? params[:memo] : nil), placeholder: "Security deposit receipt", class: "yn-input text-sm py-1.5", id: "receive_memo" %>
         </div>
 
         <div class="pt-2">
@@ -94,35 +84,38 @@
     </div>
 
     <!-- Refund Deposit Card -->
-    <div class="bg-white border border-stone-200 rounded-lg p-6">
-      <h2 class="text-base font-bold text-stone-900 mb-1">Refund Deposit</h2>
+    <div class="yn-surface p-6">
+      <h2 class="text-sm font-semibold text-stone-900 mb-1">Refund Deposit</h2>
       <p class="text-xs text-stone-500 mb-4">Return held deposit funds to a tenant or contributor.</p>
+      <% if failed == :refund %>
+        <div class="yn-alert yn-alert-danger text-sm mb-3" role="alert" id="refund_error"><%= @failed_error %></div>
+      <% end %>
 
-      <% if @security_deposit.held_cents > 0 %>
-        <%= form_with url: refund_tenancy_security_deposit_path(@tenancy), method: :post, local: true, class: "space-y-3" do |f| %>
+      <% if @held_cents > 0 %>
+        <%= form_with url: refund_tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-3" do |f| %>
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_party_id">Recipient</label>
-            <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name), class: "yn-select text-sm py-1.5", id: "refund_party_id", required: true %>
+            <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name, (failed == :refund ? params[:party_id] : nil)), class: "yn-select text-sm py-1.5", id: "refund_party_id", required: true %>
           </div>
 
           <div>
-            <label class="yn-label text-xs font-semibold" for="refund_amount">Amount ($) — Max: <%= number_to_currency(@security_deposit.held_amount) %></label>
-            <%= number_field_tag :amount, sprintf("%.2f", @security_deposit.held_amount), step: "0.01", min: "0.01", max: sprintf("%.2f", @security_deposit.held_amount), class: "yn-input text-sm py-1.5 font-mono tabular-nums", id: "refund_amount", required: true %>
+            <label class="yn-label text-xs font-semibold" for="refund_amount">Amount ($), up to <%= format_money_cents(@held_cents) %></label>
+            <%= number_field_tag :amount, (failed == :refund ? params[:amount] : sprintf("%.2f", @held_cents / 100.0)), step: "0.01", min: "0.01", max: sprintf("%.2f", @held_cents / 100.0), class: "yn-input text-sm py-1.5 tabular-nums", id: "refund_amount", required: true, "aria-invalid": (failed == :refund ? "true" : nil), "aria-describedby": (failed == :refund ? "refund_error" : nil) %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_occurred_on">Refunded On</label>
-            <%= date_field_tag :occurred_on, Date.current, class: "yn-input text-sm py-1.5", id: "refund_occurred_on", required: true %>
+            <%= date_field_tag :occurred_on, (failed == :refund ? params[:occurred_on] : Date.current), class: "yn-input text-sm py-1.5", id: "refund_occurred_on", required: true %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_external_reference">Reference (Optional)</label>
-            <%= text_field_tag :external_reference, nil, placeholder: "Check #, wire ref", class: "yn-input text-sm py-1.5", id: "refund_external_reference" %>
+            <%= text_field_tag :external_reference, (failed == :refund ? params[:external_reference] : nil), placeholder: "Check #, wire ref", class: "yn-input text-sm py-1.5", id: "refund_external_reference" %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_memo">Memo (Optional)</label>
-            <%= text_field_tag :memo, nil, placeholder: "Deposit refund at move-out", class: "yn-input text-sm py-1.5", id: "refund_memo" %>
+            <%= text_field_tag :memo, (failed == :refund ? params[:memo] : nil), placeholder: "Deposit refund at move-out", class: "yn-input text-sm py-1.5", id: "refund_memo" %>
           </div>
 
           <div class="pt-2">
@@ -137,19 +130,22 @@
     </div>
 
     <!-- Apply Deposit Card -->
-    <div class="bg-white border border-stone-200 rounded-lg p-6">
-      <h2 class="text-base font-bold text-stone-900 mb-1">Apply Deposit to Charge</h2>
+    <div class="yn-surface p-6">
+      <h2 class="text-sm font-semibold text-stone-900 mb-1">Apply Deposit to Charge</h2>
       <p class="text-xs text-stone-500 mb-4">Apply held deposit toward an active charge (damages, rent, late fee).</p>
+      <% if failed == :apply %>
+        <div class="yn-alert yn-alert-danger text-sm mb-3" role="alert" id="apply_error"><%= @failed_error %></div>
+      <% end %>
 
-      <% if @security_deposit.held_cents > 0 && @tenancy.current_balance > 0 && @active_charges.any? %>
-        <%= form_with url: apply_tenancy_security_deposit_path(@tenancy), method: :post, local: true, class: "space-y-3" do |f| %>
+      <% if @held_cents > 0 && @balance_cents > 0 && @active_charges.any? %>
+        <%= form_with url: apply_tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-3" do |f| %>
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_charge_id">Select Active Charge</label>
             <select name="charge_id" id="apply_charge_id" class="yn-select text-sm py-1.5" required>
               <% @active_charges.each do |c| %>
-                <% cap = [c.remaining_deposit_application_cents, @security_deposit.held_cents, @tenancy.current_balance_cents].min / 100.0 %>
-                <option value="<%= c.id %>">
-                  <%= c.charge_date.strftime("%b %d, %Y") %> — <%= c.description || c.charge_kind.titleize %> (<%= number_to_currency(c.amount) %>, Max: <%= number_to_currency(cap) %>)
+                <% cap_cents = [c.remaining_deposit_application_cents, @held_cents, @balance_cents].min %>
+                <option value="<%= c.id %>"<%= " selected" if failed == :apply && params[:charge_id].to_s == c.id.to_s %>>
+                  <%= c.charge_date.strftime("%b %d, %Y") %> — <%= c.description || c.charge_kind.titleize %> (<%= format_money_cents(c.amount_cents) %>, up to <%= format_money_cents(cap_cents) %>)
                 </option>
               <% end %>
             </select>
@@ -157,17 +153,17 @@
 
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_amount">Amount to Apply ($)</label>
-            <%= number_field_tag :amount, sprintf("%.2f", [@security_deposit.held_amount, @tenancy.current_balance].min), step: "0.01", min: "0.01", class: "yn-input text-sm py-1.5 font-mono tabular-nums", id: "apply_amount", required: true %>
+            <%= number_field_tag :amount, (failed == :apply ? params[:amount] : sprintf("%.2f", [@held_cents, @balance_cents].min / 100.0)), step: "0.01", min: "0.01", class: "yn-input text-sm py-1.5 tabular-nums", id: "apply_amount", required: true, "aria-invalid": (failed == :apply ? "true" : nil), "aria-describedby": (failed == :apply ? "apply_error" : nil) %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_occurred_on">Application Date</label>
-            <%= date_field_tag :occurred_on, Date.current, class: "yn-input text-sm py-1.5", id: "apply_occurred_on", required: true %>
+            <%= date_field_tag :occurred_on, (failed == :apply ? params[:occurred_on] : Date.current), class: "yn-input text-sm py-1.5", id: "apply_occurred_on", required: true %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_memo">Memo (Optional)</label>
-            <%= text_field_tag :memo, nil, placeholder: "Deposit deduction for repairs", class: "yn-input text-sm py-1.5", id: "apply_memo" %>
+            <%= text_field_tag :memo, (failed == :apply ? params[:memo] : nil), placeholder: "Deposit deduction for repairs", class: "yn-input text-sm py-1.5", id: "apply_memo" %>
           </div>
 
           <div class="pt-2">
@@ -176,9 +172,9 @@
         <% end %>
       <% else %>
         <div class="yn-alert text-xs" role="status">
-          <% if @security_deposit.held_cents <= 0 %>
+          <% if @held_cents <= 0 %>
             No deposit funds are currently held.
-          <% elsif @tenancy.current_balance <= 0 %>
+          <% elsif @balance_cents <= 0 %>
             Tenancy has no outstanding balance ($0.00).
           <% else %>
             No active posted charges to apply against.
@@ -189,8 +185,8 @@
   </div>
 
   <!-- Transaction History Table -->
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
-    <h2 class="text-base font-bold text-stone-900 mb-4">Deposit Transaction History</h2>
+  <div class="yn-surface p-6">
+    <h2 class="text-sm font-semibold text-stone-900 mb-4">Deposit Transaction History</h2>
 
     <div class="overflow-x-auto">
       <table class="yn-table">
@@ -211,7 +207,7 @@
               <tr class="<%= 'opacity-60 bg-stone-50' if txn.voided? %>">
                 <td class="text-sm font-medium whitespace-nowrap"><%= txn.occurred_on.strftime("%b %d, %Y") %></td>
                 <td>
-                  <span class="text-xs font-mono uppercase text-stone-600">
+                  <span class="text-xs uppercase tracking-wider text-stone-600">
                     <%= txn.transaction_kind.titleize %>
                   </span>
                 </td>
@@ -226,8 +222,8 @@
                   <%= txn.external_reference.present? ? "[#{txn.external_reference}] " : "" %>
                   <%= txn.memo || "—" %>
                 </td>
-                <td class="font-mono font-bold text-right tabular-nums <%= txn.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
-                  <%= txn.received? ? '+' : '-' %><%= number_to_currency(txn.amount) %>
+                <td class="text-right tabular-nums font-medium <%= txn.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
+                  <%= signed_money_cents(txn.received? ? txn.amount_cents : -txn.amount_cents, plus: true) %>
                 </td>
                 <td>
                   <% if txn.superseded? %>

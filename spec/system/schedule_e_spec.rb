@@ -263,7 +263,7 @@ RSpec.describe "ScheduleE", type: :system do
     expect(page).to have_text("1 item needs review")
 
     # Focus must stay within review section, landing on the first useful control of item 2
-    expect(page.evaluate_script("document.activeElement.id")).to eq("treatment_#{entry2.id}")
+    expect(page).to have_css("#treatment_#{entry2.id}:focus", wait: 5)
 
     # 2. Resolve item 2 -> no unresolved items remain
     within("#review_item_#{entry2.id}") do
@@ -273,7 +273,7 @@ RSpec.describe "ScheduleE", type: :system do
     expect(page).to have_text("Tax treatment for Journal Entry ##{entry2.id} was successfully recorded.", wait: 10)
 
     # Focus must fall back to the tabindex="-1" review heading
-    expect(page.evaluate_script("document.activeElement.id")).to eq("se-review-heading")
+    expect(page).to have_css("#se-review-heading:focus", wait: 5)
 
     # 3. Undo item 2 -> item 2 becomes unresolved again
     expect(page).to have_button("Undo")
@@ -285,6 +285,6 @@ RSpec.describe "ScheduleE", type: :system do
     expect(page).to have_text("Tax treatment resolution removed; review item restored.", wait: 10)
 
     # Focus must move back to the restored unresolved item's control
-    expect(page.evaluate_script("document.activeElement.id")).to eq("treatment_#{entry2.id}")
+    expect(page).to have_css("#treatment_#{entry2.id}:focus", wait: 5)
   end
 end

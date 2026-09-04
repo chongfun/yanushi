@@ -1,5 +1,8 @@
 module ImportedTransactions
   class InboxQuery
+    # Most reviewable items the Needs review queue renders at once.
+    QUEUE_LIMIT = 50
+
     InboxResult = Data.define(
       :reviewable_transactions,
       :review_count,
@@ -83,16 +86,20 @@ module ImportedTransactions
 
       def fetch_reviewables
         if load_records
+          # The queue is a work list, not a browse list: render a bounded page of
+          # it and keep the true total for the badges and the "first N of M" line.
+          total = user.imported_transactions.reviewable.count
           records = user.imported_transactions
-                        .includes(:matched_party, :source_document, matched_tenancy: { rentable_unit: :property })
+                        .includes(:matched_party, :source_document, matched_tenancy: [ :property, :rentable_unit ])
                         .reviewable
                         .order(created_at: :desc, id: :desc)
+                        .limit(QUEUE_LIMIT)
                         .to_a
-          [ records, records.size, records.first ]
+          [ records, total, records.first ]
         else
           next_txn = user.imported_transactions
                          .reviewable
-                         .includes(:matched_party, :source_document, matched_tenancy: { rentable_unit: :property })
+                         .includes(:matched_party, :source_document, matched_tenancy: [ :property, :rentable_unit ])
                          .order(created_at: :desc, id: :desc)
                          .first
           [ [], user.imported_transactions.reviewable.count, next_txn ]
@@ -104,7 +111,7 @@ module ImportedTransactions
 
         user.imported_transactions
             .reviewable
-            .includes(:matched_party, :source_document, matched_tenancy: { rentable_unit: :property })
+            .includes(:matched_party, :source_document, matched_tenancy: [ :property, :rentable_unit ])
             .find_by(id: updated_transaction_id)
       end
 

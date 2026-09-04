@@ -1,7 +1,7 @@
 <% if transactions.any? %>
   <div class="lg:flex lg:gap-6 lg:items-start" id="inbox_review_workspace">
     <div id="inbox_review_queue">
-      <%= render "imported_transactions/review_list", transactions: transactions, selected_transaction: selected_transaction %>
+      <%= render "imported_transactions/review_list", transactions: transactions, selected_transaction: selected_transaction, total_count: local_assigns[:total_count] %>
     </div>
     <div class="flex-1 min-w-0 mt-6 lg:mt-0" id="inbox_review_container">
       <%= render "imported_transactions/review_detail",

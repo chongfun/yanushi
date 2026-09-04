@@ -1,3 +1,5 @@
+<%# Status is a dot plus a word; color is not the only carrier of meaning.
+    Locals: text, tone (:neutral | :ok | :warn | :danger), size (:sm), extra_class %>
 <% tone = local_assigns.fetch(:tone, :neutral).to_sym %>
 <% dot_class = case tone
    when :ok then "yn-dot-ok"
@@ -5,5 +7,8 @@
    when :danger then "yn-dot-danger"
    else ""
    end %>
-<% status_class = local_assigns[:size] == :sm ? "yn-status yn-status-sm" : "yn-status" %>
+<% status_class = [
+     local_assigns[:size] == :sm ? "yn-status yn-status-sm" : "yn-status",
+     local_assigns[:extra_class]
+   ].compact.join(" ") %>
 <span class="<%= status_class %>"><span class="yn-dot <%= dot_class %>"></span><%= text %></span>

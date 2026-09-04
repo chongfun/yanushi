@@ -8,9 +8,14 @@ module Properties
         flash.now[:alert] = @date_range.errors.to_sentence
       end
       @year = @date_range.year || Date.current.year
-      @financial_activity = Accounting::PropertyLedgerQuery.call(property: @property, date_range: @date_range)
+      @activity_result = Accounting::PortfolioActivityQuery.call(
+        user: authenticated_user,
+        property_id: @property.id,
+        date_range: @date_range,
+        page: params[:page],
+        per_page: 25
+      )
       @financial_summary = Accounting::PropertySummaryQuery.call(property: @property, date_range: @date_range)
-      @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: @property)
       @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
     end
 

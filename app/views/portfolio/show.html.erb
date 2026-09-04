@@ -1,19 +1,9 @@
 <% content_for :title, "Portfolio" %>
 
 <div class="max-w-5xl">
-  <header class="mb-6">
-    <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-      <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Portfolio</h1>
-      <%= link_to "Add property", new_property_path, class: "yn-btn yn-btn-primary" %>
-    </div>
-    <nav class="yn-tabs mt-4" aria-label="Portfolio sections">
-      <%= link_to "Properties", portfolio_path, class: "yn-tab", "aria-current": "page" %>
-      <%= link_to "Tenancies", tenancies_path, class: "yn-tab" %>
-      <%= link_to "Parties", parties_path, class: "yn-tab" %>
-    </nav>
-  </header>
+  <%= render "portfolio/header", current_tab: :properties %>
 
-  <% if @properties.any? %>
+  <% if @rows.any? %>
     <div class="overflow-x-auto">
       <table class="yn-table">
         <thead>
@@ -25,46 +15,30 @@
           </tr>
         </thead>
         <tbody>
-          <% @properties.each do |property| %>
+          <% @rows.each do |row| %>
             <%
-              units = property.rentable_units.select(&:active?)
-              total_units = units.size
-              active_units = units.count { |u| u.tenancies.any?(&:active?) }
-              prop_all_tenancies = property.rentable_units.flat_map(&:tenancies)
-              prop_balances = prop_all_tenancies.map { |t| @balances[t.id] || 0 }
-              due_cents = prop_balances.select(&:positive?).sum
-              credit_cents = prop_balances.select(&:negative?).sum
-              balance_cents = if due_cents.positive?
-                due_cents
-              elsif credit_cents.negative?
-                credit_cents
-              else
-                0
-              end
-
-              occupancy_text = if total_units == 1
-                active_units == 1 ? "Occupied" : "Vacant"
-              else
-                "#{active_units} of #{total_units} occupied"
-              end
-
-              is_all_occupied = total_units > 0 && active_units == total_units
-              dot_class = is_all_occupied ? "yn-dot-ok" : "yn-dot-warn"
+              total_units = row.total_units_count
+              occupied_units = row.occupied_units_count
+              balance_cents = row.balance_cents
             %>
             <tr>
               <td>
-                <%= link_to property.address, property_path(property), class: "yn-row-link" %>
-                <span class="block text-[13px] text-stone-500"><%= property.asset_type.humanize %></span>
+                <%= link_to row.property.address, property_path(row.property), class: "yn-row-link" %>
+                <span class="block text-[13px] text-stone-500"><%= row.property.asset_type.humanize %></span>
               </td>
               <td class="tabular-nums"><%= total_units %></td>
               <td>
-                <span class="yn-status yn-status-sm">
-                  <span class="yn-dot <%= dot_class %>"></span><%= occupancy_text %>
-                </span>
+                <% if total_units.zero? %>
+                  <span class="text-stone-500">No units yet</span>
+                <% elsif total_units == 1 %>
+                  <%= render "shared/status", text: (occupied_units == 1 ? "Occupied" : "Vacant"), tone: (occupied_units == 1 ? :ok : :warn), size: :sm %>
+                <% else %>
+                  <%= render "shared/status", text: "#{occupied_units} of #{total_units} occupied", tone: (occupied_units == total_units ? :ok : :warn), size: :sm %>
+                <% end %>
               </td>
               <td class="text-right tabular-nums whitespace-nowrap <%= balance_cents.positive? ? 'text-stone-900 font-medium' : 'text-stone-500' %>">
                 <% if balance_cents.zero? %>
-                  <span class="text-stone-400">—</span>
+                  <span class="text-stone-400" aria-hidden="true">—</span><span class="sr-only">Settled</span>
                 <% else %>
                   <%= balance_phrase_cents(balance_cents) %>
                 <% end %>
@@ -75,10 +49,9 @@
       </table>
     </div>
   <% else %>
-    <div class="yn-empty">
-      <p class="yn-empty-title">Add your first property</p>
-      <p class="yn-empty-body">Yanushi tracks units, tenancies, and finances per property.</p>
-      <%= link_to "Add property", new_property_path, class: "yn-btn yn-btn-primary" %>
-    </div>
+    <%= render "shared/empty_state",
+          title: "Add your first property",
+          body: "Yanushi tracks units, tenancies, and finances per property.",
+          action: link_to("Add a property", new_property_path, class: "yn-btn yn-btn-primary") %>
   <% end %>
 </div>

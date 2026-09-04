@@ -1,32 +1,33 @@
-<div class="max-w-xl mx-auto py-6">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900">Correct Expense</h1>
-    <%= link_to "Cancel", expense_path(@expense), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-  </div>
+<%
+  expense_label = @expense.vendor_name.presence || @expense.expense_kind&.titleize || "Expense"
+  active_reimbursements = @expense.reimbursement_charges.active.to_a
+%>
+<% content_for :title, "Correct expense" %>
+
+<div class="max-w-xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Expenses", expenses_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to expense_label, expense_path(@expense), class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "Correct expense" %>
 
   <div class="yn-alert yn-alert-warn mb-6" role="status">
-    <div>
-      <h3 class="font-bold text-sm">Reversal & Replacement Notice</h3>
-      <div class="text-xs">Correcting this expense will reverse the original ledger entry dated <%= @expense.paid_on.strftime("%B %d, %Y") %> and create a replacement record with the corrected facts.</div>
-    </div>
+    <span>This reverses the original ledger entry dated <%= @expense.paid_on.strftime("%B %-d, %Y") %> and creates a replacement record with the corrected details.</span>
   </div>
 
-  <% if @expense.reimbursement_charges.active.exists? %>
+  <% if active_reimbursements.any? %>
     <div class="yn-alert mb-6" role="status">
-      <div>
-        <h3 class="font-bold text-sm">Active Reimbursements Notice</h3>
-        <div class="text-xs">
-          <%= pluralize(@expense.reimbursement_charges.active.count, "active reimbursement charge") %>
-          totalling <%= number_to_currency(@expense.reimbursement_charges.active.sum(:amount_cents) / 100.0) %>
-          will be automatically restated to link to the corrected replacement expense.
-        </div>
-      </div>
+      <span><%= pluralize(active_reimbursements.size, "active reimbursement charge") %> totalling <%= format_money_cents(active_reimbursements.sum(&:amount_cents)) %> will be restated to link to the replacement expense.</span>
     </div>
   <% end %>
 
   <% rep = @replacement_expense || @expense %>
 
-  <div class="bg-white border border-stone-200 rounded-lg p-6">
+  <div class="yn-surface p-6">
     <%= form_with(url: correct_expense_path(@expense), method: :post, class: "space-y-4", id: "expense-correction-form") do |form| %>
       <% if rep.errors.any? || flash[:alert].present? %>
         <div class="yn-alert yn-alert-danger" role="alert">
@@ -53,7 +54,7 @@
           <label class="yn-label" for="expense_property_id">Property</label>
           <%= select_tag "expense[property_id]",
                 options_from_collection_for_select(@properties, :id, :address, rep.property_id),
-                class: "yn-select w-full #{'yn-field-invalid' if has_prop_error}",
+                class: "yn-select #{'yn-field-invalid' if has_prop_error}",
                 id: "expense_property_id",
                 required: true,
                 "aria-invalid": (has_prop_error ? "true" : nil),
@@ -66,12 +67,12 @@
 
         <div>
           <% has_unit_error = rep.errors[:rentable_unit_id].any? || rep.errors[:rentable_unit].any? %>
-          <label class="yn-label" for="expense_rentable_unit_id">Unit (Optional)</label>
+          <%= label_tag "expense[rentable_unit_id]", class: "yn-label", for: "expense_rentable_unit_id" do %>Unit <span class="font-normal text-stone-400">(optional)</span><% end %>
           <% prop_units = (rep.property_id.present? ? @properties.find { |p| p.id.to_s == rep.property_id.to_s }&.rentable_units : nil) || [] %>
           <%= select_tag "expense[rentable_unit_id]",
                 options_from_collection_for_select(prop_units, :id, :display_name, rep.rentable_unit_id),
                 include_blank: "Entire property / No specific unit",
-                class: "yn-select w-full #{'yn-field-invalid' if has_unit_error}",
+                class: "yn-select #{'yn-field-invalid' if has_unit_error}",
                 id: "expense_rentable_unit_id",
                 "aria-invalid": (has_unit_error ? "true" : nil),
                 "aria-describedby": (has_unit_error ? "expense-correct-unit-error" : nil),
@@ -87,7 +88,7 @@
         <label class="yn-label" for="expense_expense_kind">Category</label>
         <%= select_tag "expense[expense_kind]",
               options_for_select(Expense::EXPENSE_KINDS.map { |k| [k.titleize, k] }, rep.expense_kind),
-              class: "yn-select w-full #{'yn-field-invalid' if has_kind_error}",
+              class: "yn-select #{'yn-field-invalid' if has_kind_error}",
               id: "expense_expense_kind",
               required: true,
               "aria-invalid": (has_kind_error ? "true" : nil),
@@ -100,12 +101,12 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <% has_amount_error = rep.errors[:amount].any? || rep.errors[:amount_cents].any? %>
-          <label class="yn-label" for="expense_amount">Amount ($)</label>
+          <label class="yn-label" for="expense_amount">Amount</label>
           <%= text_field_tag "expense[amount]",
                 rep.formatted_amount,
                 inputmode: "decimal",
                 placeholder: "0.00",
-                class: "yn-input font-mono tabular-nums w-full #{'yn-field-invalid' if has_amount_error}",
+                class: "yn-input tabular-nums #{'yn-field-invalid' if has_amount_error}",
                 id: "expense_amount",
                 required: true,
                 "aria-invalid": (has_amount_error ? "true" : nil),
@@ -117,10 +118,10 @@
 
         <div>
           <% has_date_error = rep.errors[:paid_on].any? %>
-          <label class="yn-label" for="expense_paid_on">Date Paid</label>
+          <label class="yn-label" for="expense_paid_on">Paid on</label>
           <%= date_field_tag "expense[paid_on]",
                 rep.paid_on,
-                class: "yn-input w-full #{'yn-field-invalid' if has_date_error}",
+                class: "yn-input #{'yn-field-invalid' if has_date_error}",
                 id: "expense_paid_on",
                 required: true,
                 "aria-invalid": (has_date_error ? "true" : nil),
@@ -134,10 +135,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <% has_vendor_error = rep.errors[:vendor_name].any? %>
-          <label class="yn-label" for="expense_vendor_name">Vendor / Payee</label>
+          <label class="yn-label" for="expense_vendor_name">Vendor</label>
           <%= text_field_tag "expense[vendor_name]",
                 rep.vendor_name,
-                class: "yn-input w-full #{'yn-field-invalid' if has_vendor_error}",
+                class: "yn-input #{'yn-field-invalid' if has_vendor_error}",
                 id: "expense_vendor_name",
                 "aria-invalid": (has_vendor_error ? "true" : nil),
                 "aria-describedby": (has_vendor_error ? "expense-correct-vendor-error" : nil) %>
@@ -148,10 +149,10 @@
 
         <div>
           <% has_ref_error = rep.errors[:external_reference].any? %>
-          <label class="yn-label" for="expense_external_reference">Invoice / Receipt #</label>
+          <label class="yn-label" for="expense_external_reference">Reference</label>
           <%= text_field_tag "expense[external_reference]",
                 rep.external_reference,
-                class: "yn-input w-full #{'yn-field-invalid' if has_ref_error}",
+                class: "yn-input #{'yn-field-invalid' if has_ref_error}",
                 id: "expense_external_reference",
                 "aria-invalid": (has_ref_error ? "true" : nil),
                 "aria-describedby": (has_ref_error ? "expense-correct-ref-error" : nil) %>
@@ -167,7 +168,7 @@
         <%= text_area_tag "expense[description]",
               rep.description,
               rows: 3,
-              class: "yn-textarea w-full #{'yn-field-invalid' if has_desc_error}",
+              class: "yn-textarea #{'yn-field-invalid' if has_desc_error}",
               id: "expense_description",
               "aria-invalid": (has_desc_error ? "true" : nil),
               "aria-describedby": (has_desc_error ? "expense-correct-desc-error" : nil) %>
@@ -176,8 +177,9 @@
         <% end %>
       </div>
 
-      <div class="pt-2">
-        <%= submit_tag "Post Corrected Expense", class: "yn-btn yn-btn-primary w-full" %>
+      <div class="flex justify-end gap-2 pt-2">
+        <%= link_to "Cancel", expense_path(@expense), class: "yn-btn yn-btn-ghost" %>
+        <%= submit_tag "Save correction", class: "yn-btn yn-btn-primary" %>
       </div>
     <% end %>
   </div>

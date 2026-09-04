@@ -48,7 +48,7 @@
             </tr>
           </thead>
           <tbody>
-            <% @tenancy.tenancy_parties.includes(:party).each do |tp| %>
+            <% @tenancy.tenancy_parties.sort_by { |tp| [tp.effective_from, tp.id] }.each do |tp| %>
               <tr>
                 <td>
                   <%= link_to tp.party.display_name, party_path(tp.party), class: "yn-row-link" %>
@@ -58,7 +58,7 @@
                 </td>
                 <td><%= tp.role.humanize %></td>
                 <td class="text-stone-500 whitespace-nowrap">
-                  <%= tp.effective_from.strftime("%b %-d") %> –
+                  <%= tp.effective_from.strftime("%b %-d, %Y") %> –
                   <%= tp.effective_until&.strftime("%b %-d, %Y") || "present" %>
                 </td>
                 <td class="text-right whitespace-nowrap">
@@ -92,7 +92,7 @@
             </tr>
           </thead>
           <tbody>
-            <% @tenancy.rent_terms.order(effective_from: :desc).each do |term| %>
+            <% @tenancy.rent_terms.sort_by { |t| [t.effective_from, t.id] }.reverse.each do |term| %>
               <%
                 is_current = term.active?(Date.current)
                 is_upcoming = !is_current && term.effective_from > Date.current
@@ -106,7 +106,7 @@
                 <td class="<%= row_class %>"><%= term.frequency.humanize %></td>
                 <td class="text-stone-500 whitespace-nowrap">
                   <%= term.effective_from.strftime("%b %-d, %Y") %> –
-                  <%= term.effective_until&.strftime("%b %-d, %Y") || "" %>
+                  <%= term.effective_until&.strftime("%b %-d, %Y") || "present" %>
                 </td>
                 <td>
                   <% if is_current %>

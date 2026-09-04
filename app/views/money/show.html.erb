@@ -16,7 +16,7 @@
     <div>
       <%= f.label :year, "Year", class: "yn-label", for: "ma-year" %>
       <%= f.select :year,
-            options_for_select(@active_years, @activity_result.date_range.year),
+            options_for_select(@active_years, @date_range.year),
             {},
             class: "yn-select w-32",
             id: "ma-year" %>
@@ -27,62 +27,50 @@
     <% end %>
   <% end %>
 
-  <% if @activity_result.rows.any? %>
-    <table class="yn-table">
-      <thead>
-        <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Event</th>
-          <th scope="col">Property</th>
-          <th scope="col" class="text-right tabular-nums">Amount</th>
-          <th scope="col"><span class="sr-only">Audit</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @activity_result.rows.each do |row| %>
-          <tr>
-            <td class="whitespace-nowrap text-stone-500 w-20"><%= row.occurred_on.strftime("%b %-d") %></td>
-            <td>
-              <% target_path = row.source ? url_for(row.source) : journal_entry_path(row.journal_entry) rescue journal_entry_path(row.journal_entry) %>
-              <%= link_to target_path, class: "yn-row-link" do %>
-                <%= row.label %>
-                <% if row.description.present? && row.description != row.label %>
-                  <span class="text-stone-400">&middot; <%= row.description %></span>
-                <% end %>
-              <% end %>
-              <% if row.corrected? %>
-                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-warn"></span>Corrected</span>
-              <% elsif row.voided? %>
-                <span class="yn-status yn-status-sm ml-1"><span class="yn-dot yn-dot-danger"></span>Voided</span>
-              <% end %>
-            </td>
-            <td class="text-stone-500 whitespace-nowrap"><%= row.property&.address || "—" %></td>
-            <td class="text-right tabular-nums whitespace-nowrap <%= row.amount_cents.negative? ? 'text-stone-500' : '' %>">
-              <%= signed_money_cents(row.amount_cents) %>
-            </td>
-            <td class="text-right whitespace-nowrap">
-              <%= link_to "Journal", journal_entry_path(row.journal_entry), class: "yn-link text-[13px]" %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+  <% if @date_range.valid? %>
+    <!-- Period totals for the current filter -->
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6">
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Income</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@summary.income_recognized_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Expenses</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@summary.total_expenses_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@summary.net_income_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net cash movement</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@summary.net_cash_movement_cents) %></dd>
+      </div>
+    </dl>
+  <% end %>
 
-    <% if @activity_result.total_pages > 1 %>
-      <% start_idx = ((@activity_result.page - 1) * @activity_result.per_page) + 1 %>
-      <% end_idx = [@activity_result.page * @activity_result.per_page, @activity_result.total_count].min %>
-      <nav class="flex items-center justify-between mt-4 max-w-5xl" aria-label="Pagination">
-        <p class="text-sm text-stone-500 m-0">Showing <span class="tabular-nums"><%= start_idx %>–<%= end_idx %></span> of <span class="tabular-nums"><%= @activity_result.total_count %></span></p>
-        <div class="flex gap-2">
-          <% if @activity_result.page > 1 %>
-            <%= link_to "Previous", money_path(page: @activity_result.page - 1, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-          <% end %>
-          <% if @activity_result.page < @activity_result.total_pages %>
-            <%= link_to "Next", money_path(page: @activity_result.page + 1, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
-          <% end %>
-        </div>
-      </nav>
-    <% end %>
+  <% if @activity_result.rows.any? %>
+    <div class="overflow-x-auto">
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Event</th>
+            <th scope="col">Property</th>
+            <th scope="col" class="text-right tabular-nums">Amount</th>
+            <th scope="col"><span class="sr-only">Audit</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render partial: "accounting/activity_row", collection: @activity_result.rows, as: :row, locals: { context: :property, audit: true } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination",
+          page: @activity_result.page, per_page: @activity_result.per_page,
+          total_count: @activity_result.total_count, total_pages: @activity_result.total_pages,
+          page_url: ->(p) { money_path(page: p, property_id: @selected_property_id, year: params[:year], from: params[:from], through: params[:through]) } %>
   <% else %>
     <div class="yn-empty">
       <p class="yn-empty-title">No financial activity found</p>

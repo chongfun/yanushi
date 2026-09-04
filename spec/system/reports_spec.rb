@@ -41,15 +41,25 @@ RSpec.describe "Reports", type: :system do
     visit reports_path(year: 2025)
 
     expect(page).to have_text("Reports")
-    expect(page).to have_text("123 Main St")
-    expect(page).to have_text("Needs tax profile")
-    expect(page).to have_link("Set up profile")
 
-    expect(page).to have_text("742 Evergreen Terrace")
-    expect(page).to have_text("Ready")
-    expect(page).to have_text("$2,000.00")
-    expect(page).to have_link("View")
-    expect(page).to have_link("Download PDF")
+    # Work first: the needs-work group holds the unconfigured property and the
+    # ready group, below it, holds the one that is done.
+    within("section[aria-labelledby='reports-work-heading']") do
+      expect(page).to have_text("Needs work")
+      expect(page).to have_text("123 Main St")
+      expect(page).to have_text("Needs tax profile")
+      expect(page).to have_link("Set up profile")
+      expect(page).to have_no_text("742 Evergreen Terrace")
+    end
+
+    within("section[aria-labelledby='reports-ready-heading']") do
+      expect(page).to have_text("Ready")
+      expect(page).to have_text("742 Evergreen Terrace")
+      expect(page).to have_text("$2,000.00")
+      expect(page).to have_link("View")
+      expect(page).to have_link("Download PDF")
+      expect(page).to have_no_text("123 Main St")
+    end
 
     # Click view on 742 Evergreen Terrace
     within("#property_#{prop2.id}_schedule_e_status") do

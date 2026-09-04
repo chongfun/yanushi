@@ -1,7 +1,7 @@
-<%= turbo_stream.replace "schedule_e_readiness", partial: "properties/schedule_e/readiness" %>
+<%= turbo_stream.update "schedule_e_readiness", partial: "properties/schedule_e/readiness_content" %>
 <%= turbo_stream.replace "schedule_e_export_block", partial: "properties/schedule_e/export" %>
 <%= turbo_stream.replace "schedule_e_review", partial: "properties/schedule_e/review", locals: { auto_focus: true } %>
 <%= turbo_stream.replace "schedule_e_projection", partial: "properties/schedule_e/projection" %>
 <%= turbo_stream.append "flash-messages",
                         partial: "shared/toast",
-                        locals: { type: :notice, message: "Tax treatment for Journal Entry ##{@resolution.journal_entry_id} was successfully recorded." } %>
+                        locals: { type: :notice, message: "Tax treatment for Journal Entry ##{@resolution.journal_entry_id} was successfully #{@action_verb || "recorded"}." } %>

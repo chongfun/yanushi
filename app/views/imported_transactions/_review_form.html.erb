@@ -2,9 +2,10 @@
 <% save_url = review_context == :standalone ? imported_transaction_path(transaction, format: :html) : imported_transaction_path(transaction) %>
 <% delete_url = review_context == :standalone ? imported_transaction_path(transaction, format: :html) : imported_transaction_path(transaction) %>
 
-<% if flash.now[:alert].present? || flash[:alert].present? || transaction.errors.any? %>
+<% inline_alert = review_context == :inbox ? (flash.now[:alert].presence || flash[:alert].presence) : nil %>
+<% if inline_alert.present? || transaction.errors.any? %>
   <div class="yn-alert yn-alert-danger mb-4" role="alert" id="form_error_alert" tabindex="-1">
-    <%= flash.now[:alert] || flash[:alert] || "Transaction couldn’t be confirmed — #{pluralize(transaction.errors.count, 'field')} needs a fix." %>
+    <%= inline_alert || "Transaction couldn’t be confirmed — #{pluralize(transaction.errors.count, 'field')} needs a fix." %>
   </div>
 <% end %>
 

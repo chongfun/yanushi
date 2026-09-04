@@ -2,6 +2,8 @@ class ReportsController < ApplicationController
   @year: Integer
   @active_years: Array[Integer]
   @statuses: Array[Reports::ScheduleEStatusesQuery::ScheduleEStatus]
+  @needs_work_statuses: Array[Reports::ScheduleEStatusesQuery::ScheduleEStatus]
+  @ready_statuses: Array[Reports::ScheduleEStatusesQuery::ScheduleEStatus]
 
   def show: () -> untyped
 end

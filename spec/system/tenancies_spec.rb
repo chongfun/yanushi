@@ -45,15 +45,15 @@ RSpec.describe "Tenancies", type: :system do
 
     click_on "New tenancy"
 
-    select vacant_unit.name, from: "Select Rentable Unit"
+    select vacant_unit.name, from: "Rentable unit"
     check party.display_name
 
-    select "Month To Month", from: "Agreement Type"
-    fill_in "Commencement Date", with: Date.today.to_s
-    fill_in "Monthly Rent ($)", with: "1000"
-    fill_in "Grace Period (Days)", with: "5"
+    select "Month To Month", from: "Agreement type"
+    fill_in "Commencement date", with: Date.today.to_s
+    fill_in "Monthly rent", with: "1000"
+    fill_in "Grace period (days)", with: "5"
 
-    click_on "Create Tenancy"
+    click_on "Create tenancy"
 
     expect(page).to have_text("Tenancy was successfully created")
     expect(page).to have_text("Lease Tester")
@@ -207,6 +207,8 @@ RSpec.describe "Tenancies", type: :system do
     # Tenancy with financial activity suppresses Delete tenancy action
     find("summary", text: "More").click
     expect(page).not_to have_button("Delete tenancy…")
+    find("summary", text: "More").click
+    expect(page).to have_no_css("#tenancy_actions details[open]")
 
     # 2. Navigate to Agreement tab
     click_on "Agreement"
@@ -334,7 +336,7 @@ RSpec.describe "Tenancies", type: :system do
     expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Record receipt")
 
     # 2. Full payoff: record remaining $300 -> $0.00 settled, Record receipt is removed via Turbo Stream without reload
-    page.execute_script("document.querySelectorAll('#flash-messages .alert').forEach(el => el.remove())")
+    page.execute_script("document.querySelectorAll('#flash-messages .yn-alert').forEach(el => el.remove())")
     click_on "Record receipt"
     expect(page).to have_css("dialog#modal[open]")
 

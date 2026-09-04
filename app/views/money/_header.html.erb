@@ -1,17 +1,18 @@
-<% current_tab = local_assigns[:current_tab] || :activity %>
-
-<header class="mb-6">
-  <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-    <h1 class="text-2xl font-semibold tracking-tight text-stone-900">Money</h1>
-    <% if current_tab == :receipts %>
-      <%= link_to "Record receipt", new_receipt_path, class: "yn-btn yn-btn-primary" %>
-    <% elsif current_tab == :expenses %>
-      <%= link_to "Record expense", new_expense_path, class: "yn-btn yn-btn-primary" %>
-    <% end %>
-  </div>
-  <nav class="yn-tabs mt-4" aria-label="Money sections">
-    <%= link_to "Activity", money_path, class: "yn-tab", aria: (current_tab == :activity ? { current: "page" } : nil) %>
-    <%= link_to "Receipts", receipts_path, class: "yn-tab", aria: (current_tab == :receipts ? { current: "page" } : nil) %>
-    <%= link_to "Expenses", expenses_path, class: "yn-tab", aria: (current_tab == :expenses ? { current: "page" } : nil) %>
-  </nav>
-</header>
+<%# Shared header for the Money tab set (Activity / Receipts / Expenses).
+    Local: current_tab (:activity | :receipts | :expenses) %>
+<%
+  current_tab = local_assigns.fetch(:current_tab, :activity)
+  tab_items = [
+    { label: "Activity", path: money_path, current: current_tab == :activity },
+    { label: "Receipts", path: receipts_path, current: current_tab == :receipts },
+    { label: "Expenses", path: expenses_path, current: current_tab == :expenses }
+  ]
+  primary_action = case current_tab
+    when :receipts then link_to("Record receipt", new_receipt_path, class: "yn-btn yn-btn-primary")
+    when :expenses then link_to("Record expense", new_expense_path, class: "yn-btn yn-btn-primary")
+    end
+%>
+<%= render "shared/page_header",
+      title: "Money",
+      actions: primary_action,
+      tabs: render("shared/tabs", items: tab_items, aria_label: "Money sections") %>

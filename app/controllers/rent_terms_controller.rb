@@ -29,7 +29,7 @@ class RentTermsController < ApplicationController
     if result.success?
       @rent_term = result.value!.data[:rent_term]
       respond_to do |format|
-        format.html { redirect_to @tenancy, notice: "Rent was successfully updated." }
+        format.html { redirect_to tenancy_agreement_path(@tenancy), notice: "Rent was successfully updated." }
         format.json { render json: @rent_term, status: :created }
       end
     else

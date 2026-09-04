@@ -1,29 +1,32 @@
+<% content_for :title, "Record expense" %>
+
 <% if @nested_property && turbo_frame_request? %>
-  <%# Modal frame %>
-  <turbo-frame id="modal-frame" data-modal-title="Record expense">
+  <%# Dialog over the property workspace %>
+  <turbo-frame id="modal-frame">
+    <%# Turbo swaps the frame's children, not its attributes, so the dialog title rides on this wrapper %>
     <div data-modal-title="Record expense">
       <%= render "expenses/form", expense: @expense, form_context: :dialog %>
     </div>
   </turbo-frame>
 <% elsif @nested_property %>
-  <%# Nested property form %>
-  <% content_for :title, "Record expense" %>
-  <div class="max-w-xl mx-auto py-8">
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Record expense</h1>
-      <p class="text-sm text-stone-500 mt-1"><%= @nested_property.address %></p>
-    </div>
+  <%# Standalone page for one property %>
+  <div class="max-w-xl">
+    <%= render "properties/page_header", property: @nested_property, title: "Record expense" %>
     <div class="yn-surface p-6">
       <%= render "expenses/form", expense: @expense, form_context: :standalone %>
     </div>
   </div>
 <% else %>
-  <%# Top-level form with property selector %>
-  <% content_for :title, "Record expense" %>
-  <div class="max-w-xl mx-auto py-8">
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Record expense</h1>
-    </div>
+  <%# Standalone page from Money; the property is chosen in the form %>
+  <div class="max-w-xl">
+    <%= render "shared/page_header",
+          eyebrow: capture { %>
+            <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+            <span class="mx-1 text-stone-300">/</span>
+            <%= link_to "Expenses", expenses_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <% },
+          title: "Record expense",
+          meta: "Money spent on a property. Expenses post to the property ledger, not to a tenant balance." %>
     <div class="yn-surface p-6">
       <%= render "expenses/form", expense: @expense, form_context: :standalone %>
     </div>

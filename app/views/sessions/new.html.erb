@@ -1,25 +1,19 @@
-<div class="flex justify-center items-center min-h-[70vh]">
-  <div class="w-full max-w-md bg-white border border-stone-200 rounded-lg p-8 shadow-sm">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900 text-center mb-6">Sign in</h1>
-    
-    <%= form_with url: session_path, class: "space-y-4" do |form| %>
-      <div>
-        <%= form.label :email, class: "yn-label" %>
-        <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email], class: "yn-input" %>
-      </div>
-      
-      <div>
-        <%= form.label :password, class: "yn-label" %>
-        <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "yn-input" %>
-      </div>
-      
-      <div class="pt-2">
-        <%= form.submit "Sign in", class: "yn-btn yn-btn-primary w-full" %>
-      </div>
-    <% end %>
-    
-    <div class="text-center mt-6">
-      <%= link_to "Forgot password?", new_password_path, class: "yn-link text-sm" %>
+<% content_for :title, "Sign in" %>
+
+<%= render layout: "shared/auth_card", locals: { title: "Sign in", footer: link_to("Forgot password?", new_password_path, class: "yn-link") } do %>
+  <%= form_with url: session_path, class: "space-y-4" do |form| %>
+    <div>
+      <%= form.label :email, "Email", class: "yn-label", for: "email" %>
+      <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username",
+            placeholder: "you@example.com", value: params[:email], class: "yn-input", id: "email" %>
     </div>
-  </div>
-</div>
+
+    <div>
+      <%= form.label :password, "Password", class: "yn-label", for: "password" %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password",
+            maxlength: 72, class: "yn-input", id: "password" %>
+    </div>
+
+    <%= form.submit "Sign in", class: "yn-btn yn-btn-primary w-full" %>
+  <% end %>
+<% end %>

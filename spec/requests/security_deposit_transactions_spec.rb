@@ -42,7 +42,7 @@ RSpec.describe "SecurityDepositTransactions", type: :request do
 
       get correction_security_deposit_transaction_path(txn)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Correct Deposit Received")
+      expect(response.body).to include("Correct deposit received")
     end
 
     it "redirects with alert if transaction is already voided" do
@@ -118,7 +118,7 @@ RSpec.describe "SecurityDepositTransactions", type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Correct Deposit Received")
+      expect(response.body).to include("Correct deposit received")
     end
 
     it "renders correction with unprocessable_entity when submitting nonexistent charge_id" do

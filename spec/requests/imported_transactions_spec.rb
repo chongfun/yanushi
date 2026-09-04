@@ -3,6 +3,8 @@ require "rails_helper"
 RSpec.describe "ImportedTransactions", type: :request do
   let(:user) { create(:user) }
   let(:other_user) { create(:user) }
+  let(:other_doc) { create(:source_document, user: other_user, status: "success") }
+  let(:other_txn) { create(:imported_transaction, user: other_user, source_document: other_doc, status: "unmatched") }
   let(:property) { create(:property, user: user) }
   let(:unit) { create(:rentable_unit, property: property) }
   let(:party) { create(:party, user: user, display_name: "Jane Doe") }
@@ -363,9 +365,9 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review_queue_list">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="sidebar_inbox_badge">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="drawer_inbox_badge">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="mobile_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="sidebar_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="drawer_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="mobile_inbox_badge">))
         expect(response.body).to include(%(<turbo-stream action="replace" target="tab_review_count">))
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review">))
         expect(response.body).to include(%(<turbo-stream action="append" target="flash-messages">))
@@ -444,6 +446,28 @@ RSpec.describe "ImportedTransactions", type: :request do
         post confirm_imported_transaction_path(txn1, format: :html)
         expect(response).to have_http_status(:see_other)
         expect(response).to redirect_to(inbox_path)
+      end
+
+      it "handles already-deleted transaction lookup gracefully in turbo stream format" do
+        deleted_id = txn1.id
+        txn1.destroy!
+        user.increment_inbox_revision!
+
+        post confirm_imported_transaction_path(id: deleted_id), as: :turbo_stream
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("The transaction was deleted in another session.")
+        expect(response.body).to include(%(<turbo-stream action="inbox_settle" target="imported_transaction_#{deleted_id}">))
+      end
+
+      it "returns 404 for nonexistent transaction in HTML format" do
+        post confirm_imported_transaction_path(id: 999_999, format: :html)
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns 404 for another user's transaction in HTML format" do
+        post confirm_imported_transaction_path(id: other_txn.id, format: :html)
+        expect(response).to have_http_status(:not_found)
       end
     end
   end
@@ -592,6 +616,36 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response.body).to include(%(id="review_form_#{txn2.id}"))
         expect(response.body).to include(%(data-inbox-sync-revision-value="#{user.reload.inbox_revision}"))
       end
+
+      it "handles already-deleted transaction lookup gracefully in turbo stream format" do
+        txn2 = create(:imported_transaction, user: user, source_document: source_document, status: "unmatched", amount_cents: 250_000)
+        deleted_id = txn.id
+        txn.destroy!
+        user.increment_inbox_revision!
+
+        patch imported_transaction_path(id: deleted_id), params: {
+          imported_transaction: { amount: "1200.00" }
+        }, as: :turbo_stream
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(%(id="review_form_#{txn2.id}"))
+        expect(response.body).to include("The transaction was deleted in another session.")
+        expect(response.body).to include(%(<turbo-stream action="inbox_settle" target="imported_transaction_#{deleted_id}">))
+      end
+
+      it "returns 404 for nonexistent transaction in HTML format" do
+        patch imported_transaction_path(id: 999_999, format: :html), params: {
+          imported_transaction: { amount: "1200.00" }
+        }
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns 404 for another user's transaction in HTML format" do
+        patch imported_transaction_path(id: other_txn.id, format: :html), params: {
+          imported_transaction: { amount: "1200.00" }
+        }
+        expect(response).to have_http_status(:not_found)
+      end
     end
   end
 
@@ -694,7 +748,7 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review_queue_list">))
-        expect(response.body).to include(%(<turbo-stream action="replace" target="sidebar_inbox_badge">))
+        expect(response.body).to include(%(<turbo-stream action="update" target="sidebar_inbox_badge">))
         expect(ImportedTransaction.exists?(txn1.id)).to be(false)
       end
 
@@ -728,6 +782,28 @@ RSpec.describe "ImportedTransactions", type: :request do
         expect(response.body).to include(%(<turbo-stream action="replace" target="inbox_review">))
         expect(response.body).to include("This transaction was updated in another session")
         expect(ImportedTransaction.exists?(txn1.id)).to be(true)
+      end
+
+      it "handles already-deleted transaction lookup gracefully in turbo stream format" do
+        deleted_id = txn1.id
+        txn1.destroy!
+        user.increment_inbox_revision!
+
+        delete imported_transaction_path(id: deleted_id), as: :turbo_stream
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("The transaction was deleted in another session.")
+        expect(response.body).to include(%(<turbo-stream action="inbox_settle" target="imported_transaction_#{deleted_id}">))
+      end
+
+      it "returns 404 for nonexistent transaction in HTML format" do
+        delete imported_transaction_path(id: 999_999, format: :html)
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns 404 for another user's transaction in HTML format" do
+        delete imported_transaction_path(id: other_txn.id, format: :html)
+        expect(response).to have_http_status(:not_found)
       end
     end
   end

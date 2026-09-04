@@ -13,12 +13,12 @@
   <% end %>
 
   <div>
-    <%= form.label :name, "Unit Name (e.g. Unit A, Apt 1, Main House)", class: "yn-label" %>
+    <%= form.label :name, "Unit name", class: "yn-label" %>
     <%= form.text_field :name, class: "yn-input", required: true %>
   </div>
 
   <div>
-    <%= form.label :unit_identifier, "Unit Identifier (Optional, e.g. 101, 2B)", class: "yn-label" %>
+    <%= form.label :unit_identifier, "Unit identifier (optional)", class: "yn-label" %>
     <%= form.text_field :unit_identifier, class: "yn-input" %>
   </div>
 
@@ -33,6 +33,6 @@
   </div>
 
   <div class="pt-2">
-    <%= form.submit class: "yn-btn yn-btn-primary w-full" %>
+    <%= form.submit (rentable_unit.persisted? ? "Save unit" : "Add unit"), class: "yn-btn yn-btn-primary w-full" %>
   </div>
 <% end %>

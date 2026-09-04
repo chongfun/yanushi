@@ -68,9 +68,50 @@ RSpec.describe "Application Shell Navigation", type: :system do
     end
   end
 
+  describe "keyboard focus on Turbo Drive navigation", js: true do
+    before do
+      visit new_session_path
+      fill_in "email", with: user.email
+      fill_in "password", with: "password"
+      click_on "Sign in"
+      expect(page).to have_button("Sign out")
+    end
+
+    it "moves focus to the heading of each page it navigates to, and leaves a full page load alone" do
+      # A full load belongs to the skip link: nothing has been focused for the reader
+      visit root_path
+      expect(page).to have_css("h1")
+      expect(page.evaluate_script("document.activeElement === document.body")).to be true
+
+      # Each hop waits for the rendered heading before reading focus. Turbo
+      # pushes the URL before it renders, so `have_current_path` alone can be
+      # satisfied mid-visit, and `evaluate_script` never waits.
+      # Sidebar link
+      within("aside.yn-sidebar") { click_on "Portfolio" }
+      expect(page).to have_css("main#main h1", text: "Portfolio")
+      expect(page).to have_current_path(portfolio_path)
+      expect(page.evaluate_script("document.activeElement.tagName")).to eq("H1")
+      expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Portfolio")
+      # Focusable on purpose, but not an extra stop on the way through the page
+      expect(page.evaluate_script("document.activeElement.getAttribute('tabindex')")).to eq("-1")
+
+      # Tab within a page
+      within("nav[aria-label='Portfolio sections']") { click_on "Parties" }
+      expect(page).to have_css(".yn-tab[aria-current='page']", text: "Parties")
+      expect(page).to have_current_path(parties_path)
+      expect(page.evaluate_script("document.activeElement.tagName")).to eq("H1")
+
+      # And on to another destination
+      within("aside.yn-sidebar") { click_on "Inbox" }
+      expect(page).to have_css("main#main h1", text: "Inbox")
+      expect(page).to have_current_path(inbox_path)
+      expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq("Inbox")
+    end
+  end
+
   describe "mobile navigation drawer", js: true do
     before do
-      page.driver.browser.manage.window.resize_to(375, 700)
+      resize_window_to(375, 700)
       visit new_session_path
       fill_in "email", with: user.email
       fill_in "password", with: "password"
@@ -79,7 +120,7 @@ RSpec.describe "Application Shell Navigation", type: :system do
     end
 
     after do
-      page.driver.browser.manage.window.resize_to(1400, 1400) if page.driver.respond_to?(:browser)
+      resize_window_to(1400, 1400)
     end
 
     it "opens, closes via close button and Escape key, restores focus, and navigates destinations from mobile drawer" do

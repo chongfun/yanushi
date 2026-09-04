@@ -3,9 +3,8 @@ module Properties
     @property: Property
     @date_range: Accounting::DateRange
     @year: Integer
-    @financial_activity: Array[Accounting::ActivityRow]
+    @activity_result: Accounting::PortfolioActivityQuery::PortfolioActivityResult
     @financial_summary: Accounting::PropertySummaryQuery::SummaryResult
-    @security_deposits_held_cents: Integer
     @active_years: Array[Integer]
 
     def show: () -> void

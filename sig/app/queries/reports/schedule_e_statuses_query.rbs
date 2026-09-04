@@ -1,5 +1,8 @@
 module Reports
   class ScheduleEStatusesQuery
+    NEEDS_WORK_STATES: Array[Symbol]
+    STATE_ORDER: Hash[Symbol, Integer]
+
     class ScheduleEStatus
       attr_reader property: Property
       attr_reader state: :needs_profile | :needs_review | :ready
@@ -12,6 +15,8 @@ module Reports
         unresolved_review_count: Integer,
         net_income_cents: Integer
       ) -> void
+
+      def needs_work?: () -> bool
     end
 
     def self.call: (user: User, tax_year: Integer | String) -> Array[ScheduleEStatus]

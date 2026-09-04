@@ -1,20 +1,18 @@
 <% content_for :title, "Chart of Accounts" %>
 
-<div class="max-w-5xl mx-auto py-6">
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold tracking-tight text-stone-900">Chart of Accounts</h1>
-    <p class="text-sm text-stone-500">System-defined double-entry ledger accounts</p>
-  </div>
+<div class="max-w-5xl">
+  <%= render "shared/page_header",
+        eyebrow: "Accounting",
+        title: "Chart of Accounts",
+        meta: "System-defined double-entry ledger accounts. Balances are shown in each account's natural direction." %>
 
-  <div class="overflow-x-auto border border-stone-200 rounded-lg bg-white">
+  <div class="overflow-x-auto">
     <table class="yn-table">
       <thead>
         <tr>
-          <th scope="col">Account Name</th>
-          <th scope="col">Key</th>
+          <th scope="col">Account</th>
           <th scope="col">Type</th>
-          <th scope="col" class="text-right">Natural Balance</th>
-          <th scope="col" class="text-right">Actions</th>
+          <th scope="col" class="text-right tabular-nums">Natural balance</th>
         </tr>
       </thead>
       <tbody>
@@ -23,20 +21,15 @@
           <tr>
             <td>
               <%= link_to account.name, account_path(account), class: "yn-row-link" %>
+              <span class="block text-[13px] text-stone-500"><%= account.key %></span>
             </td>
-            <td class="font-mono text-xs text-stone-500"><%= account.key %></td>
             <td>
-              <span class="yn-status yn-status-sm">
-                <span class="yn-dot <%= case account.account_type when 'asset', 'income' then 'yn-dot-ok' when 'liability', 'expense' then 'yn-dot-warn' else '' end %>"></span>
-                <%= account.account_type.titleize %>
-              </span>
+              <%= render "shared/status",
+                    text: account.account_type.titleize,
+                    tone: (%w[asset income].include?(account.account_type) ? :ok : (%w[liability expense].include?(account.account_type) ? :warn : :neutral)),
+                    size: :sm %>
             </td>
-            <td class="text-right tabular-nums font-mono font-medium">
-              <%= format_money_cents(balance_cents) %>
-            </td>
-            <td class="text-right">
-              <%= link_to "View Ledger", account_path(account), class: "yn-link text-[13px]" %>
-            </td>
+            <td class="text-right tabular-nums whitespace-nowrap font-medium"><%= format_money_cents(balance_cents) %></td>
           </tr>
         <% end %>
       </tbody>

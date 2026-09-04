@@ -1,66 +1,99 @@
+<%# Participant form for both add and edit. Local: tenancy_party %>
+<% error_for = ->(*attrs) { attrs.flat_map { |a| tenancy_party.errors[a] }.first } %>
 <%= form_with(model: [@tenancy, tenancy_party], class: "space-y-4") do |form| %>
   <% if tenancy_party.errors.any? %>
     <div class="yn-alert yn-alert-danger" role="alert">
-      <div>
-        <h3 class="font-bold text-sm"><%= pluralize(tenancy_party.errors.count, "error") %> prohibited this participant from being saved:</h3>
-        <ul class="list-disc pl-5 mt-1 text-sm">
-          <% tenancy_party.errors.each do |error| %>
-            <li><%= error.full_message %></li>
-          <% end %>
-        </ul>
-      </div>
+      Participant couldn't be saved — <%= pluralize(tenancy_party.errors.count, "field") %> needs a fix.
+      <ul class="list-disc pl-5 mt-1 text-sm">
+        <% tenancy_party.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
     </div>
   <% end %>
 
   <% if tenancy_party.new_record? %>
     <div>
-      <%= form.label :party_id, "Select Party", class: "yn-label" %>
-      <%= form.select :party_id, @parties.map { |p| [p.display_name, p.id] }, {}, { class: "yn-select", required: true } %>
+      <% party_error = error_for.call(:party_id, :party) %>
+      <%= form.label :party_id, "Party", class: "yn-label", for: "participant-party" %>
+      <%= form.select :party_id, @parties.map { |p| [p.display_name, p.id] }, { include_blank: "Select a party" },
+            { class: "yn-select #{'yn-field-invalid' if party_error}", id: "participant-party",
+              autofocus: (tenancy_party.errors.empty? ? true : nil),
+              "aria-invalid": party_error ? "true" : nil,
+              "aria-describedby": party_error ? "participant-party-error" : nil } %>
+      <% if party_error %>
+        <p id="participant-party-error" class="yn-error-text"><%= party_error %></p>
+      <% end %>
     </div>
 
     <div>
-      <%= form.label :role, "Role", class: "yn-label" %>
-      <%= form.select :role, TenancyParty::ROLES.map { |r| [r.titleize, r] }, {}, { class: "yn-select", required: true } %>
+      <% role_error = error_for.call(:role) %>
+      <%= form.label :role, "Role", class: "yn-label", for: "participant-role" %>
+      <%= form.select :role, TenancyParty::ROLES.map { |r| [r.titleize, r] }, {},
+            { class: "yn-select #{'yn-field-invalid' if role_error}", id: "participant-role",
+              "aria-invalid": role_error ? "true" : nil,
+              "aria-describedby": role_error ? "participant-role-error" : nil } %>
+      <% if role_error %>
+        <p id="participant-role-error" class="yn-error-text"><%= role_error %></p>
+      <% end %>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
-        <%= form.label :effective_from, "Effective From Date", class: "yn-label" %>
-        <%= form.date_field :effective_from, class: "yn-input", required: true %>
+        <% from_error = error_for.call(:effective_from) %>
+        <%= form.label :effective_from, "Effective from", class: "yn-label", for: "participant-from" %>
+        <%= form.date_field :effective_from, class: "yn-input #{'yn-field-invalid' if from_error}", id: "participant-from",
+              "aria-invalid": from_error ? "true" : nil,
+              "aria-describedby": from_error ? "participant-from-error" : nil %>
+        <% if from_error %>
+          <p id="participant-from-error" class="yn-error-text"><%= from_error %></p>
+        <% end %>
       </div>
-
       <div>
-        <%= form.label :effective_until, "Effective Until Date (Optional)", class: "yn-label" %>
-        <%= form.date_field :effective_until, class: "yn-input" %>
+        <% until_error = error_for.call(:effective_until) %>
+        <%= form.label :effective_until, class: "yn-label", for: "participant-until" do %>
+          Effective until <span class="font-normal text-stone-400">(optional)</span>
+        <% end %>
+        <%= form.date_field :effective_until, class: "yn-input #{'yn-field-invalid' if until_error}", id: "participant-until",
+              "aria-invalid": until_error ? "true" : nil,
+              "aria-describedby": until_error ? "participant-until-error" : nil %>
+        <% if until_error %>
+          <p id="participant-until-error" class="yn-error-text"><%= until_error %></p>
+        <% end %>
       </div>
     </div>
   <% else %>
-    <div class="bg-stone-50 border border-stone-200 p-4 rounded-lg space-y-3">
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm border-y border-stone-200 py-3">
+      <div class="col-span-2">
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Participant</dt>
+        <dd class="m-0 font-medium text-stone-900"><%= tenancy_party.party.display_name %></dd>
+      </div>
       <div>
-        <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Participant</div>
-        <div class="text-base font-bold text-stone-900"><%= tenancy_party.party.display_name %></div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Role</dt>
+        <dd class="m-0"><%= tenancy_party.role.titleize %></dd>
       </div>
-      <div class="flex gap-6">
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Role</div>
-          <span class="text-xs font-mono uppercase px-2 py-0.5 bg-stone-200 rounded text-stone-800 font-semibold inline-block mt-1"><%= tenancy_party.role.titleize %></span>
-        </div>
-        <div>
-          <div class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Effective From</div>
-          <div class="text-sm font-medium text-stone-900 mt-1"><%= tenancy_party.effective_from&.to_fs(:rfc822) %></div>
-        </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Effective from</dt>
+        <dd class="m-0"><%= tenancy_party.effective_from&.strftime("%b %-d, %Y") %></dd>
       </div>
-    </div>
+    </dl>
 
     <div>
-      <%= form.label :effective_until, "Effective Until Date (End of participation)", class: "yn-label" %>
-      <%= form.date_field :effective_until, class: "yn-input" %>
-      <p class="yn-hint">To change a participant's role or start a new period, add a new participant record.</p>
+      <% until_error = error_for.call(:effective_until) %>
+      <%= form.label :effective_until, "Effective until", class: "yn-label", for: "participant-until" %>
+      <%= form.date_field :effective_until, class: "yn-input #{'yn-field-invalid' if until_error}", id: "participant-until",
+            autofocus: (tenancy_party.errors.empty? ? true : nil),
+            "aria-invalid": until_error ? "true" : nil,
+            "aria-describedby": until_error ? "participant-until-error" : "participant-until-hint" %>
+      <% if until_error %>
+        <p id="participant-until-error" class="yn-error-text"><%= until_error %></p>
+      <% end %>
+      <p id="participant-until-hint" class="yn-hint">Ends this person's participation. To change a role or start a new period, add a new participant instead.</p>
     </div>
   <% end %>
 
-  <div class="flex justify-end gap-3 pt-2">
-    <%= link_to "Cancel", @tenancy, class: "yn-btn yn-btn-secondary" %>
-    <%= form.submit class: "yn-btn yn-btn-primary px-8" %>
+  <div class="flex justify-end gap-2 pt-2">
+    <%= link_to "Cancel", tenancy_agreement_path(@tenancy), class: "yn-btn yn-btn-ghost" %>
+    <%= form.submit (tenancy_party.new_record? ? "Add participant" : "Save participant"), class: "yn-btn yn-btn-primary" %>
   </div>
 <% end %>
