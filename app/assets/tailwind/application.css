@@ -278,6 +278,10 @@
  * on both th and td in markup.
  * ------------------------------------------------------------------------ */
 
+.overflow-x-auto {
+  position: relative;
+}
+
 .yn-table {
   width: 100%;
   border-collapse: collapse;

@@ -30,12 +30,42 @@ module SystemWindowHelper
   def resize_window_to(width, height)
     return unless page.driver.is_a?(Capybara::Selenium::Driver)
 
-    page.driver.browser.manage.window.resize_to(width, height)
-    wait_for_window_size(width, height)
+    browser = page.driver.browser
+    if width < 500 && browser.respond_to?(:execute_cdp)
+      browser.execute_cdp(
+        "Emulation.setDeviceMetricsOverride",
+        width: width,
+        height: height,
+        deviceScaleFactor: 1,
+        mobile: true
+      )
+      wait_for_emulated_size(width, height)
+    else
+      if browser.respond_to?(:execute_cdp)
+        begin
+          browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+        rescue StandardError
+          nil
+        end
+      end
+      browser.manage.window.resize_to(width, height)
+      wait_for_window_size(width, height)
+    end
     wait_for_animation_frame
   end
 
   private
+
+    def wait_for_emulated_size(width, height)
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + Capybara.default_max_wait_time
+
+      loop do
+        break if page.evaluate_script("[ window.innerWidth, window.innerHeight ]") == [ width, height ]
+        break if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+
+        sleep 0.05
+      end
+    end
 
     def wait_for_window_size(width, height)
       deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + Capybara.default_max_wait_time

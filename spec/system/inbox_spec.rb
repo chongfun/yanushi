@@ -1335,6 +1335,9 @@ RSpec.describe "Inbox", type: :system do
         locals: { revision: newer_revision, review_count: 0 }
       )
 
+      # Wait for Action Cable broadcast to arrive and advance maxRevision
+      expect(page).to have_css("#inbox_sync[data-inbox-sync-revision-value='#{newer_revision}']", visible: :all)
+
       # Document finishes in database
       doc.update!(status: "failed", error_message: "Format parse error")
 
