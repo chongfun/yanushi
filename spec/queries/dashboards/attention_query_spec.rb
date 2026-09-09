@@ -545,6 +545,93 @@ RSpec.describe Dashboards::AttentionQuery do
         expect(described_class.call(user: user).map(&:kind)).to eq([ :schedule_e_review ])
         expect(described_class.call(user: user).first.description).to eq("#{filing_year} tax year · 1 item needs review")
       end
+
+      it "recomputes when an entry with an earlier posted_at commits after a later one" do
+        add_tax_profile(property)
+        later_time = Time.current
+        earlier_time = later_time - 10.seconds
+
+        # Entry B commits first with a later timestamp
+        create(
+          :journal_entry,
+          user: user,
+          posted_at: later_time,
+          occurred_on: Date.new(filing_year, 9, 1),
+          event_type: "rent_payment",
+          source: property
+        )
+
+        initial_key = described_class.new(user: user).send(:schedule_e_cache_key, user, filing_year)
+        expect(described_class.call(user: user)).to eq([])
+
+        # Entry A commits later with an earlier timestamp (out-of-order transaction commit)
+        entry_a = create(
+          :journal_entry,
+          user: user,
+          posted_at: earlier_time,
+          occurred_on: Date.new(filing_year, 9, 2),
+          event_type: "deposit_applied",
+          source: tenancy
+        )
+        create(:posting, journal_entry: entry_a, property: property, amount_cents: -50_000, account: user.accounts.find_by!(key: "tenant_receivable"))
+        create(:posting, journal_entry: entry_a, property: property, amount_cents: 50_000, account: user.accounts.find_by!(key: "security_deposits_held"))
+
+        # maximum(:posted_at) is still later_time
+        expect(user.journal_entries.maximum(:posted_at)).to eq(later_time)
+
+        # Cache key must change because entry count changed
+        new_key = described_class.new(user: user).send(:schedule_e_cache_key, user, filing_year)
+        expect(new_key).not_to eq(initial_key)
+
+        # Cached state is invalidated and review item is returned
+        items = described_class.call(user: user)
+        expect(items.map(&:kind)).to eq([ :schedule_e_review ])
+        expect(items.first.description).to eq("#{filing_year} tax year · 1 item needs review")
+      end
+
+      it "recomputes when a mutable profile or resolution updates with an earlier timestamp than the maximum" do
+        property_b = create(:property, user: user)
+        profile_a = add_tax_profile(property)
+        profile_b = add_tax_profile(property_b)
+
+        # Baseline cache
+        expect(described_class.call(user: user)).to eq([])
+
+        # Profile B updates first with a later timestamp
+        later_time = Time.current + 1.minute
+        profile_b.update_columns(updated_at: later_time)
+
+        # Warm the cache against profile B's new timestamp
+        initial_key = described_class.new(user: user).send(:schedule_e_cache_key, user, filing_year)
+        expect(described_class.call(user: user)).to eq([])
+
+        # Profile A updates afterward with an earlier timestamp than profile B
+        earlier_time = later_time - 30.seconds
+        profile_a.update_columns(updated_at: earlier_time)
+
+        # Count and maximum(:updated_at) remain unchanged across the user's profiles
+        profiles = PropertyTaxProfile.where(property_id: [ property.id, property_b.id ])
+        expect(profiles.count).to eq(2)
+        expect(profiles.maximum(:updated_at)).to eq(later_time)
+
+        # Cache key must change because the content checksum changes
+        new_key = described_class.new(user: user).send(:schedule_e_cache_key, user, filing_year)
+        expect(new_key).not_to eq(initial_key)
+      end
+
+      it "evaluates append_only_fingerprint in a single statement snapshot" do
+        query = described_class.new(user: user)
+        sql_statements = []
+        subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+          sql_statements << payload[:sql] unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+        end
+        query.send(:append_only_fingerprint, user.journal_entries)
+        ActiveSupport::Notifications.unsubscribe(subscription)
+
+        expect(sql_statements.size).to eq(1)
+        expect(sql_statements.first).to include("COUNT(*)")
+        expect(sql_statements.first).to include("MAX")
+      end
     end
   end
 end

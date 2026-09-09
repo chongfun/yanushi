@@ -212,22 +212,38 @@ module Dashboards
           u.id,
           year,
           u.properties.count,
-          # Journal entries are append-only, so a new one always carries the
-          # latest `posted_at` and a timestamp alone notices it. A correction
-          # is another entry, not an edit or a deletion.
-          stamp(u.journal_entries.maximum(:posted_at)),
-          *fingerprint(PropertyTaxReviewResolution.where(property_id: property_ids)),
-          *fingerprint(PropertyTaxProfile.where(property_id: property_ids))
+          *append_only_fingerprint(u.journal_entries, :posted_at),
+          *mutable_fingerprint(PropertyTaxReviewResolution.where(property_id: property_ids)),
+          *mutable_fingerprint(PropertyTaxProfile.where(property_id: property_ids))
         ]
       end
 
-      # A latest-timestamp moves when a row is written and stays put when one
-      # is removed. Every resolved Schedule E item offers Undo, which deletes
-      # the resolution, and undoing any but the newest leaves the maximum
-      # untouched: the review item comes back while the dashboard goes on
-      # reporting it as handled. Counting the rows is what sees one leave.
-      def fingerprint(relation)
-        [ relation.count, stamp(relation.maximum(:updated_at)) ]
+      # Count plus latest timestamp in a single statement snapshot. Journal
+      # entries are append-only (the model aborts every update and destroy), so
+      # a timestamp alone almost sees everything. The count is for the entry
+      # that commits after a later-stamped one: MAX(posted_at) does not move,
+      # the count does.
+      def append_only_fingerprint(relation, timestamp_col = :posted_at)
+        count, maximum = relation.pick(Arel.star.count, relation.arel_table[timestamp_col].maximum)
+
+        [ count.to_i, stamp(maximum) ]
+      end
+
+      # Count plus checksum. Tax profiles and review resolutions change in
+      # place and get deleted (every resolved Schedule E item offers Undo), so
+      # neither a count nor MAX(updated_at) is enough on its own: an in-place
+      # edit leaves the count alone, and an edit to any row but the newest
+      # leaves the maximum alone. Hashing the ordered id and timestamp pairs
+      # moves the key on any change. Columns are qualified so a future join
+      # cannot make them ambiguous.
+      def mutable_fingerprint(relation)
+        table = relation.klass.quoted_table_name
+        count, digest = relation.pick(
+          Arel.star.count,
+          Arel.sql("MD5(COALESCE(STRING_AGG(#{table}.id::text || '-' || #{table}.updated_at::text, ',' ORDER BY #{table}.id), ''))")
+        )
+
+        [ count.to_i, digest ]
       end
 
       # Postgres keeps microseconds and `Time#to_i` discards them, which is the
