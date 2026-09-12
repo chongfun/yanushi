@@ -96,12 +96,21 @@ RSpec.describe Accounting::PropertySummaryQuery do
     end
 
     it "bounds from-only queries to today so future-dated entries are excluded and reconcile with closing balances" do
-      # Past charge on Jan 1
+      # Both charges carry an explicit service period. A rent charge otherwise
+      # takes the month of its charge date, and on the 11th through the 20th
+      # "10 days ago" and "10 days from now" are the same month, so the two
+      # collide on the one-live-rent-charge-per-period index and the example
+      # fails for a third of every month.
+      last_period = Date.current.beginning_of_month - 1.month
+      next_period = Date.current.beginning_of_month + 1.month
+
+      # Past charge, 10 days ago
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "rent",
         amount_cents: 200_000,
-        charge_date: Date.current - 10.days
+        charge_date: Date.current - 10.days,
+        service_period_start: last_period
       )
 
       # Future charge 10 days in the future
@@ -109,7 +118,8 @@ RSpec.describe Accounting::PropertySummaryQuery do
         tenancy: tenancy,
         charge_kind: "rent",
         amount_cents: 200_000,
-        charge_date: Date.current + 10.days
+        charge_date: Date.current + 10.days,
+        service_period_start: next_period
       )
 
       from_only_summary = described_class.call(property: property, from: Date.current - 20.days)
@@ -190,12 +200,15 @@ RSpec.describe Accounting::PropertySummaryQuery do
     end
 
     it "excludes future-dated charges in an all-time range so period activity reconciles with closing balances" do
+      # Explicit, distinct service periods: see the note above, "10 days ago"
+      # and "10 days from now" share a month for a third of every month.
       # Past charge 10 days ago ($1,000)
       Charges::CreateService.call(
         tenancy: tenancy,
         charge_kind: "rent",
         amount_cents: 100_000,
-        charge_date: Date.current - 10.days
+        charge_date: Date.current - 10.days,
+        service_period_start: Date.current.beginning_of_month - 1.month
       )
 
       # Future charge 10 days in the future ($2,000)
@@ -203,7 +216,8 @@ RSpec.describe Accounting::PropertySummaryQuery do
         tenancy: tenancy,
         charge_kind: "rent",
         amount_cents: 200_000,
-        charge_date: Date.current + 10.days
+        charge_date: Date.current + 10.days,
+        service_period_start: Date.current.beginning_of_month + 1.month
       )
 
       all_time_range = Accounting::DateRange.new(from: nil, through: nil)
