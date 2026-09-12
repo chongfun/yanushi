@@ -13,14 +13,15 @@ import { Controller } from "@hotwired/stimulus"
 // update makes it scroll again.
 export default class extends Controller {
   connect() {
-    // Read the name the server rendered before any of it is taken away.
-    this.named = {
-      role: this.element.getAttribute("role"),
-      "aria-label": this.element.getAttribute("aria-label"),
-      "aria-labelledby": this.element.getAttribute("aria-labelledby")
-    }
+    this.named = this.readCanonical()
 
     this.sync = this.sync.bind(this)
+    this.handleFocusOut = this.handleFocusOut.bind(this)
+    this.restoreCanonical = this.restoreCanonical.bind(this)
+
+    this.element.addEventListener("focusout", this.handleFocusOut)
+    document.addEventListener("turbo:before-cache", this.restoreCanonical)
+
     this.observer = new ResizeObserver(this.sync)
     this.observer.observe(this.element)
     // The table as well as the container: a column grows and starts the
@@ -33,6 +34,48 @@ export default class extends Controller {
 
   disconnect() {
     this.observer.disconnect()
+    this.element.removeEventListener("focusout", this.handleFocusOut)
+    document.removeEventListener("turbo:before-cache", this.restoreCanonical)
+  }
+
+  readCanonical() {
+    const read = (attr, dataKey) =>
+      this.element.dataset[dataKey] || this.element.getAttribute(attr)
+
+    const canonical = {
+      role: read("role", "tableScrollRole") || "region",
+      "aria-label": read("aria-label", "tableScrollAriaLabel"),
+      "aria-labelledby": read("aria-labelledby", "tableScrollAriaLabelledby")
+    }
+
+    if (!this.element.dataset.tableScrollRole && canonical.role) {
+      this.element.dataset.tableScrollRole = canonical.role
+    }
+    if (!this.element.dataset.tableScrollAriaLabel && canonical["aria-label"]) {
+      this.element.dataset.tableScrollAriaLabel = canonical["aria-label"]
+    }
+    if (!this.element.dataset.tableScrollAriaLabelledby && canonical["aria-labelledby"]) {
+      this.element.dataset.tableScrollAriaLabelledby = canonical["aria-labelledby"]
+    }
+
+    return canonical
+  }
+
+  restoreCanonical() {
+    this.element.setAttribute("tabindex", "0")
+    for (const [name, value] of Object.entries(this.named)) {
+      if (value) this.element.setAttribute(name, value)
+    }
+  }
+
+  handleFocusOut(event) {
+    if (event.relatedTarget && this.element.contains(event.relatedTarget)) return
+
+    queueMicrotask(() => {
+      if (this.element.isConnected && !this.element.contains(document.activeElement)) {
+        this.sync()
+      }
+    })
   }
 
   sync() {

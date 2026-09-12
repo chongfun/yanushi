@@ -180,6 +180,56 @@ RSpec.describe "Application Shell Navigation", type: :system do
       expect(page).to have_no_css(".yn-table-scroll[tabindex]")
       expect(page).to have_no_css(".yn-table-scroll[role='region']")
     end
+
+    it "restores the table's accessible name and region role when restored from Turbo page cache on a narrow screen" do
+      resize_window_to(1400, 1000)
+      visit tenancy_agreement_path(tenancy)
+      expect(page).to have_text("Participants")
+
+      # Wide viewport: table fits, controller strips tabindex and landmark attributes
+      expect(page).to have_no_css(".yn-table-scroll[tabindex]")
+      expect(page).to have_no_css(".yn-table-scroll[role='region']")
+
+      # Navigate away via Turbo Drive, which caches the current mutated page
+      within(".yn-tabs") { click_on "Activity" }
+      expect(page).to have_current_path(tenancy_path(tenancy))
+
+      # Narrow viewport (table will now overflow upon return)
+      resize_window_to(375, 667)
+
+      # Restore Agreement page from Turbo cache via browser back
+      page.go_back
+      expect(page).to have_current_path(tenancy_agreement_path(tenancy))
+      expect(page).to have_text("Participants")
+
+      scroller = find(".yn-table-scroll[aria-labelledby='participants-heading']", match: :first)
+      expect(scroller[:tabindex]).to eq("0")
+      expect(scroller[:role]).to eq("region")
+      expect(scroller["aria-labelledby"]).to eq("participants-heading")
+    end
+
+    it "removes the tab stop when focus leaves a table that stopped overflowing" do
+      resize_window_to(375, 667)
+      visit tenancy_agreement_path(tenancy)
+      expect(page).to have_text("Participants")
+
+      # Table overflows at 375px: focus the scroller
+      scroller = find(".yn-table-scroll[aria-labelledby='participants-heading']", match: :first)
+      expect(scroller[:tabindex]).to eq("0")
+      page.execute_script("document.querySelector(\".yn-table-scroll[aria-labelledby='participants-heading']\").focus()")
+      expect(page.evaluate_script("document.activeElement.className")).to include("yn-table-scroll")
+
+      # Widen viewport: table now fits, but container is focused so it keeps tabindex until blur
+      resize_window_to(1400, 1000)
+      wait_for_animation_frame
+
+      # Move focus away
+      page.execute_script("document.activeElement.blur()")
+      wait_for_animation_frame
+
+      expect(page).to have_no_css(".yn-table-scroll[tabindex]")
+      expect(page).to have_no_css(".yn-table-scroll[role='region']")
+    end
   end
 
   describe "mobile navigation drawer", js: true do

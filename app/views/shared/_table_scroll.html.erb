@@ -21,6 +21,13 @@
      data-controller="table-scroll"
      tabindex="0"
      role="region"
-     <% if labelledby.present? %>aria-labelledby="<%= labelledby %>"<% else %>aria-label="<%= label %>"<% end %>>
+     data-table-scroll-role="region"
+     <% if labelledby.present? %>
+       aria-labelledby="<%= labelledby %>"
+       data-table-scroll-aria-labelledby="<%= labelledby %>"
+     <% else %>
+       aria-label="<%= label %>"
+       data-table-scroll-aria-label="<%= label %>"
+     <% end %>>
   <%= yield %>
 </div>
