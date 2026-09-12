@@ -46,7 +46,7 @@
 
     <!-- Chronological ledger -->
     <% if @activity_result.rows.any? %>
-      <div class="overflow-x-auto">
+      <%= render layout: "shared/table_scroll", locals: { label: "Activity" } do %>
         <table class="yn-table">
           <thead>
             <tr>
@@ -61,7 +61,7 @@
             <%= render partial: "accounting/activity_row", collection: @activity_result.rows, as: :row, locals: { context: :tenancy_or_unit, audit: true } %>
           </tbody>
         </table>
-      </div>
+      <% end %>
 
       <% filter_params = { year: params[:year], from: params[:from], through: params[:through] }.compact_blank %>
       <%= render "shared/pagination",

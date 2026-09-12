@@ -15,7 +15,7 @@
   <% if @status.state == :needs_profile %>
     <div class="yn-alert yn-alert-warn max-w-2xl flex flex-wrap items-center justify-between gap-3">
       <span>No tax profile exists for <%= @year %>, so Schedule E can’t be prepared.</span>
-      <%= link_to "Set up #{@year} tax profile", new_property_tax_profile_path(@property, tax_year: @year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+      <%= link_to "Set up #{@year} tax profile", new_property_tax_profile_path(@property, tax_year: @year), class: "yn-btn yn-btn-primary yn-btn-sm" %>
     </div>
   <% else %>
     <div class="yn-surface divide-y divide-stone-200 max-w-2xl">

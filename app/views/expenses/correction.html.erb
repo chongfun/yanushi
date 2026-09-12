@@ -67,7 +67,7 @@
 
         <div>
           <% has_unit_error = rep.errors[:rentable_unit_id].any? || rep.errors[:rentable_unit].any? %>
-          <%= label_tag "expense[rentable_unit_id]", class: "yn-label", for: "expense_rentable_unit_id" do %>Unit <span class="font-normal text-stone-400">(optional)</span><% end %>
+          <%= label_tag "expense[rentable_unit_id]", class: "yn-label", for: "expense_rentable_unit_id" do %>Unit <span class="font-normal text-stone-500">(optional)</span><% end %>
           <% prop_units = (rep.property_id.present? ? @properties.find { |p| p.id.to_s == rep.property_id.to_s }&.rentable_units : nil) || [] %>
           <%= select_tag "expense[rentable_unit_id]",
                 options_from_collection_for_select(prop_units, :id, :display_name, rep.rentable_unit_id),

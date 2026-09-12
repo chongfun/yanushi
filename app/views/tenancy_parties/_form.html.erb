@@ -52,7 +52,7 @@
       <div>
         <% until_error = error_for.call(:effective_until) %>
         <%= form.label :effective_until, class: "yn-label", for: "participant-until" do %>
-          Effective until <span class="font-normal text-stone-400">(optional)</span>
+          Effective until <span class="font-normal text-stone-500">(optional)</span>
         <% end %>
         <%= form.date_field :effective_until, class: "yn-input #{'yn-field-invalid' if until_error}", id: "participant-until",
               "aria-invalid": until_error ? "true" : nil,

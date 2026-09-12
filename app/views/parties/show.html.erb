@@ -72,7 +72,7 @@
       <h2 id="party-tenancies-heading" class="text-sm font-semibold mb-3">Tenancies</h2>
 
       <% if @tenancy_participations.any? %>
-        <div class="overflow-x-auto">
+        <%= render layout: "shared/table_scroll", locals: { labelledby: "party-tenancies-heading" } do %>
           <table class="yn-table">
             <thead>
               <tr>
@@ -98,7 +98,7 @@
               <% end %>
             </tbody>
           </table>
-        </div>
+        <% end %>
       <% else %>
         <%= render "shared/empty_state",
               title: "No tenancies yet",

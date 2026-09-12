@@ -55,7 +55,7 @@
 
   <% if expense.superseded? %>
     <div class="yn-alert yn-alert-warn mb-6" role="status">
-      <span><strong class="font-medium">Expense Corrected.</strong> Superseded by <%= link_to "Expense ##{expense.superseded_by_id}", expense_path(expense.superseded_by_id), class: "yn-link font-medium" %> on <%= expense.voided_at&.strftime("%B %-d, %Y") %>.</span>
+      <span><strong class="">Expense Corrected.</strong> Superseded by <%= link_to "Expense ##{expense.superseded_by_id}", expense_path(expense.superseded_by_id), class: "yn-link font-medium" %> on <%= expense.voided_at&.strftime("%B %-d, %Y") %>.</span>
     </div>
   <% elsif expense.voided? %>
     <div class="yn-alert yn-alert-danger mb-6" role="status">
@@ -64,7 +64,7 @@
   <% end %>
   <% if expense.superseded_expense %>
     <div class="yn-alert mb-6" role="status">
-      <span><strong class="font-medium">Replacement Expense.</strong> This record replaces <%= link_to "Expense ##{expense.superseded_expense.id}", expense_path(expense.superseded_expense), class: "yn-link font-medium" %>.</span>
+      <span><strong class="">Replacement Expense.</strong> This record replaces <%= link_to "Expense ##{expense.superseded_expense.id}", expense_path(expense.superseded_expense), class: "yn-link font-medium" %>.</span>
     </div>
   <% end %>
 
@@ -74,7 +74,7 @@
       <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
         <div class="flex justify-between gap-6 py-2.5">
           <dt class="text-stone-500">Amount</dt>
-          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-400' if inactive %>"><%= format_money_cents(expense.amount_cents) %></dd>
+          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-500' if inactive %>"><%= format_money_cents(expense.amount_cents) %></dd>
         </div>
         <div class="flex justify-between gap-6 py-2.5">
           <dt class="text-stone-500">Paid on</dt>
@@ -150,7 +150,7 @@
     </div>
 
     <% if @reimbursements.any? %>
-      <div class="overflow-x-auto">
+      <%= render layout: "shared/table_scroll", locals: { label: "Reimbursement charges" } do %>
         <table class="yn-table">
           <thead>
             <tr>
@@ -170,7 +170,7 @@
                 </td>
                 <td class="text-stone-500 whitespace-nowrap"><%= charge.charge_date.strftime("%b %-d, %Y") %></td>
                 <td class="text-stone-600"><%= charge.description %></td>
-                <td class="text-right tabular-nums whitespace-nowrap <%= charge.voided? ? 'line-through text-stone-400' : '' %>"><%= format_money_cents(charge.amount_cents) %></td>
+                <td class="text-right tabular-nums whitespace-nowrap <%= charge.voided? ? 'line-through text-stone-500' : '' %>"><%= format_money_cents(charge.amount_cents) %></td>
                 <td>
                   <% if charge.superseded? %>
                     <%= render "shared/status", text: "Corrected", size: :sm %>
@@ -191,7 +191,7 @@
             <% end %>
           </tbody>
         </table>
-      </div>
+      <% end %>
     <% else %>
       <p class="text-sm text-stone-500 m-0">No tenant reimbursement charges have been posted for this expense.</p>
     <% end %>

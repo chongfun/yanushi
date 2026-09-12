@@ -2,7 +2,7 @@
   <h2 id="se-proj-heading" class="text-sm font-semibold mb-3">Projected Schedule E</h2>
   <p class="text-sm text-stone-500 mb-3">Values update as review items are resolved. Lines follow the <%= @year %> IRS form.</p>
 
-  <div class="overflow-x-auto">
+  <%= render layout: "shared/table_scroll", locals: { labelledby: "se-proj-heading" } do %>
     <table class="yn-table max-w-2xl">
       <thead>
         <tr>
@@ -80,5 +80,5 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  <% end %>
 </section>

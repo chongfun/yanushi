@@ -22,10 +22,10 @@
       <%= row.label %>
       <% if detail == :unit %>
         <% if row.rentable_unit %>
-          <span class="text-stone-400">&middot; <%= row.rentable_unit.name %></span>
+          <span class="text-stone-500">&middot; <%= row.rentable_unit.name %></span>
         <% end %>
       <% elsif row.description.present? && row.description != row.label %>
-        <span class="text-stone-400">&middot; <%= row.description %></span>
+        <span class="text-stone-500">&middot; <%= row.description %></span>
       <% end %>
     <% end %>
     <% if row.corrected? %>

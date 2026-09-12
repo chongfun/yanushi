@@ -164,27 +164,27 @@ RSpec.describe "Properties", type: :system do
     # 1. Property Overview
     visit property_path(property)
     expect(page).to have_text("Alexander Montgomery-Smith")
-    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be true
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= document.documentElement.clientWidth")).to be true
 
     # 2. Property Tenancies
     visit property_tenancies_path(property)
     expect(page).to have_text("Alexander Montgomery-Smith")
-    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be true
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= document.documentElement.clientWidth")).to be true
 
     # 3. Property Activity
     visit property_activity_path(property)
     expect(page).to have_text("Emergency electrical main repair")
-    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be true
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= document.documentElement.clientWidth")).to be true
 
     # 4. Portfolio
     visit portfolio_path
     expect(page).to have_text("123 Main St")
-    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be true
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= document.documentElement.clientWidth")).to be true
 
     # 5. Dashboard Overview
     visit root_path
     expect(page).to have_text("Overview")
-    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be true
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= document.documentElement.clientWidth")).to be true
   end
 
   it "navigates from vacant unit to tenancy creation with unit preselected", js: true do

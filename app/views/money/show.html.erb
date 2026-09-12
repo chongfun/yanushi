@@ -23,7 +23,7 @@
     </div>
     <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
     <% if @selected_property_id.present? || params[:year].present? || params[:from].present? || params[:through].present? %>
-      <%= link_to "Clear filters", money_path, class: "yn-btn yn-btn-ghost text-sm" %>
+      <%= link_to "Clear filters", money_path, class: "yn-btn yn-btn-ghost" %>
     <% end %>
   <% end %>
 
@@ -50,7 +50,7 @@
   <% end %>
 
   <% if @activity_result.rows.any? %>
-    <div class="overflow-x-auto">
+    <%= render layout: "shared/table_scroll", locals: { label: "Activity" } do %>
       <table class="yn-table">
         <thead>
           <tr>
@@ -65,7 +65,7 @@
           <%= render partial: "accounting/activity_row", collection: @activity_result.rows, as: :row, locals: { context: :property, audit: true } %>
         </tbody>
       </table>
-    </div>
+    <% end %>
 
     <%= render "shared/pagination",
           page: @activity_result.page, per_page: @activity_result.per_page,

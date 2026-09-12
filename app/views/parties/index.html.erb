@@ -4,7 +4,7 @@
   <%= render "portfolio/header", current_tab: :parties %>
 
   <% if @parties.any? %>
-    <div class="overflow-x-auto">
+    <%= render layout: "shared/table_scroll", locals: { label: "Parties" } do %>
       <table class="yn-table">
         <thead>
           <tr>
@@ -33,7 +33,7 @@
           <% end %>
         </tbody>
       </table>
-    </div>
+    <% end %>
 
     <%= render "shared/pagination",
           page: @page, per_page: @per_page, total_count: @total_count, total_pages: @total_pages,

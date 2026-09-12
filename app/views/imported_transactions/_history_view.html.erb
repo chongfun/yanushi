@@ -7,19 +7,19 @@
       <%= f.text_field :search,
                        value: filters[:search],
                        placeholder: "Search payer or reference…",
-                       class: "yn-input w-full",
+                       class: "yn-input",
                        "aria-label": "Search payer or reference" %>
     </div>
     <div class="w-48">
       <%= f.select :payment_method,
                    options_for_select(ImportedTransaction::PAYMENT_METHOD_OPTIONS, filters[:payment_method]),
                    {},
-                   class: "yn-select w-full",
+                   class: "yn-select",
                    "aria-label": "Filter by payment method" %>
     </div>
     <%= f.submit "Filter", class: "yn-btn yn-btn-secondary" %>
     <% if filters.present? && filters.values.any?(&:present?) %>
-      <%= link_to "Clear", inbox_path(view: "history"), class: "yn-btn yn-btn-ghost text-sm" %>
+      <%= link_to "Clear", inbox_path(view: "history"), class: "yn-btn yn-btn-ghost" %>
     <% end %>
   <% end %>
 </div>
@@ -29,7 +29,7 @@
     <span class="yn-status"><span class="yn-dot"></span>No confirmed transactions found.</span>
   </p>
 <% else %>
-  <div class="overflow-x-auto">
+  <%= render layout: "shared/table_scroll", locals: { label: "Confirmed transactions" } do %>
     <table class="yn-table max-w-4xl">
       <thead>
         <tr>
@@ -62,7 +62,7 @@
                   Security deposit — <%= txn.confirmed_source.security_deposit.tenancy.property.address %>
                 <% end %>
               <% else %>
-                <span class="text-stone-400">Confirmed</span>
+                <span class="text-stone-500">Confirmed</span>
               <% end %>
             </td>
             <td class="text-right tabular-nums whitespace-nowrap font-medium">
@@ -72,7 +72,7 @@
         <% end %>
       </tbody>
     </table>
-  </div>
+  <% end %>
 
   <%= render "shared/pagination",
         page: page, per_page: per_page, total_count: total_confirmed_count, total_pages: total_pages,

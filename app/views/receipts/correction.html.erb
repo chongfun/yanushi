@@ -110,7 +110,7 @@
         <div>
           <% ref_error = error_for.call(:external_reference) %>
           <%= f.label :external_reference, class: "yn-label", for: "receipt_correction_external_reference" do %>
-            Reference <span class="font-normal text-stone-400">(optional)</span>
+            Reference <span class="font-normal text-stone-500">(optional)</span>
           <% end %>
           <%= f.text_field :external_reference,
                 class: "yn-input #{'yn-field-invalid' if ref_error}", id: "receipt_correction_external_reference",
@@ -125,7 +125,7 @@
       <div>
         <% memo_error = error_for.call(:memo) %>
         <%= f.label :memo, class: "yn-label", for: "receipt_correction_memo" do %>
-          Memo <span class="font-normal text-stone-400">(optional)</span>
+          Memo <span class="font-normal text-stone-500">(optional)</span>
         <% end %>
         <%= f.text_area :memo, rows: 2,
               class: "yn-textarea #{'yn-field-invalid' if memo_error}", id: "receipt_correction_memo",

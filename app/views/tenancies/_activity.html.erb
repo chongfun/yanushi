@@ -5,7 +5,7 @@
   </div>
 
   <% if @recent_activity_rows.present? %>
-    <div class="overflow-x-auto">
+    <%= render layout: "shared/table_scroll", locals: { labelledby: "activity-heading" } do %>
       <table class="yn-table">
         <thead>
           <tr>
@@ -22,7 +22,7 @@
           <% end %>
         </tbody>
       </table>
-    </div>
+    <% end %>
   <% else %>
     <p class="text-sm text-stone-500 py-6">No account activity recorded yet.</p>
   <% end %>

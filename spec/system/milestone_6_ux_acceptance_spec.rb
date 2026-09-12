@@ -445,9 +445,10 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       expect(page).to have_css("header.lg\\:hidden")
       expect(page).to have_css("button[aria-label='Open navigation']")
 
-      # Check document width vs window inner width
+      # Document width vs the layout viewport (see SystemWindowHelper: the
+      # visual viewport widens to fit an overflowing page under emulation)
       doc_width = page.evaluate_script("document.documentElement.scrollWidth")
-      win_width = page.evaluate_script("window.innerWidth")
+      win_width = page.evaluate_script("document.documentElement.clientWidth")
       expect(doc_width).to be <= win_width
     end
 
@@ -458,7 +459,7 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
 
       # Verify no horizontal page overflow
       doc_width = page.evaluate_script("document.documentElement.scrollWidth")
-      win_width = page.evaluate_script("window.innerWidth")
+      win_width = page.evaluate_script("document.documentElement.clientWidth")
       expect(doc_width).to be <= win_width
 
       # Navigate to agreements tab
@@ -479,6 +480,35 @@ RSpec.describe "Milestone 6 UX Acceptance", type: :system do
       expect(page).to have_text("Charge was successfully created.")
       expect(page).to have_current_path(tenancy_path(tenancy))
       expect(page).to have_text("Mobile late fee")
+    end
+
+    # The statement header carries three actions, more than any other page,
+    # and a header action row that cannot wrap pushed the document past the
+    # viewport there while every narrower page still fit. Measure against the
+    # layout viewport: under device emulation the visual viewport widens to
+    # whatever the page is, so comparing with `window.innerWidth` would pass
+    # on an overflowing page.
+    it "keeps every primary page inside the 375px layout viewport" do
+      {
+        "Overview" => root_path,
+        "Portfolio" => portfolio_path,
+        "Money" => money_path,
+        "Inbox" => inbox_path,
+        "Reports" => reports_path,
+        "Accounts" => accounts_path,
+        "Property activity" => property_activity_path(property),
+        "Tenancy" => tenancy_path(tenancy),
+        "Tenancy agreement" => tenancy_agreement_path(tenancy),
+        "Tenant account statement" => statement_tenancy_path(tenancy)
+      }.each do |label, path|
+        visit path
+        expect(page).to have_css("h1")
+
+        overflow = page.evaluate_script(
+          "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+        )
+        expect(overflow).to(be <= 0, -> { "#{label} (#{path}) overflows the 375px viewport by #{overflow}px" })
+      end
     end
   end
 

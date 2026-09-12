@@ -5,7 +5,7 @@
     <section aria-labelledby="current-heading">
       <h2 id="current-heading" class="text-sm font-semibold mb-3">Current</h2>
       <% if @active_tenancies.any? %>
-        <div class="overflow-x-auto">
+        <%= render layout: "shared/table_scroll", locals: { labelledby: "current-heading" } do %>
           <table class="yn-table">
             <thead>
               <tr>
@@ -33,7 +33,7 @@
                       <%= tenant_name ? tenant_name.to_sentence : "No tenant assigned" %>
                     <% end %>
                     <% if other_parties.any? %>
-                      <span class="text-stone-400 text-[13px]">+ <%= pluralize(other_parties.size, "other party") %></span>
+                      <span class="text-stone-500 text-[13px]">+ <%= pluralize(other_parties.size, "other party") %></span>
                     <% end %>
                   </td>
                   <td class="text-stone-500 whitespace-nowrap"><%= tenancy.commencement_date&.strftime("%b %Y") %></td>
@@ -51,7 +51,7 @@
               <% end %>
             </tbody>
           </table>
-        </div>
+        <% end %>
       <% else %>
         <% vacant_unit = @property.rentable_units.select(&:active?).find { |u| u.tenancies.none?(&:active?) } %>
         <%= render "shared/empty_state",
@@ -64,7 +64,7 @@
     <% if @upcoming_tenancies.any? %>
       <section aria-labelledby="upcoming-heading">
         <h2 id="upcoming-heading" class="text-sm font-semibold mb-3 text-stone-700">Upcoming</h2>
-        <div class="overflow-x-auto">
+        <%= render layout: "shared/table_scroll", locals: { labelledby: "upcoming-heading" } do %>
           <table class="yn-table">
             <thead>
               <tr>
@@ -93,7 +93,7 @@
                       <%= tenant_name ? tenant_name.to_sentence : "Upcoming tenancy" %>
                     <% end %>
                     <% if other_parties.any? %>
-                      <span class="text-stone-400 text-[13px]">+ <%= pluralize(other_parties.size, "other party") %></span>
+                      <span class="text-stone-500 text-[13px]">+ <%= pluralize(other_parties.size, "other party") %></span>
                     <% end %>
                   </td>
                   <td class="text-stone-500 whitespace-nowrap"><%= tenancy.commencement_date&.strftime("%b %-d, %Y") %></td>
@@ -111,14 +111,14 @@
               <% end %>
             </tbody>
           </table>
-        </div>
+        <% end %>
       </section>
     <% end %>
 
     <% if @past_tenancies.any? %>
       <section aria-labelledby="past-heading">
         <h2 id="past-heading" class="text-sm font-semibold mb-3 text-stone-500">Past</h2>
-        <div class="overflow-x-auto">
+        <%= render layout: "shared/table_scroll", locals: { labelledby: "past-heading" } do %>
           <table class="yn-table">
             <thead>
               <tr>
@@ -153,7 +153,7 @@
               <% end %>
             </tbody>
           </table>
-        </div>
+        <% end %>
       </section>
     <% end %>
   </div>

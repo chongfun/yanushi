@@ -37,7 +37,7 @@
         <h2 id="participants-heading" class="text-sm font-semibold">Participants</h2>
         <%= link_to "Add participant", new_tenancy_tenancy_party_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
       </div>
-      <div class="overflow-x-auto">
+      <%= render layout: "shared/table_scroll", locals: { labelledby: "participants-heading" } do %>
         <table class="yn-table">
           <thead>
             <tr>
@@ -69,7 +69,7 @@
             <% end %>
           </tbody>
         </table>
-      </div>
+      <% end %>
     </section>
 
     <!-- Rent history -->
@@ -80,7 +80,7 @@
           <%= link_to "Change rent", new_tenancy_rent_term_path(@tenancy), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
         <% end %>
       </div>
-      <div class="overflow-x-auto">
+      <%= render layout: "shared/table_scroll", locals: { labelledby: "rent-heading" } do %>
         <table class="yn-table">
           <thead>
             <tr>
@@ -121,7 +121,7 @@
             <% end %>
           </tbody>
         </table>
-      </div>
+      <% end %>
     </section>
 
     <!-- Security deposit configuration -->

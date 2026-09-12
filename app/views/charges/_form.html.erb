@@ -94,7 +94,7 @@
 
   <div>
     <%= form.label :description, class: "yn-label", for: "charge-desc" do %>
-      Description <span class="font-normal text-stone-400">(optional)</span>
+      Description <span class="font-normal text-stone-500">(optional)</span>
     <% end %>
     <%= form.text_field :description,
           class: "yn-input #{'yn-field-invalid' if charge.errors[:description].any?}", id: "charge-desc",

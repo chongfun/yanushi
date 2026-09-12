@@ -48,33 +48,33 @@
       <h2 class="text-sm font-semibold text-stone-900 mb-1">Record Deposit Payment</h2>
       <p class="text-xs text-stone-500 mb-4">Record money received toward this security deposit liability.</p>
       <% if failed == :receive %>
-        <div class="yn-alert yn-alert-danger text-sm mb-3" role="alert" id="receive_error"><%= @failed_error %></div>
+        <div class="yn-alert yn-alert-danger mb-3" role="alert" id="receive_error"><%= @failed_error %></div>
       <% end %>
 
       <%= form_with url: receive_tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-3" do |f| %>
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_party_id">Contributor (Payer)</label>
-          <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name, (failed == :receive ? params[:party_id] : nil)), class: "yn-select text-sm py-1.5", id: "receive_party_id", required: true %>
+          <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name, (failed == :receive ? params[:party_id] : nil)), class: "yn-select py-1.5", id: "receive_party_id", required: true %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_amount">Amount ($)</label>
-          <%= number_field_tag :amount, (failed == :receive ? params[:amount] : sprintf("%.2f", (@remaining_required_cents > 0 ? @remaining_required_cents : 10_000) / 100.0)), step: "0.01", min: "0.01", class: "yn-input text-sm py-1.5 tabular-nums", id: "receive_amount", required: true, "aria-invalid": (failed == :receive ? "true" : nil), "aria-describedby": (failed == :receive ? "receive_error" : nil) %>
+          <%= number_field_tag :amount, (failed == :receive ? params[:amount] : sprintf("%.2f", (@remaining_required_cents > 0 ? @remaining_required_cents : 10_000) / 100.0)), step: "0.01", min: "0.01", class: "yn-input py-1.5 tabular-nums", id: "receive_amount", required: true, "aria-invalid": (failed == :receive ? "true" : nil), "aria-describedby": (failed == :receive ? "receive_error" : nil) %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_occurred_on">Received On</label>
-          <%= date_field_tag :occurred_on, (failed == :receive ? params[:occurred_on] : Date.current), class: "yn-input text-sm py-1.5", id: "receive_occurred_on", required: true %>
+          <%= date_field_tag :occurred_on, (failed == :receive ? params[:occurred_on] : Date.current), class: "yn-input py-1.5", id: "receive_occurred_on", required: true %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_external_reference">Reference (Optional)</label>
-          <%= text_field_tag :external_reference, (failed == :receive ? params[:external_reference] : nil), placeholder: "Check #, wire ref", class: "yn-input text-sm py-1.5", id: "receive_external_reference" %>
+          <%= text_field_tag :external_reference, (failed == :receive ? params[:external_reference] : nil), placeholder: "Check #, wire ref", class: "yn-input py-1.5", id: "receive_external_reference" %>
         </div>
 
         <div>
           <label class="yn-label text-xs font-semibold" for="receive_memo">Memo (Optional)</label>
-          <%= text_field_tag :memo, (failed == :receive ? params[:memo] : nil), placeholder: "Security deposit receipt", class: "yn-input text-sm py-1.5", id: "receive_memo" %>
+          <%= text_field_tag :memo, (failed == :receive ? params[:memo] : nil), placeholder: "Security deposit receipt", class: "yn-input py-1.5", id: "receive_memo" %>
         </div>
 
         <div class="pt-2">
@@ -88,34 +88,34 @@
       <h2 class="text-sm font-semibold text-stone-900 mb-1">Refund Deposit</h2>
       <p class="text-xs text-stone-500 mb-4">Return held deposit funds to a tenant or contributor.</p>
       <% if failed == :refund %>
-        <div class="yn-alert yn-alert-danger text-sm mb-3" role="alert" id="refund_error"><%= @failed_error %></div>
+        <div class="yn-alert yn-alert-danger mb-3" role="alert" id="refund_error"><%= @failed_error %></div>
       <% end %>
 
       <% if @held_cents > 0 %>
         <%= form_with url: refund_tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-3" do |f| %>
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_party_id">Recipient</label>
-            <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name, (failed == :refund ? params[:party_id] : nil)), class: "yn-select text-sm py-1.5", id: "refund_party_id", required: true %>
+            <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :display_name, (failed == :refund ? params[:party_id] : nil)), class: "yn-select py-1.5", id: "refund_party_id", required: true %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_amount">Amount ($), up to <%= format_money_cents(@held_cents) %></label>
-            <%= number_field_tag :amount, (failed == :refund ? params[:amount] : sprintf("%.2f", @held_cents / 100.0)), step: "0.01", min: "0.01", max: sprintf("%.2f", @held_cents / 100.0), class: "yn-input text-sm py-1.5 tabular-nums", id: "refund_amount", required: true, "aria-invalid": (failed == :refund ? "true" : nil), "aria-describedby": (failed == :refund ? "refund_error" : nil) %>
+            <%= number_field_tag :amount, (failed == :refund ? params[:amount] : sprintf("%.2f", @held_cents / 100.0)), step: "0.01", min: "0.01", max: sprintf("%.2f", @held_cents / 100.0), class: "yn-input py-1.5 tabular-nums", id: "refund_amount", required: true, "aria-invalid": (failed == :refund ? "true" : nil), "aria-describedby": (failed == :refund ? "refund_error" : nil) %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_occurred_on">Refunded On</label>
-            <%= date_field_tag :occurred_on, (failed == :refund ? params[:occurred_on] : Date.current), class: "yn-input text-sm py-1.5", id: "refund_occurred_on", required: true %>
+            <%= date_field_tag :occurred_on, (failed == :refund ? params[:occurred_on] : Date.current), class: "yn-input py-1.5", id: "refund_occurred_on", required: true %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_external_reference">Reference (Optional)</label>
-            <%= text_field_tag :external_reference, (failed == :refund ? params[:external_reference] : nil), placeholder: "Check #, wire ref", class: "yn-input text-sm py-1.5", id: "refund_external_reference" %>
+            <%= text_field_tag :external_reference, (failed == :refund ? params[:external_reference] : nil), placeholder: "Check #, wire ref", class: "yn-input py-1.5", id: "refund_external_reference" %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="refund_memo">Memo (Optional)</label>
-            <%= text_field_tag :memo, (failed == :refund ? params[:memo] : nil), placeholder: "Deposit refund at move-out", class: "yn-input text-sm py-1.5", id: "refund_memo" %>
+            <%= text_field_tag :memo, (failed == :refund ? params[:memo] : nil), placeholder: "Deposit refund at move-out", class: "yn-input py-1.5", id: "refund_memo" %>
           </div>
 
           <div class="pt-2">
@@ -134,14 +134,14 @@
       <h2 class="text-sm font-semibold text-stone-900 mb-1">Apply Deposit to Charge</h2>
       <p class="text-xs text-stone-500 mb-4">Apply held deposit toward an active charge (damages, rent, late fee).</p>
       <% if failed == :apply %>
-        <div class="yn-alert yn-alert-danger text-sm mb-3" role="alert" id="apply_error"><%= @failed_error %></div>
+        <div class="yn-alert yn-alert-danger mb-3" role="alert" id="apply_error"><%= @failed_error %></div>
       <% end %>
 
       <% if @held_cents > 0 && @balance_cents > 0 && @active_charges.any? %>
         <%= form_with url: apply_tenancy_security_deposit_path(@tenancy), method: :post, class: "space-y-3" do |f| %>
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_charge_id">Select Active Charge</label>
-            <select name="charge_id" id="apply_charge_id" class="yn-select text-sm py-1.5" required>
+            <select name="charge_id" id="apply_charge_id" class="yn-select py-1.5" required>
               <% @active_charges.each do |c| %>
                 <% cap_cents = [c.remaining_deposit_application_cents, @held_cents, @balance_cents].min %>
                 <option value="<%= c.id %>"<%= " selected" if failed == :apply && params[:charge_id].to_s == c.id.to_s %>>
@@ -153,17 +153,17 @@
 
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_amount">Amount to Apply ($)</label>
-            <%= number_field_tag :amount, (failed == :apply ? params[:amount] : sprintf("%.2f", [@held_cents, @balance_cents].min / 100.0)), step: "0.01", min: "0.01", class: "yn-input text-sm py-1.5 tabular-nums", id: "apply_amount", required: true, "aria-invalid": (failed == :apply ? "true" : nil), "aria-describedby": (failed == :apply ? "apply_error" : nil) %>
+            <%= number_field_tag :amount, (failed == :apply ? params[:amount] : sprintf("%.2f", [@held_cents, @balance_cents].min / 100.0)), step: "0.01", min: "0.01", class: "yn-input py-1.5 tabular-nums", id: "apply_amount", required: true, "aria-invalid": (failed == :apply ? "true" : nil), "aria-describedby": (failed == :apply ? "apply_error" : nil) %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_occurred_on">Application Date</label>
-            <%= date_field_tag :occurred_on, (failed == :apply ? params[:occurred_on] : Date.current), class: "yn-input text-sm py-1.5", id: "apply_occurred_on", required: true %>
+            <%= date_field_tag :occurred_on, (failed == :apply ? params[:occurred_on] : Date.current), class: "yn-input py-1.5", id: "apply_occurred_on", required: true %>
           </div>
 
           <div>
             <label class="yn-label text-xs font-semibold" for="apply_memo">Memo (Optional)</label>
-            <%= text_field_tag :memo, (failed == :apply ? params[:memo] : nil), placeholder: "Deposit deduction for repairs", class: "yn-input text-sm py-1.5", id: "apply_memo" %>
+            <%= text_field_tag :memo, (failed == :apply ? params[:memo] : nil), placeholder: "Deposit deduction for repairs", class: "yn-input py-1.5", id: "apply_memo" %>
           </div>
 
           <div class="pt-2">
@@ -188,7 +188,7 @@
   <div class="yn-surface p-6">
     <h2 class="text-sm font-semibold text-stone-900 mb-4">Deposit Transaction History</h2>
 
-    <div class="overflow-x-auto">
+    <%= render layout: "shared/table_scroll", locals: { label: "Deposit transaction history" } do %>
       <table class="yn-table">
         <thead>
           <tr>
@@ -222,7 +222,7 @@
                   <%= txn.external_reference.present? ? "[#{txn.external_reference}] " : "" %>
                   <%= txn.memo || "—" %>
                 </td>
-                <td class="text-right tabular-nums font-medium <%= txn.voided? ? 'line-through text-stone-400' : 'text-stone-900' %>">
+                <td class="text-right tabular-nums font-medium <%= txn.voided? ? 'line-through text-stone-500' : 'text-stone-900' %>">
                   <%= signed_money_cents(txn.received? ? txn.amount_cents : -txn.amount_cents, plus: true) %>
                 </td>
                 <td>
@@ -250,6 +250,6 @@
           <% end %>
         </tbody>
       </table>
-    </div>
+    <% end %>
   </div>
 </div>

@@ -140,7 +140,7 @@
     <div>
       <% ref_error = field_error.call(:external_reference) %>
       <%= form.label :external_reference, class: "yn-label", for: "receipt-ref" do %>
-        Reference <span class="font-normal text-stone-400">(optional)</span>
+        Reference <span class="font-normal text-stone-500">(optional)</span>
       <% end %>
       <%= form.text_field :external_reference, placeholder: "Check #1042",
             class: "yn-input #{'yn-field-invalid' if ref_error}", id: "receipt-ref",
@@ -155,7 +155,7 @@
   <div>
     <% memo_error = field_error.call(:memo) %>
     <%= form.label :memo, class: "yn-label", for: "receipt-memo" do %>
-      Memo <span class="font-normal text-stone-400">(optional)</span>
+      Memo <span class="font-normal text-stone-500">(optional)</span>
     <% end %>
     <%= form.text_area :memo, rows: 2, class: "yn-textarea #{'yn-field-invalid' if memo_error}", id: "receipt-memo",
           "aria-invalid": memo_error ? "true" : nil,

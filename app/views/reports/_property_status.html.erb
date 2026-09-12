@@ -27,14 +27,14 @@
     <div class="flex items-center gap-2">
       <% case status.state %>
       <% when :needs_review %>
-        <%= link_to "Review Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+        <%= link_to "Review Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm" %>
       <% when :ready %>
         <% if pdf_available %>
-          <%= link_to "View Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
-          <%= link_to "Download PDF", schedule_e_pdf_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap", data: { turbo: false } %>
+          <%= link_to "View Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
+          <%= link_to "Download PDF", schedule_e_pdf_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm", data: { turbo: false } %>
         <% else %>
           <span class="text-xs text-stone-500 whitespace-nowrap">PDF export isn’t available for <%= year %>.</span>
-          <%= link_to "View Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+          <%= link_to "View Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm" %>
         <% end %>
       <% end %>
     </div>
@@ -61,14 +61,14 @@
 
     <% case status.state %>
     <% when :needs_review %>
-      <%= link_to "Review Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap" %>
+      <%= link_to "Review Schedule E", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-primary yn-btn-sm" %>
     <% when :needs_profile %>
-      <%= link_to "Set up profile", new_property_tax_profile_path(property, tax_year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
+      <%= link_to "Set up profile", new_property_tax_profile_path(property, tax_year: year), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
     <% when :ready %>
       <div class="flex gap-2 shrink-0">
-        <%= link_to "View", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap" %>
+        <%= link_to "View", schedule_e_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm" %>
         <% if pdf_available %>
-          <%= link_to "Download PDF", schedule_e_pdf_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap", data: { turbo: false } %>
+          <%= link_to "Download PDF", schedule_e_pdf_property_path(property, year: year), class: "yn-btn yn-btn-secondary yn-btn-sm", data: { turbo: false } %>
         <% end %>
       </div>
     <% end %>

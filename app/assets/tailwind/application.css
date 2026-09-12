@@ -31,7 +31,9 @@
   --yn-ink: #1c1917;           /* stone-900 — primary text */
   --yn-ink-soft: #44403c;      /* stone-700 */
   --yn-muted: #78716c;         /* stone-500 — secondary text */
-  --yn-faint: #a8a29e;         /* stone-400 — tertiary text, icons */
+  --yn-faint: #a8a29e;         /* stone-400 — decorative glyphs and icons
+                                  ONLY: 2.5:1 on white, below AA. Text of any
+                                  size uses --yn-muted. */
 
   /* Interactive accent (Tailwind indigo) */
   --yn-accent: #4f46e5;        /* indigo-600 — links */
@@ -50,6 +52,24 @@
   --yn-danger-bg: #fef2f2;     /* red-50 */
   --yn-danger-border: #fecaca; /* red-200 */
 }
+
+/* ===========================================================================
+ * Everything below is a COMPONENT, and components lose to utilities.
+ *
+ * Tailwind v4 emits its utilities in `@layer utilities`. An unlayered rule
+ * beats every layered one whatever its specificity, so while these class
+ * definitions sat outside a layer they silently discarded any Tailwind
+ * utility touching the same property: `class="yn-input pl-8"` kept
+ * `.yn-input`'s own padding and dropped the utility on the floor. Declaring
+ * them in `@layer components` puts them where a component belongs, one layer
+ * below utilities, so a utility in markup reads as what it looks like, a
+ * deliberate deviation from the component default.
+ *
+ * The contents are deliberately NOT re-indented inside this block: the wrap
+ * is a cascade statement, not a restructuring, and indenting 450 lines would
+ * bury every real change in whitespace.
+ * ======================================================================== */
+@layer components {
 
 /* ---------------------------------------------------------------------------
  * Base (mockup viewing only — the app gets this from Tailwind preflight)
@@ -100,7 +120,8 @@
 .yn-tab:focus-visible,
 .yn-link:focus-visible,
 .yn-nav-link:focus-visible,
-.yn-menu-item:focus-visible {
+.yn-menu-item:focus-visible,
+.yn-table-scroll:focus-visible {
   outline: 2px solid var(--yn-focus);
   outline-offset: 2px;
 }
@@ -181,7 +202,7 @@
   padding: 0.5rem 0.75rem;
 }
 .yn-input::placeholder,
-.yn-textarea::placeholder { color: var(--yn-faint); }
+.yn-textarea::placeholder { color: var(--yn-muted); }
 
 .yn-hint { font-size: 0.8125rem; color: var(--yn-muted); margin-top: 0.25rem; }
 
@@ -278,7 +299,21 @@
  * on both th and td in markup.
  * ------------------------------------------------------------------------ */
 
-.overflow-x-auto {
+/* Table scroll container. Two jobs beyond the scrolling itself:
+ *
+ * `position: relative` makes it the containing block for its descendants.
+ * Tailwind's `.sr-only` is `position: absolute`, so without this a visually
+ * hidden column heading inside a table wider than the screen resolves against
+ * the initial containing block, escapes the scroller's clip, and widens the
+ * whole document: a phone gets a horizontal scrollbar on the page even though
+ * the table scrolls correctly on its own.
+ *
+ * The focus ring matters because `table_scroll_controller` makes this element
+ * focusable whenever it actually scrolls, so a keyboard user can reach the
+ * hidden columns (WCAG 2.1.1). A focusable element with no visible focus
+ * state would trade one failure for another. */
+.yn-table-scroll {
+  overflow-x: auto;
   position: relative;
 }
 
@@ -497,6 +532,9 @@ turbo-frame[busy] {
   transition: opacity 0.15s ease-in-out;
 }
 
+} /* end @layer components */
+
+
 /* ---------------------------------------------------------------------------
  * Motion (PRD §20): honor the reduced-motion preference.
  * ------------------------------------------------------------------------ */
@@ -577,7 +615,7 @@ turbo-frame[busy] {
   /* Tables are the payload of every printable page. Scroll containers must
    * release their content, headers repeat on each sheet, and rows stay whole
    * instead of splitting across a page break. */
-  .overflow-x-auto,
+  .yn-table-scroll,
   .overflow-y-auto {
     overflow: visible !important;
   }

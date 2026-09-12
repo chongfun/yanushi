@@ -7,7 +7,7 @@
       <h2 id="units-heading" class="text-sm font-semibold mb-3">Units</h2>
       <% active_units = @property.rentable_units.select(&:active?) %>
       <% if active_units.any? %>
-        <div class="overflow-x-auto">
+        <%= render layout: "shared/table_scroll", locals: { labelledby: "units-heading" } do %>
           <table class="yn-table">
             <thead>
               <tr>
@@ -34,7 +34,7 @@
                         <%= tenant_name ? tenant_name.to_sentence : "Active tenancy" %>
                       <% end %>
                       <% if active_tenancy.commencement_date %>
-                        <span class="text-stone-400 text-[13px]">&middot; since <%= active_tenancy.commencement_date.strftime("%b %Y") %></span>
+                        <span class="text-stone-500 text-[13px]">&middot; since <%= active_tenancy.commencement_date.strftime("%b %Y") %></span>
                       <% end %>
                     <% else %>
                       <%= render "shared/status", text: "Vacant", size: :sm %>
@@ -57,7 +57,7 @@
               <% end %>
             </tbody>
           </table>
-        </div>
+        <% end %>
       <% else %>
         <%= render "shared/empty_state",
               title: "No units yet",

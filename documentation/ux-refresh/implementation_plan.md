@@ -3027,7 +3027,7 @@ via `aria-describedby`. Nothing may require hover.
 375px / 768px / 1280px / wide, for each primary workflow: no page-level
 horizontal overflow; header actions wrap per the page-header pattern;
 tables follow their declared strategy (comparative tables scroll inside
-`overflow-x-auto`; row-oriented lists stack, per the mockup comments);
+`shared/_table_scroll`; row-oriented lists stack, per the mockup comments);
 dialogs fit the viewport (`max-height` handles this); drawer navigation
 covers everything the sidebar does.
 

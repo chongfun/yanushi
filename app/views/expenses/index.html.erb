@@ -39,7 +39,7 @@
     </div>
     <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
     <% if @filters.any? %>
-      <%= link_to "Clear filters", expenses_path, class: "yn-btn yn-btn-ghost text-sm" %>
+      <%= link_to "Clear filters", expenses_path, class: "yn-btn yn-btn-ghost" %>
     <% end %>
   <% end %>
 
@@ -62,7 +62,7 @@
       <% end %>
     </dl>
 
-    <div class="overflow-x-auto">
+    <%= render layout: "shared/table_scroll", locals: { label: "Expenses" } do %>
       <table class="yn-table">
         <thead>
           <tr>
@@ -80,7 +80,7 @@
               <td class="whitespace-nowrap">
                 <%= expense.property.address %>
                 <% if expense.rentable_unit %>
-                  <span class="text-stone-400 text-[13px]">· <%= expense.rentable_unit.name %></span>
+                  <span class="text-stone-500 text-[13px]">· <%= expense.rentable_unit.name %></span>
                 <% end %>
               </td>
               <td>
@@ -107,14 +107,14 @@
                 <% end %>
               </td>
               <td class="text-stone-500"><%= expense.expense_kind.titleize %></td>
-              <td class="text-right tabular-nums whitespace-nowrap <%= (expense.voided? || expense.superseded?) ? 'text-stone-400 line-through' : '' %>">
+              <td class="text-right tabular-nums whitespace-nowrap <%= (expense.voided? || expense.superseded?) ? 'text-stone-500 line-through' : '' %>">
                 <%= format_money_cents(expense.amount_cents) %>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-    </div>
+    <% end %>
 
     <%= render "shared/pagination",
           page: @page, per_page: @per_page, total_count: @total_count, total_pages: @total_pages,

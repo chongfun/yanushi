@@ -1,0 +1,26 @@
+<%# A table too wide for the screen scrolls sideways inside this wrapper.
+
+    The wrapper ships focusable and named, because a scroll container is not
+    reachable with a keyboard otherwise: there is no way to see the columns
+    past the right edge without a mouse or a trackpad (WCAG 2.1.1). Rendering
+    it that way rather than adding it from JavaScript keeps the affordance
+    when JavaScript does not run; `table_scroll_controller` then removes the
+    tab stop and the landmark again on any table that fits, so only tables
+    that genuinely scroll cost the reader a stop.
+
+    Pass `labelledby:` with the id of the heading that already names the
+    table, and `label:` only where no such heading exists.
+
+    Locals: labelledby (element id) or label (string), one of the two %>
+<%
+  labelledby = local_assigns[:labelledby]
+  label = local_assigns[:label]
+  raise ArgumentError, "shared/table_scroll needs labelledby: or label:" if labelledby.blank? && label.blank?
+%>
+<div class="yn-table-scroll"
+     data-controller="table-scroll"
+     tabindex="0"
+     role="region"
+     <% if labelledby.present? %>aria-labelledby="<%= labelledby %>"<% else %>aria-label="<%= label %>"<% end %>>
+  <%= yield %>
+</div>

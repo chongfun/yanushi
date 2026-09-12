@@ -26,6 +26,16 @@ end
 # between reads a viewport that is about to change and clicks coordinates that
 # are about to move, so every resize waits for the size the caller asked for
 # and then for a frame drawn at it.
+#
+# Below 500px the window cannot be resized: macOS Chrome clamps a real window
+# to a minimum width, so a 375px phone viewport has to come from CDP device
+# emulation instead. Emulation is not a free substitute. `mobile: true` gives
+# Chrome a visual viewport it may widen to fit content that overflows, so
+# `window.innerWidth` grows to whatever the page is instead of staying at the
+# size that was asked for. Every check of "does this page overflow" must
+# therefore measure against `document.documentElement.clientWidth`, the layout
+# viewport, which stays put; comparing scrollWidth to innerWidth is a
+# tautology under emulation and passes no matter how wide the page gets.
 module SystemWindowHelper
   def resize_window_to(width, height)
     return unless page.driver.is_a?(Capybara::Selenium::Driver)
@@ -56,11 +66,13 @@ module SystemWindowHelper
 
   private
 
+    # The layout viewport, not `window.innerWidth`: see above, the visual
+    # viewport is free to widen past the override.
     def wait_for_emulated_size(width, height)
       deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + Capybara.default_max_wait_time
 
       loop do
-        break if page.evaluate_script("[ window.innerWidth, window.innerHeight ]") == [ width, height ]
+        break if page.evaluate_script("[ document.documentElement.clientWidth, document.documentElement.clientHeight ]") == [ width, height ]
         break if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
 
         sleep 0.05

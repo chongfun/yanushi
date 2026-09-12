@@ -52,7 +52,7 @@
             </div>
 
             <% if is_failed_entry %>
-              <div class="yn-alert yn-alert-danger text-sm mt-3" role="alert">
+              <div class="yn-alert yn-alert-danger mt-3" role="alert">
                 <%= failed_res.errors.full_messages.to_sentence %>
               </div>
             <% end %>
@@ -87,7 +87,7 @@
                                action: "change->schedule-e-treatment#toggle"
                              } %>
                 <% if has_treatment_error %>
-                  <p id="treatment_<%= target_entry.id %>_error" class="yn-error-text mt-1">
+                  <p id="treatment_<%= target_entry.id %>_error" class="yn-error-text">
                     <%= failed_res.errors[:treatment].first %>
                   </p>
                 <% end %>
@@ -106,7 +106,7 @@
                                "aria-invalid": (has_category_error ? "true" : nil),
                                "aria-describedby": (has_category_error ? "category_#{target_entry.id}_error" : nil) %>
                   <% if has_category_error %>
-                    <p id="category_<%= target_entry.id %>_error" class="yn-error-text mt-1">
+                    <p id="category_<%= target_entry.id %>_error" class="yn-error-text">
                       <%= failed_res.errors[:schedule_e_category].first %>
                     </p>
                   <% end %>

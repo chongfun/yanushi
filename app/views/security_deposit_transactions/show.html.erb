@@ -42,7 +42,7 @@
 
   <% if txn.superseded? %>
     <div class="yn-alert yn-alert-warn mb-6" role="status">
-      <span>This transaction was corrected. Superseded by <%= link_to "Transaction ##{txn.superseded_by_id}", security_deposit_transaction_path(txn.superseded_by), class: "yn-link font-medium" %> on <%= txn.voided_at.strftime("%B %-d, %Y") %>.</span>
+      <span>This transaction was corrected. Superseded by <%= link_to "Transaction ##{txn.superseded_by_id}", security_deposit_transaction_path(txn.superseded_by), class: "yn-link" %> on <%= txn.voided_at.strftime("%B %-d, %Y") %>.</span>
     </div>
   <% elsif txn.voided? %>
     <div class="yn-alert yn-alert-danger mb-6" role="status">
@@ -50,7 +50,7 @@
     </div>
   <% elsif txn.superseded_transaction.present? %>
     <div class="yn-alert mb-6" role="status">
-      <span>This transaction replaces <%= link_to "Transaction ##{txn.superseded_transaction.id}", security_deposit_transaction_path(txn.superseded_transaction), class: "yn-link font-medium" %>.</span>
+      <span>This transaction replaces <%= link_to "Transaction ##{txn.superseded_transaction.id}", security_deposit_transaction_path(txn.superseded_transaction), class: "yn-link" %>.</span>
     </div>
   <% end %>
 
@@ -64,7 +64,7 @@
         </div>
         <div class="flex justify-between gap-6 py-2.5">
           <dt class="text-stone-500">Amount</dt>
-          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-400' if txn.voided? %>"><%= format_money_cents(txn.amount_cents) %></dd>
+          <dd class="m-0 font-medium tabular-nums <%= 'line-through text-stone-500' if txn.voided? %>"><%= format_money_cents(txn.amount_cents) %></dd>
         </div>
         <div class="flex justify-between gap-6 py-2.5">
           <dt class="text-stone-500">Date</dt>
@@ -102,10 +102,10 @@
           <% @journal_entries.each do |entry| %>
             <div>
               <p class="text-sm m-0 mb-1">
-                <%= link_to entry.event_type.titleize, journal_entry_path(entry), class: "yn-link font-medium" %>
+                <%= link_to entry.event_type.titleize, journal_entry_path(entry), class: "yn-link" %>
                 <span class="text-stone-500">&middot; <%= entry.occurred_on.strftime("%b %-d, %Y") %></span>
               </p>
-              <div class="overflow-x-auto">
+              <%= render layout: "shared/table_scroll", locals: { label: "Postings for #{entry.event_type.titleize}" } do %>
                 <table class="yn-table">
                   <thead>
                     <tr>
@@ -124,7 +124,7 @@
                     <% end %>
                   </tbody>
                 </table>
-              </div>
+              <% end %>
             </div>
           <% end %>
         </div>

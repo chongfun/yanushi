@@ -6,7 +6,7 @@
         title: "Chart of Accounts",
         meta: "System-defined double-entry ledger accounts. Balances are shown in each account's natural direction." %>
 
-  <div class="overflow-x-auto">
+  <%= render layout: "shared/table_scroll", locals: { label: "Chart of accounts" } do %>
     <table class="yn-table">
       <thead>
         <tr>
@@ -34,5 +34,5 @@
         <% end %>
       </tbody>
     </table>
-  </div>
+  <% end %>
 </div>

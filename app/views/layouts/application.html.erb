@@ -60,10 +60,13 @@
       </dialog>
     </div>
 
-    <dialog id="confirm-modal" data-controller="turbo-confirm" class="modal-dialog" aria-labelledby="confirm-title">
+    <%# aria-describedby so the question itself is announced on open: the
+        title is the same on every confirmation, and some of these are
+        destructive. %>
+    <dialog id="confirm-modal" data-controller="turbo-confirm" class="modal-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
       <div class="modal-inner">
         <header class="modal-header">
-          <h2 id="confirm-title">Confirm Action</h2>
+          <h2 id="confirm-title">Confirm action</h2>
         </header>
         <div class="modal-body">
           <p data-turbo-confirm-target="message" id="confirm-message" class="mb-6"></p>

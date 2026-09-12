@@ -51,13 +51,13 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <%= f.label :external_reference, class: "yn-label", for: "security_deposit_transaction_external_reference" do %>
-            Reference <span class="font-normal text-stone-400">(optional)</span>
+            Reference <span class="font-normal text-stone-500">(optional)</span>
           <% end %>
           <%= f.text_field :external_reference, value: @transaction.external_reference, class: "yn-input", id: "security_deposit_transaction_external_reference" %>
         </div>
         <div>
           <%= f.label :memo, class: "yn-label", for: "security_deposit_transaction_memo" do %>
-            Memo <span class="font-normal text-stone-400">(optional)</span>
+            Memo <span class="font-normal text-stone-500">(optional)</span>
           <% end %>
           <%= f.text_field :memo, value: @transaction.memo, class: "yn-input", id: "security_deposit_transaction_memo" %>
         </div>

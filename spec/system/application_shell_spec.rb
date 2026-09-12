@@ -109,6 +109,79 @@ RSpec.describe "Application Shell Navigation", type: :system do
     end
   end
 
+  # A table wider than the screen scrolls sideways in its own container, and a
+  # scroll container is not reachable with a keyboard unless something gives it
+  # a tab stop (WCAG 2.1.1). The markup ships with one so the affordance holds
+  # without JavaScript; `table_scroll_controller` takes it back off any table
+  # that fits, so a reader is not stopped on a table that has nothing hidden.
+  describe "keyboard access to horizontally scrolling tables", js: true do
+    let!(:property) { create(:property, user: user, address: "100 Elm Street") }
+    let!(:unit) { create(:rentable_unit, property: property, name: "Unit A With A Long Name") }
+    let!(:party) { create(:party, user: user, display_name: "Alexander Montgomery-Smith") }
+    let!(:tenancy) do
+      create(:tenancy, :month_to_month, property: property, rentable_unit: unit,
+        commencement_date: Date.current - 2.months)
+    end
+    let!(:tenancy_party) do
+      create(:tenancy_party, tenancy: tenancy, party: party, role: "tenant", effective_from: tenancy.commencement_date)
+    end
+    let!(:rent_term) do
+      create(:rent_term, tenancy: tenancy, amount_cents: 245_000, effective_from: tenancy.commencement_date, due_day: 1)
+    end
+
+    before do
+      Accounting::ChartOfAccounts.ensure_for(user)
+      visit new_session_path
+      fill_in "email", with: user.email
+      fill_in "password", with: "password"
+      click_on "Sign in"
+      expect(page).to have_current_path(root_path)
+    end
+
+    after { resize_window_to(1400, 1400) }
+
+    it "gives a scrolling table a labelled tab stop and scrolls it from the keyboard" do
+      resize_window_to(375, 667)
+      visit tenancy_agreement_path(tenancy)
+      expect(page).to have_text("Participants")
+
+      scroller = find(".yn-table-scroll[aria-labelledby='participants-heading']", match: :first)
+      expect(scroller[:tabindex]).to eq("0")
+      expect(scroller[:role]).to eq("region")
+      expect(page).to have_css("#participants-heading", text: "Participants")
+
+      # Reachable, and once focused the arrow keys move the hidden columns into
+      # view. Without the tab stop there is no way to get to them at all.
+      page.execute_script("document.querySelector(\".yn-table-scroll[aria-labelledby='participants-heading']\").focus()")
+      expect(page.evaluate_script("document.activeElement.className")).to include("yn-table-scroll")
+
+      expect(page.evaluate_script("document.activeElement.scrollLeft")).to eq(0)
+      page.execute_script("document.activeElement.scrollLeft = 9999")
+      expect(page.evaluate_script("document.activeElement.scrollLeft")).to be > 0
+    end
+
+    # No JavaScript on purpose: this is the half of the behavior the server
+    # owns, and the controller would strip it on a viewport this wide.
+    it "renders the tab stop and the name server side, so no-JS keeps the affordance", js: false do
+      visit tenancy_agreement_path(tenancy)
+
+      expect(page).to have_css(
+        ".yn-table-scroll[tabindex='0'][role='region'][aria-labelledby='participants-heading']",
+        visible: :all
+      )
+    end
+
+    it "leaves no tab stop or landmark on a table that fits" do
+      resize_window_to(1400, 1000)
+      visit tenancy_agreement_path(tenancy)
+      expect(page).to have_text("Participants")
+
+      expect(page).to have_css(".yn-table-scroll")
+      expect(page).to have_no_css(".yn-table-scroll[tabindex]")
+      expect(page).to have_no_css(".yn-table-scroll[role='region']")
+    end
+  end
+
   describe "mobile navigation drawer", js: true do
     before do
       resize_window_to(375, 700)

@@ -4,7 +4,7 @@
   <%= render "portfolio/header", current_tab: :properties %>
 
   <% if @rows.any? %>
-    <div class="overflow-x-auto">
+    <%= render layout: "shared/table_scroll", locals: { label: "Properties" } do %>
       <table class="yn-table">
         <thead>
           <tr>
@@ -47,7 +47,7 @@
           <% end %>
         </tbody>
       </table>
-    </div>
+    <% end %>
   <% else %>
     <%= render "shared/empty_state",
           title: "Add your first property",
