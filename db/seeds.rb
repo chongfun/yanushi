@@ -2,7 +2,7 @@
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
-return unless Rails.env.development? || ENV["FORCE_SEEDS"] == "true"
+return unless Rails.env.development? || Rails.env.test? || ENV["FORCE_SEEDS"] == "true"
 
 puts "== Seeding Yanushi demonstration data =="
 
@@ -104,10 +104,14 @@ unit_1 = prop_1.rentable_units.find_or_create_by!(name: "Main Residence") do |u|
 end
 
 # Active 1-year tenancy: started 8 months ago, ends in 4 months
-tenancy_1 = Tenancy.find_or_create_by!(rentable_unit: unit_1, commencement_date: today - 8.months) do |t|
-  t.termination_date = today + 4.months
-  t.agreement_type = "fixed_term"
-  t.late_period_days = 5
+tenancy_1 = unit_1.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_homer.id } } || unit_1.tenancies.first
+if tenancy_1.nil?
+  tenancy_1 = unit_1.tenancies.create!(
+    commencement_date: today - 8.months,
+    termination_date: today + 4.months,
+    agreement_type: "fixed_term",
+    late_period_days: 5
+  )
 end
 
 tenancy_1.tenancy_parties.find_or_create_by!(party: party_homer, role: "tenant") do |tp|
@@ -120,11 +124,14 @@ tenancy_1.tenancy_parties.find_or_create_by!(party: party_marge, role: "occupant
   tp.effective_until = tenancy_1.termination_date
 end
 
-tenancy_1.rent_terms.find_or_create_by!(effective_from: tenancy_1.commencement_date) do |rt|
-  rt.amount_cents = 280_000 # $2,800/mo
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = tenancy_1.termination_date
+if tenancy_1.rent_terms.empty?
+  tenancy_1.rent_terms.create!(
+    amount_cents: 280_000, # $2,800/mo
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: tenancy_1.commencement_date,
+    effective_until: tenancy_1.termination_date
+  )
 end
 
 # Security deposit: $2,800 received
@@ -153,6 +160,7 @@ RentCharges::GenerateThroughService.call(tenancy: tenancy_1, through: today)
 (2..8).each do |months_ago|
   charge_date = (today - months_ago.months).beginning_of_month
   next if charge_date < tenancy_1.commencement_date
+  next if tenancy_1.termination_date && charge_date > tenancy_1.termination_date
 
   ref_code = "ACH-SIMP-#{charge_date.strftime('%Y%m')}"
   unless Receipt.exists?(tenancy: tenancy_1, external_reference: ref_code)
@@ -245,31 +253,39 @@ end
 # Tenancy 2A (Unit 101): Month-to-Month, Rent Term Increase, Utility Reimbursement
 # ------------------------------------------------------------------------------
 comm_2a = Date.new(prev_year, 1, 1)
-tenancy_2a = Tenancy.find_or_create_by!(rentable_unit: unit_2a, commencement_date: comm_2a) do |t|
-  t.termination_date = nil
-  t.agreement_type = "month_to_month"
-  t.late_period_days = 5
+tenancy_2a = unit_2a.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_sarah.id } } || unit_2a.tenancies.first
+if tenancy_2a.nil?
+  tenancy_2a = unit_2a.tenancies.create!(
+    commencement_date: comm_2a,
+    termination_date: nil,
+    agreement_type: "month_to_month",
+    late_period_days: 5
+  )
 end
 
 tenancy_2a.tenancy_parties.find_or_create_by!(party: party_sarah, role: "tenant") do |tp|
-  tp.effective_from = comm_2a
+  tp.effective_from = tenancy_2a.commencement_date
   tp.effective_until = nil
 end
 
-# Rent term 1: $1,800 from prev_year until end of prev_year
-tenancy_2a.rent_terms.find_or_create_by!(effective_from: comm_2a) do |rt|
-  rt.amount_cents = 180_000
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = Date.new(this_year, 1, 1) - 1.day
-end
-
-# Rent term 2: Increased to $1,950 from Jan 1 of this_year
-tenancy_2a.rent_terms.find_or_create_by!(effective_from: Date.new(this_year, 1, 1)) do |rt|
-  rt.amount_cents = 195_000
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = nil
+# Rent term 1: $1,800 from prev_year until end of prev_year; Rent term 2: Increased to $1,950 from next Jan 1
+if tenancy_2a.rent_terms.empty?
+  term_1_start = tenancy_2a.commencement_date
+  term_2_start = Date.new(term_1_start.year + 1, 1, 1)
+  tenancy_2a.rent_terms.create!(
+    amount_cents: 180_000,
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: term_1_start,
+    effective_until: term_2_start - 1.day
+  )
+  tenancy_2a.rent_terms.create!(
+    amount_cents: 195_000,
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: term_2_start,
+    effective_until: nil
+  )
 end
 
 # Security deposit: $1,800 received
@@ -277,14 +293,14 @@ if tenancy_2a.security_deposit.nil?
   dep_res = SecurityDeposits::CreateService.call(
     tenancy: tenancy_2a,
     required_amount: "1800.00",
-    due_on: comm_2a
+    due_on: tenancy_2a.commencement_date
   )
   if dep_res.success?
     SecurityDepositTransactions::ReceiveService.call(
       security_deposit: dep_res.value!.data[:security_deposit],
       party: party_sarah,
       amount: "1800.00",
-      occurred_on: comm_2a,
+      occurred_on: tenancy_2a.commencement_date,
       memo: "Initial security deposit receipt"
     )
   end
@@ -293,10 +309,10 @@ end
 RentCharges::GenerateThroughService.call(tenancy: tenancy_2a, through: today)
 
 # Sarah Connor pays all rent on time via Zelle
-cursor_date = comm_2a
+cursor_date = tenancy_2a.commencement_date
 while cursor_date <= today.beginning_of_month
   ref_code = "ZEL-SC-#{cursor_date.strftime('%Y%m')}"
-  rent_amt = cursor_date.year == prev_year ? 180_000 : 195_000
+  rent_amt = cursor_date.year == tenancy_2a.commencement_date.year ? 180_000 : 195_000
 
   unless Receipt.exists?(tenancy: tenancy_2a, external_reference: ref_code)
     Receipts::CreateService.call(
@@ -351,49 +367,57 @@ end
 # ------------------------------------------------------------------------------
 # Tenancy 2B (Unit 201): Past Tenancy (Ended in prev_year, Deposit Applied & Refunded)
 # ------------------------------------------------------------------------------
-comm_2b = Date.new(prev_year, 3, 1)
-term_2b_end = Date.new(prev_year, 12, 31)
-
-tenancy_2b = Tenancy.find_or_create_by!(rentable_unit: unit_2b, commencement_date: comm_2b) do |t|
-  t.termination_date = term_2b_end
-  t.agreement_type = "fixed_term"
-  t.late_period_days = 5
+tenancy_2b = unit_2b.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_miles.id } }
+if tenancy_2b.nil?
+  comm_2b = Date.new(prev_year, 3, 1)
+  term_2b_end = Date.new(prev_year, 12, 31)
+  tenancy_2b = unit_2b.tenancies.create!(
+    commencement_date: comm_2b,
+    termination_date: term_2b_end,
+    agreement_type: "fixed_term",
+    late_period_days: 5
+  )
 end
 
 tenancy_2b.tenancy_parties.find_or_create_by!(party: party_miles, role: "tenant") do |tp|
-  tp.effective_from = comm_2b
-  tp.effective_until = term_2b_end
+  tp.effective_from = tenancy_2b.commencement_date
+  tp.effective_until = tenancy_2b.termination_date
 end
 
-tenancy_2b.rent_terms.find_or_create_by!(effective_from: comm_2b) do |rt|
-  rt.amount_cents = 200_000 # $2,000/mo
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = term_2b_end
+if tenancy_2b.rent_terms.empty?
+  tenancy_2b.rent_terms.create!(
+    amount_cents: 200_000, # $2,000/mo
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: tenancy_2b.commencement_date,
+    effective_until: tenancy_2b.termination_date
+  )
 end
 
 if tenancy_2b.security_deposit.nil?
   dep_res = SecurityDeposits::CreateService.call(
     tenancy: tenancy_2b,
     required_amount: "2000.00",
-    due_on: comm_2b
+    due_on: tenancy_2b.commencement_date
   )
   if dep_res.success?
     SecurityDepositTransactions::ReceiveService.call(
       security_deposit: dep_res.value!.data[:security_deposit],
       party: party_miles,
       amount: "2000.00",
-      occurred_on: comm_2b,
+      occurred_on: tenancy_2b.commencement_date,
       memo: "Initial security deposit receipt"
     )
   end
 end
 
-RentCharges::GenerateThroughService.call(tenancy: tenancy_2b, through: term_2b_end)
+RentCharges::GenerateThroughService.call(tenancy: tenancy_2b, through: tenancy_2b.termination_date)
+
+year_2b = tenancy_2b.commencement_date.year
 
 # Months March through November paid in full
 (3..11).each do |month_num|
-  m_date = Date.new(prev_year, month_num, 1)
+  m_date = Date.new(year_2b, month_num, 1)
   ref_code = "CHK-DYSON-#{m_date.strftime('%Y%m')}"
 
   unless Receipt.exists?(tenancy: tenancy_2b, external_reference: ref_code)
@@ -410,14 +434,14 @@ RentCharges::GenerateThroughService.call(tenancy: tenancy_2b, through: term_2b_e
 end
 
 # In December: Miles paid partial rent of $1,600; remaining $400 was applied from deposit
-dec_charge = tenancy_2b.charges.where(charge_kind: "rent").find_by("charge_date >= ?", Date.new(prev_year, 12, 1))
-dec_ref = "CHK-DYSON-#{prev_year}12"
+dec_charge = tenancy_2b.charges.where(charge_kind: "rent").find_by("charge_date >= ?", Date.new(year_2b, 12, 1))
+dec_ref = "CHK-DYSON-#{year_2b}12"
 unless Receipt.exists?(tenancy: tenancy_2b, external_reference: dec_ref)
   Receipts::CreateService.call(
     tenancy: tenancy_2b,
     payer_party: party_miles,
     amount_cents: 160_000,
-    received_on: Date.new(prev_year, 12, 2),
+    received_on: Date.new(year_2b, 12, 2),
     payment_method: "check",
     external_reference: dec_ref,
     memo: "Partial December rent check"
@@ -431,7 +455,7 @@ if deposit_2b && dec_charge && !deposit_2b.transactions.where(transaction_kind: 
     security_deposit: deposit_2b,
     charge: dec_charge,
     amount_cents: 40_000,
-    occurred_on: Date.new(prev_year, 12, 28),
+    occurred_on: Date.new(year_2b, 12, 28),
     memo: "Security deposit applied to unpaid December rent"
   )
 
@@ -440,7 +464,7 @@ if deposit_2b && dec_charge && !deposit_2b.transactions.where(transaction_kind: 
     PropertyTaxReviewResolution.find_or_create_by!(
       property: prop_2,
       journal_entry: entry_1,
-      tax_year: prev_year
+      tax_year: year_2b
     ) do |res|
       res.treatment = "include_in_rents"
     end
@@ -451,8 +475,8 @@ if deposit_2b && dec_charge && !deposit_2b.transactions.where(transaction_kind: 
     tenancy: tenancy_2b,
     charge_kind: "other",
     amount_cents: 15_000,
-    charge_date: Date.new(prev_year, 12, 29),
-    due_on: Date.new(prev_year, 12, 29),
+    charge_date: Date.new(year_2b, 12, 29),
+    due_on: Date.new(year_2b, 12, 29),
     description: "Move-out carpet and deep cleaning fee"
   )
 
@@ -462,7 +486,7 @@ if deposit_2b && dec_charge && !deposit_2b.transactions.where(transaction_kind: 
       security_deposit: deposit_2b,
       charge: clean_charge,
       amount_cents: 15_000,
-      occurred_on: Date.new(prev_year, 12, 30),
+      occurred_on: Date.new(year_2b, 12, 30),
       memo: "Security deposit applied to carpet cleaning"
     )
     # Intentionally no PropertyTaxReviewResolution -> triggers needs_review status
@@ -473,7 +497,7 @@ if deposit_2b && dec_charge && !deposit_2b.transactions.where(transaction_kind: 
     security_deposit: deposit_2b,
     party: party_miles,
     amount_cents: 145_000,
-    occurred_on: Date.new(prev_year, 12, 31),
+    occurred_on: Date.new(year_2b, 12, 31),
     memo: "Security deposit refund after move-out deductions"
   )
 end
@@ -481,44 +505,50 @@ end
 # ------------------------------------------------------------------------------
 # Tenancy 2C (Unit 201): Upcoming Tenancy (Commences in 15 days, Advance Deposit)
 # ------------------------------------------------------------------------------
-comm_2c = today + 15.days
-term_2c = comm_2c + 1.year
-
-tenancy_2c = Tenancy.find_or_create_by!(rentable_unit: unit_2b, commencement_date: comm_2c) do |t|
-  t.termination_date = term_2c
-  t.agreement_type = "fixed_term"
-  t.late_period_days = 5
+tenancy_2c = unit_2b.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_john.id } }
+if tenancy_2c.nil?
+  comm_2c = today + 15.days
+  term_2c = comm_2c + 1.year
+  tenancy_2c = unit_2b.tenancies.create!(
+    commencement_date: comm_2c,
+    termination_date: term_2c,
+    agreement_type: "fixed_term",
+    late_period_days: 5
+  )
 end
 
 tenancy_2c.tenancy_parties.find_or_create_by!(party: party_john, role: "tenant") do |tp|
-  tp.effective_from = comm_2c
-  tp.effective_until = term_2c
+  tp.effective_from = tenancy_2c.commencement_date
+  tp.effective_until = tenancy_2c.termination_date
 end
 
 tenancy_2c.tenancy_parties.find_or_create_by!(party: party_sarah, role: "guarantor") do |tp|
-  tp.effective_from = comm_2c
-  tp.effective_until = term_2c
+  tp.effective_from = tenancy_2c.commencement_date
+  tp.effective_until = tenancy_2c.termination_date
 end
 
-tenancy_2c.rent_terms.find_or_create_by!(effective_from: comm_2c) do |rt|
-  rt.amount_cents = 210_000 # $2,100/mo
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = term_2c
+if tenancy_2c.rent_terms.empty?
+  tenancy_2c.rent_terms.create!(
+    amount_cents: 210_000, # $2,100/mo
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: tenancy_2c.commencement_date,
+    effective_until: tenancy_2c.termination_date
+  )
 end
 
 if tenancy_2c.security_deposit.nil?
   dep_res = SecurityDeposits::CreateService.call(
     tenancy: tenancy_2c,
     required_amount: "2100.00",
-    due_on: today
+    due_on: tenancy_2c.commencement_date
   )
   if dep_res.success?
     SecurityDepositTransactions::ReceiveService.call(
       security_deposit: dep_res.value!.data[:security_deposit],
       party: party_john,
       amount: "2100.00",
-      occurred_on: today,
+      occurred_on: [ today, tenancy_2c.commencement_date ].min,
       memo: "Advance security deposit for upcoming lease"
     )
   end
@@ -549,39 +579,45 @@ unit_3 = prop_3.rentable_units.find_or_create_by!(name: "Suite 100 - Retail Fron
   u.active = true
 end
 
-comm_3 = today - 18.months
-term_3 = today + 18.months
-
-tenancy_3 = Tenancy.find_or_create_by!(rentable_unit: unit_3, commencement_date: comm_3) do |t|
-  t.termination_date = term_3
-  t.agreement_type = "fixed_term"
-  t.late_period_days = 35 # 35-day grace period keeps current month from being overdue
+tenancy_3 = unit_3.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_cyberdyne.id } } || unit_3.tenancies.first
+if tenancy_3.nil?
+  comm_3 = today - 18.months
+  term_3 = today + 18.months
+  tenancy_3 = unit_3.tenancies.create!(
+    commencement_date: comm_3,
+    termination_date: term_3,
+    agreement_type: "fixed_term",
+    late_period_days: 35 # 35-day grace period keeps current month from being overdue
+  )
 end
 
 tenancy_3.tenancy_parties.find_or_create_by!(party: party_cyberdyne, role: "tenant") do |tp|
-  tp.effective_from = comm_3
-  tp.effective_until = term_3
+  tp.effective_from = tenancy_3.commencement_date
+  tp.effective_until = tenancy_3.termination_date
 end
 
-tenancy_3.rent_terms.find_or_create_by!(effective_from: comm_3) do |rt|
-  rt.amount_cents = 450_000 # $4,500/mo
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = term_3
+if tenancy_3.rent_terms.empty?
+  tenancy_3.rent_terms.create!(
+    amount_cents: 450_000, # $4,500/mo
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: tenancy_3.commencement_date,
+    effective_until: tenancy_3.termination_date
+  )
 end
 
 if tenancy_3.security_deposit.nil?
   dep_res = SecurityDeposits::CreateService.call(
     tenancy: tenancy_3,
     required_amount: "9000.00",
-    due_on: comm_3
+    due_on: tenancy_3.commencement_date
   )
   if dep_res.success?
     SecurityDepositTransactions::ReceiveService.call(
       security_deposit: dep_res.value!.data[:security_deposit],
       party: party_cyberdyne,
       amount: "9000.00",
-      occurred_on: comm_3,
+      occurred_on: tenancy_3.commencement_date,
       memo: "Commercial security deposit"
     )
   end
@@ -590,8 +626,9 @@ end
 RentCharges::GenerateThroughService.call(tenancy: tenancy_3, through: today)
 
 # All past months paid up to last month; current month remains unpaid (inside 35-day grace period)
-cursor_date = comm_3.beginning_of_month
+cursor_date = tenancy_3.commencement_date.beginning_of_month
 while cursor_date < today.beginning_of_month
+  break if tenancy_3.termination_date && cursor_date > tenancy_3.termination_date
   ref_code = "ACH-CYBER-#{cursor_date.strftime('%Y%m')}"
 
   unless Receipt.exists?(tenancy: tenancy_3, external_reference: ref_code)
@@ -676,39 +713,45 @@ end
 # ------------------------------------------------------------------------------
 # Tenancy 4A (Unit 1): Arthur Dent (Waived Fee Demonstration)
 # ------------------------------------------------------------------------------
-comm_4a = today - 1.year
-term_4a = today + 1.year
-
-tenancy_4a = Tenancy.find_or_create_by!(rentable_unit: unit_4a, commencement_date: comm_4a) do |t|
-  t.termination_date = term_4a
-  t.agreement_type = "fixed_term"
-  t.late_period_days = 5
+tenancy_4a = unit_4a.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_arthur.id } } || unit_4a.tenancies.first
+if tenancy_4a.nil?
+  comm_4a = today - 1.year
+  term_4a = today + 1.year
+  tenancy_4a = unit_4a.tenancies.create!(
+    commencement_date: comm_4a,
+    termination_date: term_4a,
+    agreement_type: "fixed_term",
+    late_period_days: 5
+  )
 end
 
 tenancy_4a.tenancy_parties.find_or_create_by!(party: party_arthur, role: "tenant") do |tp|
-  tp.effective_from = comm_4a
-  tp.effective_until = term_4a
+  tp.effective_from = tenancy_4a.commencement_date
+  tp.effective_until = tenancy_4a.termination_date
 end
 
-tenancy_4a.rent_terms.find_or_create_by!(effective_from: comm_4a) do |rt|
-  rt.amount_cents = 220_000 # $2,200/mo
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = term_4a
+if tenancy_4a.rent_terms.empty?
+  tenancy_4a.rent_terms.create!(
+    amount_cents: 220_000, # $2,200/mo
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: tenancy_4a.commencement_date,
+    effective_until: tenancy_4a.termination_date
+  )
 end
 
 if tenancy_4a.security_deposit.nil?
   dep_res = SecurityDeposits::CreateService.call(
     tenancy: tenancy_4a,
     required_amount: "2200.00",
-    due_on: comm_4a
+    due_on: tenancy_4a.commencement_date
   )
   if dep_res.success?
     SecurityDepositTransactions::ReceiveService.call(
       security_deposit: dep_res.value!.data[:security_deposit],
       party: party_arthur,
       amount: "2200.00",
-      occurred_on: comm_4a,
+      occurred_on: tenancy_4a.commencement_date,
       memo: "Initial security deposit receipt"
     )
   end
@@ -717,8 +760,9 @@ end
 RentCharges::GenerateThroughService.call(tenancy: tenancy_4a, through: today)
 
 # Arthur Dent pays each month via Zelle
-cursor_date = comm_4a.beginning_of_month
+cursor_date = tenancy_4a.commencement_date.beginning_of_month
 while cursor_date <= today.beginning_of_month
+  break if tenancy_4a.termination_date && cursor_date > tenancy_4a.termination_date
   ref_code = "ZEL-DENT-#{cursor_date.strftime('%Y%m')}"
 
   unless Receipt.exists?(tenancy: tenancy_4a, external_reference: ref_code)
@@ -761,39 +805,45 @@ end
 # ------------------------------------------------------------------------------
 # Tenancy 4B (Unit 2): Tricia McMillan (P2P Venmo Payments)
 # ------------------------------------------------------------------------------
-comm_4b = today - 1.year
-term_4b = today + 1.year
-
-tenancy_4b = Tenancy.find_or_create_by!(rentable_unit: unit_4b, commencement_date: comm_4b) do |t|
-  t.termination_date = term_4b
-  t.agreement_type = "fixed_term"
-  t.late_period_days = 5
+tenancy_4b = unit_4b.tenancies.find { |t| t.tenancy_parties.any? { |tp| tp.party_id == party_tricia.id } } || unit_4b.tenancies.first
+if tenancy_4b.nil?
+  comm_4b = today - 1.year
+  term_4b = today + 1.year
+  tenancy_4b = unit_4b.tenancies.create!(
+    commencement_date: comm_4b,
+    termination_date: term_4b,
+    agreement_type: "fixed_term",
+    late_period_days: 5
+  )
 end
 
 tenancy_4b.tenancy_parties.find_or_create_by!(party: party_tricia, role: "tenant") do |tp|
-  tp.effective_from = comm_4b
-  tp.effective_until = term_4b
+  tp.effective_from = tenancy_4b.commencement_date
+  tp.effective_until = tenancy_4b.termination_date
 end
 
-tenancy_4b.rent_terms.find_or_create_by!(effective_from: comm_4b) do |rt|
-  rt.amount_cents = 240_000 # $2,400/mo
-  rt.due_day = 1
-  rt.frequency = "monthly"
-  rt.effective_until = term_4b
+if tenancy_4b.rent_terms.empty?
+  tenancy_4b.rent_terms.create!(
+    amount_cents: 240_000, # $2,400/mo
+    due_day: 1,
+    frequency: "monthly",
+    effective_from: tenancy_4b.commencement_date,
+    effective_until: tenancy_4b.termination_date
+  )
 end
 
 if tenancy_4b.security_deposit.nil?
   dep_res = SecurityDeposits::CreateService.call(
     tenancy: tenancy_4b,
     required_amount: "2400.00",
-    due_on: comm_4b
+    due_on: tenancy_4b.commencement_date
   )
   if dep_res.success?
     SecurityDepositTransactions::ReceiveService.call(
       security_deposit: dep_res.value!.data[:security_deposit],
       party: party_tricia,
       amount: "2400.00",
-      occurred_on: comm_4b,
+      occurred_on: tenancy_4b.commencement_date,
       memo: "Initial security deposit receipt"
     )
   end
@@ -802,8 +852,9 @@ end
 RentCharges::GenerateThroughService.call(tenancy: tenancy_4b, through: today)
 
 # Tricia pays each month via Venmo
-cursor_date = comm_4b.beginning_of_month
+cursor_date = tenancy_4b.commencement_date.beginning_of_month
 while cursor_date <= today.beginning_of_month
+  break if tenancy_4b.termination_date && cursor_date > tenancy_4b.termination_date
   ref_code = "VEN-TRIL-#{cursor_date.strftime('%Y%m')}"
 
   unless Receipt.exists?(tenancy: tenancy_4b, external_reference: ref_code)
@@ -887,15 +938,15 @@ puts "Creating Inbox source documents and imported transactions..."
 # ==============================================================================
 
 # 1. Successful statement with confirmed historical transactions (History tab)
-doc_history = SourceDocument.find_or_create_by!(user: user, attachment_filename: "chase_checking_oct_#{prev_year}.csv") do |d|
+doc_history = SourceDocument.find_or_create_by!(user: user, attachment_filename: "chase_checking_historical.csv") do |d|
   d.document_type = "chase_statement"
   d.status = "success"
   d.attachment_content_type = "text/csv"
-  d.attachment_file = "Date,Description,Amount\n#{prev_year}-10-01,Rent Trillian,2400.00\n#{prev_year}-10-02,Rent Dent,2200.00"
+  d.attachment_file = "Date,Description,Amount\n2025-10-01,Rent Trillian,2400.00\n2025-10-02,Rent Dent,2200.00"
 end
 
 # Link confirmed transactions to real receipts created earlier
-hist_receipt_tricia = Receipt.find_by(tenancy: tenancy_4b, external_reference: "VEN-TRIL-#{prev_year}10")
+hist_receipt_tricia = Receipt.where(tenancy: tenancy_4b, payment_method: "venmo").order(:received_on).first
 if hist_receipt_tricia && !ImportedTransaction.exists?(confirmed_source: hist_receipt_tricia)
   ImportedTransaction.create!(
     user: user,
@@ -915,7 +966,7 @@ if hist_receipt_tricia && !ImportedTransaction.exists?(confirmed_source: hist_re
   )
 end
 
-hist_receipt_arthur = Receipt.find_by(tenancy: tenancy_4a, external_reference: "ZEL-DENT-#{prev_year}10")
+hist_receipt_arthur = Receipt.where(tenancy: tenancy_4a, payment_method: "zelle").order(:received_on).first
 if hist_receipt_arthur && !ImportedTransaction.exists?(confirmed_source: hist_receipt_arthur)
   ImportedTransaction.create!(
     user: user,
