@@ -26,14 +26,18 @@ module SourceDocuments
       end
 
       begin
-        source_document = user.source_documents.create!(
-          attachment_file: file_bytes,
-          attachment_filename: pdf_param.original_filename,
-          attachment_content_type: pdf_param.content_type,
-          attachment_sha256: sha256,
-          status: "processing",
-          document_type: "unknown"
-        )
+        source_document = user.source_documents.transaction do
+          doc = user.source_documents.create!(
+            attachment_file: file_bytes,
+            attachment_filename: pdf_param.original_filename,
+            attachment_content_type: pdf_param.content_type,
+            attachment_sha256: sha256,
+            status: "processing",
+            document_type: "unknown"
+          )
+          user.increment_inbox_revision!
+          doc
+        end
       rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
         if e.is_a?(ActiveRecord::RecordNotUnique) || (e.is_a?(ActiveRecord::RecordInvalid) && e.record.errors[:attachment_sha256].any?)
           existing = user.source_documents.find_by(attachment_sha256: sha256)
@@ -46,13 +50,19 @@ module SourceDocuments
         end
       end
 
+      ImportedTransactions::InboxBroadcastService.call(user: user, document: source_document)
+
       begin
         IngestSourceDocumentJob.perform_later(source_document.id)
       rescue => e
-        source_document.update_columns(
-          status: "failed",
-          error_message: "Failed to queue ingestion job: #{e.message}"
-        )
+        source_document.transaction do
+          source_document.update_columns(
+            status: "failed",
+            error_message: "Failed to queue ingestion job: #{e.message}"
+          )
+          user.increment_inbox_revision!
+        end
+        ImportedTransactions::InboxBroadcastService.call(user: user, document: source_document)
         raise e
       end
 

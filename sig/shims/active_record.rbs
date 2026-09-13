@@ -10,4 +10,11 @@ module ActiveRecord
       def each: () { (Model) -> void } -> void
     end
   end
+
+  module Associations
+    class Preloader
+      def initialize: (?records: untyped, ?associations: untyped) -> void
+      def call: () -> untyped
+    end
+  end
 end

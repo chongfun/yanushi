@@ -1,11 +1,14 @@
 class ImportedTransaction < ApplicationRecord
   KINDS: Array[String]
   STATUSES: Array[String]
+  PAYMENT_METHOD_OPTIONS: Array[[ String, String ]]
 
+  def lock_version: () -> Integer
   def amount: () -> BigDecimal?
   def amount=: (untyped) -> void
   def confirmable?: () -> bool
   def reviewable?: () -> bool
+  def proposed_alias_for: (?Party? party) -> String?
   def accounting_user: () -> User?
 
   private

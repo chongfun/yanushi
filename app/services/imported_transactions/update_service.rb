@@ -13,18 +13,34 @@ module ImportedTransactions
     def call
       return failure("Imported transaction was not found.", :not_found) unless transaction.user_id == user.id
 
-      transaction.with_lock do
+      res = transaction.with_lock do
         return failure("Cannot update a confirmed imported transaction", :immutable) if transaction.confirmed?
+
+        submitted_lock_version = params[:lock_version] || params["lock_version"]
+        if submitted_lock_version.present? && transaction.lock_version.to_s != submitted_lock_version.to_s
+          return failure("This transaction was updated in another session. Please reload to review the latest changes.", :conflict)
+        end
 
         transaction.assign_attributes(params)
         recompute_matching_status
 
         if transaction.save
+          user.increment_inbox_revision!
           success(transaction)
         else
           failure(transaction.errors.full_messages.to_sentence, :validation_error)
         end
       end
+
+      if res.success?
+        ImportedTransactions::InboxBroadcastService.call(user: user, updated_transaction_id: transaction.id)
+      end
+
+      res
+    rescue ActiveRecord::RecordNotFound
+      failure("Imported transaction was not found.", :gone)
+    rescue ActiveRecord::StaleObjectError
+      failure("This transaction was updated in another session. Please reload to review the latest changes.", :conflict)
     rescue ActiveRecord::RecordNotUnique
       failure("This transaction reference has already been imported for this payment method.", :duplicate_external_transaction)
     end

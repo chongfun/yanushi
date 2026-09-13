@@ -1,0 +1,43 @@
+module ImportedTransactions
+  class HistoryQuery
+    class HistoryResult < Data
+      attr_reader confirmed_transactions: Array[ImportedTransaction]
+      attr_reader page: Integer
+      attr_reader per_page: Integer
+      attr_reader total_pages: Integer
+      attr_reader total_confirmed_count: Integer
+      attr_reader review_count: Integer
+      attr_reader processing_count: Integer
+      attr_reader failed_count: Integer
+      attr_reader history_count: Integer
+      attr_reader inbox_revision: Integer
+      attr_reader filters: Hash[Symbol, String]
+
+      def self.new: (
+        confirmed_transactions: Array[ImportedTransaction],
+        page: Integer,
+        per_page: Integer,
+        total_pages: Integer,
+        total_confirmed_count: Integer,
+        review_count: Integer,
+        processing_count: Integer,
+        failed_count: Integer,
+        history_count: Integer,
+        inbox_revision: Integer,
+        filters: Hash[Symbol, String]
+      ) -> HistoryResult
+    end
+
+    def initialize: (user: User) -> void
+    def call: (?page: (Integer | String)?, ?per_page: (Integer | String)?, ?filters: untyped) -> HistoryResult
+
+    private
+
+    attr_reader user: User
+
+    def confirmed_transactions_scope: () -> untyped
+    def preload_confirmed_sources: (Array[ImportedTransaction] transactions) -> void
+    def normalize_filters: (untyped filters) -> Hash[Symbol, String]
+    def apply_filters: (untyped scope, Hash[Symbol, String] filters) -> untyped
+  end
+end

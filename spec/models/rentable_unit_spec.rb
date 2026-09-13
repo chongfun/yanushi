@@ -64,9 +64,19 @@ RSpec.describe RentableUnit, type: :model do
     end
   end
 
-  describe "#occupied? and active scope" do
+  describe "#occupied? and active/inactive scopes" do
     let(:property) { create(:property) }
     let(:unit) { create(:rentable_unit, property: property) }
+
+    it "filters units by active and inactive scopes" do
+      active_unit = create(:rentable_unit, property: property, active: true)
+      inactive_unit = create(:rentable_unit, property: property, name: "Old Unit", active: false)
+
+      expect(property.rentable_units.active).to include(active_unit)
+      expect(property.rentable_units.active).not_to include(inactive_unit)
+      expect(property.rentable_units.inactive).to include(inactive_unit)
+      expect(property.rentable_units.inactive).not_to include(active_unit)
+    end
 
     it "returns false when no active tenancies" do
       expect(unit.occupied?).to be false

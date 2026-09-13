@@ -1,0 +1,18 @@
+<%# Shared header for the Money tab set (Activity / Receipts / Expenses).
+    Local: current_tab (:activity | :receipts | :expenses) %>
+<%
+  current_tab = local_assigns.fetch(:current_tab, :activity)
+  tab_items = [
+    { label: "Activity", path: money_path, current: current_tab == :activity },
+    { label: "Receipts", path: receipts_path, current: current_tab == :receipts },
+    { label: "Expenses", path: expenses_path, current: current_tab == :expenses }
+  ]
+  primary_action = case current_tab
+    when :receipts then link_to("Record receipt", new_receipt_path, class: "yn-btn yn-btn-primary")
+    when :expenses then link_to("Record expense", new_expense_path, class: "yn-btn yn-btn-primary")
+    end
+%>
+<%= render "shared/page_header",
+      title: "Money",
+      actions: primary_action,
+      tabs: render("shared/tabs", items: tab_items, aria_label: "Money sections") %>

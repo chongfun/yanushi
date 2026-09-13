@@ -1,39 +1,117 @@
-<% content_for :title, "Payments & Receipts" %>
+<% content_for :title, "Money" %>
 
-<div class="flex justify-between items-center mb-6">
-  <div>
-    <h1 class="text-3xl font-bold">Payments & Receipts</h1>
-    <p class="text-xs text-base-content/60">Historical record of all payments and ledger credits</p>
-  </div>
-  <%= link_to "＋ Record Payment", new_receipt_path, class: "btn btn-primary" %>
-</div>
+<div class="max-w-5xl">
+  <%= render "money/header", current_tab: :receipts %>
 
-<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>Tenancy / Property</th>
-        <th>Payer</th>
-        <th>Payment Date</th>
-        <th>Amount</th>
-        <th>Method</th>
-        <th>Reference</th>
-        <th>Status</th>
-        <th class="text-right">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="receipts">
-      <% if @receipts.any? %>
-        <% @receipts.each do |receipt| %>
-          <%= render receipt %>
-        <% end %>
-      <% else %>
-        <tr>
-          <td colspan="8" class="text-center py-8 text-base-content/60">
-            No payment receipts recorded yet.
-          </td>
-        </tr>
+  <!-- GET filters -->
+  <%= form_with url: receipts_path, method: :get, class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
+    <div>
+      <%= f.label :property_id, "Property", class: "yn-label", for: "rc-property" %>
+      <%= f.select :property_id,
+            options_from_collection_for_select(@properties, :id, :address, @filters[:property_id]),
+            { include_blank: "All properties" },
+            class: "yn-select w-52",
+            id: "rc-property" %>
+    </div>
+    <div>
+      <%= f.label :year, "Year", class: "yn-label", for: "rc-year" %>
+      <%= f.select :year,
+            options_for_select(@active_years, @filters[:year]),
+            { include_blank: "All years" },
+            class: "yn-select w-32",
+            id: "rc-year" %>
+    </div>
+    <div>
+      <%= f.label :search, "Search", class: "yn-label", for: "rc-search" %>
+      <%= f.text_field :search,
+            value: @filters[:search],
+            placeholder: "Payer or reference",
+            class: "yn-input w-56",
+            id: "rc-search" %>
+    </div>
+    <%= f.submit "Apply", class: "yn-btn yn-btn-secondary" %>
+    <% if @filters.any? %>
+      <%= link_to "Clear filters", receipts_path, class: "yn-btn yn-btn-ghost" %>
+    <% end %>
+  <% end %>
+
+  <% if @receipts.any? %>
+    <!-- Totals for the filtered list, not just this page -->
+    <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4 border-y border-stone-200 py-4 mb-6">
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Receipts</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= @total_count %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Total received</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@received_total_cents) %></dd>
+      </div>
+      <% if @voided_total_cents > 0 %>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Voided (excluded)</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@voided_total_cents) %></dd>
+        </div>
       <% end %>
-    </tbody>
-  </table>
+    </dl>
+
+    <%= render layout: "shared/table_scroll", locals: { label: "Receipts" } do %>
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Payer</th>
+            <th scope="col">Tenancy</th>
+            <th scope="col">Method</th>
+            <th scope="col" class="text-right tabular-nums">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @receipts.each do |receipt| %>
+            <tr id="<%= dom_id(receipt) %>">
+              <td class="whitespace-nowrap text-stone-500 w-20"><%= receipt.received_on.strftime("%b %-d") %></td>
+              <td>
+                <% if receipt.voided? %>
+                  <%= link_to (receipt.payer_party&.display_name || "Receipt"), receipt_path(receipt), class: "yn-row-link text-stone-500 line-through" %>
+                  <span class="yn-status yn-status-sm ml-1"><span class="yn-dot"></span>Voided</span>
+                  <% if receipt.superseded_by.present? %>
+                    <span class="block text-[13px] text-stone-500">
+                      <%= link_to "Corrected #{receipt.superseded_by.received_on.strftime('%b %-d')}", receipt_path(receipt.superseded_by), class: "yn-link" %>
+                    </span>
+                  <% end %>
+                <% else %>
+                  <%= link_to (receipt.payer_party&.display_name || "—"), receipt_path(receipt), class: "yn-row-link" %>
+                <% end %>
+              </td>
+              <td class="text-stone-500">
+                <%= receipt.tenancy.property.address %> — <%= receipt.tenancy.rentable_unit&.name || "Tenancy" %>
+              </td>
+              <td class="text-stone-500">
+                <%= receipt.payment_method.titleize %>
+                <% if receipt.imported_transaction.present? %>
+                  <span class="text-stone-500">· imported</span>
+                <% end %>
+              </td>
+              <td class="text-right tabular-nums whitespace-nowrap <%= receipt.voided? ? 'text-stone-500 line-through' : '' %>">
+                <%= format_money_cents(receipt.amount_cents) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+
+    <%= render "shared/pagination",
+          page: @page, per_page: @per_page, total_count: @total_count, total_pages: @total_pages,
+          page_url: ->(p) { receipts_path(@filters.merge(page: p)) } %>
+  <% elsif @filters.any? %>
+    <%= render "shared/empty_state",
+          title: "No receipts match these filters",
+          body: "Try another property, another year, or a different search term.",
+          action: link_to("Clear filters", receipts_path, class: "yn-btn yn-btn-secondary yn-btn-sm mt-3") %>
+  <% else %>
+    <%= render "shared/empty_state",
+          title: "No receipts recorded yet",
+          body: "Record payment receipts from your tenants to track income.",
+          action: link_to("Record receipt", new_receipt_path, class: "yn-btn yn-btn-primary yn-btn-sm mt-3") %>
+  <% end %>
 </div>

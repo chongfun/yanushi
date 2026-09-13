@@ -1,24 +1,27 @@
 class PropertiesController < ApplicationController
-  before_action :set_property, only: %i[show edit update destroy schedule_e schedule_e_pdf]
+  before_action :set_property, only: %i[edit update destroy schedule_e schedule_e_pdf]
 
   def index
-    @properties = authenticated_user.properties.includes(:rentable_units)
+    respond_to do |format|
+      format.html { redirect_to portfolio_path, status: :moved_permanently }
+      format.json { @properties = authenticated_user.properties.includes(:rentable_units) }
+    end
   end
 
   def show
-    @date_range = Accounting::DateRange.parse(params)
-    unless @date_range.valid?
-      flash.now[:alert] = @date_range.errors.to_sentence
-    end
-    @year = @date_range.year || Date.current.year
     @property = authenticated_user.properties.includes(
-      :rentable_units,
-      tenancies: :parties
+      rentable_units: { tenancies: [ :parties, :tenancy_parties, :rent_terms ] }
     ).find(params.expect(:id))
-    @financial_activity = Accounting::PropertyLedgerQuery.call(property: @property, date_range: @date_range)
-    @financial_summary = Accounting::PropertySummaryQuery.call(property: @property, date_range: @date_range)
+    @tenancies = @property.rentable_units.flat_map(&:tenancies)
+    @balances = Accounting::TenancyBalancesQuery.call(tenancies: @tenancies)
     @security_deposits_held_cents = Accounting::SecurityDepositBalanceQuery.call(property: @property)
-    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
+    ytd_range = Accounting::DateRange.new(
+      from: Date.current.beginning_of_year,
+      through: Date.current
+    )
+    @ytd_summary = Accounting::PropertySummaryQuery.call(property: @property, date_range: ytd_range)
+    recent_range = Accounting::DateRange.new(through: Date.current)
+    @recent_activity = Accounting::PropertyLedgerQuery.call(property: @property, date_range: recent_range, limit: 5)
   end
 
   def schedule_e
@@ -33,14 +36,6 @@ class PropertiesController < ApplicationController
     @schedule_e_result = TaxReporting::ScheduleEQuery.call(property: @property, tax_year: @year)
     @tax_profile = @schedule_e_result.tax_profile
     @form_definition = TaxReporting::ScheduleEFormDefinition.for(@year)
-    @active_years = Accounting::ActiveYearsQuery.call(property: @property, additional_years: [ @year ])
-
-    @rents_received = @schedule_e_result.rents_received
-    @utility_reimbursements = BigDecimal("0.00")
-    @total_income = @schedule_e_result.rents_received
-    @expenses_by_category = @schedule_e_result.expenses_by_category_cents.transform_keys(&:to_s).transform_values { |cents| BigDecimal(cents.to_s) / 100 }
-    @total_expenses = @schedule_e_result.total_expenses
-    @net_income = @schedule_e_result.net_income
   end
 
   def schedule_e_pdf
@@ -106,7 +101,7 @@ class PropertiesController < ApplicationController
   def destroy
     if @property.destroy
       respond_to do |format|
-        format.html { redirect_to properties_path, notice: "Property was successfully destroyed.", status: :see_other }
+        format.html { redirect_to portfolio_path, notice: "Property was successfully destroyed.", status: :see_other }
         format.json { head :no_content }
       end
     else

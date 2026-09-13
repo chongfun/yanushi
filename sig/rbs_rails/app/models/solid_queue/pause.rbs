@@ -45,46 +45,6 @@ module ::SolidQueue
 
       def id_for_database: () -> ::Integer
 
-      def queue_name: () -> ::String
-
-      def queue_name=: (::String) -> ::String
-
-      def queue_name?: () -> bool
-
-      def queue_name_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def queue_name_change: () -> [ ::String?, ::String? ]
-
-      def queue_name_will_change!: () -> void
-
-      def queue_name_was: () -> ::String?
-
-      def queue_name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def queue_name_previous_change: () -> ::Array[::String?]?
-
-      def queue_name_previously_was: () -> ::String?
-
-      def queue_name_before_last_save: () -> ::String?
-
-      def queue_name_change_to_be_saved: () -> ::Array[::String?]?
-
-      def queue_name_in_database: () -> ::String?
-
-      def saved_change_to_queue_name: () -> ::Array[::String?]?
-
-      def saved_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def will_save_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-      def restore_queue_name!: () -> void
-
-      def clear_queue_name_change: () -> void
-
-      def queue_name_before_type_cast: () -> ::String
-
-      def queue_name_for_database: () -> ::String
-
       def created_at: () -> ::ActiveSupport::TimeWithZone
 
       def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
@@ -124,6 +84,46 @@ module ::SolidQueue
       def created_at_before_type_cast: () -> ::Time
 
       def created_at_for_database: () -> ::Time
+
+      def queue_name: () -> ::String
+
+      def queue_name=: (::String) -> ::String
+
+      def queue_name?: () -> bool
+
+      def queue_name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def queue_name_change: () -> [ ::String?, ::String? ]
+
+      def queue_name_will_change!: () -> void
+
+      def queue_name_was: () -> ::String?
+
+      def queue_name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def queue_name_previous_change: () -> ::Array[::String?]?
+
+      def queue_name_previously_was: () -> ::String?
+
+      def queue_name_before_last_save: () -> ::String?
+
+      def queue_name_change_to_be_saved: () -> ::Array[::String?]?
+
+      def queue_name_in_database: () -> ::String?
+
+      def saved_change_to_queue_name: () -> ::Array[::String?]?
+
+      def saved_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def will_save_change_to_queue_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+      def restore_queue_name!: () -> void
+
+      def clear_queue_name_change: () -> void
+
+      def queue_name_before_type_cast: () -> ::String
+
+      def queue_name_for_database: () -> ::String
     end
     include ::SolidQueue::Pause::GeneratedAttributeMethods
     module ::SolidQueue::Pause::GeneratedAliasAttributeMethods

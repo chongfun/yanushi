@@ -10,8 +10,8 @@ RSpec.describe "Sessions", type: :system do
     fill_in "password", with: "wrongpassword"
     click_on "Sign in"
 
-    expect(page).to have_selector(".toast", text: "Try another email address or password.")
-    expect(page).to have_selector(".alert-error")
+    expect(page).to have_selector("#flash-messages", text: "Try another email address or password.")
+    expect(page).to have_selector(".yn-alert-danger")
   end
 
   it "redirects appropriately on successful login" do

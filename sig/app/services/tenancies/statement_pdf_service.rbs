@@ -1,0 +1,52 @@
+module Tenancies
+  class StatementPdfService
+    PAGE_MARGIN: Integer
+    INK: String
+    MUTED: String
+    FAINT: String
+    HAIRLINE: String
+    NO_BORDERS: Array[Symbol]
+    ROW_BORDERS: Array[Symbol]
+    ACCOUNT_COLUMNS: Array[String]
+    ACCOUNT_WIDTHS: Hash[Integer, Integer]
+    ACTIVITY_COLUMNS: Array[String]
+    ACTIVITY_WIDTHS: Hash[Integer, Integer]
+
+    def self.call: (
+      tenancy: Tenancy,
+      date_range: Accounting::DateRange,
+      ?statement: Accounting::TenantReceivableActivityQuery::StatementResult?,
+      ?activity_rows: Array[Accounting::ActivityRow]?
+    ) -> String
+
+    def initialize: (
+      tenancy: Tenancy,
+      date_range: Accounting::DateRange,
+      ?statement: Accounting::TenantReceivableActivityQuery::StatementResult?,
+      ?activity_rows: Array[Accounting::ActivityRow]?
+    ) -> void
+
+    def call: () -> String
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader date_range: Accounting::DateRange
+    attr_reader statement: Accounting::TenantReceivableActivityQuery::StatementResult?
+    attr_reader activity_rows: Array[Accounting::ActivityRow]
+
+    def view_mode: () -> String
+    def draw_masthead: (Prawn::Document pdf) -> void
+    def subject_line: () -> String
+    def draw_balances: (Prawn::Document pdf, Accounting::TenantReceivableActivityQuery::StatementResult result) -> void
+    def opening_label: () -> String
+    def closing_label: () -> String
+    def draw_account_rows: (Prawn::Document pdf, Array[Accounting::TenantReceivableActivityQuery::StatementRow] rows) -> void
+    def draw_activity_rows: (Prawn::Document pdf, Array[Accounting::ActivityRow] rows) -> void
+    def inactive_indexes: (untyped rows) -> Array[Integer]
+    def draw_rows: (Prawn::Document pdf, Array[Array[untyped]] data, Hash[Integer, Integer] column_widths, Array[Integer] right_aligned, Array[Integer] muted_rows) -> void
+    def draw_footnotes: (Prawn::Document pdf) -> void
+    def draw_page_numbers: (Prawn::Document pdf) -> void
+    def draw_rule: (Prawn::Document pdf) -> void
+  end
+end

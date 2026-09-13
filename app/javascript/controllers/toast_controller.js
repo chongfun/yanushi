@@ -23,8 +23,12 @@ export default class extends Controller {
     this.element.style.transition = "opacity 0.3s ease, transform 0.3s ease"
     this.element.style.opacity = "0"
     this.element.style.transform = "translateX(1rem)"
-    this.element.addEventListener("transitionend", () => {
-      this.element.remove()
-    }, { once: true })
+    const removeElement = () => {
+      if (this.element && this.element.parentNode) {
+        this.element.remove()
+      }
+    }
+    this.element.addEventListener("transitionend", removeElement, { once: true })
+    setTimeout(removeElement, 350)
   }
 }

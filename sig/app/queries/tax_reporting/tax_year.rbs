@@ -6,8 +6,8 @@ module TaxReporting
 
     attr_reader year: Integer
 
-    def self.parse: (untyped raw_value, ?default: Integer) -> TaxYear?
-    def self.parse!: (untyped raw_value, ?default: Integer) -> TaxYear
+    def self.parse: (untyped raw_value, ?default: Integer?) -> TaxYear?
+    def self.parse!: (untyped raw_value, ?default: Integer?) -> TaxYear
 
     def initialize: (Integer | String year) -> void
 

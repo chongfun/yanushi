@@ -106,15 +106,16 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
       expect(exp_item.can_include_in_rents?).to be false
 
       # Cash income entry
-      income_entry = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "custom_income", source: property)
-      create(:posting, journal_entry: income_entry, property: property, amount_cents: 20_000, account: user.accounts.find_by!(key: "cash"))
-      create(:posting, journal_entry: income_entry, property: property, amount_cents: -20_000, account: user.accounts.find_by!(key: "rental_income"))
+      income_prop = create(:property, user: user)
+      income_entry = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "custom_income_single", source: income_prop)
+      create(:posting, journal_entry: income_entry, property: income_prop, amount_cents: 20_000, account: user.accounts.find_by!(key: "cash"))
+      create(:posting, journal_entry: income_entry, property: income_prop, amount_cents: -20_000, account: user.accounts.find_by!(key: "rental_income"))
       inc_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
         id: 5,
         occurred_on: Date.new(2025, 5, 1),
         amount_cents: 20_000,
         reason: "Income",
-        source: property,
+        source: income_prop,
         journal_entry: income_entry
       )
       expect(inc_item.can_map_to_expense?).to be false
@@ -178,6 +179,22 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
         journal_entry: exp_module_entry
       )
       expect(exp_module_item.can_include_in_rents?).to be false
+
+      # Cross-year reversal
+      expect(item_unresolved.cross_year_reversal?).to be false
+      expect(nil_entry_item.cross_year_reversal?).to be false
+      cross_year_prop = create(:property, user: user)
+      cross_year_orig = create(:journal_entry, user: user, occurred_on: Date.new(2025, 12, 1), event_type: "orig_event", source: cross_year_prop)
+      cross_year_rev = create(:journal_entry, user: user, occurred_on: Date.new(2026, 1, 5), event_type: "reversal", reversal_of: cross_year_orig, source: cross_year_prop)
+      cross_year_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
+        id: 99,
+        occurred_on: Date.new(2026, 1, 5),
+        amount_cents: 20_000,
+        reason: "Cross Year",
+        source: cross_year_prop,
+        journal_entry: cross_year_rev
+      )
+      expect(cross_year_item.cross_year_reversal?).to be true
 
       # Pure liability entry
       liab_prop = create(:property, user: user)
@@ -276,6 +293,23 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
       prop_for_rev = create(:property, user: user)
       orig_entry_rev = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "custom_cash", source: prop_for_rev)
       create(:posting, journal_entry: orig_entry_rev, property: prop_for_rev, amount_cents: 10_000, account: user.accounts.find_by!(key: "cash"))
+      # Reversal of expense entry
+      prop_exp = create(:property, user: user)
+      orig_exp = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 1), event_type: "expense_posted", source: prop_exp)
+      create(:posting, journal_entry: orig_exp, property: prop_exp, amount_cents: 10_000, account: user.accounts.find_by!(key: "expense_repairs"))
+      rev_exp = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 15), event_type: "reversal", reversal_of: orig_exp, source: prop_exp)
+      create(:posting, journal_entry: rev_exp, property: prop_exp, amount_cents: -10_000, account: user.accounts.find_by!(key: "expense_repairs"))
+      rev_exp_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
+        id: 18,
+        occurred_on: Date.new(2025, 5, 15),
+        amount_cents: 10_000,
+        reason: "Reversal of expense",
+        source: prop_exp,
+        journal_entry: rev_exp,
+        review_kind: :expense
+      )
+      expect(rev_exp_item.can_map_to_expense?).to be true
+      expect(rev_exp_item.can_include_in_rents?).to be false
       rev_entry = create(:journal_entry, user: user, occurred_on: Date.new(2025, 5, 15), event_type: "reversal", reversal_of: orig_entry_rev, source: prop_for_rev)
       create(:posting, journal_entry: rev_entry, property: prop_for_rev, amount_cents: -10_000, account: user.accounts.find_by!(key: "cash"))
       rev_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
@@ -360,7 +394,19 @@ RSpec.describe TaxReporting::ScheduleEResult, type: :query do
         source: prop_same,
         journal_entry: same_year_rev
       )
-      expect(same_year_item.cross_year_reversal?).to be false
+      # Orphan reversal without reversal_of
+      orphan_rev = build_stubbed(:journal_entry, occurred_on: Date.new(2025, 7, 15), event_type: "reversal", reversal_of: nil)
+      orphan_rev_item = TaxReporting::ScheduleEResult::TaxReviewItem.new(
+        id: 19,
+        occurred_on: Date.new(2025, 7, 15),
+        amount_cents: 10_000,
+        reason: "Orphan reversal",
+        source: prop_same,
+        journal_entry: orphan_rev
+      )
+      expect(orphan_rev_item.cross_year_reversal?).to be false
+      expect(orphan_rev_item.can_map_to_expense?).to be false
+      expect(orphan_rev_item.can_include_in_rents?).to be false
     end
   end
 end

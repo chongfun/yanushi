@@ -1,20 +1,11 @@
-<% content_for :title, "New Property" %>
+<% content_for :title, "Add property" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Properties", properties_path %></li>
-  <li class="font-bold">New Property</li>
-<% end %>
-
-<div class="max-w-xl mx-auto py-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold mb-6">New Property</h2>
-
-      <%= render "form", property: @property %>
-
-      <div class="mt-6 flex justify-between">
-        <%= link_to "Back to Properties", properties_path, class: "btn btn-ghost" %>
-      </div>
-    </div>
+<div class="max-w-xl">
+  <%= render "shared/page_header",
+        eyebrow: link_to("Portfolio", portfolio_path, class: "hover:text-stone-700 no-underline text-inherit"),
+        title: "Add property",
+        meta: "Yanushi tracks units, tenancies, and finances per property." %>
+  <div class="yn-surface p-6">
+    <%= render "form", property: @property %>
   </div>
 </div>

@@ -1,0 +1,61 @@
+<% content_for :title, "Reports" %>
+
+<div class="max-w-5xl">
+  <%= render "shared/page_header",
+        title: "Reports",
+        meta: "Schedule E preparation by property and tax year." %>
+
+  <%= form_with url: reports_path, method: :get, data: { controller: "autosubmit" }, class: "mb-6" do |f| %>
+    <%= f.label :year, "Tax year", class: "yn-label", for: "rep-year" %>
+    <%= f.select :year,
+          options_for_select(@active_years, @year),
+          {},
+          class: "yn-select w-32",
+          id: "rep-year",
+          data: { action: "change->autosubmit#submit" } %>
+  <% end %>
+
+  <% if @statuses.any? %>
+    <div class="max-w-3xl space-y-8">
+      <section aria-labelledby="reports-work-heading">
+        <h2 id="reports-work-heading" class="text-sm font-semibold mb-3">
+          Needs work
+          <% if @needs_work_statuses.any? %>
+            <span class="yn-count ml-1"><%= @needs_work_statuses.size %><span class="sr-only"> <%= @needs_work_statuses.size == 1 ? "property needs" : "properties need" %> work</span></span>
+          <% end %>
+        </h2>
+
+        <% if @needs_work_statuses.any? %>
+          <div class="yn-surface divide-y divide-stone-200">
+            <% @needs_work_statuses.each do |status| %>
+              <%= render "reports/property_status", status: status, year: @year %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-sm text-stone-500 m-0">
+            <%= render "shared/status", text: "No properties need work for #{@year}.", tone: :ok %>
+          </p>
+        <% end %>
+      </section>
+
+      <% if @ready_statuses.any? %>
+        <section aria-labelledby="reports-ready-heading">
+          <h2 id="reports-ready-heading" class="text-sm font-semibold mb-3 text-stone-700">
+            Ready
+            <span class="yn-count yn-count-neutral ml-1"><%= @ready_statuses.size %><span class="sr-only"> <%= @ready_statuses.size == 1 ? "property" : "properties" %> ready</span></span>
+          </h2>
+          <div class="yn-surface divide-y divide-stone-200">
+            <% @ready_statuses.each do |status| %>
+              <%= render "reports/property_status", status: status, year: @year %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "shared/empty_state",
+          title: "No properties found",
+          body: "Add a property to your portfolio to generate Schedule E tax reports.",
+          action: link_to("Add property", new_property_path, class: "yn-btn yn-btn-primary yn-btn-sm") %>
+  <% end %>
+</div>

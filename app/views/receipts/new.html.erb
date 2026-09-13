@@ -1,12 +1,37 @@
-<div class="max-w-xl mx-auto py-8">
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold">Record Payment</h1>
-    <p class="text-xs text-base-content/60">Posts payment directly to ledger (Dr Cash / Cr Tenant Receivable)</p>
-  </div>
+<% content_for :title, "Record receipt" %>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <%= render "receipts/form", receipt: @receipt, tenancy: @tenancy %>
+<% if @tenancy && turbo_frame_request? %>
+  <%# Dialog over the tenancy page %>
+  <turbo-frame id="modal-frame">
+    <%# Turbo swaps the frame's children, not its attributes, so the dialog title rides on this wrapper %>
+    <div data-modal-title="Record receipt">
+      <%= render "receipts/form", receipt: @receipt, fixed_tenancy: @tenancy, form_context: :dialog,
+                 parties: @parties, balance_cents: @balance_cents %>
+    </div>
+  </turbo-frame>
+<% elsif @tenancy %>
+  <%# Standalone page for one tenancy %>
+  <div class="max-w-xl">
+    <%= render "tenancies/page_header", tenancy: @tenancy, title: "Record receipt" %>
+    <div class="yn-surface p-6">
+      <%= render "receipts/form", receipt: @receipt, fixed_tenancy: @tenancy, form_context: :standalone,
+                 parties: @parties, balance_cents: @balance_cents %>
     </div>
   </div>
-</div>
+<% else %>
+  <%# Standalone page from Money; the tenancy is chosen in the form %>
+  <div class="max-w-xl">
+    <%= render "shared/page_header",
+          eyebrow: capture { %>
+            <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+            <span class="mx-1 text-stone-300">/</span>
+            <%= link_to "Receipts", receipts_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <% },
+          title: "Record receipt",
+          meta: "Money received from a tenant, posted to that tenancy's running account." %>
+    <div class="yn-surface p-6">
+      <%= render "receipts/form", receipt: @receipt, fixed_tenancy: nil, form_context: :standalone,
+                 parties: @parties, tenancies: @tenancies %>
+    </div>
+  </div>
+<% end %>

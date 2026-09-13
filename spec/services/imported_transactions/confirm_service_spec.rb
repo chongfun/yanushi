@@ -93,6 +93,69 @@ RSpec.describe ImportedTransactions::ConfirmService do
       expect(result.failure.error).to eq("Future date invalid")
       expect(transaction.reload.status).to eq("matched")
     end
+
+    it "atomically applies submitted params before confirming receipt" do
+      unmatched_txn = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "unknown",
+        status: "unmatched",
+        amount_cents: 99_000,
+        occurred_on: Date.new(2026, 3, 25)
+      )
+
+      result = described_class.call(
+        user: user,
+        transaction: unmatched_txn,
+        params: {
+          transaction_kind: "tenant_receipt",
+          matched_party_id: party.id,
+          matched_tenancy_id: tenancy.id,
+          payment_method: "check",
+          external_reference: "CHK-999"
+        }
+      )
+
+      expect(result).to be_success
+      receipt = result.value!.data[:source]
+      expect(receipt.payment_method).to eq("check")
+      expect(receipt.external_reference).to eq("CHK-999")
+      expect(receipt.amount_cents).to eq(99_000)
+
+      unmatched_txn.reload
+      expect(unmatched_txn.status).to eq("confirmed")
+      expect(unmatched_txn.payment_method).to eq("check")
+      expect(unmatched_txn.external_reference).to eq("CHK-999")
+      expect(unmatched_txn.matched_party).to eq(party)
+      expect(unmatched_txn.matched_tenancy).to eq(tenancy)
+    end
+
+    it "rolls back and leaves transaction unconfirmed when submitted params are invalid" do
+      unmatched_txn = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "unknown",
+        status: "unmatched",
+        amount_cents: 99_000,
+        occurred_on: Date.new(2026, 3, 25)
+      )
+
+      result = described_class.call(
+        user: user,
+        transaction: unmatched_txn,
+        params: {
+          transaction_kind: "tenant_receipt",
+          external_reference: "A" * 300 # Exceeds 255 chars validation
+        }
+      )
+
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:validation_error)
+      expect(unmatched_txn.reload.status).to eq("unmatched")
+      expect(Receipt.count).to eq(0)
+    end
   end
 
   describe "#call for security_deposit" do
@@ -246,7 +309,7 @@ RSpec.describe ImportedTransactions::ConfirmService do
       expect(result.failure.code).to eq(:validation_error)
     end
 
-    it "rescues ActiveRecord::RecordNotFound" do
+    it "rescues ActiveRecord::RecordNotFound from downstream services as :not_found" do
       txn = create(
         :imported_transaction,
         user: user,
@@ -265,6 +328,29 @@ RSpec.describe ImportedTransactions::ConfirmService do
       result = described_class.call(user: user, transaction: txn)
       expect(result).to be_failure
       expect(result.failure.code).to eq(:not_found)
+      expect(result.failure.error).to eq("Party not found")
+    end
+
+    it "returns :gone when imported transaction is deleted from DB before lock acquisition" do
+      txn = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "tenant_receipt",
+        status: "matched",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 125_000,
+        occurred_on: Date.new(2026, 3, 24),
+        payment_method: "zelle"
+      )
+
+      ImportedTransaction.where(id: txn.id).delete_all
+
+      result = described_class.call(user: user, transaction: txn)
+      expect(result).to be_failure
+      expect(result.failure.code).to eq(:gone)
+      expect(result.failure.error).to include("not found")
     end
 
     it "creates username alias when create_alias: true and payer_username is a candidate" do
@@ -286,6 +372,90 @@ RSpec.describe ImportedTransactions::ConfirmService do
       result = described_class.call(user: user, transaction: txn, create_alias: true)
       expect(result).to be_success
       expect(party.party_aliases.where(alias_name: "@janedoe-venmo").exists?).to be(true)
+    end
+
+    it "creates only the proposed alias candidate when both payer_name and payer_username are candidates" do
+      txn = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "tenant_receipt",
+        status: "matched",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 125_000,
+        occurred_on: Date.new(2026, 3, 24),
+        payment_method: "venmo",
+        payer_name: "Jane D Doe",
+        payer_username: "@janeddoe"
+      )
+
+      result = described_class.call(user: user, transaction: txn, create_alias: true)
+      expect(result).to be_success
+      expect(party.party_aliases.where(alias_name: "Jane D Doe").exists?).to be(true)
+      expect(party.party_aliases.where(alias_name: "@janeddoe").exists?).to be(false)
+    end
+
+    it "creates proposed alias for newly submitted party when payer is changed during confirmation" do
+      party2 = create(:party, user: user, display_name: "Robert Smith")
+      txn = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "tenant_receipt",
+        status: "matched",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 125_000,
+        occurred_on: Date.new(2026, 3, 24),
+        payment_method: "venmo",
+        payer_name: "Bob Smith",
+        payer_username: "@bobsmith"
+      )
+
+      result = described_class.call(
+        user: user,
+        transaction: txn,
+        params: { matched_party_id: party2.id },
+        create_alias: true,
+        requested_alias: "Bob Smith"
+      )
+
+      expect(result).to be_success
+      expect(party2.party_aliases.where(alias_name: "Bob Smith").exists?).to be(true)
+      expect(party.party_aliases.where(alias_name: "Bob Smith").exists?).to be(false)
+    end
+
+    it "does not create alias if requested_alias does not match proposed alias for the selected party" do
+      party2 = create(:party, user: user, display_name: "Robert Smith")
+      create(:party_alias, party: party2, alias_name: "Bob Smith") # Bob Smith already exists
+
+      txn = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "tenant_receipt",
+        status: "matched",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 125_000,
+        occurred_on: Date.new(2026, 3, 24),
+        payment_method: "venmo",
+        payer_name: "Bob Smith",
+        payer_username: "@bobsmith"
+      )
+
+      # UI requested "Bob Smith", but party2 proposed_alias_for is "@bobsmith"
+      result = described_class.call(
+        user: user,
+        transaction: txn,
+        params: { matched_party_id: party2.id },
+        create_alias: true,
+        requested_alias: "Stale Alias"
+      )
+
+      expect(result).to be_success
+      expect(party2.party_aliases.where(alias_name: "@bobsmith").exists?).to be(false)
     end
   end
 
@@ -455,15 +625,43 @@ RSpec.describe ImportedTransactions::ConfirmService do
     end
 
     it "rescues RecordNotUnique and RecordInvalid during confirmation" do
-      allow(transaction).to receive(:update!).and_raise(ActiveRecord::RecordNotUnique, "Unique violation")
+      allow(transaction).to receive(:save!).and_raise(ActiveRecord::RecordNotUnique, "Unique violation")
       res_dup = described_class.call(user: user, transaction: transaction)
       expect(res_dup).to be_failure
       expect(res_dup.failure.code).to eq(:duplicate)
 
-      allow(transaction).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(transaction))
-      res_inv = described_class.call(user: user, transaction: transaction)
+      txn2 = create(
+        :imported_transaction,
+        user: user,
+        source_document: source_document,
+        transaction_kind: "tenant_receipt",
+        status: "matched",
+        matched_party: party,
+        matched_tenancy: tenancy,
+        amount_cents: 125_000,
+        occurred_on: Date.new(2026, 3, 24),
+        payment_method: "zelle"
+      )
+      allow(txn2).to receive(:save!).and_raise(ActiveRecord::RecordInvalid.new(txn2))
+      res_inv = described_class.call(user: user, transaction: txn2)
       expect(res_inv).to be_failure
       expect(res_inv.failure.code).to eq(:validation_error)
+    end
+
+    it "rejects confirmation when submitted lock_version is stale" do
+      # Transaction updated in another session, advancing lock_version
+      transaction.update!(amount_cents: 150_000)
+      expect(transaction.lock_version).to eq(1)
+
+      res = described_class.call(
+        user: user,
+        transaction: transaction,
+        params: { lock_version: 0 }
+      )
+
+      expect(res).to be_failure
+      expect(res.failure.code).to eq(:conflict)
+      expect(res.failure.error).to include("updated in another session")
     end
   end
 end

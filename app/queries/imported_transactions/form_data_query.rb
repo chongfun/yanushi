@@ -10,8 +10,8 @@ module ImportedTransactions
     end
 
     def call
-      parties = user.parties.order(:display_name)
-      tenancies = user.tenancies.includes(rentable_unit: :property).distinct
+      parties = user.parties.includes(:party_aliases).order(:display_name)
+      tenancies = user.tenancies.includes(:property, :rentable_unit).distinct
       p_t_map = party_tenancies_map
       t_p_map = tenancy_parties_map
 

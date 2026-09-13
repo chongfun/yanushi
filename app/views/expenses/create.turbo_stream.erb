@@ -1,0 +1,15 @@
+<%= turbo_stream.action "close_modal", "modal-frame" %>
+
+<%= turbo_stream.append "flash-messages",
+                        partial: "shared/toast",
+                        locals: { type: :notice, message: "Expense was successfully created." } %>
+
+<% if @nested_property.present? %>
+  <%= turbo_stream.replace "property_summary",
+                           partial: "properties/summary",
+                           locals: { security_deposits_held_cents: @security_deposits_held_cents, ytd_summary: @ytd_summary } %>
+
+  <%= turbo_stream.replace "property_recent_activity",
+                           partial: "properties/recent_activity",
+                           locals: { property: @nested_property, recent_activity: @recent_activity } %>
+<% end %>

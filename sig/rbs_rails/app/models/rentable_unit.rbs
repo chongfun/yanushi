@@ -44,166 +44,6 @@ class ::RentableUnit < ::ApplicationRecord
 
     def id_for_database: () -> ::Integer
 
-    def property_id: () -> ::Integer
-
-    def property_id=: (::Integer) -> ::Integer
-
-    def property_id?: () -> bool
-
-    def property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def property_id_change: () -> [ ::Integer?, ::Integer? ]
-
-    def property_id_will_change!: () -> void
-
-    def property_id_was: () -> ::Integer?
-
-    def property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def property_id_previous_change: () -> ::Array[::Integer?]?
-
-    def property_id_previously_was: () -> ::Integer?
-
-    def property_id_before_last_save: () -> ::Integer?
-
-    def property_id_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def property_id_in_database: () -> ::Integer?
-
-    def saved_change_to_property_id: () -> ::Array[::Integer?]?
-
-    def saved_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_property_id!: () -> void
-
-    def clear_property_id_change: () -> void
-
-    def property_id_before_type_cast: () -> ::Integer
-
-    def property_id_for_database: () -> ::Integer
-
-    def name: () -> ::String
-
-    def name=: (::String) -> ::String
-
-    def name?: () -> bool
-
-    def name_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def name_change: () -> [ ::String?, ::String? ]
-
-    def name_will_change!: () -> void
-
-    def name_was: () -> ::String?
-
-    def name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def name_previous_change: () -> ::Array[::String?]?
-
-    def name_previously_was: () -> ::String?
-
-    def name_before_last_save: () -> ::String?
-
-    def name_change_to_be_saved: () -> ::Array[::String?]?
-
-    def name_in_database: () -> ::String?
-
-    def saved_change_to_name: () -> ::Array[::String?]?
-
-    def saved_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_name!: () -> void
-
-    def clear_name_change: () -> void
-
-    def name_before_type_cast: () -> ::String
-
-    def name_for_database: () -> ::String
-
-    def unit_identifier: () -> ::String?
-
-    def unit_identifier=: (::String?) -> ::String?
-
-    def unit_identifier?: () -> bool
-
-    def unit_identifier_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def unit_identifier_change: () -> [ ::String?, ::String? ]
-
-    def unit_identifier_will_change!: () -> void
-
-    def unit_identifier_was: () -> ::String?
-
-    def unit_identifier_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def unit_identifier_previous_change: () -> ::Array[::String?]?
-
-    def unit_identifier_previously_was: () -> ::String?
-
-    def unit_identifier_before_last_save: () -> ::String?
-
-    def unit_identifier_change_to_be_saved: () -> ::Array[::String?]?
-
-    def unit_identifier_in_database: () -> ::String?
-
-    def saved_change_to_unit_identifier: () -> ::Array[::String?]?
-
-    def saved_change_to_unit_identifier?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_unit_identifier?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_unit_identifier!: () -> void
-
-    def clear_unit_identifier_change: () -> void
-
-    def unit_identifier_before_type_cast: () -> ::String?
-
-    def unit_identifier_for_database: () -> ::String?
-
-    def square_footage: () -> ::Integer?
-
-    def square_footage=: (::Integer?) -> ::Integer?
-
-    def square_footage?: () -> bool
-
-    def square_footage_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def square_footage_change: () -> [ ::Integer?, ::Integer? ]
-
-    def square_footage_will_change!: () -> void
-
-    def square_footage_was: () -> ::Integer?
-
-    def square_footage_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def square_footage_previous_change: () -> ::Array[::Integer?]?
-
-    def square_footage_previously_was: () -> ::Integer?
-
-    def square_footage_before_last_save: () -> ::Integer?
-
-    def square_footage_change_to_be_saved: () -> ::Array[::Integer?]?
-
-    def square_footage_in_database: () -> ::Integer?
-
-    def saved_change_to_square_footage: () -> ::Array[::Integer?]?
-
-    def saved_change_to_square_footage?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def will_save_change_to_square_footage?: (?from: ::Integer?, ?to: ::Integer?) -> bool
-
-    def restore_square_footage!: () -> void
-
-    def clear_square_footage_change: () -> void
-
-    def square_footage_before_type_cast: () -> ::Integer?
-
-    def square_footage_for_database: () -> ::Integer?
-
     def active: () -> bool
 
     def active=: (bool) -> bool
@@ -283,6 +123,166 @@ class ::RentableUnit < ::ApplicationRecord
     def created_at_before_type_cast: () -> ::Time
 
     def created_at_for_database: () -> ::Time
+
+    def name: () -> ::String
+
+    def name=: (::String) -> ::String
+
+    def name?: () -> bool
+
+    def name_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def name_change: () -> [ ::String?, ::String? ]
+
+    def name_will_change!: () -> void
+
+    def name_was: () -> ::String?
+
+    def name_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def name_previous_change: () -> ::Array[::String?]?
+
+    def name_previously_was: () -> ::String?
+
+    def name_before_last_save: () -> ::String?
+
+    def name_change_to_be_saved: () -> ::Array[::String?]?
+
+    def name_in_database: () -> ::String?
+
+    def saved_change_to_name: () -> ::Array[::String?]?
+
+    def saved_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_name?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_name!: () -> void
+
+    def clear_name_change: () -> void
+
+    def name_before_type_cast: () -> ::String
+
+    def name_for_database: () -> ::String
+
+    def property_id: () -> ::Integer
+
+    def property_id=: (::Integer) -> ::Integer
+
+    def property_id?: () -> bool
+
+    def property_id_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def property_id_change: () -> [ ::Integer?, ::Integer? ]
+
+    def property_id_will_change!: () -> void
+
+    def property_id_was: () -> ::Integer?
+
+    def property_id_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def property_id_previous_change: () -> ::Array[::Integer?]?
+
+    def property_id_previously_was: () -> ::Integer?
+
+    def property_id_before_last_save: () -> ::Integer?
+
+    def property_id_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def property_id_in_database: () -> ::Integer?
+
+    def saved_change_to_property_id: () -> ::Array[::Integer?]?
+
+    def saved_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_property_id?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_property_id!: () -> void
+
+    def clear_property_id_change: () -> void
+
+    def property_id_before_type_cast: () -> ::Integer
+
+    def property_id_for_database: () -> ::Integer
+
+    def square_footage: () -> ::Integer?
+
+    def square_footage=: (::Integer?) -> ::Integer?
+
+    def square_footage?: () -> bool
+
+    def square_footage_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def square_footage_change: () -> [ ::Integer?, ::Integer? ]
+
+    def square_footage_will_change!: () -> void
+
+    def square_footage_was: () -> ::Integer?
+
+    def square_footage_previously_changed?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def square_footage_previous_change: () -> ::Array[::Integer?]?
+
+    def square_footage_previously_was: () -> ::Integer?
+
+    def square_footage_before_last_save: () -> ::Integer?
+
+    def square_footage_change_to_be_saved: () -> ::Array[::Integer?]?
+
+    def square_footage_in_database: () -> ::Integer?
+
+    def saved_change_to_square_footage: () -> ::Array[::Integer?]?
+
+    def saved_change_to_square_footage?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def will_save_change_to_square_footage?: (?from: ::Integer?, ?to: ::Integer?) -> bool
+
+    def restore_square_footage!: () -> void
+
+    def clear_square_footage_change: () -> void
+
+    def square_footage_before_type_cast: () -> ::Integer?
+
+    def square_footage_for_database: () -> ::Integer?
+
+    def unit_identifier: () -> ::String?
+
+    def unit_identifier=: (::String?) -> ::String?
+
+    def unit_identifier?: () -> bool
+
+    def unit_identifier_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def unit_identifier_change: () -> [ ::String?, ::String? ]
+
+    def unit_identifier_will_change!: () -> void
+
+    def unit_identifier_was: () -> ::String?
+
+    def unit_identifier_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def unit_identifier_previous_change: () -> ::Array[::String?]?
+
+    def unit_identifier_previously_was: () -> ::String?
+
+    def unit_identifier_before_last_save: () -> ::String?
+
+    def unit_identifier_change_to_be_saved: () -> ::Array[::String?]?
+
+    def unit_identifier_in_database: () -> ::String?
+
+    def saved_change_to_unit_identifier: () -> ::Array[::String?]?
+
+    def saved_change_to_unit_identifier?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_unit_identifier?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_unit_identifier!: () -> void
+
+    def clear_unit_identifier_change: () -> void
+
+    def unit_identifier_before_type_cast: () -> ::String?
+
+    def unit_identifier_for_database: () -> ::String?
 
     def updated_at: () -> ::ActiveSupport::TimeWithZone
 

@@ -12,17 +12,31 @@ module SourceDocuments
     def call
       return failure("Document was not found.", :not_found) unless document.user_id == user.id
 
-      document.transaction do
+      deleted_document_id = document.id
+      cascaded_txn_ids = [] # : Array[Integer]
+
+      res = document.transaction do
         document.lock!
         txns = document.imported_transactions.lock("FOR UPDATE").to_a
 
         if txns.any?(&:confirmed?)
-          return failure("Cannot delete document with confirmed transactions", :immutable)
+          next failure("Cannot delete document with confirmed transactions", :immutable)
         end
 
+        cascaded_txn_ids = txns.map(&:id)
         document.destroy!
+        user.increment_inbox_revision!
         success(document)
       end
+
+      if res.success?
+        ImportedTransactions::InboxBroadcastService.call(
+          user: user,
+          deleted_document_id: deleted_document_id,
+          deleted_transaction_ids: cascaded_txn_ids
+        )
+      end
+      res
     rescue ActiveRecord::RecordNotDestroyed => e
       failure(e.record.errors.full_messages.to_sentence.presence || "Cannot delete document", :destroy_failed)
     end

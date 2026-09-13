@@ -8,7 +8,7 @@ module TaxReporting
 
     def self.parse(raw_value, default: Date.current.year)
       if raw_value.blank?
-        return new(default)
+        return default ? new(default) : nil
       end
 
       if raw_value.is_a?(TaxYear)

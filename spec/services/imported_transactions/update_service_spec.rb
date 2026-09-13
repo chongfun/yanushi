@@ -254,4 +254,42 @@ RSpec.describe ImportedTransactions::UpdateService do
     expect(txn.status).to eq("unmatched")
     expect(txn.matched_party).to eq(party)
   end
+
+  it "rejects update when submitted lock_version is stale" do
+    txn = create(
+      :imported_transaction,
+      user: user,
+      source_document: source_document,
+      status: "unmatched",
+      amount_cents: 100_000
+    )
+    txn.update!(amount_cents: 150_000)
+    expect(txn.lock_version).to eq(1)
+
+    result = described_class.call(
+      user: user,
+      transaction: txn,
+      params: { amount: "200.00", lock_version: 0 }
+    )
+
+    expect(result).to be_failure
+    expect(result.failure.code).to eq(:conflict)
+    expect(result.failure.error).to include("updated in another session")
+  end
+
+  it "returns :gone failure when record is deleted from DB before lock acquisition" do
+    txn = create(:imported_transaction, user: user, source_document: source_document, status: "unmatched")
+    txn_id = txn.id
+    ImportedTransaction.where(id: txn_id).delete_all
+
+    result = described_class.call(
+      user: user,
+      transaction: txn,
+      params: { amount: "200.00" }
+    )
+
+    expect(result).to be_failure
+    expect(result.failure.code).to eq(:gone)
+    expect(result.failure.error).to include("not found")
+  end
 end

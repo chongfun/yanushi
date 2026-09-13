@@ -1,8 +1,19 @@
 Rails.application.routes.draw do
   root "dashboards#index"
-  get "dashboards/index"
+  get "dashboards/index", to: redirect("/", status: 301)
+
+  get "portfolio", to: "portfolio#show", as: :portfolio
+  get "money", to: "money#show", as: :money
+  get "inbox", to: "imported_transactions#index", as: :inbox
+  get "reports", to: "reports#show", as: :reports
+  get "search", to: "search#show", as: :search
 
   resources :properties do
+    scope module: :properties do
+      resources :tenancies, only: :index
+      resource :activity, only: :show
+      resource :tax, only: :show
+    end
     resources :rentable_units
     resources :expenses, only: %i[new create]
     resources :tax_profiles, controller: "property_tax_profiles", only: %i[new create edit update]
@@ -17,6 +28,9 @@ Rails.application.routes.draw do
   resources :parties
 
   resources :tenancies do
+    scope module: :tenancies do
+      resource :agreement, only: :show
+    end
     resources :receipts, only: %i[new create]
     resources :charges, only: %i[new create]
     resources :tenancy_parties, only: %i[new create edit update destroy]

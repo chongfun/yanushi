@@ -1,0 +1,14 @@
+module Tenancies
+  class AgreementsController < ApplicationController
+    @tenancy: Tenancy
+    @current_rent_term: RentTerm?
+    @security_deposit_held_cents: Integer
+    @balance_cents: Integer
+
+    def show: () -> void
+
+    private
+
+    def set_tenancy: () -> Tenancy
+  end
+end

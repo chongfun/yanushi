@@ -1,0 +1,58 @@
+<%= render "imported_transactions/count_streams",
+           review_count: @review_count,
+           processing_count: @processing_count,
+           failed_count: @failed_count,
+           history_count: @history_count,
+           inbox_revision: @inbox_revision %>
+
+<% if @transaction.present? %>
+  <%= turbo_stream.replace "imported_transaction_#{@transaction.id}",
+                           partial: "imported_transactions/review_row",
+                           locals: { transaction: @transaction, selected: true } %>
+
+  <%= turbo_stream.replace "inbox_review",
+                           partial: "imported_transactions/review_detail",
+                           locals: {
+                             transaction: @transaction,
+                             review_context: :inbox,
+                             parties: @parties,
+                             tenancies: @tenancies,
+                             party_tenancies_map: @party_tenancies_map,
+                             tenancy_parties_map: @tenancy_parties_map,
+                             processing_count: @processing_count,
+                             failed_count: @failed_count,
+                             inbox_revision: @inbox_revision,
+                             review_count: @review_count
+                           } %>
+<% elsif @next_transaction.present? %>
+  <%= turbo_stream.replace "inbox_review_queue_list",
+                           partial: "imported_transactions/review_list",
+                           locals: { transactions: @reviewable_transactions, selected_transaction: @next_transaction, total_count: @review_count } %>
+
+  <%= turbo_stream.replace "inbox_review",
+                           partial: "imported_transactions/review_detail",
+                           locals: {
+                             transaction: @next_transaction,
+                             review_context: :inbox,
+                             parties: @parties,
+                             tenancies: @tenancies,
+                             party_tenancies_map: @party_tenancies_map,
+                             tenancy_parties_map: @tenancy_parties_map,
+                             processing_count: @processing_count,
+                             failed_count: @failed_count,
+                             inbox_revision: @inbox_revision,
+                             review_count: @review_count,
+                             focus_on_connect: true
+                           } %>
+<% else %>
+  <%= render "imported_transactions/caught_up_streams",
+             processing_count: @processing_count,
+             failed_count: @failed_count %>
+<% end %>
+
+<%= turbo_stream.append "flash-messages",
+                        partial: "shared/toast",
+                        locals: { type: :notice, message: (@notice_message || "Transaction record updated successfully.") } %>
+
+<%# Last on purpose: tells the originating tab this mutation has fully rendered %>
+<%= turbo_stream.action "inbox_settle", "imported_transaction_#{@settled_transaction_id}" %>

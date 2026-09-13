@@ -24,6 +24,10 @@ class User < ApplicationRecord
     self
   end
 
+  def increment_inbox_revision!
+    increment!(:inbox_revision)
+  end
+
   private
 
     def provision_chart_of_accounts

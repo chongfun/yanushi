@@ -1,0 +1,41 @@
+<div class="max-w-5xl">
+  <%= render "properties/header", current_tab: :tax %>
+
+  <!-- Year selector: GET form -->
+  <%= form_with url: property_tax_path(@property), method: :get, data: { controller: "autosubmit" }, class: "mb-6" do |f| %>
+    <%= f.label :year, "Tax year", class: "yn-label", for: "tax-year" %>
+    <%= f.select :year,
+          options_for_select(@active_years, @year),
+          {},
+          class: "yn-select w-32",
+          id: "tax-year",
+          data: { action: "change->autosubmit#submit" } %>
+  <% end %>
+
+  <% if @status.state == :needs_profile %>
+    <div class="yn-alert yn-alert-warn max-w-2xl flex flex-wrap items-center justify-between gap-3">
+      <span>No tax profile exists for <%= @year %>, so Schedule E can’t be prepared.</span>
+      <%= link_to "Set up #{@year} tax profile", new_property_tax_profile_path(@property, tax_year: @year), class: "yn-btn yn-btn-primary yn-btn-sm" %>
+    </div>
+  <% else %>
+    <div class="yn-surface divide-y divide-stone-200 max-w-2xl">
+      <!-- Profile row -->
+      <div class="flex items-center gap-4 px-4 py-3.5">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium m-0">Tax profile</p>
+          <p class="text-sm text-stone-500 m-0">
+            <%= @tax_profile.schedule_e_property_type.humanize %>
+            <% if @tax_profile.other_description.present? %>
+              (<%= @tax_profile.other_description %>)
+            <% end %>
+            &middot; Tax year <%= @year %>
+          </p>
+        </div>
+        <%= link_to "Edit profile", edit_property_tax_profile_path(@property, @tax_profile, year: @year), class: "yn-link text-sm whitespace-nowrap" %>
+      </div>
+
+      <!-- Readiness row: shared status partial -->
+      <%= render "reports/property_status", status: @status, year: @year, variant: :property_tax_row, pdf_available: @pdf_available %>
+    </div>
+  <% end %>
+</div>

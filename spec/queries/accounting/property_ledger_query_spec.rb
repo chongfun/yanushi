@@ -238,5 +238,34 @@ RSpec.describe Accounting::PropertyLedgerQuery do
 
       expect(queries).to be_empty
     end
+
+    it "respects the limit argument and preserves previous-year entries across January 1" do
+      Charges::CreateService.call(
+        tenancy: tenancy,
+        charge_kind: "rent",
+        amount_cents: 200_000,
+        charge_date: Date.new(2025, 12, 15)
+      )
+      4.times do |i|
+        Charges::CreateService.call(
+          tenancy: tenancy,
+          charge_kind: "late_fee",
+          amount_cents: 10_000,
+          charge_date: Date.new(2026, 1, i + 1)
+        )
+      end
+
+      # 5 rows total through 2026-01-10
+      range = Accounting::DateRange.new(through: Date.new(2026, 1, 10))
+      rows = described_class.call(property: property, date_range: range, limit: 3)
+
+      expect(rows.size).to eq(3)
+      expect(rows.first.occurred_on).to eq(Date.new(2026, 1, 4))
+
+      # When limit is 5, December row is included
+      all_5 = described_class.call(property: property, date_range: range, limit: 5)
+      expect(all_5.size).to eq(5)
+      expect(all_5.last.occurred_on).to eq(Date.new(2025, 12, 15))
+    end
   end
 end

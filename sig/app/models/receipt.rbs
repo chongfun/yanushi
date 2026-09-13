@@ -11,8 +11,11 @@ class Receipt < ApplicationRecord
   def superseded?: () -> bool
   def active?: () -> bool
 
+  attr_accessor raw_amount: String?
   def amount: () -> BigDecimal?
   def amount=: ((BigDecimal | Numeric | String | nil) val) -> void
+  def formatted_amount: () -> String?
+  def amount_cents=: (Integer?) -> Integer?
 
   def balance_cents_as_of: (?as_of: Date) -> Integer
   def balance_as_of: (?as_of: Date) -> BigDecimal

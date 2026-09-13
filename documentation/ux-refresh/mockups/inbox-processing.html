@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inbox processing — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 4 REFERENCE — Inbox, Processing & failed view
+  (/inbox?view=processing).
+
+  Source: SourceDocument records (status: processing | failed). Successful
+  documents do NOT appear here — their transactions live in Needs review /
+  History. Failures sort above in-flight processing.
+
+  Row DOM IDs (#source_document_<id>) are broadcast targets: when the
+  background IngestSourceDocumentJob finishes, a Turbo Stream broadcast
+  replaces the row (processing → done/failed) and refreshes
+  #sidebar_inbox_badge, #drawer_inbox_badge, #mobile_inbox_badge, and
+  #inbox_tab_counts. Page must be correct on plain refresh regardless.
+
+  Retry → POST retry_source_document_path. Delete allowed only while no
+  confirmed transactions exist (server-enforced).
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-6xl">
+
+      <header class="mb-6">
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <h1 class="text-2xl font-semibold tracking-tight">Inbox</h1>
+          <a href="#" class="yn-btn yn-btn-primary">Upload statement</a>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Inbox views">
+          <a href="#" class="yn-tab">Needs review <span class="yn-count">3</span></a>
+          <a href="#" class="yn-tab" aria-current="page">Processing &amp; failed <span class="yn-count">1</span></a>
+          <a href="#" class="yn-tab">History <span class="yn-count yn-count-neutral">128</span></a>
+        </nav>
+      </header>
+
+      <div class="yn-surface divide-y divide-stone-200 max-w-3xl">
+
+        <!-- Failed — always listed first -->
+        <div class="px-4 py-3.5" id="source_document_87">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-sm font-medium m-0">chase_statement_aug.pdf</p>
+              <p class="text-sm m-0 mt-0.5">
+                <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-danger"></span>Failed</span>
+                <span class="text-stone-500"> — Multi-page statement PDFs are not supported</span>
+              </p>
+              <p class="text-[13px] text-stone-500 m-0 mt-0.5">Uploaded Aug 22, 2:14 PM</p>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button class="yn-btn yn-btn-secondary yn-btn-sm">Retry</button>
+              <button class="yn-btn yn-btn-ghost yn-btn-sm text-red-700">Delete…</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Processing — restrained inline indicator, no skeletons -->
+        <div class="px-4 py-3.5" id="source_document_88">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-sm font-medium m-0">venmo_receipt_aug23.pdf</p>
+              <p class="text-sm m-0 mt-0.5">
+                <span class="yn-status yn-status-sm">
+                  <svg class="animate-spin w-3.5 h-3.5 text-stone-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" opacity="0.25"/>
+                    <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  Processing…
+                </span>
+              </p>
+              <p class="text-[13px] text-stone-500 m-0 mt-0.5">Uploaded just now</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Empty state (nothing processing, nothing failed):
+      <p class="text-sm text-stone-500 mt-2">
+        <span class="yn-status"><span class="yn-dot yn-dot-ok"></span>No uploads in flight and no failures.</span>
+      </p>
+      -->
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

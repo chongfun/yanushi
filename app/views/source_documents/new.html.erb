@@ -1,64 +1,39 @@
-<% content_for :title, "Upload Source Document - Yanushi" %>
+<% content_for :title, "Upload statement" %>
 
-<% content_for :breadcrumbs do %>
-  <li><%= link_to "Imported Transactions", imported_transactions_path %></li>
-  <li>Upload Document</li>
-<% end %>
+<div class="max-w-2xl">
+  <%= render "shared/page_header",
+        eyebrow: link_to("Inbox", inbox_path, class: "hover:text-stone-700 no-underline text-inherit"),
+        title: "Upload statement",
+        meta: "Yanushi reads the transactions out of the PDF, skips files it has already seen, and matches payments to your tenancies." %>
 
-<div class="max-w-2xl mx-auto mt-8">
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <h2 class="card-title text-2xl font-bold text-primary mb-2">Ingest Source Document</h2>
-      <p class="text-sm text-base-content/70 mb-6">
-        Upload a Chase Zelle receipt, Venmo receipt, or monthly Chase checking statement PDF. The system will automatically parse transactions, extract metadata, and match them to your tenants.
-      </p>
+  <div class="yn-surface p-6">
+    <%= form_with(model: @source_document, data: { turbo: false }, class: "space-y-5") do |f| %>
+      <div>
+        <%= f.label :pdf_file, "Statement or receipt PDF", class: "yn-label", for: "source_document_pdf_file" %>
+        <%= f.file_field :pdf_file, accept: "application/pdf", id: "source_document_pdf_file",
+              class: "yn-input file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer",
+              "aria-describedby": "source_document_pdf_hint" %>
+        <p id="source_document_pdf_hint" class="yn-hint">PDF only. Processing runs in the background; the Inbox updates on its own when it finishes.</p>
+      </div>
 
-      <%= form_with(model: @source_document, local: true, data: { turbo: false }, class: "space-y-6") do |f| %>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text font-semibold">Select Document PDF</span>
-            <span class="label-text-alt text-base-content/50">PDF format</span>
-          </label>
-          <%= f.file_field :pdf_file, accept: "application/pdf", class: "file-input file-input-bordered file-input-primary w-full" %>
-        </div>
-
-        <div class="space-y-4">
-          <h3 class="text-xs font-bold text-base-content/60 uppercase tracking-wider">Supported Documents & Formats</h3>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Chase Zelle / P2P -->
-            <div class="card bg-base-200/50 border border-base-300 rounded-xl p-4 hover:border-primary/30 transition-all duration-300">
-              <div class="flex items-center gap-2 mb-2">
-                 <span class="badge badge-primary badge-sm font-semibold">Chase</span>
-                <span class="text-sm font-bold text-base-content">Zelle & Statements</span>
-              </div>
-              <ul class="text-xs text-base-content/70 space-y-1 list-disc list-inside">
-                <li>Single-payment PDF Zelle receipts</li>
-                <li>Multi-page checking account statements</li>
-                <li>Extracts Zelle & P2P ACH deposits</li>
-              </ul>
-            </div>
-
-            <!-- Venmo Receipts -->
-            <div class="card bg-base-200/50 border border-base-300 rounded-xl p-4 hover:border-secondary/30 transition-all duration-300">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="badge badge-secondary badge-sm font-semibold">Venmo</span>
-                <span class="text-sm font-bold text-base-content">Venmo Receipts</span>
-              </div>
-              <ul class="text-xs text-base-content/70 space-y-1 list-disc list-inside">
-                <li>"Transaction details" pages saved as PDF</li>
-                <li>Single-payment receipts</li>
-                <li>Resolves by name or @username handle</li>
-              </ul>
-            </div>
+      <section aria-labelledby="supported-heading">
+        <h2 id="supported-heading" class="text-sm font-semibold mb-2">What you can upload</h2>
+        <dl class="text-sm divide-y divide-stone-200 border-y border-stone-200">
+          <div class="py-2.5">
+            <dt class="font-medium text-stone-900">Chase</dt>
+            <dd class="m-0 text-stone-500">Single Zelle receipts, and monthly checking statements. Zelle and peer-to-peer ACH deposits are extracted.</dd>
           </div>
-        </div>
+          <div class="py-2.5">
+            <dt class="font-medium text-stone-900">Venmo</dt>
+            <dd class="m-0 text-stone-500">Transaction detail pages saved as PDF. Payers are matched by name or @username.</dd>
+          </div>
+        </dl>
+      </section>
 
-        <div class="card-actions justify-end mt-6 gap-3">
-          <%= link_to "Cancel", imported_transactions_path, class: "btn btn-ghost" %>
-          <%= f.submit "Upload & Parse", class: "btn btn-primary px-6" %>
-        </div>
-      <% end %>
-    </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <%= link_to "Cancel", inbox_path, class: "yn-btn yn-btn-ghost" %>
+        <%= f.submit "Upload statement", class: "yn-btn yn-btn-primary" %>
+      </div>
+    <% end %>
   </div>
 </div>

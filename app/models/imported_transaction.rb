@@ -1,6 +1,16 @@
 class ImportedTransaction < ApplicationRecord
   KINDS = %w[unknown tenant_receipt security_deposit].freeze
   STATUSES = %w[pending matched unmatched ambiguous confirmed failed].freeze
+  PAYMENT_METHOD_OPTIONS = [
+    [ "All payment methods", "" ],
+    [ "Zelle", "zelle" ],
+    [ "Venmo", "venmo" ],
+    [ "P2P", "p2p" ],
+    [ "Check", "check" ],
+    [ "Cash", "cash" ],
+    [ "Bank transfer", "bank_transfer" ],
+    [ "Other", "other" ]
+  ].freeze
 
   enum :transaction_kind, {
     unknown: "unknown",
@@ -90,7 +100,7 @@ class ImportedTransaction < ApplicationRecord
 
   def confirmable?
     return false if confirmed?
-    return false if matched_party.blank? || matched_tenancy.blank?
+    return false if matched_party_id.blank? || matched_tenancy_id.blank?
     cents = amount_cents
     return false if cents.nil? || cents <= 0
     return false if occurred_on.blank?
@@ -99,7 +109,8 @@ class ImportedTransaction < ApplicationRecord
     if tenant_receipt?
       return false if payment_method.blank?
     elsif security_deposit?
-      return false if matched_tenancy&.security_deposit.blank?
+      t = matched_tenancy || (matched_tenancy_id ? Tenancy.find_by(id: matched_tenancy_id) : nil)
+      return false if t&.security_deposit.blank?
     end
 
     true
@@ -111,6 +122,16 @@ class ImportedTransaction < ApplicationRecord
 
   def accounting_user
     user
+  end
+
+  def proposed_alias_for(party = matched_party)
+    return unless party
+
+    if (name = payer_name) && party.alias_candidate?(name)
+      name
+    elsif (username = payer_username) && party.alias_candidate?(username)
+      username
+    end
   end
 
   private

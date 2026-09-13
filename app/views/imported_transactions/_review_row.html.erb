@@ -1,0 +1,12 @@
+<% selected_class = selected ? "border-l-4 border-stone-900 bg-stone-100" : "border-l-4 border-transparent hover:bg-stone-50" %>
+<%= link_to imported_transaction_path(transaction),
+            id: "imported_transaction_#{transaction.id}",
+            aria: { current: (selected ? "true" : nil) },
+            data: {
+              responsive_frame_target: "link",
+              turbo_frame: "_top",
+              action: "click->responsive-frame#select"
+            },
+            class: "block px-4 py-3 no-underline text-inherit #{selected_class}" do %>
+  <%= render "imported_transactions/review_row_content", transaction: transaction %>
+<% end %>

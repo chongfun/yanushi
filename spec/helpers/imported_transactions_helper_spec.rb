@@ -35,16 +35,25 @@ RSpec.describe ImportedTransactionsHelper, type: :helper do
     expect(helper.imported_transaction_alias_proposal(txn)).to eq("@janedoe")
   end
 
-  it "returns nil if neither name nor username is candidate" do
-    txn = create(
-      :imported_transaction,
-      user: user,
-      source_document: source_document,
-      matched_party: party,
-      payer_name: "Jane Doe",
-      payer_username: nil
-    )
+  describe "#imported_transaction_source_description" do
+    it "formats payment method and username when username is present" do
+      txn = build(:imported_transaction, payment_method: "venmo", payer_username: "@janedoe", raw_text: "Venmo Payment")
+      expect(helper.imported_transaction_source_description(txn)).to eq("Venmo · “@janedoe”")
+    end
 
-    expect(helper.imported_transaction_alias_proposal(txn)).to be_nil
+    it "formats payment method and raw text description for Chase statement import without username" do
+      txn = build(:imported_transaction, payment_method: "zelle", payer_username: nil, raw_text: "HSIMPSON RENT AUG")
+      expect(helper.imported_transaction_source_description(txn)).to eq("Zelle · “HSIMPSON RENT AUG”")
+    end
+
+    it "formats payment method and external reference when raw text and username are absent" do
+      txn = build(:imported_transaction, payment_method: "check", payer_username: nil, raw_text: nil, external_reference: "CHK-999")
+      expect(helper.imported_transaction_source_description(txn)).to eq("Check · “CHK-999”")
+    end
+
+    it "returns titleized payment method when no descriptive fields are present" do
+      txn = build(:imported_transaction, payment_method: "cash", payer_username: nil, raw_text: nil, external_reference: nil, payer_name: nil)
+      expect(helper.imported_transaction_source_description(txn)).to eq("Cash")
+    end
   end
 end

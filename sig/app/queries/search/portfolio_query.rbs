@@ -1,0 +1,48 @@
+module Search
+  class PortfolioQuery
+    MIN_QUERY_LENGTH: Integer
+    GROUP_LIMIT: Integer
+
+    class Group < Data
+      attr_reader key: Symbol
+      attr_reader records: Array[untyped]
+      attr_reader total_count: Integer
+
+      def self.new: (
+        key: Symbol,
+        records: Array[untyped],
+        total_count: Integer
+      ) -> Group
+    end
+
+    class Result < Data
+      attr_reader query: String
+      attr_reader groups: Array[Group]
+      attr_reader total_count: Integer
+
+      def self.new: (
+        query: String,
+        groups: Array[Group],
+        total_count: Integer
+      ) -> Result
+    end
+
+    def self.call: (user: User, query: String?, ?limit: (Integer | String)?) -> Result
+    def initialize: (user: User) -> void
+    def call: (query: String?, ?limit: (Integer | String)?) -> Result
+
+    private
+
+    attr_reader user: User
+
+    def like_pattern: (String term) -> String
+    def group: (Symbol key, untyped scope, order: untyped, limit: Integer) -> Group
+    def preload: (Symbol key, Array[untyped] records) -> void
+    def properties_scope: (String pattern) -> untyped
+    def rentable_units_scope: (String pattern) -> untyped
+    def tenancies_scope: (String pattern) -> untyped
+    def parties_scope: (String pattern) -> untyped
+    def owned_units: () -> untyped
+    def owned_tenancies: () -> untyped
+  end
+end

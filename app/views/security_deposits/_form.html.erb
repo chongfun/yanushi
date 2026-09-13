@@ -1,0 +1,45 @@
+<%# Deposit requirement form for set-up and edit. Locals: security_deposit, submit_label, cancel_path %>
+<% error_for = ->(*attrs) { attrs.flat_map { |a| security_deposit.errors[a] }.first } %>
+<%= form_with model: security_deposit, url: tenancy_security_deposit_path(@tenancy),
+              method: (security_deposit.persisted? ? :patch : :post), class: "space-y-4" do |f| %>
+  <% if security_deposit.errors.any? %>
+    <div class="yn-alert yn-alert-danger" role="alert">
+      Deposit requirement couldn't be saved — <%= pluralize(security_deposit.errors.count, "field") %> needs a fix.
+      <ul class="list-disc pl-5 mt-1 text-sm">
+        <% security_deposit.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <% amount_error = error_for.call(:required_amount_cents, :required_amount) %>
+    <%= f.label :required_amount, "Required deposit amount", class: "yn-label", for: "security_deposit_required_amount" %>
+    <%= f.number_field :required_amount, step: "0.01", min: "0.01", placeholder: "2000.00", inputmode: "decimal",
+          value: (security_deposit.required_amount_cents&.positive? ? sprintf("%.2f", security_deposit.required_amount_cents / 100.0) : nil),
+          class: "yn-input tabular-nums #{'yn-field-invalid' if amount_error}", id: "security_deposit_required_amount",
+          autofocus: (security_deposit.errors.empty? ? true : nil),
+          "aria-invalid": amount_error ? "true" : nil,
+          "aria-describedby": amount_error ? "security_deposit_required_amount_error" : nil %>
+    <% if amount_error %>
+      <p id="security_deposit_required_amount_error" class="yn-error-text"><%= amount_error %></p>
+    <% end %>
+  </div>
+
+  <div>
+    <% due_error = error_for.call(:due_on) %>
+    <%= f.label :due_on, "Due on", class: "yn-label", for: "security_deposit_due_on" %>
+    <%= f.date_field :due_on, value: security_deposit.due_on, class: "yn-input #{'yn-field-invalid' if due_error}", id: "security_deposit_due_on",
+          "aria-invalid": due_error ? "true" : nil,
+          "aria-describedby": due_error ? "security_deposit_due_on_error" : nil %>
+    <% if due_error %>
+      <p id="security_deposit_due_on_error" class="yn-error-text"><%= due_error %></p>
+    <% end %>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-2">
+    <%= link_to "Cancel", cancel_path, class: "yn-btn yn-btn-ghost" %>
+    <%= f.submit submit_label, class: "yn-btn yn-btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,6 @@
+<%# One property result. Local: property %>
+<li class="py-2.5">
+  <%= link_to property.address, property_path(property),
+        class: "text-sm font-medium text-stone-900 no-underline hover:underline" %>
+  <p class="text-[13px] text-stone-500"><%= property.asset_type.humanize %></p>
+</li>

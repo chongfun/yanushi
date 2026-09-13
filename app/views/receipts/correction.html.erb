@@ -1,76 +1,145 @@
-<div class="max-w-xl mx-auto py-8">
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold">Correct Payment</h1>
-    <p class="text-xs text-base-content/60">Restates accounting record and preserves audit history</p>
+<%
+  receipt = @receipt
+  replacement = @replacement_receipt
+  payer_name = receipt.payer_party&.display_name || "Unknown payer"
+  error_for = ->(*attrs) { attrs.flat_map { |a| replacement.errors[a] }.first }
+%>
+<% content_for :title, "Correct receipt" %>
+
+<div class="max-w-xl">
+  <%= render "shared/page_header",
+        eyebrow: capture { %>
+          <%= link_to "Money", money_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Receipts", receipts_path, class: "hover:text-stone-700 no-underline text-inherit" %>
+          <span class="mx-1 text-stone-300">/</span>
+          <%= link_to "Receipt from #{payer_name}", receipt_path(receipt), class: "hover:text-stone-700 no-underline text-inherit" %>
+        <% },
+        title: "Correct receipt" %>
+
+  <div class="yn-alert mb-6" role="status">
+    <span>This keeps the original receipt as a voided record, reverses its ledger postings as of <%= receipt.received_on.strftime("%b %-d, %Y") %>, and creates a replacement receipt with the corrected details.</span>
   </div>
 
-  <div class="alert alert-info mb-6 text-sm">
-    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    <div>
-      <div class="font-bold">Correction Semantics</div>
-      <div>
-        Correcting this payment will retain original Receipt #<%= @receipt.id %> as a voided record, reverse its ledger postings as of <%= @receipt.received_on.strftime("%b %d, %Y") %>, and create an active replacement receipt.
-      </div>
-    </div>
-  </div>
-
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
-      <%= form_with(model: @replacement_receipt, url: correct_receipt_path(@receipt), method: :post, local: true, class: "space-y-4") do |f| %>
-        <% if @replacement_receipt.errors.any? %>
-          <div class="alert alert-error mb-4">
-            <ul>
-              <% @replacement_receipt.errors.full_messages.each do |msg| %>
+  <div class="yn-surface p-6">
+    <%= form_with(model: replacement, url: correct_receipt_path(receipt), method: :post, class: "space-y-4", id: "receipt-correction-form") do |f| %>
+      <% if replacement.errors.any? || flash[:alert].present? %>
+        <div class="yn-alert yn-alert-danger" role="alert">
+          <% if flash[:alert].present? %>
+            <%= flash[:alert] %>
+          <% else %>
+            Correction couldn't be saved — <%= pluralize(replacement.errors.count, "field") %> needs a fix.
+          <% end %>
+          <% if replacement.errors.any? %>
+            <ul class="list-disc pl-5 mt-1 text-sm">
+              <% replacement.errors.full_messages.each do |msg| %>
                 <li><%= msg %></li>
               <% end %>
             </ul>
-          </div>
-        <% end %>
-
-        <div class="form-control w-full">
-          <%= f.label :tenancy_id, "Tenancy / Unit", class: "label font-semibold" %>
-          <%= f.collection_select :tenancy_id, @tenancies, :id, ->(t) { "##{t.id} - #{t.property&.address} (#{t.rentable_unit&.display_name})" }, { selected: @replacement_receipt.tenancy_id }, { class: "select select-bordered w-full", required: true } %>
-        </div>
-
-        <div class="form-control w-full">
-          <%= f.label :payer_party_id, "Payer (Party)", class: "label font-semibold" %>
-          <%= f.collection_select :payer_party_id, @parties, :id, :display_name, { selected: @replacement_receipt.payer_party_id }, { class: "select select-bordered w-full", required: true } %>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="form-control w-full">
-            <%= f.label :amount, "Amount ($)", class: "label font-semibold" %>
-            <%= f.number_field :amount, value: @replacement_receipt.amount, step: "0.01", min: "0.01", class: "input input-bordered w-full", required: true %>
-          </div>
-
-          <div class="form-control w-full">
-            <%= f.label :received_on, "Received Date", class: "label font-semibold" %>
-            <%= f.date_field :received_on, class: "input input-bordered w-full", required: true %>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="form-control w-full">
-            <%= f.label :payment_method, "Payment Method", class: "label font-semibold" %>
-            <%= f.text_field :payment_method, class: "input input-bordered w-full", required: true %>
-          </div>
-
-          <div class="form-control w-full">
-            <%= f.label :external_reference, "External Reference / Txn #", class: "label font-semibold" %>
-            <%= f.text_field :external_reference, class: "input input-bordered w-full" %>
-          </div>
-        </div>
-
-        <div class="form-control w-full">
-          <%= f.label :memo, "Memo", class: "label font-semibold" %>
-          <%= f.text_area :memo, class: "textarea textarea-bordered w-full", rows: 2 %>
-        </div>
-
-        <div class="flex gap-2 pt-4">
-          <%= f.submit "Save Replacement Payment", class: "btn btn-primary flex-1" %>
-          <%= link_to "Cancel", receipt_path(@receipt), class: "btn btn-ghost" %>
+          <% end %>
         </div>
       <% end %>
-    </div>
+
+      <div>
+        <% tenancy_error = error_for.call(:tenancy_id, :tenancy) %>
+        <%= f.label :tenancy_id, "Tenancy", class: "yn-label", for: "receipt_correction_tenancy_id" %>
+        <%= f.collection_select :tenancy_id, @tenancies, :id,
+              ->(t) { [ t.property&.address, t.rentable_unit&.display_name ].compact.join(" · ") },
+              { selected: replacement.tenancy_id },
+              { class: "yn-select #{'yn-field-invalid' if tenancy_error}", id: "receipt_correction_tenancy_id", required: true,
+                "aria-invalid": (tenancy_error ? "true" : nil),
+                "aria-describedby": (tenancy_error ? "receipt-correct-tenancy-error" : nil) } %>
+        <% if tenancy_error %>
+          <p id="receipt-correct-tenancy-error" class="yn-error-text"><%= tenancy_error %></p>
+        <% end %>
+      </div>
+
+      <div>
+        <% payer_error = error_for.call(:payer_party_id, :payer_party) %>
+        <%= f.label :payer_party_id, "Payer", class: "yn-label", for: "receipt_correction_payer_party_id" %>
+        <%= f.collection_select :payer_party_id, @parties, :id, :display_name,
+              { selected: replacement.payer_party_id },
+              { class: "yn-select #{'yn-field-invalid' if payer_error}", id: "receipt_correction_payer_party_id", required: true,
+                "aria-invalid": (payer_error ? "true" : nil),
+                "aria-describedby": (payer_error ? "receipt-correct-payer-error" : nil) } %>
+        <% if payer_error %>
+          <p id="receipt-correct-payer-error" class="yn-error-text"><%= payer_error %></p>
+        <% end %>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <% amount_error = error_for.call(:amount, :amount_cents) %>
+          <%= f.label :amount, "Amount", class: "yn-label", for: "receipt_correction_amount" %>
+          <%= f.text_field :amount, value: replacement.formatted_amount, inputmode: "decimal", placeholder: "0.00",
+                class: "yn-input tabular-nums #{'yn-field-invalid' if amount_error}", id: "receipt_correction_amount", required: true,
+                autofocus: (replacement.errors.empty? ? true : nil),
+                "aria-invalid": (amount_error ? "true" : nil),
+                "aria-describedby": (amount_error ? "receipt-correct-amount-error" : nil) %>
+          <% if amount_error %>
+            <p id="receipt-correct-amount-error" class="yn-error-text"><%= amount_error %></p>
+          <% end %>
+        </div>
+
+        <div>
+          <% date_error = error_for.call(:received_on) %>
+          <%= f.label :received_on, "Received on", class: "yn-label", for: "receipt_correction_received_on" %>
+          <%= f.date_field :received_on,
+                class: "yn-input #{'yn-field-invalid' if date_error}", id: "receipt_correction_received_on", required: true,
+                "aria-invalid": (date_error ? "true" : nil),
+                "aria-describedby": (date_error ? "receipt-correct-date-error" : nil) %>
+          <% if date_error %>
+            <p id="receipt-correct-date-error" class="yn-error-text"><%= date_error %></p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <% method_error = error_for.call(:payment_method) %>
+          <%= f.label :payment_method, "Payment method", class: "yn-label", for: "receipt_correction_payment_method" %>
+          <%= f.text_field :payment_method,
+                class: "yn-input #{'yn-field-invalid' if method_error}", id: "receipt_correction_payment_method", required: true,
+                "aria-invalid": (method_error ? "true" : nil),
+                "aria-describedby": (method_error ? "receipt-correct-method-error" : nil) %>
+          <% if method_error %>
+            <p id="receipt-correct-method-error" class="yn-error-text"><%= method_error %></p>
+          <% end %>
+        </div>
+
+        <div>
+          <% ref_error = error_for.call(:external_reference) %>
+          <%= f.label :external_reference, class: "yn-label", for: "receipt_correction_external_reference" do %>
+            Reference <span class="font-normal text-stone-500">(optional)</span>
+          <% end %>
+          <%= f.text_field :external_reference,
+                class: "yn-input #{'yn-field-invalid' if ref_error}", id: "receipt_correction_external_reference",
+                "aria-invalid": (ref_error ? "true" : nil),
+                "aria-describedby": (ref_error ? "receipt-correct-ref-error" : nil) %>
+          <% if ref_error %>
+            <p id="receipt-correct-ref-error" class="yn-error-text"><%= ref_error %></p>
+          <% end %>
+        </div>
+      </div>
+
+      <div>
+        <% memo_error = error_for.call(:memo) %>
+        <%= f.label :memo, class: "yn-label", for: "receipt_correction_memo" do %>
+          Memo <span class="font-normal text-stone-500">(optional)</span>
+        <% end %>
+        <%= f.text_area :memo, rows: 2,
+              class: "yn-textarea #{'yn-field-invalid' if memo_error}", id: "receipt_correction_memo",
+              "aria-invalid": (memo_error ? "true" : nil),
+              "aria-describedby": (memo_error ? "receipt-correct-memo-error" : nil) %>
+        <% if memo_error %>
+          <p id="receipt-correct-memo-error" class="yn-error-text"><%= memo_error %></p>
+        <% end %>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <%= link_to "Cancel", receipt_path(receipt), class: "yn-btn yn-btn-ghost" %>
+        <%= f.submit "Save correction", class: "yn-btn yn-btn-primary" %>
+      </div>
+    <% end %>
   </div>
 </div>

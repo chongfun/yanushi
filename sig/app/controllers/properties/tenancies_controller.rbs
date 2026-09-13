@@ -1,0 +1,15 @@
+module Properties
+  class TenanciesController < ApplicationController
+    @property: Property
+    @active_tenancies: Array[Tenancy]
+    @upcoming_tenancies: Array[Tenancy]
+    @past_tenancies: Array[Tenancy]
+    @balances: Hash[Integer, Integer]
+
+    def index: () -> void
+
+    private
+
+    def set_property: () -> void
+  end
+end

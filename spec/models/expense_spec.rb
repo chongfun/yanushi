@@ -72,22 +72,39 @@ RSpec.describe Expense, type: :model do
       expect(expense.amount).to eq(125.50)
 
       expense.amount_cents = nil
-      expect(expense.amount).to eq(0)
+      expect(expense.amount).to be_nil
     end
 
-    it "converts amount= to amount_cents" do
+    it "converts amount= to amount_cents and retains raw_amount and formatted_amount" do
       expense = build(:expense)
       expense.amount = "250.75"
       expect(expense.amount_cents).to eq(25_075)
+      expect(expense.amount).to eq(BigDecimal("250.75"))
+      expect(expense.raw_amount).to eq("250.75")
+      expect(expense.formatted_amount).to eq("250.75")
 
       expense.amount = ""
-      expect(expense.amount_cents).to eq(0)
+      expect(expense.amount_cents).to be_nil
+      expect(expense.amount).to be_nil
+      expect(expense.raw_amount).to be_nil
+      expect(expense.formatted_amount).to be_nil
 
       expense.amount = nil
-      expect(expense.amount_cents).to eq(0)
+      expect(expense.amount_cents).to be_nil
+      expect(expense.amount).to be_nil
+      expect(expense.raw_amount).to be_nil
+      expect(expense.formatted_amount).to be_nil
 
       expense.amount = "invalid"
-      expect(expense.amount_cents).to eq(0)
+      expect(expense.amount_cents).to be_nil
+      expect(expense.amount).to be_nil
+      expect(expense.raw_amount).to eq("invalid")
+      expect(expense.formatted_amount).to eq("invalid")
+
+      expense.amount = "1e3"
+      expect(expense.raw_amount).to eq("1e3")
+      expect(expense.formatted_amount).to eq("1e3")
+      expect(expense.amount).to eq(BigDecimal("1000.0"))
     end
   end
 

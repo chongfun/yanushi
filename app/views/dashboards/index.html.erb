@@ -1,69 +1,143 @@
-<div class="flex flex-col gap-6">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">Dashboard</h1>
-  </div>
+<% content_for :title, "Overview" %>
 
-  <% if @properties.empty? %>
-    <div class="alert alert-info shadow-lg">
+<div class="max-w-5xl space-y-10">
+  <%= render "shared/page_header", title: "Overview", meta: Date.current.strftime("%A, %B %-d") %>
+
+  <!-- Needs attention -->
+  <section aria-labelledby="attention-heading">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 id="attention-heading" class="text-sm font-semibold">
+        Needs attention
+        <% if @overview.attention_items.any? %>
+          <span class="yn-count ml-1"><%= @overview.attention_items.size %></span>
+        <% end %>
+      </h2>
+    </div>
+
+    <% if @overview.attention_items.any? %>
+      <div class="yn-surface divide-y divide-stone-200">
+        <% @overview.attention_items.each do |item| %>
+          <%= link_to item.path, class: "flex items-center gap-3 px-4 py-3 no-underline text-inherit hover:bg-stone-50 first:rounded-t-xl last:rounded-b-xl" do %>
+            <span class="yn-dot <%= item.severity == :danger ? 'yn-dot-danger' : 'yn-dot-warn' %> mt-0.5"></span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-stone-900"><%= item.title %></span>
+              <span class="block text-sm text-stone-500"><%= item.description %></span>
+            </span>
+            <span class="text-sm font-medium text-stone-500 whitespace-nowrap">
+              <% if item.kind == :inbox_review %>
+                Open Inbox &rarr;
+              <% elsif item.kind == :balance_due %>
+                Open tenancy &rarr;
+              <% elsif item.kind == :schedule_e_review %>
+                Open Reports &rarr;
+              <% else %>
+                View &rarr;
+              <% end %>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-stone-500 m-0">
+        <%= render "shared/status", text: "Nothing needs attention.", tone: :ok %>
+      </p>
+    <% end %>
+  </section>
+
+  <!-- Portfolio summary -->
+  <section aria-labelledby="summary-heading">
+    <h2 id="summary-heading" class="sr-only">Portfolio summary</h2>
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 border-y border-stone-200 py-4">
       <div>
-        <h3 class="font-bold">No Properties Found</h3>
-        <div class="text-xs">Get started by creating your first property!</div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Properties</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= @overview.portfolio_summary.properties_count %></dd>
       </div>
-      <div class="flex-none">
-        <%= link_to "Add Property", new_property_path, class: "btn btn-sm" %>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Units occupied</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0">
+          <%= @overview.portfolio_summary.occupied_units_count %>
+          <span class="text-sm font-normal text-stone-500">of <%= @overview.portfolio_summary.total_units_count %></span>
+        </dd>
       </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Outstanding balances</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= format_money_cents(@overview.portfolio_summary.outstanding_balances_cents) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wider text-stone-500">Net income, YTD</dt>
+        <dd class="mt-0.5 text-lg font-semibold tabular-nums m-0"><%= signed_money_cents(@overview.portfolio_summary.net_income_cents) %></dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Properties -->
+  <section aria-labelledby="properties-heading">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 id="properties-heading" class="text-sm font-semibold">Properties</h2>
+      <%= link_to "Portfolio →", portfolio_path, class: "yn-link text-sm" %>
     </div>
-  <% else %>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <% @property_summaries.each do |summary| %>
-        <% property = summary[:property] %>
 
-        <div class="card bg-base-100 shadow-xl border border-base-200">
-          <div class="card-body">
-            <h2 class="card-title text-xl mb-4"><%= property.address %></h2>
-            
-            <div class="stats stats-vertical shadow border border-base-200 bg-base-100">
-              <div class="stat">
-                <div class="stat-title">Total Income</div>
-                <div class="stat-value text-success"><%= number_to_currency(summary[:income]) %></div>
-              </div>
-              
-              <div class="stat">
-                <div class="stat-title">Total Expenses</div>
-                <div class="stat-value text-error"><%= number_to_currency(summary[:expenses]) %></div>
-              </div>
-              
-              <div class="stat">
-                <div class="stat-title">Net Income</div>
-                <div class="stat-value <%= summary[:net_income] >= 0 ? 'text-primary' : 'text-error' %>"><%= number_to_currency(summary[:net_income]) %></div>
-              </div>
-            </div>
-
-            <% balances = summary[:tenancy_balances] || summary[:lease_balances] || [] %>
-            <% if balances.any? %>
-              <div class="mt-4 border-t border-base-200 pt-3">
-                <div class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-2">Active Tenancy Balances</div>
-                <div class="space-y-1.5">
-                  <% balances.each do |tb| %>
-                    <% tenancy = tb[:tenancy] || tb[:lease] %>
-                    <% balance = tb[:balance] %>
-                    <div class="flex justify-between items-center text-xs">
-                      <span class="text-base-content/70">Tenancy #<%= tenancy.id %> (<%= tenancy.parties.first&.display_name %>)</span>
-                      <span class="font-bold <%= balance >= 0 ? 'text-success' : 'text-error' %>">
-                        <%= balance >= 0 ? "+" : "" %><%= number_to_currency(balance) %>
-                      </span>
-                    </div>
+    <% if @overview.properties.any? %>
+      <ul class="divide-y divide-stone-200 border-y border-stone-200 list-none m-0 p-0">
+        <% @overview.properties.each do |row| %>
+          <li>
+            <%= link_to property_path(row.property), class: "flex items-center gap-4 py-3 no-underline text-inherit hover:bg-stone-50 px-1" do %>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-medium text-stone-900"><%= row.property.address %></span>
+                <span class="block text-sm text-stone-500">
+                  <% if row.total_units_count.zero? %>
+                    No units yet
+                  <% elsif row.total_units_count == 1 %>
+                    1 unit &middot; <%= row.occupied_units_count == 1 ? "occupied" : "vacant" %>
+                  <% else %>
+                    <%= row.total_units_count %> units &middot; <%= row.occupied_units_count %> occupied, <%= row.total_units_count - row.occupied_units_count %> vacant
                   <% end %>
-                </div>
-              </div>
+                </span>
+              </span>
+              <% if row.balance_cents.positive? %>
+                <span class="text-sm text-stone-500 whitespace-nowrap tabular-nums"><%= format_money_cents(row.balance_cents) %> outstanding</span>
+              <% elsif row.balance_cents.negative? %>
+                <span class="text-sm text-stone-500 whitespace-nowrap tabular-nums"><%= format_money_cents(row.balance_cents.abs) %> credit</span>
+              <% else %>
+                <%= render "shared/status", text: "Settled", tone: :ok, size: :sm, extra_class: "whitespace-nowrap" %>
+              <% end %>
             <% end %>
-            
-            <div class="card-actions justify-end mt-4">
-              <%= link_to "View Property", property, class: "btn btn-outline btn-sm" %>
-            </div>
-          </div>
-        </div>
-      <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= render "shared/empty_state",
+            title: "Add your first property",
+            body: "Yanushi tracks units, tenancies, and finances per property.",
+            action: link_to("Add property", new_property_path, class: "yn-btn yn-btn-primary yn-btn-sm") %>
+    <% end %>
+  </section>
+
+  <!-- Recent activity -->
+  <section aria-labelledby="recent-heading">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 id="recent-heading" class="text-sm font-semibold">Recent activity</h2>
+      <%= link_to "All activity →", money_path, class: "yn-link text-sm" %>
     </div>
-  <% end %>
+
+    <% if @overview.recent_activity.any? %>
+      <%= render layout: "shared/table_scroll", locals: { labelledby: "recent-heading" } do %>
+        <table class="yn-table">
+          <thead class="sr-only">
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Event</th>
+              <th scope="col">Property</th>
+              <th scope="col" class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <%= render partial: "accounting/activity_row", collection: @overview.recent_activity, as: :row, locals: { context: :property, detail: :unit } %>
+          </tbody>
+        </table>
+      <% end %>
+    <% else %>
+      <p class="text-sm text-stone-500 m-0">No activity yet. Receipts, charges, and expenses will appear here as they are recorded.</p>
+    <% end %>
+  </section>
 </div>

@@ -84,6 +84,46 @@ class ::Property < ::ApplicationRecord
 
     def address_for_database: () -> ::String
 
+    def asset_type: () -> ::String
+
+    def asset_type=: (::String | ::Symbol) -> ::String
+
+    def asset_type?: () -> bool
+
+    def asset_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def asset_type_change: () -> [ ::String?, ::String? ]
+
+    def asset_type_will_change!: () -> void
+
+    def asset_type_was: () -> ::String?
+
+    def asset_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def asset_type_previous_change: () -> ::Array[::String?]?
+
+    def asset_type_previously_was: () -> ::String?
+
+    def asset_type_before_last_save: () -> ::String?
+
+    def asset_type_change_to_be_saved: () -> ::Array[::String?]?
+
+    def asset_type_in_database: () -> ::String?
+
+    def saved_change_to_asset_type: () -> ::Array[::String?]?
+
+    def saved_change_to_asset_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def will_save_change_to_asset_type?: (?from: ::String?, ?to: ::String?) -> bool
+
+    def restore_asset_type!: () -> void
+
+    def clear_asset_type_change: () -> void
+
+    def asset_type_before_type_cast: () -> ::String
+
+    def asset_type_for_database: () -> ::String
+
     def created_at: () -> ::ActiveSupport::TimeWithZone
 
     def created_at=: (::ActiveSupport::TimeWithZone) -> ::ActiveSupport::TimeWithZone
@@ -243,46 +283,6 @@ class ::Property < ::ApplicationRecord
     def user_id_before_type_cast: () -> ::Integer
 
     def user_id_for_database: () -> ::Integer
-
-    def asset_type: () -> ::String
-
-    def asset_type=: (::String | ::Symbol) -> ::String
-
-    def asset_type?: () -> bool
-
-    def asset_type_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def asset_type_change: () -> [ ::String?, ::String? ]
-
-    def asset_type_will_change!: () -> void
-
-    def asset_type_was: () -> ::String?
-
-    def asset_type_previously_changed?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def asset_type_previous_change: () -> ::Array[::String?]?
-
-    def asset_type_previously_was: () -> ::String?
-
-    def asset_type_before_last_save: () -> ::String?
-
-    def asset_type_change_to_be_saved: () -> ::Array[::String?]?
-
-    def asset_type_in_database: () -> ::String?
-
-    def saved_change_to_asset_type: () -> ::Array[::String?]?
-
-    def saved_change_to_asset_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def will_save_change_to_asset_type?: (?from: ::String?, ?to: ::String?) -> bool
-
-    def restore_asset_type!: () -> void
-
-    def clear_asset_type_change: () -> void
-
-    def asset_type_before_type_cast: () -> ::String
-
-    def asset_type_for_database: () -> ::String
   end
   include ::Property::GeneratedAttributeMethods
   module ::Property::GeneratedAliasAttributeMethods

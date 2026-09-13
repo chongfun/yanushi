@@ -71,7 +71,7 @@ module TaxReporting
         prop.postings
             .joins(:journal_entry)
             .where(journal_entries: { occurred_on: start_date..end_date })
-            .includes(:account, :party, :rentable_unit, :tenancy, journal_entry: [ :source, :reversal, reversal_of: [ :source, :reversal, postings: :account ] ])
+            .includes(:account, :party, :rentable_unit, :tenancy, journal_entry: [ :source, :reversal, { postings: :account }, reversal_of: [ :source, :reversal, postings: :account ] ])
             .order("journal_entries.occurred_on ASC, journal_entries.id ASC, postings.id ASC")
       end
 

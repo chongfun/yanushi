@@ -1,34 +1,47 @@
-<% content_for :title, "Tenants & Payers" %>
+<% content_for :title, "Parties" %>
 
-<% content_for :breadcrumbs do %>
-  <li>Tenants & Payers</li>
-<% end %>
+<div class="max-w-5xl">
+  <%= render "portfolio/header", current_tab: :parties %>
 
-<div class="flex justify-between items-center mb-6">
-  <div>
-    <h1 class="text-3xl font-bold">Tenants & Payers</h1>
-    <p class="text-sm text-base-content/60">People and organizations who participate in tenancies or make payments</p>
-  </div>
-  <%= link_to "New Tenant / Payer", new_party_path, class: "btn btn-primary" %>
-</div>
+  <% if @parties.any? %>
+    <%= render layout: "shared/table_scroll", locals: { label: "Parties" } do %>
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">Contact</th>
+            <th scope="col">Tenancies</th>
+          </tr>
+        </thead>
+        <tbody id="parties">
+          <% @parties.each do |party| %>
+            <tr id="<%= dom_id party %>">
+              <td>
+                <%= link_to party.display_name, party_path(party), class: "yn-row-link" %>
+                <% if party.party_aliases.any? %>
+                  <span class="block text-[13px] text-stone-500">aka <%= party.party_aliases.map(&:alias_name).join(", ") %></span>
+                <% end %>
+              </td>
+              <td><%= party.party_type.humanize %></td>
+              <td class="text-stone-500 text-sm">
+                <% contact_parts = [party.email_address, party.phone_number].compact.reject(&:blank?) %>
+                <%= contact_parts.any? ? contact_parts.join(" · ") : "—" %>
+              </td>
+              <td class="tabular-nums"><%= party.tenancy_parties.map(&:tenancy_id).uniq.size %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
 
-<div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-200">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Aliases</th>
-        <th>Tenancies</th>
-        <th class="text-right">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="parties">
-      <% @parties.each do |party| %>
-        <%= render party %>
-      <% end %>
-    </tbody>
-  </table>
+    <%= render "shared/pagination",
+          page: @page, per_page: @per_page, total_count: @total_count, total_pages: @total_pages,
+          page_url: ->(p) { parties_path(page: p) } %>
+  <% else %>
+    <%= render "shared/empty_state",
+          title: "No parties yet",
+          body: "Parties are the people and organizations on your tenancies: tenants, guarantors, and payers. Add one here or while creating a tenancy.",
+          action: link_to("Add a party", new_party_path, class: "yn-btn yn-btn-primary yn-btn-sm") %>
+  <% end %>
 </div>

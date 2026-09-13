@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 5 REFERENCE — Reports landing (/reports?year=2025).
+
+  Cross-property Schedule E status for the selected tax year
+  (Reports::ScheduleEStatusesQuery). Unresolved work is the strongest
+  visual state; completed totals are quiet. The status vocabulary and row
+  partial are SHARED with the property Tax tab (property-tax.html):
+    Needs profile / Needs review / Ready
+  Year selection is a GET form; the year persists in the URL.
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link" aria-current="page">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <header class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Reports</h1>
+        <p class="mt-1 text-sm text-stone-500">Schedule E preparation by property and tax year.</p>
+      </header>
+
+      <form class="mb-6">
+        <label class="yn-label" for="rep-year">Tax year</label>
+        <select class="yn-select w-32" id="rep-year" name="year">
+          <option>2026</option>
+          <option selected>2025</option>
+          <option>2024</option>
+        </select>
+      </form>
+
+      <div class="yn-surface divide-y divide-stone-200 max-w-3xl">
+
+        <!-- Needs review — the loudest row state -->
+        <div class="flex items-center gap-4 px-4 py-4">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium m-0">456 Oak Ave</p>
+            <p class="text-sm m-0 mt-0.5">
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>2 items need review</span>
+              <span class="text-stone-400"> · profile configured</span>
+            </p>
+          </div>
+          <a href="#" class="yn-btn yn-btn-primary yn-btn-sm whitespace-nowrap">Review Schedule E</a>
+        </div>
+
+        <!-- Needs profile -->
+        <div class="flex items-center gap-4 px-4 py-4">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium m-0">123 Main St</p>
+            <p class="text-sm m-0 mt-0.5">
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-warn"></span>Needs tax profile</span>
+              <span class="text-stone-400"> · Schedule E can’t be prepared yet</span>
+            </p>
+          </div>
+          <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap">Set up profile</a>
+        </div>
+
+        <!-- Ready — quiet, with the net figure -->
+        <div class="flex items-center gap-4 px-4 py-4">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium m-0">742 Evergreen Terrace</p>
+            <p class="text-sm m-0 mt-0.5">
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Ready</span>
+              <span class="text-stone-400"> · net income </span>
+              <span class="tabular-nums text-stone-500">$14,860.00</span>
+            </p>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap">View</a>
+            <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm whitespace-nowrap">Download PDF</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- No properties: yn-empty pointing to Portfolio → Add property.
+           Future report types get their own section beneath Schedule E;
+           the landing stays a status page, never a form. -->
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

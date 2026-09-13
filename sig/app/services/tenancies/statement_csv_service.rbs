@@ -1,0 +1,36 @@
+module Tenancies
+  class StatementCsvService
+    ACCOUNT_COLUMNS: Array[String]
+    ACTIVITY_COLUMNS: Array[String]
+    FORMULA_TRIGGERS: Array[String]
+
+    def self.call: (
+      tenancy: Tenancy,
+      date_range: Accounting::DateRange,
+      ?statement: Accounting::TenantReceivableActivityQuery::StatementResult?,
+      ?activity_rows: Array[Accounting::ActivityRow]?
+    ) -> String
+
+    def initialize: (
+      tenancy: Tenancy,
+      date_range: Accounting::DateRange,
+      ?statement: Accounting::TenantReceivableActivityQuery::StatementResult?,
+      ?activity_rows: Array[Accounting::ActivityRow]?
+    ) -> void
+
+    def call: () -> String
+
+    private
+
+    attr_reader tenancy: Tenancy
+    attr_reader date_range: Accounting::DateRange
+    attr_reader statement: Accounting::TenantReceivableActivityQuery::StatementResult?
+    attr_reader activity_rows: Array[Accounting::ActivityRow]
+
+    def view_mode: () -> String
+    def write_preamble: (untyped csv) -> void
+    def write_account_rows: (untyped csv, Array[Accounting::TenantReceivableActivityQuery::StatementRow] rows) -> void
+    def csv_text: (untyped value) -> String
+    def write_activity_rows: (untyped csv, Array[Accounting::ActivityRow] rows) -> void
+  end
+end

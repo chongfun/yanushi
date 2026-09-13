@@ -1,0 +1,18 @@
+module Tenancies
+  class OverdueQuery
+    @tenancies: Array[Tenancy]
+    @balances: Hash[Integer, Integer]
+    @as_of: Date
+
+    def self.call: (tenancies: untyped, balances: Hash[Integer, Integer]?, ?as_of: Date?) -> Hash[Integer, Integer]
+    def initialize: (tenancies: untyped, balances: Hash[Integer, Integer]?, ?as_of: Date?) -> void
+    def call: () -> Hash[Integer, Integer]
+
+    private
+
+    def tenancies: () -> Array[Tenancy]
+    def balances: () -> Hash[Integer, Integer]
+    def as_of: () -> Date
+    def not_yet_due_cents_by_tenancy: () -> Hash[Integer, Integer]
+  end
+end

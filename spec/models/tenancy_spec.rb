@@ -282,5 +282,189 @@ RSpec.describe Tenancy, type: :model do
         expect(orphan.accounting_user).to be_nil
       end
     end
+
+    describe "lifecycle predicates and scopes" do
+      let(:active_tenancy) do
+        create(:tenancy, rentable_unit: unit, agreement_type: "month_to_month", commencement_date: Date.current - 1.month, termination_date: nil)
+      end
+      let(:upcoming_tenancy) do
+        unit2 = create(:rentable_unit, property: unit.property, name: "Unit 2")
+        create(:tenancy, rentable_unit: unit2, agreement_type: "month_to_month", commencement_date: Date.current + 1.month, termination_date: nil)
+      end
+      let(:past_tenancy) do
+        unit3 = create(:rentable_unit, property: unit.property, name: "Unit 3")
+        create(:tenancy, rentable_unit: unit3, commencement_date: Date.current - 1.year, termination_date: Date.current - 1.month)
+      end
+
+      it "correctly identifies active, upcoming, and past tenancies" do
+        expect(active_tenancy.active?).to be true
+        expect(active_tenancy.upcoming?).to be false
+        expect(active_tenancy.past?).to be false
+
+        expect(upcoming_tenancy.active?).to be false
+        expect(upcoming_tenancy.upcoming?).to be true
+        expect(upcoming_tenancy.past?).to be false
+
+        expect(past_tenancy.active?).to be false
+        expect(past_tenancy.upcoming?).to be false
+        expect(past_tenancy.past?).to be true
+
+        # Scopes
+        expect(Tenancy.active).to include(active_tenancy)
+        expect(Tenancy.active).not_to include(upcoming_tenancy, past_tenancy)
+
+        expect(Tenancy.upcoming).to include(upcoming_tenancy)
+        expect(Tenancy.upcoming).not_to include(active_tenancy, past_tenancy)
+
+        expect(Tenancy.past).to include(past_tenancy)
+        expect(Tenancy.past).not_to include(active_tenancy, upcoming_tenancy)
+      end
+
+      it "handles nil commencement/termination and as_of argument" do
+        unstarted = build(:tenancy, commencement_date: nil)
+        expect(unstarted.upcoming?).to be false
+        expect(unstarted.active?).to be false
+
+        unterminated = build(:tenancy, termination_date: nil)
+        expect(unterminated.past?).to be false
+
+        expect(active_tenancy.upcoming?(as_of: Date.current - 2.months)).to be true
+        expect(active_tenancy.past?(as_of: Date.current + 2.months)).to be false
+      end
+    end
+
+    describe "participant projection methods" do
+      let(:user) { unit.property.user }
+      let(:tenancy) do
+        create(:tenancy, rentable_unit: unit, agreement_type: "fixed_term", commencement_date: Date.new(2026, 1, 1), termination_date: Date.new(2026, 12, 31))
+      end
+      let(:alice) { create(:party, user: user, display_name: "Alice") }
+      let(:bob) { create(:party, user: user, display_name: "Bob") }
+      let(:guarantor_gary) { create(:party, user: user, display_name: "Gary Guarantor") }
+      let(:occupant_olivia) { create(:party, user: user, display_name: "Olivia Occupant") }
+
+      before do
+        # Alice was tenant Jan 1 - Jun 30
+        create(:tenancy_party, tenancy: tenancy, party: alice, role: "tenant", effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 6, 30))
+        # Bob replaced Alice as tenant Jul 1 - Dec 31
+        create(:tenancy_party, tenancy: tenancy, party: bob, role: "tenant", effective_from: Date.new(2026, 7, 1), effective_until: Date.new(2026, 12, 31))
+        # Gary is guarantor for entire year
+        create(:tenancy_party, tenancy: tenancy, party: guarantor_gary, role: "guarantor", effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+        # Olivia is occupant for entire year
+        create(:tenancy_party, tenancy: tenancy, party: occupant_olivia, role: "occupant", effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 12, 31))
+      end
+
+      describe "#tenant_parties_as_of" do
+        it "resolves only active tenants as of a given date and excludes guarantors and occupants" do
+          # On March 1, Alice is tenant
+          mar_tenants = tenancy.tenant_parties_as_of(Date.new(2026, 3, 1))
+          expect(mar_tenants).to eq([ alice ])
+
+          # On August 24, Bob is tenant
+          aug_tenants = tenancy.tenant_parties_as_of(Date.new(2026, 8, 24))
+          expect(aug_tenants).to eq([ bob ])
+
+          # Outside tenancy bounds
+          expect(tenancy.tenant_parties_as_of(Date.new(2025, 12, 31))).to be_empty
+          expect(tenancy.tenant_parties_as_of(Date.new(2027, 1, 1))).to be_empty
+        end
+      end
+
+      describe "#all_tenant_parties" do
+        it "returns all historical tenants across the tenancy and excludes guarantors and occupants" do
+          all_tenants = tenancy.all_tenant_parties
+          expect(all_tenants).to contain_exactly(alice, bob)
+          expect(all_tenants).not_to include(guarantor_gary, occupant_olivia)
+        end
+      end
+
+      describe "#non_tenant_parties_as_of" do
+        it "returns active non-tenant parties as of a given date" do
+          non_tenants = tenancy.non_tenant_parties_as_of(Date.new(2026, 8, 24))
+          expect(non_tenants).to contain_exactly(guarantor_gary, occupant_olivia)
+          expect(non_tenants).not_to include(bob, alice)
+        end
+      end
+
+      describe "#primary_tenant_parties" do
+        it "returns the active tenant for an ongoing tenancy" do
+          expect(tenancy.primary_tenant_parties(Date.new(2026, 3, 1))).to eq([ alice ])
+          expect(tenancy.primary_tenant_parties(Date.new(2026, 8, 1))).to eq([ bob ])
+        end
+
+        it "returns the final active tenant as of termination for a past tenancy" do
+          unit2 = create(:rentable_unit, property: unit.property, name: "Unit 2B")
+          past_t = create(:tenancy, rentable_unit: unit2, commencement_date: Date.new(2025, 1, 1), termination_date: Date.new(2025, 12, 31))
+          create(:tenancy_party, tenancy: past_t, party: alice, role: "tenant", effective_from: Date.new(2025, 1, 1), effective_until: Date.new(2025, 5, 31))
+          create(:tenancy_party, tenancy: past_t, party: bob, role: "tenant", effective_from: Date.new(2025, 6, 1), effective_until: Date.new(2025, 12, 31))
+
+          expect(past_t.primary_tenant_parties(Date.new(2026, 1, 1))).to eq([ bob ])
+        end
+
+        it "returns the initial active tenant for an upcoming tenancy" do
+          unit3 = create(:rentable_unit, property: unit.property, name: "Unit 3B")
+          upcoming_t = create(:tenancy, rentable_unit: unit3, commencement_date: Date.new(2027, 1, 1), termination_date: Date.new(2027, 12, 31))
+          create(:tenancy_party, tenancy: upcoming_t, party: alice, role: "tenant", effective_from: Date.new(2027, 1, 1), effective_until: Date.new(2027, 12, 31))
+
+          expect(upcoming_t.primary_tenant_parties(Date.new(2026, 1, 1))).to eq([ alice ])
+        end
+      end
+
+      describe "#primary_rent_term" do
+        it "returns the term active today for an ongoing tenancy" do
+          create(:rent_term, tenancy: tenancy, amount_cents: 100_000, effective_from: Date.new(2026, 1, 1), effective_until: Date.new(2026, 5, 31))
+          term2 = create(:rent_term, tenancy: tenancy, amount_cents: 120_000, effective_from: Date.new(2026, 6, 1))
+
+          expect(tenancy.primary_rent_term(Date.new(2026, 8, 1))).to eq(term2)
+        end
+
+        it "returns the commencement term for an upcoming tenancy with scheduled increases" do
+          unit_upcoming = create(:rentable_unit, property: unit.property, name: "Unit Up")
+          upcoming_t = create(:tenancy, rentable_unit: unit_upcoming, commencement_date: Date.new(2026, 9, 1), agreement_type: "month_to_month")
+          initial_term = create(:rent_term, tenancy: upcoming_t, amount_cents: 100_000, effective_from: Date.new(2026, 9, 1), effective_until: Date.new(2026, 12, 31))
+          _future_increase = create(:rent_term, tenancy: upcoming_t, amount_cents: 110_000, effective_from: Date.new(2027, 1, 1))
+
+          expect(upcoming_t.primary_rent_term(Date.new(2026, 8, 1))).to eq(initial_term)
+        end
+
+        it "returns the final term as of termination for a past tenancy" do
+          unit_past = create(:rentable_unit, property: unit.property, name: "Unit Past")
+          past_t = create(:tenancy, rentable_unit: unit_past, commencement_date: Date.new(2025, 1, 1), termination_date: Date.new(2025, 12, 31))
+          _term1 = create(:rent_term, tenancy: past_t, amount_cents: 90_000, effective_from: Date.new(2025, 1, 1), effective_until: Date.new(2025, 6, 30))
+          final_term = create(:rent_term, tenancy: past_t, amount_cents: 95_000, effective_from: Date.new(2025, 7, 1), effective_until: Date.new(2025, 12, 31))
+
+          expect(past_t.primary_rent_term(Date.new(2026, 1, 1))).to eq(final_term)
+        end
+      end
+
+      describe "#deletable?" do
+        it "returns true for a tenancy with no charges, receipts, postings, or security deposit" do
+          clean_unit = create(:rentable_unit, property: unit.property, name: "Clean Unit 1")
+          clean_tenancy = create(:tenancy, rentable_unit: clean_unit, commencement_date: Date.current)
+          expect(clean_tenancy.deletable?).to be true
+        end
+
+        it "returns false when a charge exists" do
+          clean_unit = create(:rentable_unit, property: unit.property, name: "Clean Unit 2")
+          clean_tenancy = create(:tenancy, rentable_unit: clean_unit, commencement_date: Date.current)
+          create(:charge, tenancy: clean_tenancy)
+          expect(clean_tenancy.deletable?).to be false
+        end
+
+        it "returns false when a receipt exists" do
+          clean_unit = create(:rentable_unit, property: unit.property, name: "Clean Unit 3")
+          clean_tenancy = create(:tenancy, rentable_unit: clean_unit, commencement_date: Date.current)
+          create(:receipt, user: user, tenancy: clean_tenancy, payer_party: alice)
+          expect(clean_tenancy.deletable?).to be false
+        end
+
+        it "returns false when a security_deposit is configured" do
+          clean_unit = create(:rentable_unit, property: unit.property, name: "Clean Unit 4")
+          clean_tenancy = create(:tenancy, rentable_unit: clean_unit, commencement_date: Date.current)
+          create(:security_deposit, tenancy: clean_tenancy)
+          expect(clean_tenancy.deletable?).to be false
+        end
+      end
+    end
   end
 end

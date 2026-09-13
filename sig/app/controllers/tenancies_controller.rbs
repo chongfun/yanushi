@@ -1,12 +1,22 @@
 class TenanciesController < ApplicationController
-  @tenancies: Tenancy::ActiveRecord_Relation
+  @tenancies: Array[Tenancy]
+  @page: Integer
+  @per_page: Integer
+  @total_count: Integer
+  @total_pages: Integer
+  @balances: Hash[Integer, Integer]
   @tenancy: Tenancy
   @properties: Property::ActiveRecord_Relation
   @parties: Party::ActiveRecord_Relation
   @recent_statement: Accounting::TenantReceivableActivityQuery::StatementResult
   @recent_activity_rows: Array[Accounting::TenantReceivableActivityQuery::StatementRow]
+  @current_rent_term: RentTerm?
+  @balance_cents: Integer
+  @security_deposit_held_cents: Integer
   @date_range: Accounting::DateRange
   @statement: Accounting::TenantReceivableActivityQuery::StatementResult
+  @financial_activity: Array[Accounting::ActivityRow]
+  @view_mode: String
 
   def index: () -> void
   def show: () -> void
@@ -20,6 +30,10 @@ class TenanciesController < ApplicationController
   private
 
   def set_tenancy: () -> Tenancy
+  def statement_pdf: () -> String
+  def statement_csv: () -> String
+  def statement_export_blocked?: () -> bool
+  def statement_export_filename: (String extension) -> String
   def set_form_data: () -> void
   def tenancy_create_params: () -> ActionController::Parameters
   def tenancy_update_params: () -> ActionController::Parameters

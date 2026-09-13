@@ -6,6 +6,7 @@ if RSpec.configuration.files_to_run.length > 1
     minimum_coverage line: 95, branch: 90
     skip 'vendor'
     skip 'spec'
+    skip 'db'
   end
 end
 

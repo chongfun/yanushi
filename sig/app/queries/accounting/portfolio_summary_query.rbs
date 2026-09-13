@@ -1,0 +1,55 @@
+module Accounting
+  class PortfolioSummaryQuery
+    class PortfolioSummaryResult
+      attr_reader date_range: DateRange
+      attr_reader property_id: (Integer | String)?
+      attr_reader net_cash_movement_cents: Integer
+      attr_reader income_recognized_cents: Integer
+      attr_reader operating_expenses_cents: Integer
+      attr_reader interest_expenses_cents: Integer
+      attr_reader total_expenses_cents: Integer
+      attr_reader net_income_cents: Integer
+
+      def initialize: (
+        date_range: DateRange,
+        property_id: (Integer | String)?,
+        net_cash_movement_cents: Integer,
+        income_recognized_cents: Integer,
+        operating_expenses_cents: Integer,
+        interest_expenses_cents: Integer,
+        total_expenses_cents: Integer,
+        net_income_cents: Integer
+      ) -> void
+    end
+
+    def self.call: (
+      user: User,
+      ?date_range: DateRange?,
+      ?from: (Date | String)?,
+      ?through: (Date | String)?,
+      ?year: (Integer | String)?,
+      ?property_id: (Integer | String)?
+    ) -> PortfolioSummaryResult
+
+    def initialize: (
+      user: User,
+      ?date_range: DateRange?,
+      ?from: (Date | String)?,
+      ?through: (Date | String)?,
+      ?year: (Integer | String)?,
+      ?property_id: (Integer | String)?
+    ) -> void
+
+    def call: () -> PortfolioSummaryResult
+
+    private
+
+    attr_reader user: User
+    attr_reader date_range: DateRange
+    attr_reader property_id: (Integer | String)?
+
+    def grouped_amounts: () -> Hash[[ String, String ], untyped]
+    def property_scope: () -> untyped
+    def empty_result: () -> PortfolioSummaryResult
+  end
+end

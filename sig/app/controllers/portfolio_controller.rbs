@@ -1,0 +1,5 @@
+class PortfolioController < ApplicationController
+  @rows: Array[Dashboards::OverviewQuery::PropertyRow]
+
+  def show: () -> void
+end

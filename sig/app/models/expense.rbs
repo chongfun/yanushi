@@ -2,8 +2,11 @@ class Expense < ApplicationRecord
   EXPENSE_KINDS: Array[String]
   IMMUTABLE_POSTED_ATTRIBUTES: Array[String]
 
-  def amount: () -> BigDecimal
+  attr_accessor raw_amount: String?
+  def amount: () -> BigDecimal?
   def amount=: (untyped val) -> void
+  def formatted_amount: () -> String?
+  def amount_cents=: (Integer?) -> Integer?
 
   def reimbursed?: () -> bool
   def total_active_reimbursement_cents: () -> Integer

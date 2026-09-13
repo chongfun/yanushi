@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tenancy agreement — mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="./yanushi-ui.css">
+</head>
+<body class="yn-body">
+<!--
+  MILESTONE 3 REFERENCE — Tenancy workspace, Agreement tab
+  (Tenancies::AgreementsController#show, /tenancies/:id/agreement).
+
+  Low-frequency configuration moved off the Activity screen: agreement
+  terms, participants, rent history, deposit config. Typography +
+  definition lists + plain tables — no stacked cards. Row-level actions
+  are quiet links; the section-level add actions are small secondary
+  buttons. Header identical to tenancy.html (Agreement tab active).
+-->
+<div class="min-h-screen lg:flex">
+
+  <aside class="yn-sidebar hidden lg:flex lg:flex-col w-60 shrink-0 sticky top-0 h-screen">
+    <div class="flex items-center gap-2 px-4 h-14"><span class="text-[15px] font-semibold tracking-tight">Yanushi</span></div>
+    <nav class="px-3 space-y-0.5" aria-label="Primary">
+      <a href="#" class="yn-nav-link">Overview</a>
+      <a href="#" class="yn-nav-link" aria-current="page">Portfolio</a>
+      <a href="#" class="yn-nav-link">Money</a>
+      <a href="#" class="yn-nav-link">Inbox <span class="yn-count ml-auto">3</span></a>
+      <a href="#" class="yn-nav-link">Reports</a>
+    </nav>
+    <nav class="px-3 mt-8" aria-label="Accounting">
+      <p class="yn-nav-heading">Accounting</p>
+      <a href="#" class="yn-nav-link">Accounts</a>
+    </nav>
+    <div class="mt-auto border-t border-stone-200 p-3"><p class="text-sm text-stone-500 px-1.5 truncate">kyle@example.com</p></div>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div class="max-w-5xl">
+
+      <header class="mb-6">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500 mb-1.5">
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">Portfolio</a>
+          <span class="mx-1 text-stone-300">/</span>
+          <a href="#" class="hover:text-stone-700 no-underline text-inherit">123 Main St</a>
+          <span class="mx-1 text-stone-300">/</span>
+          Unit 2
+        </p>
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">Jane Smith · Unit 2</h1>
+            <p class="mt-1 text-sm text-stone-500">
+              123 Main St ·
+              <span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Active</span>
+              · <span class="tabular-nums">$2,400.00</span>/month · Fixed term through Dec 2026
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="yn-btn yn-btn-secondary">More</button>
+            <a href="#" class="yn-btn yn-btn-secondary">Add charge</a>
+            <a href="#" class="yn-btn yn-btn-primary">Record receipt</a>
+          </div>
+        </div>
+        <nav class="yn-tabs mt-4" aria-label="Tenancy sections">
+          <a href="#" class="yn-tab">Activity</a>
+          <a href="#" class="yn-tab" aria-current="page">Agreement</a>
+        </nav>
+      </header>
+
+      <div class="space-y-10 max-w-3xl">
+
+        <!-- ============================== Agreement terms -->
+        <section aria-labelledby="terms-heading">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 id="terms-heading" class="text-sm font-semibold">Terms</h2>
+            <a href="#" class="yn-link text-sm">Edit</a>
+          </div>
+          <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <div>
+              <dt class="text-stone-500">Agreement type</dt>
+              <dd class="m-0 mt-0.5 font-medium">Fixed term</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Late period</dt>
+              <dd class="m-0 mt-0.5 font-medium">3 days</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Commencement</dt>
+              <dd class="m-0 mt-0.5 font-medium">March 1, 2026</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Termination</dt>
+              <dd class="m-0 mt-0.5 font-medium">December 31, 2026</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- ============================== Participants -->
+        <section aria-labelledby="participants-heading">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 id="participants-heading" class="text-sm font-semibold">Participants</h2>
+            <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm">Add participant</a>
+          </div>
+          <table class="yn-table">
+            <thead>
+              <tr>
+                <th scope="col">Party</th>
+                <th scope="col">Role</th>
+                <th scope="col">Effective</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="#" class="yn-row-link">Jane Smith</a>
+                  <span class="block text-[13px] text-stone-500">jane@example.com</span>
+                </td>
+                <td>Tenant</td>
+                <td class="text-stone-500 whitespace-nowrap">Mar 1 – Dec 31, 2026</td>
+                <td class="text-right whitespace-nowrap">
+                  <a href="#" class="yn-link text-[13px]">Edit</a>
+                  <a href="#" class="yn-link text-[13px] ml-3 text-red-700">Remove</a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" class="yn-row-link">Robert Smith</a>
+                  <span class="block text-[13px] text-stone-500">rob@example.com</span>
+                </td>
+                <td>Guarantor</td>
+                <td class="text-stone-500 whitespace-nowrap">Mar 1 – Dec 31, 2026</td>
+                <td class="text-right whitespace-nowrap">
+                  <a href="#" class="yn-link text-[13px]">Edit</a>
+                  <a href="#" class="yn-link text-[13px] ml-3 text-red-700">Remove</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ============================== Rent history -->
+        <section aria-labelledby="rent-heading">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 id="rent-heading" class="text-sm font-semibold">Rent</h2>
+            <a href="#" class="yn-btn yn-btn-secondary yn-btn-sm">Change rent</a>
+          </div>
+          <table class="yn-table">
+            <thead>
+              <tr>
+                <th scope="col" class="text-right tabular-nums">Amount</th>
+                <th scope="col">Due</th>
+                <th scope="col">Frequency</th>
+                <th scope="col">Effective</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-right tabular-nums whitespace-nowrap font-medium">$2,400.00</td>
+                <td class="whitespace-nowrap">Day 1</td>
+                <td>Monthly</td>
+                <td class="text-stone-500 whitespace-nowrap">Mar 1, 2026 –</td>
+                <td><span class="yn-status yn-status-sm"><span class="yn-dot yn-dot-ok"></span>Current</span></td>
+              </tr>
+              <tr>
+                <td class="text-right tabular-nums whitespace-nowrap text-stone-500">$2,250.00</td>
+                <td class="whitespace-nowrap text-stone-500">Day 1</td>
+                <td class="text-stone-500">Monthly</td>
+                <td class="text-stone-500 whitespace-nowrap">Mar 1, 2025 – Feb 28, 2026</td>
+                <td><span class="yn-status yn-status-sm"><span class="yn-dot"></span>Superseded</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ============================== Security deposit configuration -->
+        <section aria-labelledby="deposit-heading">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 id="deposit-heading" class="text-sm font-semibold">Security deposit</h2>
+            <a href="#" class="yn-link text-sm">Manage deposit →</a>
+          </div>
+          <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <div>
+              <dt class="text-stone-500">Required</dt>
+              <dd class="m-0 mt-0.5 font-medium tabular-nums">$2,400.00 · due Mar 1, 2026</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Currently held</dt>
+              <dd class="m-0 mt-0.5 font-medium tabular-nums">$2,400.00</dd>
+            </div>
+          </dl>
+          <!-- Full deposit history and receive/refund/apply actions stay on
+               the existing security_deposit route. -->
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<% content_for :title, "Portfolio" %>
+
+<div class="max-w-5xl">
+  <%= render "portfolio/header", current_tab: :properties %>
+
+  <% if @rows.any? %>
+    <%= render layout: "shared/table_scroll", locals: { label: "Properties" } do %>
+      <table class="yn-table">
+        <thead>
+          <tr>
+            <th scope="col">Property</th>
+            <th scope="col">Units</th>
+            <th scope="col">Occupancy</th>
+            <th scope="col" class="text-right tabular-nums">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @rows.each do |row| %>
+            <%
+              total_units = row.total_units_count
+              occupied_units = row.occupied_units_count
+              balance_cents = row.balance_cents
+            %>
+            <tr>
+              <td>
+                <%= link_to row.property.address, property_path(row.property), class: "yn-row-link" %>
+                <span class="block text-[13px] text-stone-500"><%= row.property.asset_type.humanize %></span>
+              </td>
+              <td class="tabular-nums"><%= total_units %></td>
+              <td>
+                <% if total_units.zero? %>
+                  <span class="text-stone-500">No units yet</span>
+                <% elsif total_units == 1 %>
+                  <%= render "shared/status", text: (occupied_units == 1 ? "Occupied" : "Vacant"), tone: (occupied_units == 1 ? :ok : :warn), size: :sm %>
+                <% else %>
+                  <%= render "shared/status", text: "#{occupied_units} of #{total_units} occupied", tone: (occupied_units == total_units ? :ok : :warn), size: :sm %>
+                <% end %>
+              </td>
+              <td class="text-right tabular-nums whitespace-nowrap <%= balance_cents.positive? ? 'text-stone-900 font-medium' : 'text-stone-500' %>">
+                <% if balance_cents.zero? %>
+                  <span class="text-stone-400" aria-hidden="true">—</span><span class="sr-only">Settled</span>
+                <% else %>
+                  <%= balance_phrase_cents(balance_cents) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% else %>
+    <%= render "shared/empty_state",
+          title: "Add your first property",
+          body: "Yanushi tracks units, tenancies, and finances per property.",
+          action: link_to("Add a property", new_property_path, class: "yn-btn yn-btn-primary") %>
+  <% end %>
+</div>

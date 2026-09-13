@@ -1,0 +1,19 @@
+<%# Shared header for the Portfolio tab set (Properties / Tenancies / Parties).
+    Local: current_tab (:properties | :tenancies | :parties) %>
+<%
+  current_tab = local_assigns.fetch(:current_tab, :properties)
+  tab_items = [
+    { label: "Properties", path: portfolio_path, current: current_tab == :properties },
+    { label: "Tenancies", path: tenancies_path, current: current_tab == :tenancies },
+    { label: "Parties", path: parties_path, current: current_tab == :parties }
+  ]
+  primary_action = case current_tab
+    when :tenancies then link_to("New tenancy", new_tenancy_path, class: "yn-btn yn-btn-primary")
+    when :parties then link_to("New party", new_party_path, class: "yn-btn yn-btn-primary")
+    else link_to("Add property", new_property_path, class: "yn-btn yn-btn-primary")
+    end
+%>
+<%= render "shared/page_header",
+      title: "Portfolio",
+      actions: primary_action,
+      tabs: render("shared/tabs", items: tab_items, aria_label: "Portfolio sections") %>

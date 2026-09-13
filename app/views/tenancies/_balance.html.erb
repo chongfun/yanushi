@@ -1,0 +1,16 @@
+<%
+  balance_cents = local_assigns[:balance_cents] || @balance_cents || 0
+%>
+<div id="tenancy_balance">
+  <p class="text-xs font-medium uppercase tracking-wider text-stone-500 m-0">Balance</p>
+  <p class="mt-1 text-3xl font-semibold tracking-tight tabular-nums m-0">
+    <% if balance_cents.positive? %>
+      <%= format_money_cents(balance_cents) %> <span class="text-lg font-medium text-stone-500">due</span>
+    <% elsif balance_cents.negative? %>
+      <%= format_money_cents(balance_cents.abs) %> <span class="text-lg font-medium text-stone-500">credit</span>
+    <% else %>
+      $0.00 <span class="text-lg font-medium text-stone-500">settled</span>
+    <% end %>
+  </p>
+  <p class="mt-0.5 text-sm text-stone-500 m-0">as of <%= Date.current.strftime("%b %-d, %Y") %></p>
+</div>

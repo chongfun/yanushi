@@ -1,11 +1,12 @@
 module Accounting
   class ActiveYearsQuery
-    def self.call: (property: Property?, ?additional_years: Array[untyped]) -> Array[Integer]
-    def initialize: (property: Property?) -> void
+    def self.call: (?property: Property?, ?user: User?, ?additional_years: Array[untyped]) -> Array[Integer]
+    def initialize: (?property: Property?, ?user: User?) -> void
     def call: (?additional_years: Array[untyped]) -> Array[Integer]
 
     private
 
     attr_reader property: Property?
+    attr_reader user: User?
   end
 end

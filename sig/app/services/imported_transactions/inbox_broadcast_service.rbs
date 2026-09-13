@@ -1,0 +1,15 @@
+module ImportedTransactions
+  class InboxBroadcastService
+    def self.call: (user: User, ?document: SourceDocument?, ?deleted_document_id: Integer?, ?deleted_transaction_ids: Array[Integer], ?updated_transaction_id: Integer?) -> void
+    def initialize: (user: User, ?document: SourceDocument?, ?deleted_document_id: Integer?, ?deleted_transaction_ids: Array[Integer], ?updated_transaction_id: Integer?) -> void
+    def call: () -> void
+
+    private
+
+    attr_reader user: User
+    attr_reader document: SourceDocument?
+    attr_reader deleted_document_id: Integer?
+    attr_reader deleted_transaction_ids: Array[Integer]
+    attr_reader updated_transaction_id: Integer?
+  end
+end

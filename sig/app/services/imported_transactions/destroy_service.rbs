@@ -2,14 +2,16 @@ module ImportedTransactions
   class DestroyService
     @user: User
     @transaction: ImportedTransaction
+    @lock_version: (Integer | String)?
 
-    def self.call: (user: User, transaction: ImportedTransaction) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
-    def initialize: (user: User, transaction: ImportedTransaction) -> void
+    def self.call: (user: User, transaction: ImportedTransaction, ?lock_version: (Integer | String)?) -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
+    def initialize: (user: User, transaction: ImportedTransaction, ?lock_version: (Integer | String)?) -> void
     def call: () -> (Dry::Monads::Result::Success | Dry::Monads::Result::Failure)
 
     private
     attr_reader user: User
     attr_reader transaction: ImportedTransaction
+    attr_reader lock_version: (Integer | String)?
     def success: (untyped data) -> Dry::Monads::Result::Success
     def failure: (String error, Symbol code) -> Dry::Monads::Result::Failure
   end

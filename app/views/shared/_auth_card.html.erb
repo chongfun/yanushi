@@ -1,0 +1,23 @@
+<%# Shell for the signed-out pages (sign in, password reset). The layout centers
+    it, so this partial owns only the brand mark, heading, and surface.
+    Locals: title, block content is the form; meta optional; footer optional %>
+<div class="flex items-center justify-center gap-2 mb-6">
+  <svg viewBox="0 0 24 24" class="w-5 h-5 text-stone-900" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75L12 3l9 9.75M4.5 9V21h5.25v-5.25h4.5V21H19.5V9"/>
+  </svg>
+  <span class="text-[15px] font-semibold tracking-tight text-stone-900">Yanushi</span>
+</div>
+
+<div class="yn-surface p-6 sm:p-8">
+  <h1 class="text-xl font-semibold tracking-tight text-stone-900 mb-1"><%= title %></h1>
+  <% if local_assigns[:meta].present? %>
+    <p class="text-sm text-stone-500 mb-5"><%= meta %></p>
+  <% else %>
+    <div class="mb-5"></div>
+  <% end %>
+  <%= yield %>
+</div>
+
+<% if local_assigns[:footer].present? %>
+  <p class="text-center text-sm text-stone-500 mt-5 m-0"><%= footer %></p>
+<% end %>

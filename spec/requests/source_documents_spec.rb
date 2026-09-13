@@ -11,12 +11,12 @@ RSpec.describe "SourceDocuments", type: :request do
     it "renders upload form" do
       get new_source_document_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Ingest Source Document")
+      expect(response.body).to include("Upload statement")
     end
   end
 
   describe "POST /source_documents" do
-    it "uploads document and redirects to imported_transactions_path" do
+    it "uploads document and redirects to the Inbox processing view" do
       pdf_file = fixture_file_upload(
         "receipts/202604 Zelle.pdf",
         "application/pdf"
@@ -28,7 +28,8 @@ RSpec.describe "SourceDocuments", type: :request do
         }
       }
 
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
+      expect(response).to have_http_status(:see_other)
       follow_redirect!
       expect(response.body).to include("Document uploaded successfully")
     end
@@ -40,9 +41,9 @@ RSpec.describe "SourceDocuments", type: :request do
 
       post source_documents_path, params: { source_document: { pdf_file: pdf_file } }
 
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
-      expect(response.body).to include("This document is already currently being processed in the background.")
+      expect(response.body).to include("This document is already being processed in the background.")
     end
 
     it "shows informative notice when re-uploading an already processed document" do
@@ -52,7 +53,7 @@ RSpec.describe "SourceDocuments", type: :request do
 
       post source_documents_path, params: { source_document: { pdf_file: pdf_file } }
 
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path)
       follow_redirect!
       expect(response.body).to include("This document has already been processed successfully.")
     end
@@ -64,9 +65,9 @@ RSpec.describe "SourceDocuments", type: :request do
 
       post source_documents_path, params: { source_document: { pdf_file: pdf_file } }
 
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
-      expect(response.body).to include("This document previously failed processing. Please click Retry in the Recent Uploads list.")
+      expect(response.body).to include("This document previously failed processing. Use Retry on the Processing tab to run it again.")
     end
 
     it "redirects to new on upload failure" do
@@ -97,7 +98,7 @@ RSpec.describe "SourceDocuments", type: :request do
       doc.update_column(:attachment_file, nil)
 
       get download_source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Document attachment data is missing.")
     end
@@ -108,7 +109,7 @@ RSpec.describe "SourceDocuments", type: :request do
       doc = create(:source_document, user: user)
 
       delete source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Upload record was removed.")
     end
@@ -118,7 +119,7 @@ RSpec.describe "SourceDocuments", type: :request do
       create(:imported_transaction, :confirmed_receipt, user: user, source_document: doc)
 
       delete source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Cannot delete document with confirmed transactions")
     end
@@ -132,7 +133,7 @@ RSpec.describe "SourceDocuments", type: :request do
         post retry_source_document_path(doc)
       }.to have_enqueued_job(IngestSourceDocumentJob).with(doc.id)
 
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Document processing has been re-queued in the background.")
       expect(doc.reload.status).to eq("processing")
@@ -142,7 +143,7 @@ RSpec.describe "SourceDocuments", type: :request do
       doc = create(:source_document, user: user, status: "success")
 
       post retry_source_document_path(doc)
-      expect(response).to redirect_to(imported_transactions_path)
+      expect(response).to redirect_to(inbox_path(view: "processing"))
       follow_redirect!
       expect(response.body).to include("Document has already been processed successfully.")
     end

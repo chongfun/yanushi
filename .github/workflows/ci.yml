@@ -128,6 +128,9 @@ jobs:
       - name: Setup database
         run: bundle exec bin/rails db:test:prepare
 
+      - name: Build stylesheet for system specs
+        run: bundle exec bin/rails tailwindcss:build
+
       - name: Run tests
         run: bundle exec rspec
 
