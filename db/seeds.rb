@@ -14,7 +14,11 @@ else
   Accounting::ChartOfAccounts.ensure_for(user)
 end
 
-today = Date.current
+# Anchor demo data to a fixed date so all demonstration scenarios
+# (overdue rent, upcoming lease, tax profiles, inbox items) remain
+# completely stable, internally coherent, and idempotent across runs.
+seed_today = ENV["SEED_DATE"].present? ? Date.parse(ENV["SEED_DATE"]) : Date.new(2026, 9, 15)
+today = seed_today
 this_year = today.year
 prev_year = this_year - 1
 
@@ -938,15 +942,16 @@ puts "Creating Inbox source documents and imported transactions..."
 # ==============================================================================
 
 # 1. Successful statement with confirmed historical transactions (History tab)
-doc_history = SourceDocument.find_or_create_by!(user: user, attachment_filename: "chase_checking_historical.csv") do |d|
+oct_date_str = "#{prev_year}-10-02"
+doc_history = SourceDocument.find_or_create_by!(user: user, attachment_filename: "chase_checking_oct_#{prev_year}.csv") do |d|
   d.document_type = "chase_statement"
   d.status = "success"
   d.attachment_content_type = "text/csv"
-  d.attachment_file = "Date,Description,Amount\n2025-10-01,Rent Trillian,2400.00\n2025-10-02,Rent Dent,2200.00"
+  d.attachment_file = "Date,Description,Amount\n#{oct_date_str},Rent Trillian,2400.00\n#{oct_date_str},Rent Dent,2200.00"
 end
 
 # Link confirmed transactions to real receipts created earlier
-hist_receipt_tricia = Receipt.where(tenancy: tenancy_4b, payment_method: "venmo").order(:received_on).first
+hist_receipt_tricia = Receipt.find_by(tenancy: tenancy_4b, external_reference: "VEN-TRIL-#{prev_year}10")
 if hist_receipt_tricia && !ImportedTransaction.exists?(confirmed_source: hist_receipt_tricia)
   ImportedTransaction.create!(
     user: user,
@@ -966,7 +971,7 @@ if hist_receipt_tricia && !ImportedTransaction.exists?(confirmed_source: hist_re
   )
 end
 
-hist_receipt_arthur = Receipt.where(tenancy: tenancy_4a, payment_method: "zelle").order(:received_on).first
+hist_receipt_arthur = Receipt.find_by(tenancy: tenancy_4a, external_reference: "ZEL-DENT-#{prev_year}10")
 if hist_receipt_arthur && !ImportedTransaction.exists?(confirmed_source: hist_receipt_arthur)
   ImportedTransaction.create!(
     user: user,
