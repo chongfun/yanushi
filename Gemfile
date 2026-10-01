@@ -85,6 +85,6 @@ gem "prawn-table", "~> 0.2.2"
 gem "dry-monads", "~> 1.11.0"
 gem "dry-struct", "~> 1.8.1"
 gem "dry-types", "~> 1.9.1"
-gem "hexapdf", "~> 1.10"
+gem "hexapdf", "~> 1.11"
 
 gem "tailwindcss-rails", "~> 4.6"
