@@ -1,3 +1,24 @@
+require "capybara/selenium/driver_specializations/chrome_driver"
+
+# Chrome 158+ rejects wildcard `origin: "*"` in CDP `Storage.clearDataForOrigin`,
+# which Capybara 3.40.0 calls in `ChromeDriver#reset!` (teamcapybara/capybara#2865).
+# Clear browser cookies directly and scope storage clearing to the Capybara server origin.
+module CapybaraChrome158ResetFix
+  private
+
+    def execute_cdp(cmd, params = {})
+      return super unless cmd == "Storage.clearDataForOrigin" && params[:origin] == "*"
+
+      super("Network.clearBrowserCookies")
+      return unless params[:storageTypes].to_s.include?("local_storage")
+
+      origin = Capybara.current_session.server&.base_url
+      super(cmd, { origin: origin, storageTypes: "local_storage" }) if origin
+    end
+end
+
+Capybara::Selenium::Driver::ChromeDriver.prepend(CapybaraChrome158ResetFix)
+
 # Waiting for the page to have drawn.
 #
 # Two frames, because the first is only scheduled by the call: the second
