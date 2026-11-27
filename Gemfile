@@ -84,7 +84,7 @@ gem "prawn-table", "~> 0.2.2"
 # Typed result objects for service workflows.
 gem "dry-monads", "~> 1.11.0"
 gem "dry-struct", "~> 1.8.1"
-gem "dry-types", "~> 1.9.1"
+gem "dry-types", "~> 1.9.2"
 gem "hexapdf", "~> 1.11"
 
 gem "tailwindcss-rails", "~> 4.7"
